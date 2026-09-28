@@ -266,7 +266,11 @@ Sagan reserves `module`, `export`, `import`, `from`, and `as`. Exact module and 
 
 - Source files are UTF-8.
 - Identifiers are case-sensitive and normalized to Unicode NFC.
-- Identifiers use Unicode `XID_Start` and `XID_Continue`, with `_` additionally permitted.
+- Identifiers use Unicode `XID_Start` and `XID_Continue`, with `_` and Unicode emoji
+  sequences additionally permitted. An identifier may begin with an emoji, so names such
+  as `🚀`, `🌌distance`, and `calculate🪐` are valid for variables and functions.
+- ASCII punctuation does not become part of an identifier merely because it resembles an
+  emoticon; for example, `:)` remains punctuation and is not a valid name.
 - Names beginning with `__` are reserved for the compiler.
 - Keywords are lowercase and receive dedicated token types.
 - `LF` and `CRLF` each represent one logical newline.
@@ -285,9 +289,53 @@ The initial compiler will translate Sagan into C++, then use a C++ compiler to p
 
 Reference counting is the intended memory-management model. Exceptions are the primary error mechanism. C and C++ interoperability may be added later but is not required for the first compiler.
 
+## Building the tokenizer
+
+The current bootstrap executable reads Sagan source and prints the resulting token stream. From Bash with an MSYS2 UCRT64 toolchain available:
+
+```bash
+bash scripts/test.sh
+make demo
+```
+
+`bash scripts/test.sh` builds the executable and runs the tokenizer self-tests. `make demo` tokenizes `examples/tokenizer_demo.sagan`. To inspect another source file:
+
+```bash
+bin/sagan path/to/program.sagan
+```
+
+`examples/tokenizer_error.sagan` intentionally contains a malformed number and demonstrates focused lexical-error reporting.
+
+## Development versions
+
+Sagan identifies development builds with a Git-derived version such as
+`0.1.3+g1a2b3c4d`:
+
+- `0.1` is the manually selected major and minor language-development line;
+- `3` is the number of commits since that line's base commit;
+- `g1a2b3c4d` identifies the exact Git revision; and
+- `.dirty` is appended when the build includes uncommitted or untracked changes.
+
+This system is adapted from Schematic's dynamic in-app version numbering. Sagan
+regenerates the version during every build so it cannot remain stale after a new
+commit. Inspect the version without building or run the compiled executable with:
+
+```bash
+make get-version
+bin/sagan --version
+```
+
+The generated version is a development-build identity, not yet a promise of
+stable-language compatibility. When a major or minor version changes, its base
+commit is updated and the patch counter begins again at zero. Tagged releases
+and source-language compatibility policy will be defined before Sagan's first
+public release.
+
+This is a bootstrap implementation. It accepts non-ASCII UTF-8 identifier bytes, including emoji, but full Unicode `XID_Start`/`XID_Continue` and emoji-sequence validation plus NFC normalization still require a Unicode library. Context-sensitive newline suppression inside vector and dictionary literals will be finalized with the parser because `<...>` and `{...}` also represent comparisons and code blocks.
+
 ## Project status
 
-The lexical design is sufficiently defined to replace the inherited token vocabulary and implement the tokenizer. Parser, semantic-analysis, runtime, and standard-library decisions remain, including:
+The bootstrap tokenizer now recognizes Sagan's keywords, operators, punctuation, identifiers, numbers, comments, documentation comments, strings, raw and multiline strings, and nested string interpolation. It includes a token-dump CLI, self-tests, a representative demo, and focused lexical errors. Parser, semantic-analysis, runtime, and standard-library decisions remain, including:
 
 - complete type inference and declaration rules;
 - reference-count cycle handling and value/reference semantics;
@@ -299,10 +347,50 @@ The lexical design is sufficiently defined to replace the inherited token vocabu
 - deterministic numeric and runtime requirements; and
 - the boundary between language features and the standard library.
 
-See [ROADMAP.md](ROADMAP.md) for the planned implementation stages.
+## Roadmap
+
+### 1. Language definition — sufficiently defined
+
+Define what Sagan is for and establish its design philosophy, core features,
+and lexical rules. The language is sufficiently defined to support tokenizer
+work, while parser and semantic decisions will continue to be refined when
+their implementation makes the tradeoffs concrete.
+
+### 2. Tokenizer — bootstrap complete
+
+Define Sagan's token IDs, keywords, operators, punctuation, identifiers, and
+literals. Convert UTF-8 source text into tokens with source spans, report
+focused lexical errors, and provide token-dump demonstrations and automated
+checks.
+
+The initial tokenizer is working. Remaining hardening includes complete Unicode
+XID and emoji-sequence validation, NFC normalization, malformed UTF-8 rejection,
+parser-informed newline handling for ambiguous delimiters, and broader
+regression and fuzz testing.
+
+### 3. Parser and syntax tree — next
+
+Turn the token stream into a structured syntax tree representing declarations,
+expressions, statements, control flow, types, classes, interfaces, and
+composition. This stage establishes the concrete grammar, operator precedence,
+and syntax-error diagnostics.
+
+### 4. Semantic analysis — planned
+
+Walk the syntax tree and determine whether syntactically valid programs are
+meaningful. This includes name resolution, scope checking, duplicate-name
+detection, type inference and checking, interface conformance, mutation rules,
+and other semantic diagnostics.
+
+### 5. Code generation — planned
+
+Translate the validated program into C++ and invoke a C++ compiler to produce a
+native executable. Later work will define optimization, runtime integration,
+debug information, platform support, and the boundary between generated code
+and Sagan's standard library.
 
 ## Origins and attribution
 
 Sagan is based on Zachary Westerman's [Schematic](https://github.com/ZacharyWesterman/schematic), a work-in-progress compiler for a node-based language. Schematic supplied the starting tokenizer, lexer, parser utilities, diagnostic infrastructure, AST foundation, and build structure.
 
-The current repository still contains Schematic-derived parser support code and an inherited lexer that has not yet been replaced with the Sagan token set described above. Schematic is published under the GNU General Public License v3. Sagan must preserve the applicable license and attribution requirements before redistribution.
+The repository retains Schematic-derived tokenizer state, span, diagnostic, and parser-support foundations, while the inherited node-language token table and lexer have now been replaced by Sagan's initial tokenizer. Schematic is published under the GNU General Public License v3. Sagan must preserve the applicable license and attribution requirements before redistribution.

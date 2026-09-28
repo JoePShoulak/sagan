@@ -1,0 +1,140 @@
+site_name: Sagan Documentation
+site_description: Internal documentation for the Sagan programming language
+docs_dir: docs
+site_dir: build/docs-site
+strict: true
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  language: en
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+
+hooks:
+  - scripts/docs_status.py
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+validation:
+  absolute_links: relative_to_docs
+  unrecognized_links: warn
+  anchors: warn
+
+extra:
+  documentation:
+    version: 0.1.0-internal.1
+    channel: internal
+    internal_only: true
+
+extra_css:
+  - stylesheets/status.css
+
+exclude_docs: |
+  overrides/
+
+nav:
+  - Home: index.md
+  - Design:
+      - design/index.md
+      - Philosophy: design/philosophy.md
+      - Goals and non-goals: design/goals-and-non-goals.md
+      - Determinism: design/determinism.md
+      - Documentation status: design/status.md
+  - Getting started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - First program: getting-started/first-program.md
+      - Editor support: getting-started/editor-support.md
+  - Language tour:
+      - tour/index.md
+      - Values and variables: tour/values-and-variables.md
+      - Functions: tour/functions.md
+      - Control flow: tour/control-flow.md
+      - Classes and interfaces: tour/classes-and-interfaces.md
+      - Errors: tour/errors.md
+  - Language reference:
+      - reference/index.md
+      - Lexical specification: reference/lexical-specification.md
+      - Grammar and syntax: reference/grammar.md
+      - Declarations: reference/declarations.md
+      - Expressions: reference/expressions.md
+      - Statements: reference/statements.md
+      - Type system: reference/type-system.md
+      - Classes, interfaces, and composition: reference/classes-interfaces-composition.md
+      - Exceptions: reference/exceptions.md
+      - Modules: reference/modules.md
+      - Memory model: reference/memory-model.md
+  - Standard library:
+      - standard-library/index.md
+      - Status: standard-library/status.md
+  - Compiler and tooling:
+      - tooling/index.md
+      - Compiler: tooling/compiler.md
+      - Command line: tooling/command-line.md
+      - Diagnostics: tooling/diagnostics.md
+      - C++ backend: tooling/cpp-backend.md
+      - Editor support: tooling/editor-support.md
+  - Implementation:
+      - implementation/index.md
+      - Architecture: implementation/architecture.md
+      - Tokenizer: implementation/tokenizer.md
+      - Parser: implementation/parser.md
+      - Semantic analysis: implementation/semantic-analysis.md
+      - Code generation: implementation/code-generation.md
+      - Schematic-derived foundations: implementation/schematic-foundations.md
+  - Design decisions:
+      - decisions/index.md
+      - Decision template: decisions/template.md
+  - RFCs:
+      - rfcs/index.md
+      - RFC template: rfcs/template.md
+      - Proposed: rfcs/proposed/index.md
+      - Accepted: rfcs/accepted/index.md
+      - Rejected: rfcs/rejected/index.md
+  - Examples: examples/index.md
+  - Contributing:
+      - contributing/index.md
+      - Development setup: contributing/development-setup.md
+      - Documentation workflow: contributing/documentation.md
+      - Testing: contributing/testing.md
+      - Licensing and attribution: contributing/licensing-and-attribution.md
+  - About:
+      - about/index.md
+      - Project history: about/project-history.md
+      - License and attribution: about/license-and-attribution.md

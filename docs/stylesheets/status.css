@@ -1,0 +1,9 @@
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: #f59e0b;
+}
+
+.md-typeset .admonition.success,
+.md-typeset details.success {
+  border-color: #16a34a;
+}
