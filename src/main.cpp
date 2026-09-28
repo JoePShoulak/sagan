@@ -110,6 +110,30 @@ namespace
     return true;
   }
 
+  auto expect_unicode_primitives() -> bool
+  {
+    const std::string invalid_byte(1, static_cast<char>(0xff));
+    const std::string truncated_two_byte(1, static_cast<char>(0xc2));
+    const std::string invalid_continuation{static_cast<char>(0xc2), 'A'};
+    const std::string tagged_flag =
+        "\xf0\x9f\x8f\xb4\xf3\xa0\x81\xa7\xf3\xa0\x81\xa2\xf3\xa0\x81\xbf";
+    const bool passed = !sagan::unicode::decode("", 0).has_value() &&
+                        !sagan::unicode::decode(invalid_byte, 0).has_value() &&
+                        !sagan::unicode::decode(truncated_two_byte, 0).has_value() &&
+                        !sagan::unicode::decode(invalid_continuation, 0).has_value() &&
+                        sagan::unicode::emoji_sequence_length(invalid_byte, 0) == 0 &&
+                        sagan::unicode::emoji_sequence_length("✈️", 0) == std::string("✈️").size() &&
+                        sagan::unicode::emoji_sequence_length("☝️🏻", 0) == std::string("☝️🏻").size() &&
+                        sagan::unicode::emoji_sequence_length(tagged_flag, 0) == tagged_flag.size();
+    if (!passed)
+    {
+      std::cerr << "[FAIL] Unicode primitive edge cases\n";
+      return false;
+    }
+    std::cout << "[PASS] Unicode primitive edge cases\n";
+    return true;
+  }
+
   auto expect_error(const std::string &name, const std::string &source) -> bool
   {
     try
@@ -263,6 +287,7 @@ namespace
     bool passed = true;
 
     passed &= expect_tokenizer_lifecycle();
+    passed &= expect_unicode_primitives();
 
     passed &= expect_ids(
         "declaration",
@@ -352,6 +377,11 @@ namespace
          tokens::STRING_BEGIN, tokens::STRING_SEGMENT, tokens::STRING_END, tokens::NEWLINE});
 
     passed &= expect_ids(
+        "complete string escape vocabulary",
+        "\"\\\\\\\"\\'\\n\\r\\t\\0\\u{41}\\u{3a9}\\u{1f680}\"\n",
+        {tokens::STRING_BEGIN, tokens::STRING_SEGMENT, tokens::STRING_END, tokens::NEWLINE});
+
+    passed &= expect_ids(
         "nested comments",
         "/* outer /* inner */ outer */ let value = 1\n",
         {tokens::KWD_LET, tokens::IDENTIFIER, tokens::EQUAL, tokens::INTEGER, tokens::NEWLINE});
@@ -375,6 +405,14 @@ namespace
     passed &= expect_error("incomplete emoji sequence", "let 🚀‍name = 1\n");
     passed &= expect_error("surrogate Unicode escape", "let value = \"\\u{d800}\"\n");
     passed &= expect_error("oversized Unicode escape", "let value = \"\\u{110000}\"\n");
+    passed &= expect_error("escape at end of input", "\"unfinished\\");
+    passed &= expect_error("unknown string escape", "\"\\q\"\n");
+    passed &= expect_error("Unicode escape missing brace", "\"\\u1234\"\n");
+    passed &= expect_error("Unicode escape non-hex digit", "\"\\u{12z4}\"\n");
+    passed &= expect_error("empty Unicode escape", "\"\\u{}\"\n");
+    passed &= expect_error("unterminated Unicode escape", "\"\\u{1234\"\n");
+    passed &= expect_error("unterminated raw string at newline", "r\"unfinished\n");
+    passed &= expect_error("unterminated raw string at end", "r\"unfinished");
     passed &= expect_robustness("random byte robustness");
     passed &= expect_ast(
         "parser foundation",
