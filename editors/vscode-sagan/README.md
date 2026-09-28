@@ -4,11 +4,11 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for the experimental Sagan programming language.
+VS Code language support for the experimental Sagan programming language. Version 0.1.1 tracks the tokenizer and parser grammar implemented by Sagan 0.13.0.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
 
-Sagan is still in language design. This extension provides lexical highlighting only; it does not provide IntelliSense, parsing, semantic analysis, type checking, diagnostics, formatting, or a language server.
+Sagan is still in language design. This extension provides syntax-based TextMate highlighting only; it does not provide semantic IntelliSense, name resolution, type checking, compiler diagnostics, formatting, or a language server. Those capabilities depend on future compiler and editor-service work.
 
 ## Local development
 
@@ -17,18 +17,29 @@ Sagan is still in language design. This extension provides lexical highlighting 
 3. The Extension Development Host opens `examples/demo.sagan` from this extension.
 4. Confirm the status bar identifies the file as **Sagan**.
 
-No compilation is required for development-host testing. TextMate grammar changes require restarting the Extension Development Host.
+No compiler build is required for development-host testing. TextMate grammar changes require restarting the Extension Development Host.
+
+## Test
+
+Install the pinned development dependencies and run the grammar against focused fixtures plus the repository's comprehensive parser demo:
+
+```bash
+npm ci
+npm test
+```
+
+The tests use VS Code's TextMate and Oniguruma engines to verify scopes for the current vocabulary, Unicode and emoji identifiers, strings and interpolation, nested and documentation comments, enum documentation, yields, exceptions, operators, and retired Schematic constructs.
 
 ## Package
 
 From this directory:
 
 ```bash
-npx --yes @vscode/vsce package
+npm run package
 ```
 
 The resulting `.vsix` can be installed from VS Code's Extensions view or with the `code --install-extension` command.
 
 ## Grammar limits
 
-TextMate highlighting is lexical and cannot fully resolve context-sensitive constructs. In particular, braces may delimit blocks or dictionaries, and angle brackets may delimit vectors or serve as comparison operators. The grammar gives their tokens stable scopes while leaving those semantic distinctions to a future parser-backed language service.
+TextMate highlighting is lexical and cannot fully resolve context-sensitive constructs. In particular, braces may delimit blocks or dictionaries, and angle brackets may delimit vectors or serve as comparison operators. The grammar gives their tokens stable scopes while leaving those grammatical distinctions and all semantic validation to the compiler or a future parser-backed language service.

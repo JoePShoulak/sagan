@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1
+
+- Align syntax scopes and the demonstration program with Sagan 0.13.0's complete tokenizer and parser grammar.
+- Add contextual module, import, export, enum-member, property, parameter, and mutating-method scopes.
+- Tighten Unicode identifier highlighting while retaining emoji identifiers and sequences.
+- Add indentation behavior for brace-delimited bodies.
+- Add TextMate tokenization tests covering the current vocabulary, strings, comments, Unicode, parser demo, and removed Schematic constructs.
+
 ## 0.1.0
 
 - Replace the JavaScript fallback with a tokenizer-aligned Sagan TextMate grammar.

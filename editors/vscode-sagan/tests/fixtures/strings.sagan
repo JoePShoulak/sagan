@@ -1,0 +1,10 @@
+let double = "escaped \\ \" \' \n \r \t \0 \u{1F680}"
+let single = 'value ${name}'
+let multiline = """
+nested ${call({"value": other, "nested": {"ready": true}})}
+"""
+let raw_double = r"${literal}\n"
+let raw_single = r'${literal}\t'
+let raw_multiline = r"""
+${literal}\u{41}
+"""

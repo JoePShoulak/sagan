@@ -1,0 +1,5 @@
+let Δx = 1
+let 変数 = 2
+let 🚀 = 3
+let 🌌distance = 4
+fun calculate🪐(速度: Float): Float => 速度

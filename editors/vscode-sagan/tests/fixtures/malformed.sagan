@@ -1,0 +1,6 @@
+let leading_dot = .5
+let trailing_dot = 5.
+let old_tag = @tag
+let ordinary_negation = !event
+let old_code = `not a code block`
+let ascii_emoticon = :)

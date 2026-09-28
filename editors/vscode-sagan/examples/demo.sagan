@@ -1,144 +1,154 @@
-/// Comprehensive lexical showcase for the current Sagan tokenizer.
-module syntax_showcase
+/// Demonstrates every currently implemented parser feature.
+module orbital_demo
 
-import Telemetry from mission_support
-import Navigator from mission_support as Guidance
+import Vector from math
+import Renderer from rendering as SceneRenderer
+import physics as simulation_physics
+
 export ExplorerShip
+export GuidanceStatus as Status
 
-/**
- * Interfaces are Sagan's primary composition mechanism.
- * This documentation comment may contain /* a nested block comment */ safely.
- */
-face Movable {
-  fun velocity(): Vector
-  fun move!(offset: Vector)
+/// Produces rendered frames.
+face Renderable {
+  /// Renders the current object.
+  fun render(): Frame
 }
 
-face Trackable {
-  fun identifier(): String
+face Navigable is Renderable, Trackable {
+  fun current_course(origin: Coordinate, destination: Coordinate): Vector
+  fun status_label(): String {
+    return "navigating"
+  }
 }
 
-face Spacecraft is Movable, Trackable {
-  fun trajectory(origin: Coordinate, duration: Float): Vector
-}
-
-enum MissionState {
-  case idle
-  case flying
-  case landed
-}
-
-class ExplorerShip has Spacecraft {
+/**A spacecraft composed from navigation, rendering, and telemetry interfaces.*/
+class ExplorerShip has Navigable, TelemetrySource {
+  /// Human-readable spacecraft name.
   let name: String = "Voyager"
-  let state: MissionState = MissionState.idle
-
-  /// A public method with parameters and a return type.
-  fun trajectory(origin: Coordinate, duration: Float): Vector {
-    let displacement = self.velocity * duration
-    return <origin, displacement, 0.0>
+  let active = true
+  fun render(): Frame {
+    return self.renderer.draw(self)
   }
-
-  // A leading dot marks a private member declaration.
-  fun .calculate_internal_state(sample_count: Integer): Float {
-    return sample_count ^ 2 / 2.0
-  }
-
-  // The trailing ! is part of this mutating method's name.
-  fun move!(offset: Vector) {
-    self.position += offset
+  fun .calculate_internal_state(): Vector {
+    return self.position + self.velocity
   }
 }
 
-let MAX_ENTITIES: Integer = 100_000
-let entity_count: Integer = 10_000
-let gravity: Float = 6.674_30e-11
-let distance: Float = 1E+9
-let efficiency: Float = 9.5e-1
-let unlimited: Float = inf
-let unavailable: Float = nan
-
-entity_count = entity_count + 1
-entity_count++
---entity_count
-entity_count += 4
-entity_count -= 2
-entity_count *= 3
-entity_count /= 2
-entity_count %= 7
-entity_count ^= 2
-let assigned = entity_count := 42
-
-let values = [1, 2, 3]
-let copied_values = [...values]
-let metadata = {"name": "Voyager", "active": true, "attempts": 3}
-let direction: Vector = <1.0, 0.0, -1.0>
-let position: Coordinate = (100.0, 200.0, 300.0)
-let maybe_name = metadata?.name
-
-let add = fun(left: Float, right: Float): Float => left + right
-let ready = true and not false
-let status = ready ? "running" ; "stopped"
-
-if entity_count >= 1 and entity_count != MAX_ENTITIES {
-  entity_count = entity_count * 2
-} else {
-  entity_count = 0
+enum GuidanceStatus {
+  waiting
+  /// Guidance has converged and can be applied.
+  ready
+  failed
 }
 
-for value in values {
-  if value == 2 {
-    continue
+fun clamp(value: Float, minimum: Float, maximum: Float): Float =>
+  value < minimum ? minimum ; value > maximum ? maximum ; value
+
+/// Lazily yields telemetry samples in source order.
+fun telemetry_samples(samples) {
+  for sample in samples {
+    yield sample
   }
 }
 
-while entity_count > 0 {
-  entity_count--
-  break
-}
+let select_greater = fun(left: Float, right: Float): Float =>
+  left > right ? left ; right
 
-until ready or !false {
-  ready = true
-}
-
-match status {
-  case "running" {
-    yield status
-  }
-  case "stopped" {
-    yield "idle"
-  }
-}
-
-hope {
-  let result = add(1.0, 2.0)
-} unless error {
-  scream "calculation failed: ${error}"
-} finally {
-  let cleaned_up = true
-}
-
-let escaped = "line one\nline two\t\u{1F680}"
-let single_quoted = 'distance: ${distance / 2.0}'
-let raw_path = r"C:\simulation\data"
-let raw_pattern = r'${not_interpolated}\n'
-let report = """
-Ship: ${metadata["name"]}
-Position: ${position}
-Summary: ${{"count": entity_count, "ready": ready}}
+let altitude: Float = 125_000.0
+let target_altitude = (altitude)
+let telemetry_pending
+let orbital_energy = -2^3^2 + 4 * 5
+let selected = telemetry_ready and altitude >= 100_000 ? altitude ; target_altitude
+let captured = target_altitude := altitude := 125_500.0
+let previous_count = telemetry_count++
+let active_ship = fleet[active_index]
+let course = fleet[active_index]?.navigator.current_course(origin, destination).magnitude()
+let predicted_position = trajectory.sample!(simulation_time + time_step).position
+let gravity = universe.systems[home_system].bodies[planet_index].gravity_at(ship.position)
+let telemetry_value = mission?.telemetry.latest().channels[channel_index].sample_count++
+let corrected_velocity = guidance.compute(ship.position, ship.velocity, target.position).normalized()
+let mission_name = "Voyager"
+let status = "mission ${mission_name}: altitude ${altitude}, course magnitude ${course}"
+let archive_path = r"C:\simulation\telemetry\${mission_name}"
+let formatted_name = "  ${mission_name}  ".trim().length()
+let flight_report = """Mission report
+Altitude and trajectory data are retained exactly.
+Current altitude: ${altitude}
+Computed course magnitude: ${course}
 """
-let raw_report = r"""
-Raw text preserves \n, ${interpolation}, and indentation.
-"""
-
-let café = "Unicode letters are identifiers"
-let 🌌distance = 42
-let 🚀 = fun(速度: Float): Float => 速度 * 2.0
-
-fun calculate🪐(位置: Coordinate): Coordinate {
-  return 位置
+let sensor_values = [1.0, ...baseline_samples, calculate_sample(altitude, course,),]
+let mission_metadata = {
+  "mission": mission_name,
+  "active": true,
+  active_ship.name: active_ship,
+  ...default_metadata,
 }
-
-/* Ordinary comments may nest.
-   /* inner comment */
-   outer comment continues here.
- */
+let thrust_direction = <
+  1.0,
+  0.0,
+  0.0,
+>
+let orbital_position = (100.0, 200.0, altitude,)
+let trajectory_samples = [
+  orbital_position,
+  (110.0, 205.0, altitude + 10.0,),
+  ...historical_positions,
+]
+/// Updates guidance state from the latest telemetry sample.
+fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
+  telemetry_count += 1
+  remaining_fuel -= fuel_burn
+  thrust *= throttle
+  average_velocity /= sample_count
+  ring_index %= ring_capacity
+  correction_weight ^= correction_exponent
+  if telemetry_ready and altitude >= target_altitude {
+    /// Course calculated from the current orbital position.
+    let next_course = navigator.current_course(orbital_position, target_position)
+    ship.guidance.course = next_course
+    ship.guidance.commit!()
+  } else if retrying {
+    telemetry.retry()
+  } else {
+    let fallback_course = guidance.safe_course(orbital_position)
+    ship.guidance.course = fallback_course
+  }
+  for sample in trajectory_samples {
+    if sample.invalid {
+      continue
+    }
+    while sample.pending {
+      sample.refresh!()
+      if sample.failed {
+        break
+      }
+    }
+  }
+  until guidance.converged {
+    guidance.refine!(orbital_position, target_position)
+  }
+  match guidance.status {
+    case "ready" {
+      telemetry.record(guidance.state)
+    }
+    case "failed" {
+      return
+    }
+    case else {
+      guidance.wait()
+    }
+  }
+  hope {
+    telemetry.publish(guidance.state)
+  } unless NetworkError {
+    telemetry.queue(guidance.state)
+  } unless error {
+    scream telemetry.wrap(error)
+  } finally {
+    telemetry.flush!()
+  }
+  if guidance.failed {
+    return
+  }
+  return guidance.state
+}

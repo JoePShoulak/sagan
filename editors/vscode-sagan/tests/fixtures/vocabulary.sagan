@@ -1,0 +1,35 @@
+module vocabulary
+import Thing from source as Alias
+export Thing as PublicThing
+
+let value = true
+fun named(parameter: Float): Float => parameter
+class Example has First, Second {}
+face Contract is Parent {}
+enum State { ready, waiting }
+
+if value { return } else { yield value }
+match value { case true {} case else {} }
+for item in items { continue }
+while value { break }
+until false {}
+hope {} unless error { scream error } finally {}
+
+let language_values = [true, false, inf, nan]
+let logic = self is Example and value or not false
+let operators = left + right - third * fourth / fifth % sixth ^ seventh
+let comparisons = left == right and left != third and left <= fourth and left >= fifth
+let vector = <left, right>
+let assigned = target := source
+let lambda = fun(item) => item
+let spread = [...items]
+let safe = object?.property
+counter++
+--counter
+counter += 1
+counter -= 1
+counter *= 2
+counter /= 2
+counter %= 2
+counter ^= 2
+let conditional = value ? left ; right

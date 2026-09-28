@@ -5,6 +5,7 @@
   "patterns": [
     { "include": "#comments" },
     { "include": "#strings" },
+    { "include": "#enum-declaration" },
     { "include": "#declarations" },
     { "include": "#numbers" },
     { "include": "#constants" },
@@ -156,7 +157,7 @@
     "declarations": {
       "patterns": [
         {
-          "match": "\\b(fun)(\\s+)(\\.?)(?:\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*!?)",
+          "match": "\\b(fun)(\\s+)(\\.?)(?:\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*!?)",
           "captures": {
             "1": { "name": "keyword.declaration.function.sagan" },
             "3": { "name": "punctuation.accessor.private.sagan" },
@@ -164,14 +165,14 @@
           }
         },
         {
-          "match": "\\b(class|face|enum)(\\s+)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "match": "\\b(class|face)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
           "captures": {
             "1": { "name": "keyword.declaration.type.sagan" },
             "3": { "name": "entity.name.type.sagan" }
           }
         },
         {
-          "match": "\\b(module)(\\s+)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "match": "\\b(module)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
           "captures": {
             "1": { "name": "keyword.declaration.module.sagan" },
             "3": { "name": "entity.name.namespace.sagan" }
@@ -185,16 +186,50 @@
           }
         },
         {
-          "match": "\\b(let)(\\s+)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "match": "\\b(let)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
           "captures": {
             "1": { "name": "keyword.declaration.variable.sagan" },
             "3": { "name": "variable.other.definition.sagan" }
           }
         },
         {
-          "name": "keyword.control.import.sagan",
-          "match": "\\b(?:import|export|from|as)\\b"
+          "match": "\\b(import)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)(?:(\\s+)(from)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*))?(?:(\\s+)(as)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*))?",
+          "captures": {
+            "1": { "name": "keyword.control.import.sagan" },
+            "3": { "name": "entity.name.namespace.import.sagan" },
+            "5": { "name": "keyword.control.import.from.sagan" },
+            "7": { "name": "entity.name.namespace.source.sagan" },
+            "9": { "name": "keyword.control.import.as.sagan" },
+            "11": { "name": "entity.name.namespace.alias.sagan" }
+          }
+        },
+        {
+          "match": "\\b(export)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)(?:(\\s+)(as)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*))?",
+          "captures": {
+            "1": { "name": "keyword.control.export.sagan" },
+            "3": { "name": "entity.name.namespace.export.sagan" },
+            "5": { "name": "keyword.control.import.as.sagan" },
+            "7": { "name": "entity.name.namespace.alias.sagan" }
+          }
         }
+      ]
+    },
+    "enum-declaration": {
+      "name": "meta.declaration.enum.sagan",
+      "begin": "\\b(enum)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)(\\s*)(\\{)",
+      "beginCaptures": {
+        "1": { "name": "keyword.declaration.type.enum.sagan" },
+        "3": { "name": "entity.name.type.enum.sagan" },
+        "5": { "name": "punctuation.section.enum.begin.sagan" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.enum.end.sagan" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "name": "variable.other.enummember.sagan", "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*" },
+        { "name": "punctuation.separator.comma.sagan", "match": "," }
       ]
     },
     "numbers": {
@@ -231,14 +266,28 @@
     "method-identifiers": {
       "patterns": [
         {
-          "name": "entity.name.function.mutating.sagan",
-          "match": "(?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*!"
+          "match": "(\\.)(\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*!)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "punctuation.accessor.dot.sagan" },
+            "3": { "name": "entity.name.function.mutating.sagan" }
+          }
         },
         {
-          "match": "(\\.)(\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)(?=\\s*\\()",
+          "name": "entity.name.function.mutating.sagan",
+          "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*!"
+        },
+        {
+          "match": "(\\.)(\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)(?=\\s*\\()",
           "captures": {
             "1": { "name": "punctuation.accessor.dot.sagan" },
             "3": { "name": "entity.name.function.member.sagan" }
+          }
+        },
+        {
+          "match": "(\\.)(\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "punctuation.accessor.dot.sagan" },
+            "3": { "name": "variable.other.property.sagan" }
           }
         }
       ]
@@ -246,7 +295,7 @@
     "type-annotations": {
       "patterns": [
         {
-          "match": "((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)(\\s*)(:)(\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "match": "((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)(\\s*)(:)(\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
           "captures": {
             "1": { "name": "variable.parameter.sagan" },
             "3": { "name": "punctuation.separator.type.sagan" },
@@ -254,7 +303,7 @@
           }
         },
         {
-          "match": "(:)(\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "match": "(:)(\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
           "captures": {
             "1": { "name": "punctuation.separator.type.sagan" },
             "3": { "name": "entity.name.type.sagan" }
@@ -266,7 +315,7 @@
       "patterns": [
         {
           "name": "entity.name.function.call.sagan",
-          "match": "(?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*(?=\\s*\\()"
+          "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*(?=\\s*\\()"
         }
       ]
     },
@@ -296,7 +345,7 @@
       "patterns": [
         {
           "name": "variable.other.sagan",
-          "match": "(?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*"
+          "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*"
         }
       ]
     }

@@ -1,0 +1,9 @@
+/// Documentation line.
+/** Documentation block with /* nested comment */ content. */
+enum Result {
+  waiting
+  /// Processing completed.
+  ready
+}
+/* outer /* inner */ outer continues */
+// Ordinary comment.
