@@ -57,7 +57,10 @@ expect_failure() {
 }
 
 expect_output "default tokenizer input" "tokenizer: examples/tokenizer_demo.sagan" "$binary"
+expect_output "version output" "Sagan " "$binary" --version
 expect_output "explicit tokenizer input" "KWD_LET" "$binary" examples/tokenizer_demo.sagan
+printf '%s\n' 'let escaped = "\r\t\0"' > "$work_dir/escaped.sagan"
+expect_output "escaped token text" '\r\t\0' "$binary" "$work_dir/escaped.sagan"
 expect_output "text AST output" "Program" "$binary" --ast examples/parser_demo.sagan
 expect_output "DOT AST output" "digraph SaganAST" "$binary" --ast-dot examples/parser_demo.sagan
 

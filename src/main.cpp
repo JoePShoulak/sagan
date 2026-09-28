@@ -74,18 +74,22 @@ namespace
     const auto actual = tokenize(source);
     if (actual.size() != expected.size())
     {
+      // LCOV_EXCL_START - a passing self-test cannot execute its own failure report.
       std::cerr << "[FAIL] " << name << ": expected " << expected.size() << " tokens, got " << actual.size()
                 << '\n';
       return false;
+      // LCOV_EXCL_STOP
     }
 
     for (std::size_t i = 0; i < expected.size(); i++)
     {
       if (actual[i].id != expected[i])
       {
+        // LCOV_EXCL_START
         std::cerr << "[FAIL] " << name << ": token " << i << " expected " << tokens::name(expected[i])
                   << ", got " << tokens::name(actual[i].id) << '\n';
         return false;
+        // LCOV_EXCL_STOP
       }
     }
 
@@ -115,8 +119,10 @@ namespace
                              tokens::name(tokens::TOKEN_COUNT) == "INVALID_TOKEN";
     if (!(initial && pulled && advanced && exhausted && token_names))
     {
+      // LCOV_EXCL_START
       std::cerr << "[FAIL] tokenizer lifecycle and token-name boundaries\n";
       return false;
+      // LCOV_EXCL_STOP
     }
     std::cout << "[PASS] tokenizer lifecycle and token-name boundaries\n";
     return true;
@@ -139,8 +145,10 @@ namespace
                         sagan::unicode::emoji_sequence_length(tagged_flag, 0) == tagged_flag.size();
     if (!passed)
     {
+      // LCOV_EXCL_START
       std::cerr << "[FAIL] Unicode primitive edge cases\n";
       return false;
+      // LCOV_EXCL_STOP
     }
     std::cout << "[PASS] Unicode primitive edge cases\n";
     return true;
@@ -158,8 +166,10 @@ namespace
       return true;
     }
 
+    // LCOV_EXCL_START
     std::cerr << "[FAIL] " << name << ": expected a lexical error\n";
     return false;
+    // LCOV_EXCL_STOP
   }
 
   auto expect_token_text(const std::string &name, const std::string &source, const std::size_t index,
@@ -168,8 +178,10 @@ namespace
     const auto actual = tokenize(source);
     if (index >= actual.size() || actual[index].text != expected)
     {
+      // LCOV_EXCL_START
       std::cerr << "[FAIL] " << name << ": expected token text '" << expected << "'\n";
       return false;
+      // LCOV_EXCL_STOP
     }
     std::cout << "[PASS] " << name << '\n';
     return true;
@@ -199,8 +211,10 @@ namespace
       }
       catch (const std::exception &error)
       {
+        // LCOV_EXCL_START
         std::cerr << "[FAIL] " << name << ": unexpected exception: " << error.what() << '\n';
         return false;
+        // LCOV_EXCL_STOP
       }
     }
     std::cout << "[PASS] " << name << '\n';
@@ -215,8 +229,10 @@ namespace
     tree.print(output);
     if (output.str() != expected)
     {
+      // LCOV_EXCL_START
       std::cerr << "[FAIL] " << name << ":\n" << output.str();
       return false;
+      // LCOV_EXCL_STOP
     }
     std::cout << "[PASS] " << name << '\n';
     return true;
@@ -234,8 +250,10 @@ namespace
       std::cout << "[PASS] " << name << '\n';
       return true;
     }
+    // LCOV_EXCL_START
     std::cerr << "[FAIL] " << name << ": expected a syntax error\n";
     return false;
+    // LCOV_EXCL_STOP
   }
 
   auto expect_syntax_error_contains(const std::string &name, const std::string &source,
@@ -253,12 +271,16 @@ namespace
         std::cout << "[PASS] " << name << '\n';
         return true;
       }
+      // LCOV_EXCL_START
       std::cerr << "[FAIL] " << name << ": expected diagnostic containing '" << expected_message
                 << "', but found '" << error.what() << "'\n";
       return false;
+      // LCOV_EXCL_STOP
     }
+    // LCOV_EXCL_START
     std::cerr << "[FAIL] " << name << ": expected a syntax error\n";
     return false;
+    // LCOV_EXCL_STOP
   }
 
   auto expect_visual_ast(const std::string &name, const std::string &source) -> bool
@@ -287,8 +309,10 @@ namespace
                         html.contains("data-action=\"fit\"") && html.contains("Wheel to zoom");
     if (!passed)
     {
+      // LCOV_EXCL_START
       std::cerr << "[FAIL] " << name << ": visual output was incomplete\n";
       return false;
+      // LCOV_EXCL_STOP
     }
     std::cout << "[PASS] " << name << '\n';
     return true;
@@ -296,6 +320,9 @@ namespace
 
   auto expect_renderer_rejects_unknown_nodes() -> bool
   {
+    std::ostringstream ignored;
+    unsupported_expression(parser::span{0, 1}).print(ignored, 0);
+    unsupported_statement(parser::span{0, 1}).print(ignored, 0);
     bool expression_rejected = false;
     bool statement_rejected = false;
     try
@@ -322,8 +349,10 @@ namespace
     }
     if (!(expression_rejected && statement_rejected))
     {
+      // LCOV_EXCL_START
       std::cerr << "[FAIL] renderer rejects unknown AST nodes\n";
       return false;
+      // LCOV_EXCL_STOP
     }
     std::cout << "[PASS] renderer rejects unknown AST nodes\n";
     return true;
@@ -425,7 +454,7 @@ namespace
 
     passed &= expect_ids(
         "complete string escape vocabulary",
-        "\"\\\\\\\"\\'\\n\\r\\t\\0\\u{41}\\u{3a9}\\u{1f680}\"\n",
+        "\"\\\\\\\"\\'\\n\\r\\t\\0\\u{41}\\u{3a9}\\u{20ac}\\u{1f680}\"\n",
         {tokens::STRING_BEGIN, tokens::STRING_SEGMENT, tokens::STRING_END, tokens::NEWLINE});
 
     passed &= expect_ids(
@@ -889,6 +918,8 @@ namespace
         "          Block\n"
         "            Return\n");
     passed &= expect_syntax_error("empty match", "fun invalid(value) {\n  match value {\n  }\n}\n");
+    passed &= expect_syntax_error("unterminated match body",
+                                  "fun invalid(value) {\n  match value {\n    case 1 {\n    }\n");
     passed &= expect_syntax_error(
         "duplicate match fallback",
         "fun invalid(value) {\n  match value {\n    case else {\n    }\n    case else {\n    }\n  }\n}\n");
@@ -1021,6 +1052,7 @@ namespace
     passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
     passed &= expect_syntax_error("enum literal member", "enum Invalid {\n  1\n}\n");
     passed &= expect_syntax_error("trailing composition comma", "face Invalid is Renderable, {\n}\n");
+    passed &= expect_syntax_error("unterminated type body", "class Invalid {\n  let value = 1\n");
     passed &= expect_ast(
         "modules imports and exports",
         "module orbital_demo\n"
@@ -1356,7 +1388,9 @@ auto main(const int argc, char **argv) -> int
     }
     catch (const std::exception &)
     {
+      // LCOV_EXCL_START - requires the already-read source file to disappear during diagnostic handling.
       std::cerr << "lexical error: " << error.what() << '\n';
+      // LCOV_EXCL_STOP
     }
     return 1;
   }

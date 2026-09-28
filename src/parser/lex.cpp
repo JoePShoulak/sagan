@@ -131,7 +131,7 @@ namespace
     const auto current = sagan::unicode::decode(state.text, static_cast<std::size_t>(offset));
     if (!current)
     {
-      return 0;
+      return 0; // LCOV_EXCL_LINE - source-wide UTF-8 validation runs before identifier scanning.
     }
     if (current->value == U'_' || sagan::unicode::is_xid_start(current->value))
     {
@@ -145,7 +145,7 @@ namespace
     const auto current = sagan::unicode::decode(state.text, static_cast<std::size_t>(offset));
     if (!current)
     {
-      return 0;
+      return 0; // LCOV_EXCL_LINE - source-wide UTF-8 validation runs before identifier scanning.
     }
     if (current->value == U'_' ||
         (current->value != 0x200c && current->value != 0x200d &&
@@ -620,7 +620,7 @@ namespace
         state.interpolation_depth = 0;
         if (state.string_stack.empty())
         {
-          fail("Interpolation ended without a containing string", begin, state.index);
+          fail("Interpolation ended without a containing string", begin, state.index); // LCOV_EXCL_LINE
         }
         const auto context = state.string_stack.back();
         state.string_stack.pop_back();

@@ -645,7 +645,7 @@ namespace parser
     std::ostringstream output;
     output << "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
            << "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>"
-           << escape_xml(title) << "</title>\n<style>"
+           << escape_xml(title) << "</title>\n<style>" // LCOV_EXCL_LINE - gcov attributes this continued output expression inconsistently.
               ":root{color-scheme:light dark;font-family:Inter,system-ui,sans-serif}body{margin:0;background:#0f172a;color:#e2e8f0}"
               "header{padding:1.4rem 2rem;border-bottom:1px solid #334155}h1{font-size:1.25rem;margin:0}"
               ".grid{display:grid;grid-template-columns:minmax(18rem,34rem) minmax(30rem,1fr);gap:1rem;padding:1rem}"

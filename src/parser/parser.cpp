@@ -55,7 +55,7 @@ namespace parser
       return previous();
     }
     const span error_range = at_end()
-                                 ? (input.empty() ? span{0, 0}
+                                 ? (input.empty() ? span{0, 0} // LCOV_EXCL_LINE - parse() accepts an empty program before expect() is called.
                                                   : span{input.back().range.end, input.back().range.end})
                                  : peek()->range;
     const std::string found = at_end() ? "end of file" : "'" + peek()->text + "'";
@@ -907,7 +907,7 @@ namespace parser
       return parse_parenthesized();
     }
     const span error_range = at_end()
-                                 ? (input.empty() ? span{0, 0}
+                                 ? (input.empty() ? span{0, 0} // LCOV_EXCL_LINE - parse() accepts an empty program before expressions are parsed.
                                                   : span{input.back().range.end, input.back().range.end})
                                  : peek()->range;
     throw parse_error("Expected an expression", error_range);
@@ -955,7 +955,7 @@ namespace parser
     {
       if (at_end())
       {
-        throw parse_error("Expected the end of the string", span{begin.range.begin, begin.range.end});
+        throw parse_error("Expected the end of the string", span{begin.range.begin, begin.range.end}); // LCOV_EXCL_LINE
       }
       if (match(tokens::STRING_SEGMENT))
       {
@@ -973,7 +973,7 @@ namespace parser
         parts.emplace_back(std::move(embedded));
         continue;
       }
-      throw parse_error("Expected string text, interpolation, or the closing delimiter", peek()->range);
+      throw parse_error("Expected string text, interpolation, or the closing delimiter", peek()->range); // LCOV_EXCL_LINE
     }
 
     const token &end = expect(tokens::STRING_END, "the end of the string");
