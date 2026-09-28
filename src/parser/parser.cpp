@@ -54,10 +54,12 @@ namespace parser
     {
       return previous();
     }
+    // LCOV_EXCL_START - the empty-input arm is unreachable because parse() accepts an empty program.
     const span error_range = at_end()
-                                 ? (input.empty() ? span{0, 0} // LCOV_EXCL_LINE - parse() accepts an empty program before expect() is called.
+                                 ? (input.empty() ? span{0, 0}
                                                   : span{input.back().range.end, input.back().range.end})
                                  : peek()->range;
+    // LCOV_EXCL_STOP
     const std::string found = at_end() ? "end of file" : "'" + peek()->text + "'";
     throw parse_error("Expected " + description + ", but found " + found, error_range);
   }
@@ -906,10 +908,12 @@ namespace parser
     {
       return parse_parenthesized();
     }
+    // LCOV_EXCL_START - an empty token stream is accepted before expression parsing begins.
     const span error_range = at_end()
-                                 ? (input.empty() ? span{0, 0} // LCOV_EXCL_LINE - parse() accepts an empty program before expressions are parsed.
+                                 ? (input.empty() ? span{0, 0}
                                                   : span{input.back().range.end, input.back().range.end})
                                  : peek()->range;
+    // LCOV_EXCL_STOP
     throw parse_error("Expected an expression", error_range);
   }
 

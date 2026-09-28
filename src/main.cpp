@@ -209,13 +209,13 @@ namespace
       catch (const parser::parse_error &)
       {
       }
+      // LCOV_EXCL_START - this branch indicates a bug in the tokenizer rather than an expected outcome.
       catch (const std::exception &error)
       {
-        // LCOV_EXCL_START
         std::cerr << "[FAIL] " << name << ": unexpected exception: " << error.what() << '\n';
         return false;
-        // LCOV_EXCL_STOP
       }
+      // LCOV_EXCL_STOP
     }
     std::cout << "[PASS] " << name << '\n';
     return true;
@@ -1224,7 +1224,7 @@ namespace
                                 "/// Documented value.\nlet value = other\n");
     passed &= expect_visual_ast(
         "visual escaped and truncated string AST",
-        "let value = \"&'\\r\\tabcdefghijklmnopqrstuvwxyz0123456789\" + other\n");
+        "let value = \"&'<>\\r\\tabcdefghijklmnopqrstuvwxyz0123456789\" + other\n");
     passed &= expect_renderer_rejects_unknown_nodes();
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
@@ -1386,12 +1386,12 @@ auto main(const int argc, char **argv) -> int
     {
       print_error(read_file(path), error, ast_mode ? "syntax" : "lexical");
     }
+    // LCOV_EXCL_START - requires the already-read source file to disappear during diagnostic handling.
     catch (const std::exception &)
     {
-      // LCOV_EXCL_START - requires the already-read source file to disappear during diagnostic handling.
       std::cerr << "lexical error: " << error.what() << '\n';
-      // LCOV_EXCL_STOP
     }
+    // LCOV_EXCL_STOP
     return 1;
   }
   catch (const std::exception &error)
