@@ -14,9 +14,20 @@ verified_by: null
 bin/sagan path/to/source.sagan
 bin/sagan --self-test
 bin/sagan --version
+bin/sagan --ast path/to/source.sagan
+bin/sagan --ast-dot path/to/source.sagan
+bin/sagan --ast-svg path/to/source.sagan build/tree.svg
+bin/sagan --ast-html path/to/source.sagan build/tree.html
 ```
 
 With no valid source path, the program reports command usage or a file error.
+`--ast` prints a readable tree. `--ast-dot` prints Graphviz DOT without requiring
+Graphviz itself. SVG and HTML modes write their final argument; HTML includes
+both the original input and an embedded visual tree.
+
+The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
+Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
+large syntax trees.
 
 ## Make targets
 
@@ -24,13 +35,17 @@ With no valid source path, the program reports command usage or a file error.
 make all
 make test
 make demo
+make parser-demo
+make ast-demo
 make get-version
 make clean
 ```
 
 `all` builds `bin/sagan`; `test` runs self-tests; `demo` tokenizes the
-repository example; `get-version` prints the calculated build identity; and
-`clean` removes compiler objects and the binary.
+repository example; `parser-demo` prints the parser example's AST; `ast-demo`
+writes the visual source-and-tree page to `build/ast-demo.html`; `get-version`
+prints the calculated build identity; and `clean` removes compiler objects and
+the binary.
 
 Development versions have the form
 `MAJOR.MINOR.COMMITS+gREVISION[.dirty]`. The commit count is measured from the

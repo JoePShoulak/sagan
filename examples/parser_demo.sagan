@@ -5,3 +5,18 @@ let orbital_energy = -2^3^2 + 4 * 5
 let selected = telemetry_ready and altitude >= 100_000 ? altitude ; target_altitude
 let captured = target_altitude := altitude := 125_500.0
 let previous_count = telemetry_count++
+let active_ship = fleet[active_index]
+let course = fleet[active_index]?.navigator.current_course(origin, destination).magnitude()
+let predicted_position = trajectory.sample!(simulation_time + time_step).position
+let gravity = universe.systems[home_system].bodies[planet_index].gravity_at(ship.position)
+let telemetry_value = mission?.telemetry.latest().channels[channel_index].sample_count++
+let corrected_velocity = guidance.compute(ship.position, ship.velocity, target.position).normalized()
+let mission_name = "Voyager"
+let status = "mission ${mission_name}: altitude ${altitude}, course magnitude ${course}"
+let archive_path = r"C:\simulation\telemetry\${mission_name}"
+let formatted_name = "  ${mission_name}  ".trim().length()
+let flight_report = """Mission report
+Altitude and trajectory data are retained exactly.
+Current altitude: ${altitude}
+Computed course magnitude: ${course}
+"""

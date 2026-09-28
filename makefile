@@ -16,6 +16,7 @@ SAGAN_VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)+g$(VERSION_R
 
 SOURCES := \
 	src/main.cpp \
+	src/parser/ast_render.cpp \
 	src/parser/ast_node.cpp \
 	src/parser/lex.cpp \
 	src/parser/parse_error.cpp \
@@ -31,7 +32,7 @@ BUILD_TMP := build/tmp
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test demo parser-demo get-version FORCE
+.PHONY: all clean test demo parser-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -59,6 +60,11 @@ demo: $(TARGET)
 
 parser-demo: $(TARGET)
 	$(TARGET) --ast examples/parser_demo.sagan
+
+ast-demo: $(TARGET)
+	@mkdir -p build
+	$(TARGET) --ast-html examples/parser_demo.sagan build/ast-demo.html
+	@echo "Visual AST demo: build/ast-demo.html"
 
 get-version:
 	@echo $(SAGAN_VERSION)

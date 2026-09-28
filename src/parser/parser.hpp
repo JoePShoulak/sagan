@@ -37,6 +37,7 @@ namespace parser
     auto parse_exponent() -> expression_ref;
     auto parse_postfix() -> expression_ref;
     auto parse_primary() -> expression_ref;
+    auto parse_string() -> expression_ref;
 
   public:
     explicit syntax_parser(std::vector<token> tokens);

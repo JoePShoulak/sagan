@@ -8,6 +8,25 @@ namespace
   {
     stream << std::string(static_cast<std::size_t>(indent), ' ');
   }
+
+  auto escaped_string_text(const std::string &text) -> std::string
+  {
+    std::string result;
+    for (const char character : text)
+    {
+      switch (character)
+      {
+      case '\n': result += "\\n"; break;
+      case '\r': result += "\\r"; break;
+      case '\t': result += "\\t"; break;
+      case '\0': result += "\\0"; break;
+      case '\\': result += "\\\\"; break;
+      case '"': result += "\\\""; break;
+      default: result.push_back(character); break;
+      }
+    }
+    return result;
+  }
 }
 
 namespace parser
@@ -107,6 +126,83 @@ namespace parser
     stream << "AssignValue(:=)\n";
     target->print(stream, indent + 2);
     value->print(stream, indent + 2);
+  }
+
+  call_expression::call_expression(const span source_range, expression_ref called_value,
+                                   std::vector<expression_ref> passed_arguments)
+      : expression(source_range), callee(std::move(called_value)), arguments(std::move(passed_arguments))
+  {
+  }
+
+  auto call_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Call\n";
+    callee->print(stream, indent + 2);
+    for (const auto &argument : arguments)
+    {
+      argument->print(stream, indent + 2);
+    }
+  }
+
+  index_expression::index_expression(const span source_range, expression_ref indexed_value,
+                                     expression_ref index_value)
+      : expression(source_range), target(std::move(indexed_value)), index(std::move(index_value))
+  {
+  }
+
+  auto index_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Index\n";
+    target->print(stream, indent + 2);
+    index->print(stream, indent + 2);
+  }
+
+  member_expression::member_expression(const span source_range, expression_ref object, std::string name,
+                                       const bool is_safe)
+      : expression(source_range), target(std::move(object)), member_name(std::move(name)), safe(is_safe)
+  {
+  }
+
+  auto member_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << (safe ? "SafeMember(" : "Member(") << member_name << ")\n";
+    target->print(stream, indent + 2);
+  }
+
+  string_part::string_part(std::string segment) : text(std::move(segment)) {}
+
+  string_part::string_part(expression_ref embedded_expression)
+      : interpolation(std::move(embedded_expression))
+  {
+  }
+
+  string_expression::string_expression(const span source_range, std::vector<string_part> string_parts,
+                                       const bool is_raw, const bool is_multiline)
+      : expression(source_range), parts(std::move(string_parts)), raw(is_raw), multiline(is_multiline)
+  {
+  }
+
+  auto string_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << (raw ? "RawString" : (multiline ? "MultilineString" : "String")) << "\n";
+    for (const auto &part : parts)
+    {
+      if (part.interpolation)
+      {
+        write_indent(stream, indent + 2);
+        stream << "Interpolation\n";
+        part.interpolation->print(stream, indent + 4);
+      }
+      else
+      {
+        write_indent(stream, indent + 2);
+        stream << "Text(\"" << escaped_string_text(part.text) << "\")\n";
+      }
+    }
   }
 
   let_declaration::let_declaration(const span source_range, std::string identifier,

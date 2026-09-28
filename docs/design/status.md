@@ -15,7 +15,7 @@ verified_by: null
 | Language direction | **Settled enough for early work** | README design and lexical rules |
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
-| Parser and Sagan AST | **Next; not implemented** | roadmap only |
+| Parser and Sagan AST | **In progress** | declarations, precedence, postfix chains, strings, AST renderers, parser demos |
 | Semantic analysis | **Planned; not implemented** | roadmap only |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | README core-library model |
@@ -29,6 +29,16 @@ UTF-8 rejection, NFC normalization, every current keyword and operator,
 focused error cases, and randomized byte-input robustness. Interpretation of
 newlines inside ambiguous `<...>` and `{...}` constructs belongs to the parser
 and is not unfinished tokenizer behavior.
+
+## Parser verification
+
+The parser currently verifies `let` declarations, core primary expressions,
+the settled operator-precedence table, chained calls/indexing/member access,
+ordinary and safe access, mutating method calls, and ordinary, raw, multiline,
+and interpolated strings. Text, DOT, SVG, and interactive HTML tree renderers
+cover every implemented AST node. The parser demo includes successful source
+plus focused chained-comparison, incomplete-member, and empty-interpolation
+errors.
 
 ## Major open language questions
 

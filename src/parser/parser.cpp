@@ -262,17 +262,71 @@ namespace parser
   auto syntax_parser::parse_postfix() -> expression_ref
   {
     auto value = parse_primary();
-    while (match(tokens::PLUS_PLUS) || match(tokens::MINUS_MINUS))
+    while (!at_end())
     {
-      const token operation = previous();
-      value = std::make_unique<unary_expression>(span{value->range.begin, operation.range.end}, operation.text,
-                                                 std::move(value), true);
+      if (match(tokens::LPAREN))
+      {
+        std::vector<expression_ref> arguments;
+        if (!check(tokens::RPAREN))
+        {
+          do
+          {
+            arguments.push_back(parse_expression());
+          } while (match(tokens::COMMA));
+        }
+        const token &close = expect(tokens::RPAREN, "')' after the call arguments");
+        value = std::make_unique<call_expression>(span{value->range.begin, close.range.end}, std::move(value),
+                                                  std::move(arguments));
+        continue;
+      }
+      if (match(tokens::LBRACKET))
+      {
+        auto index = parse_expression();
+        const token &close = expect(tokens::RBRACKET, "']' after the index expression");
+        value = std::make_unique<index_expression>(span{value->range.begin, close.range.end}, std::move(value),
+                                                   std::move(index));
+        continue;
+      }
+      if (match(tokens::DOT) || match(tokens::SAFE_DOT))
+      {
+        const token access = previous();
+        const bool safe = access.id == tokens::SAFE_DOT;
+        if (!match(tokens::IDENTIFIER) && !match(tokens::METHOD_IDENTIFIER))
+        {
+          const span error_range = at_end() || check(tokens::NEWLINE) ? access.range : peek()->range;
+          throw parse_error("Expected a member name after '" + std::string(safe ? "?." : ".") + "'",
+                            error_range);
+        }
+        const token member = previous();
+        value = std::make_unique<member_expression>(span{value->range.begin, member.range.end}, std::move(value),
+                                                    member.text, safe);
+        continue;
+      }
+      if (match(tokens::PLUS_PLUS) || match(tokens::MINUS_MINUS))
+      {
+        const token operation = previous();
+        value = std::make_unique<unary_expression>(span{value->range.begin, operation.range.end}, operation.text,
+                                                   std::move(value), true);
+        continue;
+      }
+      break;
     }
     return value;
   }
 
   auto syntax_parser::parse_primary() -> expression_ref
   {
+    if (match(tokens::STRING))
+    {
+      const token &value = previous();
+      std::vector<string_part> parts;
+      parts.emplace_back(value.text);
+      return std::make_unique<string_expression>(value.range, std::move(parts), true, false);
+    }
+    if (check(tokens::STRING_BEGIN))
+    {
+      return parse_string();
+    }
     if (match(tokens::IDENTIFIER))
     {
       const token &value = previous();
@@ -309,5 +363,41 @@ namespace parser
                                                   : span{input.back().range.end, input.back().range.end})
                                  : peek()->range;
     throw parse_error("Expected an expression", error_range);
+  }
+
+  auto syntax_parser::parse_string() -> expression_ref
+  {
+    const token &begin = expect(tokens::STRING_BEGIN, "the beginning of a string");
+    const bool multiline = begin.text == "\"\"\"";
+    std::vector<string_part> parts;
+
+    while (!check(tokens::STRING_END))
+    {
+      if (at_end())
+      {
+        throw parse_error("Expected the end of the string", span{begin.range.begin, begin.range.end});
+      }
+      if (match(tokens::STRING_SEGMENT))
+      {
+        parts.emplace_back(previous().text);
+        continue;
+      }
+      if (match(tokens::INTERPOLATION_BEGIN))
+      {
+        if (check(tokens::INTERPOLATION_END))
+        {
+          throw parse_error("Expected an expression inside string interpolation", peek()->range);
+        }
+        auto embedded = parse_expression();
+        expect(tokens::INTERPOLATION_END, "'}' after the interpolated expression");
+        parts.emplace_back(std::move(embedded));
+        continue;
+      }
+      throw parse_error("Expected string text, interpolation, or the closing delimiter", peek()->range);
+    }
+
+    const token &end = expect(tokens::STRING_END, "the end of the string");
+    return std::make_unique<string_expression>(span{begin.range.begin, end.range.end}, std::move(parts), false,
+                                               multiline);
   }
 }

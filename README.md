@@ -4,6 +4,8 @@
 
 # Sagan
 
+[![Development version 0.1.14](https://img.shields.io/badge/development-0.1.14-2563eb)](#development-versions)
+
 **Simulation Architecture for Geometry, Astrodynamics, and Numerics**
 
 Sagan is an experimental, strongly typed programming language for scientific and real-time simulation. It is designed to make geometry, astrodynamics, physics, rendering, and multi-entity systems natural to express while retaining predictable behavior and practical performance.
@@ -345,6 +347,7 @@ milestone onward:
 ```bash
 make parser-demo
 bash scripts/parser_demo.sh
+bash scripts/ast_demo.sh
 ```
 
 `make parser-demo` parses `examples/parser_demo.sagan` and prints its current
@@ -352,6 +355,20 @@ AST. The script also runs `examples/parser_error.sagan` and confirms that the
 intentional syntax error is diagnosed. Every major compiler stage will retain a
 similar runnable success demo and focused error demo before being marked
 complete.
+
+`bash scripts/ast_demo.sh` builds and opens `build/ast-demo.html`, a
+self-contained visual demonstration showing the exact Sagan input beside its
+colored AST tree. Use the buttons or mouse wheel to zoom, drag to pan, and use
+**Fit** to restore an overview of the entire tree. It does not require Graphviz. Use
+`bash scripts/ast_demo.sh --no-open` to generate the page without opening it.
+The compiler can also emit the same tree directly:
+
+```bash
+bin/sagan --ast examples/parser_demo.sagan
+bin/sagan --ast-dot examples/parser_demo.sagan
+bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
+bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
+```
 
 ## Development versions
 
@@ -377,6 +394,12 @@ stable-language compatibility. When a major or minor version changes, its base
 commit is updated and the patch counter begins again at zero. Tagged releases
 and source-language compatibility policy will be defined before Sagan's first
 public release.
+
+The badge at the top of this README records the commit-derived numeric version
+for the commit containing the README. During local development, `make
+get-version` remains authoritative because it also includes the Git revision
+and `.dirty` marker. A commit that changes Sagan should update the badge to the
+new patch number in the same change.
 
 The tokenizer validates UTF-8, enforces Unicode 17 `XID_Start` and
 `XID_Continue`, recognizes emoji identifier sequences, and normalizes identifier
@@ -438,14 +461,17 @@ and syntax-error diagnostics.
 
 The parser now handles programs containing `let` declarations, optional simple
 type annotations, optional initializers, identifiers, numeric and Boolean
-literals, grouped expressions, prefix and postfix operators, exponentiation,
-arithmetic, comparisons, equality, logical operations, conditional expressions,
-and value-producing `:=` assignment. It includes an AST-dump command and
-success/error demonstrations.
+literals, grouped expressions, prefix and postfix operators, calls, indexing,
+ordinary and safe member access, mutating method calls, exponentiation,
+ordinary, raw, multiline, and interpolated string expressions, arithmetic,
+comparisons, equality, logical operations, conditional expressions, and
+value-producing `:=` assignment. Postfix operations can be chained freely, as
+in `fleet[index]?.navigator.course(origin).magnitude()`. It includes text, DOT,
+SVG, and self-contained HTML AST output, plus success/error demonstrations.
 
 Implemented expression precedence, from highest to lowest, is:
 
-1. postfix `++` and `--` (calls, indexing, and member access will join this tier);
+1. calls, indexing, member access, safe member access, and postfix `++` and `--`;
 2. right-associative exponentiation `^`;
 3. prefix `++`, `--`, `!`, `not`, unary `+`, and unary `-`;
 4. `*`, `/`, and `%`;

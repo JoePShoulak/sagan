@@ -1,4 +1,5 @@
 #include "parser/lex.hpp"
+#include "parser/ast_render.hpp"
 #include "parser/parse_error.hpp"
 #include "parser/parser.hpp"
 #include "parser/tokenizer.hpp"
@@ -172,6 +173,26 @@ namespace
     return false;
   }
 
+  auto expect_visual_ast(const std::string &name, const std::string &source) -> bool
+  {
+    parser::syntax_parser syntax(tokenize(source));
+    const auto tree = syntax.parse();
+    const std::string dot = parser::render_ast_dot(tree);
+    const std::string svg = parser::render_ast_svg(tree);
+    const std::string html = parser::render_ast_html(source, tree, "AST test");
+    const bool passed = dot.contains("digraph SaganAST") && dot.contains("Binary\\n+") &&
+                        svg.contains("<svg") && svg.contains("Identifier") &&
+                        html.contains("Input source") && html.contains("let result = 1 + value") &&
+                        html.contains("data-action=\"fit\"") && html.contains("Wheel to zoom");
+    if (!passed)
+    {
+      std::cerr << "[FAIL] " << name << ": visual output was incomplete\n";
+      return false;
+    }
+    std::cout << "[PASS] " << name << '\n';
+    return true;
+  }
+
   auto run_self_tests() -> int
   {
     bool passed = true;
@@ -334,8 +355,69 @@ namespace
         "        Identifier(source)\n"
         "        Integer(1)\n");
     passed &= expect_syntax_error("chained comparison", "let invalid = a < b < c\n");
+    passed &= expect_ast(
+        "postfix calls indexing and member access",
+        "let course = fleet[active_index]?.navigator.current_course(origin, destination).magnitude()\n",
+        "Program\n"
+        "  Let(course)\n"
+        "    Call\n"
+        "      Member(magnitude)\n"
+        "        Call\n"
+        "          Member(current_course)\n"
+        "            SafeMember(navigator)\n"
+        "              Index\n"
+        "                Identifier(fleet)\n"
+        "                Identifier(active_index)\n"
+        "          Identifier(origin)\n"
+        "          Identifier(destination)\n");
+    passed &= expect_ast(
+        "mutating method call",
+        "let normalized = vectors[0].normalize!()\n",
+        "Program\n"
+        "  Let(normalized)\n"
+        "    Call\n"
+        "      Member(normalize!)\n"
+        "        Index\n"
+        "          Identifier(vectors)\n"
+        "          Integer(0)\n");
+    passed &= expect_syntax_error("missing member name", "let invalid = spacecraft.\n");
+    passed &= expect_ast(
+        "string interpolation expression",
+        "let message = \"speed: ${distance / time} km/s\"\n",
+        "Program\n"
+        "  Let(message)\n"
+        "    String\n"
+        "      Text(\"speed: \")\n"
+        "      Interpolation\n"
+        "        Binary(/)\n"
+        "          Identifier(distance)\n"
+        "          Identifier(time)\n"
+        "      Text(\" km/s\")\n");
+    passed &= expect_ast(
+        "raw and multiline strings",
+        "let path = r\"C:\\simulation\\${literal}\"\nlet report = \"\"\"line one\nline two\"\"\"\n",
+        "Program\n"
+        "  Let(path)\n"
+        "    RawString\n"
+        "      Text(\"C:\\\\simulation\\\\${literal}\")\n"
+        "  Let(report)\n"
+        "    MultilineString\n"
+        "      Text(\"line one\\nline two\")\n");
+    passed &= expect_ast(
+        "string postfix chain",
+        "let size = \"telemetry\".trim().length()\n",
+        "Program\n"
+        "  Let(size)\n"
+        "    Call\n"
+        "      Member(length)\n"
+        "        Call\n"
+        "          Member(trim)\n"
+        "            String\n"
+        "              Text(\"telemetry\")\n");
+    passed &= expect_syntax_error("empty string interpolation", "let invalid = \"value: ${}\"\n");
+    passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
 
-    std::cout << (passed ? "All tokenizer tests passed.\n" : "Tokenizer tests failed.\n");
+    std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
   }
 
@@ -349,6 +431,16 @@ namespace
     std::ostringstream contents;
     contents << input.rdbuf();
     return contents.str();
+  }
+
+  auto write_file(const std::string &path, const std::string &contents) -> void
+  {
+    std::ofstream output(path, std::ios::binary);
+    if (!output)
+    {
+      throw std::runtime_error("Could not write '" + path + "'");
+    }
+    output << contents;
   }
 
   auto print_error(const std::string &source, const parser::parse_error &error, const std::string &category) -> void
@@ -388,13 +480,55 @@ auto main(const int argc, char **argv) -> int
     return run_self_tests();
   }
 
-  const bool ast_mode = argc == 3 && std::string(argv[1]) == "--ast";
-  if (argc > 1 && !ast_mode && argc != 2)
+  enum class output_mode
   {
-    std::cerr << "usage: sagan [--version | --self-test | --ast FILE | FILE]\n";
+    tokens,
+    ast_text,
+    ast_dot,
+    ast_svg,
+    ast_html,
+  };
+
+  output_mode mode = output_mode::tokens;
+  std::string path;
+  std::string output_path;
+  if (argc == 3 && std::string(argv[1]) == "--ast")
+  {
+    mode = output_mode::ast_text;
+    path = argv[2];
+  }
+  else if (argc == 3 && std::string(argv[1]) == "--ast-dot")
+  {
+    mode = output_mode::ast_dot;
+    path = argv[2];
+  }
+  else if (argc == 4 && std::string(argv[1]) == "--ast-svg")
+  {
+    mode = output_mode::ast_svg;
+    path = argv[2];
+    output_path = argv[3];
+  }
+  else if (argc == 4 && std::string(argv[1]) == "--ast-html")
+  {
+    mode = output_mode::ast_html;
+    path = argv[2];
+    output_path = argv[3];
+  }
+  else if (argc == 2)
+  {
+    path = argv[1];
+  }
+  else if (argc == 1)
+  {
+    path = "examples/tokenizer_demo.sagan";
+  }
+  else
+  {
+    std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
+                 "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | FILE]\n";
     return 2;
   }
-  const std::string path = ast_mode ? argv[2] : (argc == 2 ? argv[1] : "examples/tokenizer_demo.sagan");
+  const bool ast_mode = mode != output_mode::tokens;
   try
   {
     const std::string source = read_file(path);
@@ -404,8 +538,25 @@ auto main(const int argc, char **argv) -> int
     {
       parser::syntax_parser syntax(result);
       const auto tree = syntax.parse();
-      std::cout << "Sagan " << SAGAN_VERSION << " AST: " << path << "\n\n";
-      tree.print(std::cout);
+      if (mode == output_mode::ast_text)
+      {
+        std::cout << "Sagan " << SAGAN_VERSION << " AST: " << path << "\n\n";
+        tree.print(std::cout);
+      }
+      else if (mode == output_mode::ast_dot)
+      {
+        std::cout << parser::render_ast_dot(tree);
+      }
+      else if (mode == output_mode::ast_svg)
+      {
+        write_file(output_path, parser::render_ast_svg(tree));
+        std::cout << "Wrote SVG AST to " << output_path << '\n';
+      }
+      else
+      {
+        write_file(output_path, parser::render_ast_html(source, tree, "Sagan AST: " + path));
+        std::cout << "Wrote visual AST demo to " << output_path << '\n';
+      }
       return 0;
     }
 

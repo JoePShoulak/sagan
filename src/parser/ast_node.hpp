@@ -100,6 +100,53 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct call_expression final : expression
+  {
+    expression_ref callee;
+    std::vector<expression_ref> arguments;
+
+    call_expression(span source_range, expression_ref called_value, std::vector<expression_ref> passed_arguments);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct index_expression final : expression
+  {
+    expression_ref target;
+    expression_ref index;
+
+    index_expression(span source_range, expression_ref indexed_value, expression_ref index_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct member_expression final : expression
+  {
+    expression_ref target;
+    std::string member_name;
+    bool safe;
+
+    member_expression(span source_range, expression_ref object, std::string name, bool is_safe);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct string_part
+  {
+    std::string text;
+    expression_ref interpolation;
+
+    explicit string_part(std::string segment);
+    explicit string_part(expression_ref embedded_expression);
+  };
+
+  struct string_expression final : expression
+  {
+    std::vector<string_part> parts;
+    bool raw;
+    bool multiline;
+
+    string_expression(span source_range, std::vector<string_part> string_parts, bool is_raw, bool is_multiline);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct statement : ast_node
   {
     using ast_node::ast_node;
