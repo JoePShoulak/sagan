@@ -9,5 +9,6 @@ export TMPDIR="$repo_tmp_native"
 export TMP="$repo_tmp_native"
 export TEMP="$repo_tmp_native"
 
+bash scripts/version_test.sh
 make clean all get-version test
 bin/sagan --version

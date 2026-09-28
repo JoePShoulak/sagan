@@ -45,10 +45,10 @@ Sagan uses a commit-derived development version inspired by Schematic. The
 format is `MAJOR.MINOR.PATCH+gREVISION`, with `.dirty` appended when tracked or
 untracked workspace changes are present.
 
-`MAJOR` and `MINOR` are selected deliberately. `PATCH` counts commits since the
-base commit for that development line, while `REVISION` is the abbreviated Git
-commit ID. This makes terminal output and bug reports traceable to their source
-without treating every working build as an official release.
+`MAJOR.MINOR.PATCH` is calculated from Conventional Commit markers after the
+baseline in `version.conf`, while `REVISION` is the abbreviated Git commit ID.
+This makes terminal output and bug reports traceable to their source without
+treating every working build as an official release.
 
 ```bash
 make get-version
@@ -56,7 +56,8 @@ make
 bin/sagan --version
 ```
 
-The version source is regenerated on every build. When starting a new major or
-minor development line, update `VERSION_MAJOR`, `VERSION_MINOR`, and
-`VERSION_BASE_COMMIT` together in the makefile. Public release tags and
-source-compatibility guarantees will be specified before the first release.
+The version source is regenerated on every build. Use `fix:` for a patch,
+`feat:` for a minor change, and `!` or a `BREAKING CHANGE:` footer for a major
+change. See the [versioning workflow](versioning.md) for badge preparation and
+verification. Public release tags and source-compatibility guarantees will be
+specified before the first release.

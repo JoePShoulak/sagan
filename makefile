@@ -3,16 +3,9 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++23 -Wall -Wextra -Wpedantic -Werror -DUNI_ALGO_STATIC_DATA -Ithird_party/uni-algo/include
 LDFLAGS ?=
 
-# Development versions follow Zach Westerman's commit-derived Schematic model.
-# Changing a major or minor version also establishes a new base commit, which
-# resets the automatically calculated patch number to zero.
-VERSION_MAJOR := 0
-VERSION_MINOR := 1
-VERSION_BASE_COMMIT := cb27232c
-VERSION_PATCH := $(shell git rev-list --count $(VERSION_BASE_COMMIT)..HEAD 2>/dev/null || echo 0)
-VERSION_REVISION := $(shell git rev-parse --short=8 HEAD 2>/dev/null || echo unknown)
-VERSION_DIRTY := $(if $(shell git status --porcelain --untracked-files=normal 2>/dev/null),.dirty,)
-SAGAN_VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)+g$(VERSION_REVISION)$(VERSION_DIRTY)
+# Development versions retain Schematic's Git-derived identity while using
+# Conventional Commit markers to declare semantic-version impact.
+SAGAN_VERSION := $(shell bash scripts/version.sh current 2>/dev/null || echo 0.0.0+gunknown)
 
 SOURCES := \
 	src/main.cpp \

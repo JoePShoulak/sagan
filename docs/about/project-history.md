@@ -23,7 +23,7 @@ Development currently proceeds through five broad stages:
 
 1. language definition — sufficiently defined for early implementation;
 2. tokenizer — complete for the current lexical specification;
-3. parser and syntax tree — next;
+3. parser and syntax tree — in progress;
 4. semantic analysis — planned; and
 5. C++ code generation — planned.
 
@@ -37,6 +37,6 @@ major and minor version manually and derives its patch number from the commits
 after a chosen cutoff commit.
 
 Sagan retains that playful, traceable connection between the compiler and its
-Git history while adding the exact abbreviated revision, dirty-worktree
-reporting, and unconditional build-time regeneration to prevent stale version
-information.
+Git history while adding Conventional Commit declarations for semantic-version
+impact, the exact abbreviated revision, dirty-worktree reporting, and
+unconditional build-time regeneration to prevent stale version information.

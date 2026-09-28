@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.1.14](https://img.shields.io/badge/development-0.1.14-2563eb)](#development-versions)
+[![Development version 0.2.0](https://img.shields.io/badge/development-0.2.0-2563eb)](#development-versions)
 
 **Simulation Architecture for Geometry, Astrodynamics, and Numerics**
 
@@ -372,17 +372,26 @@ bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 
 ## Development versions
 
-Sagan identifies development builds with a Git-derived version such as
-`0.1.3+g1a2b3c4d`:
+Sagan identifies development builds with a Git-derived semantic version such as
+`0.2.0+g1a2b3c4d`:
 
-- `0.1` is the manually selected major and minor language-development line;
-- `3` is the number of commits since that line's base commit;
+- `0.2.0` is calculated by applying declared commit impacts after the configured
+  version baseline;
 - `g1a2b3c4d` identifies the exact Git revision; and
 - `.dirty` is appended when the build includes uncommitted or untracked changes.
 
 This system is adapted from Schematic's dynamic in-app version numbering. Sagan
 regenerates the version during every build so it cannot remain stale after a new
-commit. Inspect the version without building or run the compiled executable with:
+commit. A Conventional Commit subject declares the impact:
+
+- `fix:` increments the patch version;
+- `feat:` increments the minor version;
+- a type followed by `!`, or a `BREAKING CHANGE:` footer, increments the major
+  version; and
+- `docs:`, `test:`, `build:`, `chore:`, and other types do not change the
+  language version.
+
+Inspect the version without building or run the compiled executable with:
 
 ```bash
 make get-version
@@ -390,16 +399,24 @@ bin/sagan --version
 ```
 
 The generated version is a development-build identity, not yet a promise of
-stable-language compatibility. When a major or minor version changes, its base
-commit is updated and the patch counter begins again at zero. Tagged releases
-and source-language compatibility policy will be defined before Sagan's first
-public release.
+stable-language compatibility. Tagged releases and source-language
+compatibility policy will be defined before Sagan's first public release.
 
 The badge at the top of this README records the commit-derived numeric version
 for the commit containing the README. During local development, `make
 get-version` remains authoritative because it also includes the Git revision
-and `.dirty` marker. A commit that changes Sagan should update the badge to the
-new patch number in the same change.
+and `.dirty` marker. Before a version-changing commit, prepare the badge with
+one of these commands; the helper edits the badge but never commits or pushes:
+
+```bash
+bash scripts/version.sh prepare patch
+bash scripts/version.sh prepare minor
+bash scripts/version.sh prepare major
+```
+
+Use the matching `fix:`, `feat:`, or breaking-change commit marker. After the
+commit, `bash scripts/version.sh check-badge` verifies that the badge and Git
+history agree.
 
 The tokenizer validates UTF-8, enforces Unicode 17 `XID_Start` and
 `XID_Continue`, recognizes emoji identifier sequences, and normalizes identifier

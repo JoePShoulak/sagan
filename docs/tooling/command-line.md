@@ -48,6 +48,9 @@ prints the calculated build identity; and `clean` removes compiler objects and
 the binary.
 
 Development versions have the form
-`MAJOR.MINOR.COMMITS+gREVISION[.dirty]`. The commit count is measured from the
-configured base commit, and `.dirty` records tracked or untracked working-tree
-changes.
+`MAJOR.MINOR.PATCH+gREVISION[.dirty]`. Conventional Commit markers after the
+configured baseline determine the numeric version, and `.dirty` records tracked
+or untracked working-tree changes. Use `bash scripts/version.sh prepare TYPE`
+before a patch, minor, or major commit and `bash scripts/version.sh check-badge`
+afterward. The complete workflow is documented in
+[Versioning](../contributing/versioning.md).
