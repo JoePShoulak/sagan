@@ -15,6 +15,7 @@
 - Javascript style .() notation as well as . chaining and list dot chaining specifically
 - No top level expressions
 - Lambdas are functions
+- Interface composition (including as types)
 
 # Purpose
 - Cosmic physics simulation
@@ -92,6 +93,10 @@ face interface_name {
   fun method3_name(p1, p2, p3)
 }
 ```
+
+# Technology
+## Lexer
+
 
 # Notes
 ```
