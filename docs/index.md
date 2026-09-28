@@ -8,6 +8,11 @@ verified_by: null
 ---
 
 # Sagan Documentation
+
+<p align="center">
+  <img src="assets/images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="240">
+</p>
+
 Sagan is an experimental, strongly typed programming language for geometry,
 astrodynamics, numerical work, and real-time simulation.
 

@@ -4,6 +4,7 @@
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
   "version": "0.1.0",
   "publisher": "sagan-language",
+  "icon": "images/sagan-logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/JoePShoulak/sagan.git",

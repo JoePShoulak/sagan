@@ -9,6 +9,8 @@ theme:
   name: material
   custom_dir: docs/overrides
   language: en
+  logo: assets/images/sagan-logo.png
+  favicon: assets/images/favicon.png
   features:
     - navigation.indexes
     - navigation.sections

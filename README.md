@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="240">
+</p>
+
 # Sagan
 
 **Simulation Architecture for Geometry, Astrodynamics, and Numerics**
