@@ -234,7 +234,7 @@ namespace parser
       }
       if (const auto *assignment = dynamic_cast<const assignment_statement *>(&value))
       {
-        auto node = std::make_unique<visual_node>(visual_node{"Assignment\n=", "statement"});
+        auto node = std::make_unique<visual_node>(visual_node{"Assignment\n" + assignment->operation, "statement"});
         node->children.push_back(make_expression_node(*assignment->target));
         node->children.push_back(make_expression_node(*assignment->value));
         return node;

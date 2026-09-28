@@ -82,6 +82,12 @@ let trajectory_samples = [
   ...historical_positions,
 ]
 fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
+  telemetry_count += 1
+  remaining_fuel -= fuel_burn
+  thrust *= throttle
+  average_velocity /= sample_count
+  ring_index %= ring_capacity
+  correction_weight ^= correction_exponent
   if telemetry_ready and altitude >= target_altitude {
     let next_course = navigator.current_course(orbital_position, target_position)
     ship.guidance.course = next_course

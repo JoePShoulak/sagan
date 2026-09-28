@@ -45,7 +45,7 @@ match_statement := "match" expression "{" newline* match_case
 match_case  := "case" (expression | "else") block
 hope_statement := "hope" block ("unless" expression block)* ("finally" block)?
 scream_statement := "scream" expression
-assignment_statement := expression "=" expression
+assignment_statement := expression ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=") expression
 expression_statement := expression
 function_declaration := "fun" identifier "(" parameters? ")" (":" type)? function_body
 function_body := block | "=>" expression

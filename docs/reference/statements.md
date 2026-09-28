@@ -17,7 +17,8 @@ Intended statements include declarations, assignments, expression statements,
 `break`, `continue`, `return`, `yield`, and exception constructs.
 
 **Implemented in the parser:** newline-separated blocks, `let` declarations,
-ordinary `=` assignment statements, expression statements inside blocks,
+ordinary `=` and compound `+=`, `-=`, `*=`, `/=`, `%=`, and `^=` assignment
+statements, expression statements inside blocks,
 `if`/`else` including `else if` chains, `for name in expression`, `while`, and
 `until` loops, unlabeled `break` and `continue`, and bare or value-bearing
 `return`. The parser also accepts `match expression` with one or more
@@ -36,6 +37,11 @@ At the program root, the parser accepts declarations only. Executable control
 flow, expression statements, and assignment statements belong inside function
 bodies. This preserves Sagan's declaration-only module scope while entry-point
 semantics remain under design.
+
+Compound assignment is statement-only, like ordinary `=` reassignment. The
+target and value are retained separately in the AST along with the exact
+operator. Semantic analysis will validate assignability, types, and operator
+support.
 
 `unless` is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.

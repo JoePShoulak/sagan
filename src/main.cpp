@@ -542,6 +542,41 @@ namespace
         "                    Identifier(retry)\n"
         "            Else\n"
         "              Block\n");
+    passed &= expect_ast(
+        "compound assignment statements",
+        "fun accumulate(delta) {\n"
+        "  total += delta\n"
+        "  remaining -= 1\n"
+        "  scale *= factor\n"
+        "  distance /= elapsed\n"
+        "  index %= capacity\n"
+        "  energy ^= exponent\n"
+        "}\n",
+        "Program\n"
+        "  Function(accumulate)\n"
+        "    Parameter(delta)\n"
+        "    Block\n"
+        "      Assignment(+=)\n"
+        "        Identifier(total)\n"
+        "        Identifier(delta)\n"
+        "      Assignment(-=)\n"
+        "        Identifier(remaining)\n"
+        "        Integer(1)\n"
+        "      Assignment(*=)\n"
+        "        Identifier(scale)\n"
+        "        Identifier(factor)\n"
+        "      Assignment(/=)\n"
+        "        Identifier(distance)\n"
+        "        Identifier(elapsed)\n"
+        "      Assignment(%=)\n"
+        "        Identifier(index)\n"
+        "        Identifier(capacity)\n"
+        "      Assignment(^=)\n"
+        "        Identifier(energy)\n"
+        "        Identifier(exponent)\n");
+    passed &= expect_syntax_error("compound assignment without value", "fun invalid() {\n  total +=\n}\n");
+    passed &= expect_syntax_error("chained compound assignment",
+                                  "fun invalid() {\n  first += second += third\n}\n");
     passed &= expect_syntax_error("top-level expression statement", "launch()\n");
     passed &= expect_syntax_error("top-level control flow", "if ready {\n}\n");
     passed &= expect_syntax_error("unterminated statement block", "fun launch() {\n  launch_engine()\n");

@@ -13,6 +13,10 @@ delimiters, member access, safe access `?.`, calls, spread `...`, assignment
 with value `:=`, `=>`, comparisons, arithmetic, logical words, increment,
 decrement, and compound-assignment tokens.
 
+Compound assignments are parsed as statements rather than expressions. Unlike
+the value-producing `:=`, they do not participate in expression precedence or
+chaining.
+
 **Settled design:** `^` means exponentiation; `and`, `or`, `not`, and
 `!` are logical operators; `? ... ; ...` is the conditional expression; and
 prefix/postfix increment return new/old values respectively.

@@ -236,9 +236,11 @@ namespace parser
   struct assignment_statement final : statement
   {
     expression_ref target;
+    std::string operation;
     expression_ref value;
 
-    assignment_statement(span source_range, expression_ref target_value, expression_ref assigned_value);
+    assignment_statement(span source_range, expression_ref target_value, std::string assignment_operation,
+                         expression_ref assigned_value);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 

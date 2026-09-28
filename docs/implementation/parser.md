@@ -35,7 +35,8 @@ syntax trees with source-spanned diagnostics.
 - Conditional expressions
 - Right-associative value-producing `:=` assignment
 - Statement blocks, including empty and nested blocks
-- Ordinary `=` assignment and expression statements inside blocks
+- Ordinary and compound (`+=`, `-=`, `*=`, `/=`, `%=`, `^=`) assignment
+  statements, plus expression statements inside blocks
 - `if`/`else` statements and `else if` chains
 - `for`/`in`, `while`, and `until` loops
 - Unlabeled `break` and `continue`, restricted to loop bodies
@@ -75,6 +76,6 @@ Text, DOT, SVG, and HTML are also available from `bin/sagan` through `--ast`,
 supports every AST node the parser can produce; new node kinds must be added to
 the renderer as their parser slices land.
 
-The next slices are compound assignment, documentation-comment attachment, and
-final grammar/error cleanup.
+The next slices are documentation-comment attachment and final grammar/error
+cleanup.
 Error recovery beyond the first syntax error also remains future parser work.

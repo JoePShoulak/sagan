@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.10.0](https://img.shields.io/badge/development-0.10.0-2563eb)](#development-versions)
+[![Development version 0.11.0](https://img.shields.io/badge/development-0.11.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -104,6 +104,7 @@ The examples below are a design sketch, not yet a formal grammar.
 ```sagan
 let altitude: Float = 125_000.0
 altitude = altitude + 500.0
+altitude += 500.0
 ```
 
 `:=` assigns a value and evaluates to the value assigned:
@@ -283,13 +284,25 @@ let new_value = ++count
 let old_value = count++
 ```
 
-Prefix returns the new value; postfix returns the old value. Compound assignment includes:
+Prefix returns the new value; postfix returns the old value. The parser accepts
+all six compound assignments as statements inside function bodies:
 
 ```text
 ++  --  +=  -=  *=  /=  %=  ^=
 ```
 
-`^` is exponentiation. Sagan does not initially provide bitwise operators.
+```sagan
+total += delta
+remaining -= 1
+scale *= factor
+distance /= elapsed
+index %= capacity
+energy ^= exponent
+```
+
+`^` is exponentiation, so `^=` performs exponentiation followed by assignment.
+Sagan does not initially provide bitwise operators. Assignability and operator
+compatibility are semantic-analysis work.
 
 ### Logical operators
 
@@ -579,7 +592,8 @@ ordinary and safe member access, mutating method calls, exponentiation,
 ordinary, raw, multiline, and interpolated string expressions, arithmetic,
 arrays, dictionaries, vectors, coordinates, spread expressions, comparisons,
 equality, logical operations, conditional expressions, and value-producing
-`:=` assignment. It also parses statement blocks, ordinary `=` assignments and
+`:=` assignment. It also parses statement blocks, ordinary and compound
+assignment statements (`=`, `+=`, `-=`, `*=`, `/=`, `%=`, and `^=`), and
 expression statements within blocks, `if`/`else if`/`else`, `for`/`in`,
 `while`, and `until` control flow, unlabeled `break` and `continue`, and bare or
 value-bearing `return` statements. Block-bodied `match`/`case` statements

@@ -332,15 +332,16 @@ namespace parser
   }
 
   assignment_statement::assignment_statement(const span source_range, expression_ref target_value,
-                                               expression_ref assigned_value)
-      : statement(source_range), target(std::move(target_value)), value(std::move(assigned_value))
+                                               std::string assignment_operation, expression_ref assigned_value)
+      : statement(source_range), target(std::move(target_value)), operation(std::move(assignment_operation)),
+        value(std::move(assigned_value))
   {
   }
 
   auto assignment_statement::print(std::ostream &stream, const int indent) const -> void
   {
     write_indent(stream, indent);
-    stream << "Assignment(=)\n";
+    stream << "Assignment(" << operation << ")\n";
     target->print(stream, indent + 2);
     value->print(stream, indent + 2);
   }

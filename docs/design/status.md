@@ -37,8 +37,8 @@ the settled operator-precedence table, chained calls/indexing/member access,
 ordinary and safe access, mutating method calls, ordinary/raw/multiline/
 interpolated strings, and array/dictionary/vector/coordinate expressions with
 spreads and trailing commas. Text, DOT, SVG, and interactive HTML tree renderers
-cover every implemented AST node. Blocks, ordinary assignment and expression
-statements, and `if`/`else if`/`else` control flow are also verified. The parser
+cover every implemented AST node. Blocks, ordinary and compound assignment,
+expression statements, and `if`/`else if`/`else` control flow are also verified. The parser
 enforces declaration-only program roots and provides named, typed, block-bodied
 functions as statement containers. `for`/`in`, `while`, and `until` loops,
 unlabeled `break` and `continue`, and bare or value-bearing `return` statements

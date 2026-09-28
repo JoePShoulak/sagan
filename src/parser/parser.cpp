@@ -365,14 +365,17 @@ namespace parser
   auto syntax_parser::parse_expression_statement() -> statement_ref
   {
     auto target = parse_expression();
-    if (!match(tokens::EQUAL))
+    if (!match(tokens::EQUAL) && !match(tokens::PLUS_EQUAL) && !match(tokens::MINUS_EQUAL) &&
+        !match(tokens::STAR_EQUAL) && !match(tokens::SLASH_EQUAL) && !match(tokens::PERCENT_EQUAL) &&
+        !match(tokens::CARET_EQUAL))
     {
       const span range = target->range;
       return std::make_unique<expression_statement>(range, std::move(target));
     }
+    const token assignment = previous();
     auto value = parse_expression();
     const span range{target->range.begin, value->range.end};
-    return std::make_unique<assignment_statement>(range, std::move(target), std::move(value));
+    return std::make_unique<assignment_statement>(range, std::move(target), assignment.text, std::move(value));
   }
 
   auto syntax_parser::parse_if_statement() -> statement_ref

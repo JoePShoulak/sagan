@@ -14,7 +14,12 @@ and `=` is used for initialization and reassignment.
 ```sagan
 let altitude: Float = 125_000.0
 altitude = altitude + 500.0
+altitude += 500.0
 ```
+
+The parser supports `=`, `+=`, `-=`, `*=`, `/=`, `%=`, and `^=` reassignment
+statements inside function bodies. `^=` uses Sagan's exponentiation operator;
+there are no initial bitwise operators.
 
 Numbers may use decimal integers, decimal floating point, scientific notation,
 and separators between digits:
