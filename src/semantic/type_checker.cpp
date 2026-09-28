@@ -837,6 +837,7 @@ namespace semantic
     public:
       auto run(const parser::program &tree) -> type_model
       {
+        add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void"}});
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements) statement(*entry, true);
         return std::move(model);

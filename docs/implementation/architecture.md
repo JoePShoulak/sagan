@@ -24,6 +24,8 @@ verified_by: null
 - `src/semantic/type_checker.*`: scalar inference, compatibility,
   overload/call/return checks, and a printable type model.
 - `src/semantic/semantic_error.hpp`: source-located semantic diagnostics.
+- `src/codegen/cpp_generator.*`: C++ emission for the initial executable
+  subset, including portable identifier encoding and built-in output.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
@@ -34,14 +36,14 @@ verified_by: null
 
 The CLI reads a file, tokenizes it, and either prints the token stream or passes
 it to the parser. AST modes print or render the resulting tree; semantic and
-type modes perform name resolution and optionally initial type checking.
+type modes perform name resolution and optionally initial type checking. The
+C++ mode validates an executable entry point and emits the supported subset.
 Lexical, syntax, and semantic failures are reported with source locations.
 
 ```text
-UTF-8 source -> tokenizer -> parser -> source-spanned AST -> scope/name analysis -> type checking
-                                            |                         |                    |
-                                            +-> text / DOT / SVG / HTML                    +-> type model
-                                                                      +-> semantic model
+UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> C++ emission
+                                  |              |               |              |
+                                  +-> renderers   +-> model       +-> model      +-> native demo
 ```
 
 Codecov measures the front-end, semantic pass, and CLI suite. Coverage includes
@@ -50,6 +52,6 @@ semantic errors, renderer output, CLI behavior, and defensive invariants.
 
 ## Planned components
 
-Generic annotations, member/object typing, and later semantic passes, runtime
-support, standard/core libraries, C++ emission, and native-toolchain invocation
+Generic annotations, member/object typing, broader lowering, runtime support,
+standard/core libraries, and native-toolchain invocation by the compiler itself
 are not implemented.

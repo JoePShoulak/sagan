@@ -337,6 +337,7 @@ namespace semantic
         {
           declare(std::string(builtin), "builtin type", parser::span{0, 0});
         }
+        declare("print", "function", parser::span{0, 0});
       }
 
       auto run(const parser::program &tree) -> semantic_model

@@ -130,8 +130,9 @@ bash scripts/execution_demo.sh
 ```
 
 The script prints the Sagan input, emits and prints C++, compiles it with
-`g++`, runs the native program, and reports its exit code. This demonstrates
-only the documented initial backend subset, not the entire parsed language.
+`g++`, runs the native program, displays the program's own `print` output, and
+reports its exit code. This demonstrates only the documented initial backend
+subset, not the entire parsed language.
 
 The string error fixture demonstrates the focused diagnostic for an empty
 `${}` interpolation. The collection fixture demonstrates the minimum

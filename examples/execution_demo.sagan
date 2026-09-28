@@ -2,6 +2,8 @@ fun 🚀(value: Int): Int => value + 2
 
 fun main(): Int {
   let answer = 🚀(40)
+  print("The answer from 🚀 is:")
+  print(answer)
 
   if answer == 42 {
     return 0

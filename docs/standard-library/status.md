@@ -16,6 +16,7 @@ verified_by: null
 | Rendering as explicit first-party core library | Settled | Not implemented |
 | Module and package names | Open | Not implemented |
 | General standard-library boundary | Open | Not implemented |
+| Basic output intrinsic | Provisional | `print(value)` implemented for the native subset |
 
 No physics, rendering, or general standard-library API should be inferred from
 the project's intended domains. Physical units and coordinate frames are not

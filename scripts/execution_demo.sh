@@ -41,4 +41,4 @@ if [[ "$status" -ne 0 ]]; then
   echo "Execution demo failed." >&2
   exit 1
 fi
-echo "Execution demo passed: Sagan called an emoji-named function and selected the success branch."
+echo "Execution demo passed: Sagan printed a result, called an emoji-named function, and selected the success branch."

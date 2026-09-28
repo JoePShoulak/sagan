@@ -1454,6 +1454,10 @@ namespace
         "let selected = choose(2.0, true)\n",
         {"count: Int8", "selected: Float64", "baseline: Float64", "Bool @", "Int8 @", "Float64 @"});
     passed &= expect_type_model(
+        "built-in print",
+        "fun show(value: Int): Void {\n  print(\"value\")\n  print(value)\n}\n",
+        {"value: Int64", "Void @"});
+    passed &= expect_type_model(
         "exact overload selection",
         "fun identity(value: Int): Int => value\n"
         "fun identity(value: String): String => value\n"

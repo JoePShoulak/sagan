@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.17.1](https://img.shields.io/badge/development-0.17.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.18.0](https://img.shields.io/badge/development-0.18.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -30,7 +30,8 @@ well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
 and dictionaries plus dimensioned vectors and coordinates are inferred. Generic
 annotations, member typing, the runtime, and the standard library are not yet
 implemented. An initial C++ emitter can compile the validated scalar/control-
-flow subset into a native executable.
+flow subset into a native executable, including visible output through the
+built-in `print(value)` function.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checking
