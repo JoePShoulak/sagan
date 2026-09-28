@@ -18,9 +18,9 @@ astrodynamics, numerical work, and real-time simulation.
 
 !!! info "Current implementation"
     The repository contains a complete **tokenizer and parser** for the current
-    specifications plus the first semantic pass: scopes, symbols, duplicate
-    checks, and name resolution. It can emit syntax trees and a semantic model.
-    It does not yet contain type checking, a runtime, or C++ code generation.
+    specifications plus name resolution and initial scalar/function type
+    checking. It can emit syntax trees, a semantic model, and a type model. It
+    does not yet contain collection/member typing, a runtime, or C++ generation.
 
 ## Where to begin
 

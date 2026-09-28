@@ -12,13 +12,13 @@ The present executable implements the syntactic front end and initial semantic
 pass of a future compiler:
 
 ```text
-UTF-8 source -> tokenizer -> token stream -> parser -> AST -> scope/name analysis
+UTF-8 source -> tokenizer -> token stream -> parser -> AST -> scope/name analysis -> scalar type checking
 ```
 
 The remaining planned pipeline is:
 
 ```text
-semantic model -> type checking -> C++ generation -> C++ compiler -> native executable
+typed program -> C++ generation -> C++ compiler -> native executable
 ```
 
 The first line is operational. Read about the [architecture](architecture.md),

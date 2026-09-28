@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.14.0](https://img.shields.io/badge/development-0.14.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.15.0](https://img.shields.io/badge/development-0.15.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -21,19 +21,21 @@ up explicit types or predictable behavior.
 ## Current status
 
 The tokenizer and parser are complete for the current lexical and syntax
-specifications. The first semantic-analysis pass now builds lexical scopes,
-collects symbols, resolves identifiers, and diagnoses duplicate and undefined
-names. Sagan can also emit text, DOT, SVG, and interactive HTML syntax trees.
-Type checking, the runtime, C++ code generation, and the standard library are
-not implemented yet.
+specifications. The semantic front end now resolves names, infers core scalar
+types, checks calls and returns, validates core operators and conditions, and
+enforces lossless numeric widening. Sagan can print semantic and type models as
+well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
+and dictionaries plus dimensioned vectors and coordinates are inferred. Generic
+annotations, member typing, the runtime, C++ generation, and the standard
+library are not yet implemented.
 
 ```text
-UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis
-                                  |                    |
-                                  |                    +-> semantic model
+UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checking
+                                  |                    |                    |
+                                  |                    +-> semantic model   +-> type model
                                   +-> text / DOT / SVG / HTML
 
-Planned: semantic model -> type checking -> C++ generation -> native executable
+Planned: typed program -> C++ generation -> native executable
 ```
 
 The detailed and continuously maintained status lives in the
@@ -66,6 +68,7 @@ Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
 bash scripts/test.sh
 make parser-demo
 bash scripts/semantic_demo.sh
+bash scripts/type_demo.sh
 bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
 make coverage
@@ -81,6 +84,7 @@ bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
+bin/sagan --types examples/type_demo.sagan
 bin/sagan --version
 ```
 

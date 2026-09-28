@@ -29,14 +29,15 @@ let entities = 10_000
 let gravity = 6.674_30e-11
 ```
 
-**Implemented syntax:** the tokenizer recognizes these numeric forms and the
-parser produces declarations and assignment statements. Neither stage decides
-whether the declared type exists, whether a value is assignable, or what an
-assignment does at runtime.
+**Implemented semantics:** the checker infers scalar values, enforces compatible
+annotations and assignments, selects the smallest fitting signed integer width,
+defaults floating literals to `Float64`, and permits only provably lossless
+widening. `Int` and `Float` default to 64-bit widths when no initializer supplies
+a narrower inference. A declaration must provide an annotation, initializer, or
+both.
 
-**Provisional design:** arrays use `[]`, dictionaries use `{key: value}`,
-vectors use `<...>`, and coordinates use parenthesized lists of at least two
-elements. Their syntax is parsed; construction, typing, and runtime behavior
-await semantic analysis and later compiler stages. Physical units and
-coordinate frames are deliberately not distinguished by the initial type
-system.
+Arrays infer one homogeneous element type; dictionaries infer homogeneous key
+and value types; and vectors and coordinates infer a numeric component type and
+dimension. Empty arrays/dictionaries await generic annotation syntax. Runtime
+construction remains future work. Physical units and coordinate frames are
+deliberately not distinguished by the initial type system.

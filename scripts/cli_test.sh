@@ -65,6 +65,8 @@ expect_output "text AST output" "Program" "$binary" --ast examples/parser_demo.s
 expect_output "DOT AST output" "digraph SaganAST" "$binary" --ast-dot examples/parser_demo.sagan
 expect_output "semantic model output" "SemanticModel" \
   "$binary" --semantic examples/semantic_demo.sagan
+expect_output "type model output" "TypeModel" \
+  "$binary" --types examples/type_demo.sagan
 
 expect_output "SVG AST file" "Wrote SVG AST" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/parser.svg"
@@ -82,6 +84,16 @@ expect_failure "undefined-name semantic diagnostic" 1 "Undefined name 'missing_v
   "$binary" --semantic examples/semantic_undefined_error.sagan
 expect_failure "duplicate-name semantic diagnostic" 1 "Duplicate declaration of 'repeated'" \
   "$binary" --semantic examples/semantic_duplicate_error.sagan
+expect_failure "type diagnostic" 1 "Function return requires Bool, but received Int" \
+  "$binary" --types examples/type_error.sagan
+expect_failure "uninferred variable diagnostic" 1 "requires a type annotation or initializer" \
+  "$binary" --types examples/type_uninferred_error.sagan
+expect_failure "heterogeneous array diagnostic" 1 "Array elements have incompatible types" \
+  "$binary" --types examples/type_array_error.sagan
+expect_failure "heterogeneous dictionary diagnostic" 1 "Dictionary values have incompatible types" \
+  "$binary" --types examples/type_dictionary_error.sagan
+expect_failure "vector component diagnostic" 1 "Vector components must be numeric" \
+  "$binary" --types examples/type_vector_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

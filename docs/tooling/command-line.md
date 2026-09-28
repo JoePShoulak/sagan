@@ -19,6 +19,7 @@ bin/sagan --ast-dot path/to/source.sagan
 bin/sagan --ast-svg path/to/source.sagan build/tree.svg
 bin/sagan --ast-html path/to/source.sagan build/tree.html
 bin/sagan --semantic path/to/source.sagan
+bin/sagan --types path/to/source.sagan
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -31,6 +32,8 @@ visual tree.
 `--semantic` parses the file, performs the implemented scope and name-resolution
 pass, and prints scopes, symbols, and resolved references. It reports undefined
 or duplicate names, but it does not type-check or execute the program.
+`--types` additionally runs the implemented type checker and prints inferred
+declaration and expression types.
 
 The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
@@ -45,11 +48,14 @@ bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
+bin/sagan --types examples/type_demo.sagan
 ```
 
 Successful AST output confirms only lexical and syntactic validity. Successful
-semantic output additionally confirms the implemented name and scope rules. No
-current command type-checks, generates C++, or executes Sagan code.
+semantic output additionally confirms the implemented name and scope rules.
+Type output confirms the documented scalar/function and literal-collection
+subset, but does not yet establish member types or generic annotations. No
+command generates C++ or executes Sagan code.
 
 ## Make targets
 
@@ -61,6 +67,7 @@ make demo
 make parser-demo
 make ast-demo
 make semantic-demo
+make type-demo
 make get-version
 make clean
 ```
@@ -72,6 +79,7 @@ bash scripts/test.sh
 bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
 bash scripts/semantic_demo.sh
+bash scripts/type_demo.sh
 bash scripts/docs.sh check
 ```
 
@@ -80,9 +88,9 @@ instrumented build and produces LCOV output when `lcov` is installed; `demo` tok
 repository example; `parser-demo` prints the parser example's AST; `ast-demo`
 writes the visual source-and-tree page to `build/ast-demo.html`; `get-version`
 prints the calculated build identity; `semantic-demo` prints the successful
-semantic model; and `clean` removes compiler objects and the binary. The test
-target also exercises semantic success and focused duplicate/undefined-name
-failures.
+semantic model; `type-demo` prints the successful type model; and `clean`
+removes compiler objects and the binary. The test target exercises semantic and
+type success plus focused name/type failures.
 
 Development versions have the form
 `MAJOR.MINOR.PATCH+gREVISION[.dirty]`. Conventional Commit markers after the

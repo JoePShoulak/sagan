@@ -7,6 +7,7 @@
 #include "parser/unicode.hpp"
 #include "semantic/analyzer.hpp"
 #include "semantic/semantic_error.hpp"
+#include "semantic/type_checker.hpp"
 #include "version.hpp"
 
 #include <fstream>
@@ -416,6 +417,57 @@ namespace
     }
     // LCOV_EXCL_START
     std::cerr << "[FAIL] " << name << ": expected a semantic error\n";
+    return false;
+    // LCOV_EXCL_STOP
+  }
+
+  auto expect_type_model(const std::string &name, const std::string &source,
+                         const std::vector<std::string> &expected) -> bool
+  {
+    parser::syntax_parser syntax(tokenize(source));
+    const auto tree = syntax.parse();
+    static_cast<void>(semantic::analyze(tree));
+    const auto model = semantic::check_types(tree);
+    std::ostringstream output;
+    model.print(output);
+    for (const auto &fragment : expected)
+    {
+      if (!output.str().contains(fragment))
+      {
+        // LCOV_EXCL_START
+        std::cerr << "[FAIL] " << name << ": missing type model fragment '" << fragment << "'\n";
+        return false;
+        // LCOV_EXCL_STOP
+      }
+    }
+    std::cout << "[PASS] " << name << '\n';
+    return true;
+  }
+
+  auto expect_type_error(const std::string &name, const std::string &source,
+                         const std::string &expected) -> bool
+  {
+    try
+    {
+      parser::syntax_parser syntax(tokenize(source));
+      const auto tree = syntax.parse();
+      static_cast<void>(semantic::analyze(tree));
+      static_cast<void>(semantic::check_types(tree));
+    }
+    catch (const semantic::semantic_error &error)
+    {
+      if (std::string(error.what()).contains(expected))
+      {
+        std::cout << "[PASS] " << name << '\n';
+        return true;
+      }
+      // LCOV_EXCL_START
+      std::cerr << "[FAIL] " << name << ": unexpected type error '" << error.what() << "'\n";
+      return false;
+      // LCOV_EXCL_STOP
+    }
+    // LCOV_EXCL_START
+    std::cerr << "[FAIL] " << name << ": expected a type error\n";
     return false;
     // LCOV_EXCL_STOP
   }
@@ -1347,6 +1399,120 @@ namespace
     passed &= expect_semantic_error("duplicate parameter",
                                     "fun invalid(value, value) => value\n",
                                     "Duplicate declaration of 'value'");
+    passed &= expect_type_model(
+        "built-in type inference and checking",
+        "fun choose(value: Float, enabled: Bool): Float {\n"
+        "  let baseline = 1.0\n"
+        "  if enabled {\n    return value > baseline ? value ; baseline\n  }\n"
+        "  return baseline\n}\n"
+        "let count: Int = 2\n"
+        "let selected = choose(2.0, true)\n",
+        {"count: Int8", "selected: Float64", "baseline: Float64", "Bool @", "Int8 @", "Float64 @"});
+    passed &= expect_type_model(
+        "exact overload selection",
+        "fun identity(value: Int): Int => value\n"
+        "fun identity(value: String): String => value\n"
+        "let number = identity(1)\n"
+        "let text = identity(\"Sagan\")\n",
+        {"number: Int64", "text: String"});
+    passed &= expect_type_model(
+        "smallest fitting integer widths",
+        "let tiny = 127\nlet small = 128\nlet medium = 32768\n"
+        "let large = 2147483648\nlet negative = -128\nlet wider_negative = -129\n"
+        "let widened = tiny + small\n",
+        {"tiny: Int8", "small: Int16", "medium: Int32", "large: Int64",
+         "negative: Int8", "wider_negative: Int16", "widened: Int16"});
+    passed &= expect_type_model(
+        "floating widths",
+        "let default_value = 1.0\nlet precise: Float64 = 2.0\nlet compact: Float32 = 3.0\n",
+        {"default_value: Float64", "precise: Float64", "compact: Float32"});
+    passed &= expect_type_model(
+        "default API widths and lossless numeric widening",
+        "fun widen_integer(value: Int): Int => value\n"
+        "fun widen_float(value: Float): Float => value\n"
+        "let default_integer: Int\nlet default_float: Float\n"
+        "let widened_integer = widen_integer(1)\n"
+        "let widened_float = widen_float(32767)\n",
+        {"value: Int64", "value: Float64", "default_integer: Int64", "default_float: Float64",
+         "widened_integer: Int64", "widened_float: Float64"});
+    passed &= expect_type_model(
+        "type traversal across declarations and control flow",
+        "class Label {\n  let text: String\n  fun read(): String => self.text\n}\n"
+        "fun traverse(enabled: Bool, values: Vector): Int {\n"
+        "  while enabled {\n    break\n  }\n"
+        "  until enabled {\n    continue\n  }\n"
+        "  for item in values {\n    yield item\n  }\n"
+        "  match 1 {\n    case 1 {\n      enabled\n    }\n    case else {\n      enabled\n    }\n  }\n"
+        "  hope {\n    enabled\n  } unless 1 {\n    scream 2\n  } finally {\n    enabled\n  }\n"
+        "  return 0\n}\n",
+        {"text: String", "enabled: Bool", "values: Vector", "item: Unknown", "Int8 @"});
+    passed &= expect_type_model(
+        "homogeneous array inference indexing and iteration",
+        "fun first(values) {\n  for value in values {\n    yield value\n  }\n  return values[0]\n}\n"
+        "let small = [1, 2]\nlet mixed_width = [1, 200]\n"
+        "let combined = [...small, 3]\nlet selected = mixed_width[0]\n",
+        {"small: Array<Int8>", "mixed_width: Array<Int16>", "combined: Array<Int8>",
+         "selected: Int16", "value: Unknown"});
+    passed &= expect_type_model(
+        "homogeneous dictionary inference indexing and spreads",
+        "let counts = {\"one\": 1, \"two\": 200}\n"
+        "let more = {...counts, \"three\": 3}\n"
+        "let selected = more[\"two\"]\n",
+        {"counts: Dictionary<String, Int16>", "more: Dictionary<String, Int16>", "selected: Int16"});
+    passed &= expect_type_model(
+        "dimensioned vector and coordinate inference",
+        "let direction = <1.0, 0.0, 0.0>\n"
+        "let origin = (0, 0, 0)\n"
+        "let extended = <...direction, 1.0>\n"
+        "let component = direction[1]\n",
+        {"direction: Vector3<Float64>", "origin: Coordinate3<Int8>",
+         "extended: Vector4<Float64>", "component: Float64"});
+    passed &= expect_type_error("initializer type mismatch", "let value: Bool = 1\n",
+                                "Variable initializer requires Bool, but received Int");
+    passed &= expect_type_error("uninferable variable", "let pending\n",
+                                "requires a type annotation or initializer");
+    passed &= expect_type_error("condition type mismatch",
+                                "fun invalid(): Int {\n  if 1 {\n    return 1\n  }\n  return 0\n}\n",
+                                "If condition requires Bool, but received Int");
+    passed &= expect_type_error("return type mismatch", "fun invalid(): Bool => 1\n",
+                                "Function return requires Bool, but received Int");
+    passed &= expect_type_error("operator type mismatch", "let invalid = true + 1\n",
+                                "requires numeric operands");
+    passed &= expect_type_error("call overload mismatch",
+                                "fun identity(value: Int): Int => value\nlet invalid = identity(true)\n",
+                                "No matching overload for 'identity'");
+    passed &= expect_type_error("floating narrowing",
+                                "let wide: Float64 = 1.0\nlet narrow: Float32 = wide\n",
+                                "Variable initializer requires Float32, but received Float64");
+    passed &= expect_type_error("lossy integer to float conversion",
+                                "fun consume(value: Float32): Float32 => value\n"
+                                "let invalid = consume(2147483647)\n",
+                                "No matching overload for 'consume'");
+    passed &= expect_type_error("heterogeneous array",
+                                "let invalid = [1, \"two\"]\n", "Array elements have incompatible types");
+    passed &= expect_type_error("empty inferred array",
+                                "let invalid = []\n", "Empty array requires an explicit element type");
+    passed &= expect_type_error("array index type",
+                                "let values = [1, 2]\nlet invalid = values[true]\n",
+                                "Array index requires Int, but received Bool");
+    passed &= expect_type_error("heterogeneous dictionary keys",
+                                "let invalid = {1: true, \"two\": false}\n",
+                                "Dictionary keys have incompatible types");
+    passed &= expect_type_error("heterogeneous dictionary values",
+                                "let invalid = {\"one\": 1, \"two\": false}\n",
+                                "Dictionary values have incompatible types");
+    passed &= expect_type_error("empty inferred dictionary",
+                                "let invalid = {}\n", "Empty dictionary requires explicit key and value types");
+    passed &= expect_type_error("dictionary key type",
+                                "let values = {\"one\": 1}\nlet invalid = values[true]\n",
+                                "Dictionary key requires String, but received Bool");
+    passed &= expect_type_error("vector component type",
+                                "let invalid = <1.0, true>\n", "Vector components must be numeric");
+    passed &= expect_type_error("vector dimension mismatch",
+                                "fun consume(value: Vector): Vector => value\n"
+                                "let left = <1.0, 2.0>\nlet right = <1.0, 2.0, 3.0>\n"
+                                "let invalid = true ? left ; right\n",
+                                "Conditional branches have incompatible types");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
@@ -1419,6 +1585,7 @@ auto main(const int argc, char **argv) -> int
     ast_svg,
     ast_html,
     semantic,
+    types,
   };
 
   output_mode mode = output_mode::tokens;
@@ -1451,6 +1618,11 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::semantic;
     path = argv[2];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--types")
+  {
+    mode = output_mode::types;
+    path = argv[2];
+  }
   else if (argc == 2)
   {
     path = argv[1];
@@ -1462,7 +1634,7 @@ auto main(const int argc, char **argv) -> int
   else
   {
     std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
-                 "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | FILE]\n";
+                 "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
@@ -1479,6 +1651,13 @@ auto main(const int argc, char **argv) -> int
       {
         const auto model = semantic::analyze(tree);
         std::cout << "Sagan " << SAGAN_VERSION << " semantic model: " << path << "\n\n";
+        model.print(std::cout);
+      }
+      else if (mode == output_mode::types)
+      {
+        static_cast<void>(semantic::analyze(tree));
+        const auto model = semantic::check_types(tree);
+        std::cout << "Sagan " << SAGAN_VERSION << " type model: " << path << "\n\n";
         model.print(std::cout);
       }
       else if (mode == output_mode::ast_text)

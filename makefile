@@ -17,7 +17,8 @@ SOURCES := \
 	src/parser/tokenizer.cpp \
 	src/parser/tokens.cpp \
 	src/parser/unicode.cpp \
-	src/semantic/analyzer.cpp
+	src/semantic/analyzer.cpp \
+	src/semantic/type_checker.cpp
 
 OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 OBJECTS += obj/version.o
@@ -30,7 +31,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -65,6 +66,9 @@ parser-demo: $(TARGET)
 
 semantic-demo: $(TARGET)
 	$(TARGET) --semantic examples/semantic_demo.sagan
+
+type-demo: $(TARGET)
+	$(TARGET) --types examples/type_demo.sagan
 
 ast-demo: $(TARGET)
 	@mkdir -p build

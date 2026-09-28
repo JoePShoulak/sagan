@@ -53,6 +53,7 @@ make parser-demo
 bash scripts/parser_demo.sh
 bash scripts/ast_demo.sh --no-open
 bash scripts/semantic_demo.sh
+bash scripts/type_demo.sh
 ```
 
 Validate documentation metadata, links, navigation, Markdown, and rendering:
@@ -62,6 +63,6 @@ bash scripts/docs.sh check
 ```
 
 The parser suite establishes syntactic correctness for the current grammar. The
-semantic suite establishes only the implemented scope and name-resolution
-rules. Coverage does not establish type correctness or runtime behavior; those
-stages do not exist yet.
+semantic suite establishes the implemented scope, name-resolution, and initial
+scalar/function type rules. Coverage does not establish deferred type
+relationships or runtime behavior.

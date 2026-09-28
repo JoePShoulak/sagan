@@ -36,9 +36,10 @@ vector.normalize!()
     Named, block-bodied functions with optional parameter and return type
     annotations parse into the AST. Named functions, interface defaults, and
     class methods may instead use `=> expression`. Anonymous lambdas accept
-    typed parameters and an optional return annotation. Calls and bare or
-    value-bearing return statements also parse. Name resolution, typing,
-    captures, overloads, and execution remain future work.
+    typed parameters and an optional return annotation. The initial checker
+    validates scalar parameters and returns and selects compatible overloads.
+    Member calls, lambda callability, captures, and execution remain future
+    work.
 
 **Provisional design:** multiple returns, destructuring, variadic parameters,
 yielding, overload selection, capture behavior, and inference rules.

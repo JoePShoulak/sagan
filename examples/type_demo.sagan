@@ -1,0 +1,29 @@
+module type_demo
+
+fun clamp(value: Float, minimum: Float, maximum: Float): Float =>
+  value < minimum ? minimum ; value > maximum ? maximum ; value
+
+fun describe(value: Int): String => "integer ${value}"
+fun describe(value: String): String => "text ${value}"
+
+fun select(value: Float, enabled: Bool): Float {
+  let baseline = 1.0
+  if enabled {
+    return value > baseline ? value ; baseline
+  }
+  return baseline
+}
+
+let entity_count: Int = 10_000
+let small_count = 127
+let widened_count = small_count + entity_count
+let sample_counts = [1, 2, 300]
+let first_sample = sample_counts[0]
+let sample_labels = {"first": 1, "second": 2}
+let first_label = sample_labels["first"]
+let direction = <1.0, 0.0, 0.0>
+let origin = (0.0, 0.0, 0.0)
+let gravity: Float = 6.674_30e-11
+let clamped = clamp(gravity, 0.0, 1.0)
+let status = describe("ready")
+let selected = select(clamped, true)

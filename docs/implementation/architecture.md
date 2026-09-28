@@ -21,6 +21,8 @@ verified_by: null
 - `src/parser/ast_render.*`: text, DOT, SVG, and interactive HTML AST output.
 - `src/semantic/analyzer.*`: lexical scopes, symbols, name resolution, and a
   printable semantic model.
+- `src/semantic/type_checker.*`: scalar inference, compatibility,
+  overload/call/return checks, and a printable type model.
 - `src/semantic/semantic_error.hpp`: source-located semantic diagnostics.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
@@ -31,14 +33,14 @@ verified_by: null
 ## Current data flow
 
 The CLI reads a file, tokenizes it, and either prints the token stream or passes
-it to the parser. AST modes print or render the resulting tree; semantic mode
-passes it through scope and name analysis. Lexical, syntax, and semantic
-failures are reported with source locations.
+it to the parser. AST modes print or render the resulting tree; semantic and
+type modes perform name resolution and optionally initial type checking.
+Lexical, syntax, and semantic failures are reported with source locations.
 
 ```text
-UTF-8 source -> tokenizer -> parser -> source-spanned AST -> scope/name analysis
-                                            |                         |
-                                            +-> text / DOT / SVG / HTML
+UTF-8 source -> tokenizer -> parser -> source-spanned AST -> scope/name analysis -> type checking
+                                            |                         |                    |
+                                            +-> text / DOT / SVG / HTML                    +-> type model
                                                                       +-> semantic model
 ```
 
@@ -48,5 +50,6 @@ semantic errors, renderer output, CLI behavior, and defensive invariants.
 
 ## Planned components
 
-Type checking and later semantic passes, runtime support, standard/core
-libraries, C++ emission, and native-toolchain invocation are not implemented.
+Generic annotations, member/object typing, and later semantic passes, runtime
+support, standard/core libraries, C++ emission, and native-toolchain invocation
+are not implemented.

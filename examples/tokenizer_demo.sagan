@@ -21,7 +21,7 @@ class ExplorerShip has Spacecraft {
   }
 }
 
-let entity_count: Integer = 10_000
+let entity_count: Int = 10_000
 let gravity: Float = 6.674_30e-11
 let direction: Vector = <1.0, 0.0, 0.0>
 let position: Coordinate = (100.0, 200.0, 300.0)

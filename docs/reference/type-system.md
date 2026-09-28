@@ -19,10 +19,25 @@ Sagan is designed as a strongly and statically typed language.
 - no separate character-literal type is planned; and
 - math types form built-in vocabulary.
 
-**Provisional design:** overloads select by parameter types, typed collections
-and interfaces exist, and arithmetic overflow raises an exception.
+**Implemented foundation:** `Int` is the canonical integer spelling. Literals
+use the smallest fitting signed width from `Int8` through `Int64`; otherwise
+`Int` defaults to `Int64`. Floating literals and unconstrained `Float` positions
+default to `Float64`, with explicit `Float32` available. Only provably lossless
+widening is implicit. Core scalar declarations, operators, conditions, calls,
+overloads, and returns are checked. Variables need either an annotation or an
+initializer.
 
-**Open questions:** inference, numeric type set and widths, nullability, value
-versus reference categories, generic semantics, possible sum types, variance,
-conversion proofs, compile-time constants, and representation. There is no
-semantic analyzer, so none of these rules is enforced today.
+Array literals infer invariant `Array<Element>` types, while dictionary literals
+infer `Dictionary<Key, Value>` with homogeneous keys and values. Spreads must
+provide compatible collections. Empty arrays and dictionaries cannot yet be
+checked because generic annotation syntax is not implemented. Vector and
+coordinate literals infer their dimension and common numeric component type,
+for example `Vector3<Float64>`; dimensions must match for compatibility.
+
+**Provisional design:** typed collections and interfaces exist, and arithmetic
+overflow raises an exception.
+
+**Open questions:** generic annotation syntax, member inference, nullability, value versus
+reference categories, generic semantics, possible sum types, variance,
+compile-time constants, and representation. Deferred cases are currently
+marked `Unknown` by the type model.

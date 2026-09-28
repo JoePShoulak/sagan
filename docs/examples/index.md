@@ -89,6 +89,22 @@ The script prints the input's scope/symbol/resolution model, then confirms that
 demonstrates the first semantic pass only; it does not type-check or execute the
 source.
 
+## Type-checking demonstration
+
+`examples/type_demo.sagan` demonstrates scalar inference, integer-width
+selection, annotations, lossless numeric widening, calls, overloads,
+conditions, returns, homogeneous arrays and dictionaries, indexing, and
+dimensioned vector and coordinate literals.
+
+```bash
+bash scripts/type_demo.sh
+```
+
+The script prints a successful `TypeModel`, then confirms focused failures for
+an incorrect return type, an uninferable variable, heterogeneous collections,
+and an invalid vector component. This is not an execution demo, and `Unknown`
+still marks deferred member and user-defined-type semantics.
+
 The string error fixture demonstrates the focused diagnostic for an empty
 `${}` interpolation. The collection fixture demonstrates the minimum
 two-element vector rule.

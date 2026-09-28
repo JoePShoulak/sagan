@@ -16,7 +16,7 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Foundation implemented** | lexical scopes, symbol collection, duplicate-name checks, identifier resolution, semantic demo |
+| Semantic analysis | **Initial type checker implemented** | scopes, names, scalars, lossless widening, calls/returns, operators/conditions, homogeneous literal collections, dimensioned vectors/coordinates, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Planned; not implemented** | roadmap only |
@@ -36,7 +36,8 @@ The `bin/sagan` front-end can print tokens, parse the current grammar, emit text
 DOT, SVG, or interactive HTML ASTs, and print the initial semantic model. The
 HTML renderer supports zooming and panning. Parser and semantic demonstrations
 provide broad successful source files plus focused malformed examples. The
-semantic mode validates names and scopes, but no mode executes Sagan source.
+semantic mode validates names and scopes. Type mode additionally validates the
+implemented scalar and function rules, but no mode executes Sagan source.
 
 The live Codecov report tracks tokenizer lifecycle behavior, Unicode and emoji
 edge cases, string escapes, malformed input, parser and semantic errors, all AST
@@ -78,9 +79,9 @@ and runtime work.
 
 ## Major open language questions
 
-Type inference and checking, value/reference behavior, reference-count cycles, interface
-defaults and conflict resolution, generics and possible sum types, constructors,
-enum and collection semantics, exception propagation, entry points, module
+Generic annotations, member inference, value/reference behavior, reference-count cycles,
+interface defaults and conflict resolution, generics and possible sum types,
+constructors, enum semantics, exception propagation, entry points, module
 resolution and packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.
