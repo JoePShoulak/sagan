@@ -1,0 +1,16 @@
+// Temporary highlighting smoke test for the draft Sagan syntax.
+class ExplorerShip {
+  fun calculate_trajectory(position, velocity) {
+    let timestep = 0.25
+    let next_position = position + velocity * timestep
+    return next_position
+  }
+}
+
+let ship_name = "Voyager"
+let orbital_velocity = 7.8e3
+
+if orbital_velocity > 0 {
+  // JavaScript highlighting is the temporary grammar baseline.
+  calculate_trajectory(<0, 0, 0>, <0, orbital_velocity, 0>)
+}

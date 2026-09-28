@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Sagan Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/editors/vscode-sagan",
+        "${workspaceFolder}/editors/vscode-sagan/examples",
+        "${workspaceFolder}/editors/vscode-sagan/examples/demo.sagan"
+      ],
+      "outFiles": []
+    }
+  ]
+}

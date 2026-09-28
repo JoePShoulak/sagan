@@ -1,0 +1,40 @@
+{
+  "name": "sagan-language",
+  "displayName": "Sagan Language",
+  "description": "Syntax highlighting and editor support for the Sagan programming language.",
+  "version": "0.0.1",
+  "publisher": "sagan-language",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "sagan",
+    "language",
+    "syntax-highlighting"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sagan",
+        "aliases": [
+          "Sagan",
+          "sagan"
+        ],
+        "extensions": [
+          ".sagan"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sagan",
+        "scopeName": "source.sagan",
+        "path": "./syntaxes/sagan.tmLanguage.json"
+      }
+    ]
+  }
+}

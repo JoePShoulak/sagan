@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Sagan",
+  "scopeName": "source.sagan",
+  "patterns": [
+    {
+      "include": "#sagan-keywords"
+    },
+    {
+      "include": "source.js"
+    }
+  ],
+  "repository": {
+    "sagan-keywords": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.sagan",
+          "match": "\\b(?:let|fun|class|face|enum)\\b"
+        },
+        {
+          "name": "keyword.control.conditional.sagan",
+          "match": "\\b(?:if|else|match|case)\\b"
+        },
+        {
+          "name": "keyword.control.loop.sagan",
+          "match": "\\b(?:for|in|while|until|break|continue)\\b"
+        },
+        {
+          "name": "keyword.control.flow.sagan",
+          "match": "\\b(?:return|yield)\\b"
+        },
+        {
+          "name": "keyword.control.import.sagan",
+          "match": "\\b(?:import|from|as)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.sagan",
+          "match": "\\b(?:and|or|not)\\b"
+        },
+        {
+          "name": "constant.language.boolean.sagan",
+          "match": "\\b(?:true|false)\\b"
+        },
+        {
+          "name": "constant.language.numeric.sagan",
+          "match": "\\b(?:inf|nan)\\b"
+        }
+      ]
+    }
+  }
+}
