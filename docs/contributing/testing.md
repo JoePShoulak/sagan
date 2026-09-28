@@ -29,8 +29,9 @@ make coverage
 
 The coverage script performs a clean build with GCC's `--coverage`
 instrumentation and runs the complete front-end suite. If `lcov` is installed,
-the portable report is written to `build/coverage.info`; otherwise the raw
-`.gcno` and `.gcda` files remain under `obj/` for local inspection.
+the portable report is written to `build/coverage.info`. Instrumented objects
+are always removed when the script exits, including after a failure, so a later
+ordinary build never tries to link coverage objects without the gcov runtime.
 
 `.github/workflows/coverage.yml` repeats this process on Ubuntu for every push
 and pull request, then uploads `build/coverage.info` to Codecov. Authentication

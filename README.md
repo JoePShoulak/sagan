@@ -350,7 +350,9 @@ bin/sagan path/to/program.sagan
 
 `make coverage` performs a clean GCC coverage build and runs the complete
 front-end suite. When `lcov` is available it writes `build/coverage.info`;
-otherwise it retains the raw `.gcno` and `.gcda` data under `obj/`. GitHub
+otherwise it reports that only the instrumented test run was completed. The
+temporary coverage objects are always cleaned afterward so normal builds cannot
+accidentally link against gcov instrumentation. GitHub
 Actions generates the LCOV report on every push and pull request and uploads it
 to Codecov using OIDC, without a repository upload token.
 

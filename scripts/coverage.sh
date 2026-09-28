@@ -7,6 +7,12 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 make clean
+
+cleanup() {
+  make clean >/dev/null
+}
+trap cleanup EXIT
+
 make \
   CXXFLAGS="-std=c++23 -Wall -Wextra -Wpedantic -Werror -DUNI_ALGO_STATIC_DATA -Ithird_party/uni-algo/include --coverage -O0 -g" \
   LDFLAGS="--coverage" \
@@ -19,7 +25,8 @@ if ! command -v lcov >/dev/null 2>&1; then
     echo "lcov is required to produce build/coverage.info." >&2
     exit 1
   fi
-  echo "Coverage data generated in obj/. Install lcov to create build/coverage.info."
+  echo "Coverage run completed. Install lcov to create build/coverage.info."
+  echo "Instrumented objects were cleaned so ordinary builds remain usable."
   exit 0
 fi
 
