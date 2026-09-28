@@ -9,6 +9,10 @@ fun main(): Int {
   let phases = {...phase_defaults, "countdown": 3}
   let configured_countdown = phases["countdown"]
   let launch_number = 0
+  let squared = 3 ^ 2
+  let reciprocal = 2.0 ^ -1
+  let powered = 2
+  powered ^= 3
 
   print("The answer from 🚀 is:")
   print(answer)
@@ -16,6 +20,9 @@ fun main(): Int {
   print("Configured countdown: ${configured_countdown}")
   print("Launch number before increment: ${launch_number++}")
   print("Launch number after prefix increment: ${++launch_number}")
+  print("Three squared: ${squared}")
+  print("Two to the negative one: ${reciprocal}")
+  print("Two cubed through ^=: ${powered}")
   match configured_countdown {
     case 3 print("Match selected the nominal countdown")
     case else print("Match selected the fallback")
@@ -34,6 +41,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 and launch_number == 2 return 0
+  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 return 0
   else return 1
 }

@@ -25,6 +25,12 @@ prefix/postfix increment return new/old values respectively.
 The prefix form mutates before producing its value; the postfix form produces
 the old value and then mutates.
 
+`^` is mathematical exponentiation, and `^=` assigns its result; neither is a
+bitwise operation. Integer exponentiation requires a non-negative exponent and
+raises a runtime error when the result overflows its checked type. Floating-
+point bases permit negative exponents. `0 ^ 0` is a runtime error for every
+numeric type.
+
 **Implemented syntax:** anonymous lambdas use `fun(parameters) => expression`,
 with optional parameter and return annotations. A lambda is a primary expression
 and can participate in postfix chains, including immediate calls when grouped.

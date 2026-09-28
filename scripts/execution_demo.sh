@@ -41,4 +41,38 @@ if [[ "$status" -ne 0 ]]; then
   echo "Execution demo failed." >&2
   exit 1
 fi
-echo "Execution demo passed: Sagan executed increment expressions, compact bodies, collection spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."
+
+expect_runtime_error() {
+  local source_file="$1"
+  local expected_message="$2"
+  local stem
+  stem="$(basename "$source_file" .sagan)"
+  local generated="build/${stem}.cpp"
+  local executable="build/${stem}"
+  if [[ "${OS:-}" == "Windows_NT" ]]; then
+    executable="${executable}.exe"
+  fi
+
+  bin/sagan --emit-cpp "$source_file" "$generated" >/dev/null
+  g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$generated" -o "$executable"
+  set +e
+  local failure_output
+  failure_output="$("$executable" 2>&1)"
+  local failure_status=$?
+  set -e
+  if [[ "$failure_status" -eq 0 || "$failure_output" != *"$expected_message"* ]]; then
+    echo "Expected runtime error '$expected_message' from $source_file." >&2
+    echo "$failure_output" >&2
+    exit 1
+  fi
+  echo "Confirmed runtime error: $expected_message"
+}
+
+expect_runtime_error examples/execution_exponent_zero_error.sagan \
+  "Sagan exponentiation does not define 0 ^ 0"
+expect_runtime_error examples/execution_exponent_negative_error.sagan \
+  "Sagan integer exponentiation requires a non-negative exponent"
+expect_runtime_error examples/execution_exponent_overflow_error.sagan \
+  "Sagan integer exponentiation overflow"
+
+echo "Execution demo passed: Sagan executed checked powers, increment expressions, compact bodies, collection spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."

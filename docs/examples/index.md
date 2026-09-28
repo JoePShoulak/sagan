@@ -126,7 +126,8 @@ calls an emoji-named function to compute `40 + 2`, builds and iterates a typed
 countdown array using a spread, reads a checked array index, formats interpolated
 strings,
 constructs a typed dictionary using a spread and later-key override, reads a
-checked key, demonstrates prefix/postfix increment values, mutates state through
+checked key, demonstrates checked powers and prefix/postfix increment values,
+mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,
 tests the result, and returns success from `main`. Its `match` cases, `for`
 loop, and final `if` branches demonstrate same-line bodies without braces.
@@ -137,7 +138,9 @@ bash scripts/execution_demo.sh
 
 The script prints the Sagan input, emits and prints C++, compiles it with
 `g++`, runs the native program, displays the program's own `print` output, and
-reports its exit code. This demonstrates only the documented initial backend
+reports its exit code. It also compiles and runs focused fixtures proving that
+negative integer exponents, `0 ^ 0`, and fixed-width integer power overflow
+raise runtime errors. This demonstrates only the documented initial backend
 subset, not the entire parsed language.
 
 The string error fixture demonstrates the focused diagnostic for an empty
