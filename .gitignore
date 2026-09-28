@@ -68,3 +68,7 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# Python and documentation environments
+__pycache__/
+.venv-docs/
