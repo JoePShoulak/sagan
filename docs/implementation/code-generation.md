@@ -15,7 +15,8 @@ C++. With an output path it writes a `.cpp` file; without one it prints the
 translation. `scripts/execution_demo.sh` compiles that file with `g++` and runs
 the resulting native executable.
 
-The current subset supports typed functions, scalar literals, plain strings,
+The current subset supports typed functions, scalar literals, plain and
+interpolated strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Homogeneous array literals preserve the element width inferred by the

@@ -123,7 +123,8 @@ generate or execute native code.
 
 `examples/execution_demo.sagan` is the first end-to-end executable fixture. It
 calls an emoji-named function to compute `40 + 2`, builds and iterates a typed
-countdown array, reads a checked array index, tests the result, and returns
+countdown array, reads a checked array index, formats interpolated strings,
+mutates state through `while` and `until` loops, tests the result, and returns
 success from `main`.
 
 ```bash

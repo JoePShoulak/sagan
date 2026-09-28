@@ -78,6 +78,9 @@ grep -Fq "SetConsoleOutputCP(CP_UTF8)" "$work_dir/generated.cpp"
 grep -Fq "std::vector<std::int8_t>" "$work_dir/generated.cpp"
 grep -Fq "for (auto" "$work_dir/generated.cpp"
 grep -Fq ".at(2)" "$work_dir/generated.cpp"
+grep -Fq "sagan_stringify" "$work_dir/generated.cpp"
+grep -Fq "while (" "$work_dir/generated.cpp"
+grep -Fq -- "-= 1" "$work_dir/generated.cpp"
 
 expect_output "SVG AST file" "Wrote SVG AST" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/parser.svg"

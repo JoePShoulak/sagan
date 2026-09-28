@@ -8,10 +8,20 @@ fun main(): Int {
   print(answer)
   print("Countdown:")
   for value in countdown {
-    print(value)
+    print("Array item: ${value}")
   }
-  print("Liftoff marker:")
-  print(countdown[2])
+
+  let ignition = 3
+  while ignition > 0 {
+    print("Ignition: ${ignition}")
+    ignition -= 1
+  }
+
+  let launched = false
+  until launched {
+    print("Liftoff ${countdown[2]} 🚀")
+    launched = true
+  }
 
   if answer == 42 {
     return 0
