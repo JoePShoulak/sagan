@@ -32,6 +32,7 @@ namespace parser
 		std::vector<string_context> string_stack;
 		bool line_has_token = false;
 		bool emitted_final_newline = false;
+		bool source_validated = false;
 		bool newline_continuation = false;
 		int parenthesis_depth = 0;
 		int bracket_depth = 0;

@@ -1,6 +1,6 @@
 APPNAME := sagan
 CXX ?= g++
-CXXFLAGS ?= -std=c++23 -Wall -Wextra -Wpedantic -Werror
+CXXFLAGS ?= -std=c++23 -Wall -Wextra -Wpedantic -Werror -DUNI_ALGO_STATIC_DATA -Ithird_party/uni-algo/include
 LDFLAGS ?=
 
 # Development versions follow Zach Westerman's commit-derived Schematic model.
@@ -19,7 +19,8 @@ SOURCES := \
 	src/parser/lex.cpp \
 	src/parser/parse_error.cpp \
 	src/parser/tokenizer.cpp \
-	src/parser/tokens.cpp
+	src/parser/tokens.cpp \
+	src/parser/unicode.cpp
 
 OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 OBJECTS += obj/version.o

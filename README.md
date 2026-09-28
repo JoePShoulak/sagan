@@ -320,7 +320,7 @@ Reference counting is the intended memory-management model. Exceptions are the p
 
 ## Building the tokenizer
 
-The current bootstrap executable reads Sagan source and prints the resulting token stream. From Bash with an MSYS2 UCRT64 toolchain available:
+The current executable reads Sagan source and prints the resulting token stream. From Bash with an MSYS2 UCRT64 toolchain available:
 
 ```bash
 bash scripts/test.sh
@@ -360,11 +360,23 @@ commit is updated and the patch counter begins again at zero. Tagged releases
 and source-language compatibility policy will be defined before Sagan's first
 public release.
 
-This is a bootstrap implementation. It accepts non-ASCII UTF-8 identifier bytes, including emoji, but full Unicode `XID_Start`/`XID_Continue` and emoji-sequence validation plus NFC normalization still require a Unicode library. Context-sensitive newline suppression inside vector and dictionary literals will be finalized with the parser because `<...>` and `{...}` also represent comparisons and code blocks.
+The tokenizer validates UTF-8, enforces Unicode 17 `XID_Start` and
+`XID_Continue`, recognizes emoji identifier sequences, and normalizes identifier
+text to NFC. It reports byte spans into the original source while exposing the
+normalized spelling to later compiler stages. Newlines inside syntactically
+ambiguous `<...>` and `{...}` constructs remain tokens; the parser will decide
+whether those delimiters represent vectors, dictionaries, comparisons, or code
+blocks and whether a particular newline terminates a statement.
 
 ## Project status
 
-The bootstrap tokenizer now recognizes Sagan's keywords, operators, punctuation, identifiers, numbers, comments, documentation comments, strings, raw and multiline strings, and nested string interpolation. It includes a token-dump CLI, self-tests, a representative demo, and focused lexical errors. Parser, semantic-analysis, runtime, and standard-library decisions remain, including:
+The tokenizer recognizes Sagan's complete current lexical vocabulary: keywords,
+operators, punctuation, Unicode and emoji identifiers, numbers, comments,
+documentation comments, strings, raw and multiline strings, and nested string
+interpolation. It includes a token-dump CLI, strict UTF-8 and Unicode handling,
+focused lexical errors, comprehensive vocabulary checks, and deterministic
+malformed-input robustness tests. Parser, semantic-analysis, runtime, and
+standard-library decisions remain, including:
 
 - complete type inference and declaration rules;
 - reference-count cycle handling and value/reference semantics;
@@ -386,17 +398,18 @@ and lexical rules. The language is sufficiently defined to support tokenizer
 work, while parser and semantic decisions will continue to be refined when
 their implementation makes the tradeoffs concrete.
 
-### 2. Tokenizer — bootstrap complete
+### 2. Tokenizer — complete
 
 Define Sagan's token IDs, keywords, operators, punctuation, identifiers, and
 literals. Convert UTF-8 source text into tokens with source spans, report
 focused lexical errors, and provide token-dump demonstrations and automated
 checks.
 
-The initial tokenizer is working. Remaining hardening includes complete Unicode
-XID and emoji-sequence validation, NFC normalization, malformed UTF-8 rejection,
-parser-informed newline handling for ambiguous delimiters, and broader
-regression and fuzz testing.
+The tokenizer is implemented and tested, including Unicode XID and emoji
+identifiers, NFC normalization, malformed UTF-8 rejection, complete keyword and
+operator coverage, lexical diagnostics, and randomized malformed-input testing.
+Context-dependent interpretation of newlines and ambiguous delimiters belongs
+to the parser rather than the tokenizer.
 
 ### 3. Parser and syntax tree — next
 

@@ -1,4 +1,5 @@
 #include "lex.hpp"
+#include "unicode.hpp"
 
 #include <cctype>
 #include <cstdlib>
@@ -125,20 +126,42 @@ namespace
     throw parser::parse_error(message, span{begin, end});
   }
 
-  auto is_identifier_start(const unsigned char c) -> bool
+  auto identifier_start_length(const programText &state, const int offset) -> int
   {
-    // The bootstrap lexer accepts UTF-8 bytes here. Full XID and emoji-sequence
-    // validation plus NFC normalization will be added with a Unicode library.
-    return c == '_' || std::isalpha(c) != 0 || c >= 0x80;
+    const auto current = sagan::unicode::decode(state.text, static_cast<std::size_t>(offset));
+    if (!current)
+    {
+      return 0;
+    }
+    if (current->value == U'_' || sagan::unicode::is_xid_start(current->value))
+    {
+      return static_cast<int>(current->width);
+    }
+    return static_cast<int>(sagan::unicode::emoji_sequence_length(state.text, static_cast<std::size_t>(offset)));
   }
 
-  auto is_identifier_continue(const unsigned char c) -> bool
+  auto identifier_continue_length(const programText &state, const int offset) -> int
   {
-    return c == '_' || std::isalnum(c) != 0 || c >= 0x80;
+    const auto current = sagan::unicode::decode(state.text, static_cast<std::size_t>(offset));
+    if (!current)
+    {
+      return 0;
+    }
+    if (current->value == U'_' ||
+        (current->value != 0x200c && current->value != 0x200d &&
+         sagan::unicode::is_xid_continue(current->value)))
+    {
+      return static_cast<int>(current->width);
+    }
+    return static_cast<int>(sagan::unicode::emoji_sequence_length(state.text, static_cast<std::size_t>(offset)));
   }
 
   auto append_utf8(std::string &out, const unsigned int codepoint) -> void
   {
+    if (codepoint > 0x10ffff || (codepoint >= 0xd800 && codepoint <= 0xdfff))
+    {
+      fail("Unicode escape is outside the valid code-point range", 0, 0);
+    }
     if (codepoint <= 0x7f)
     {
       out.push_back(static_cast<char>(codepoint));
@@ -154,16 +177,12 @@ namespace
       out.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
       out.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
     }
-    else if (codepoint <= 0x10ffff)
+    else
     {
       out.push_back(static_cast<char>(0xf0 | (codepoint >> 18)));
       out.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3f)));
       out.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
       out.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
-    }
-    else
-    {
-      fail("Unicode escape is outside the valid code-point range", 0, 0);
     }
   }
 
@@ -219,6 +238,10 @@ namespace
       if (!std::isxdigit(digit))
       {
         fail("Unicode escape contains a non-hexadecimal digit", escape_begin, state.index + 1);
+      }
+      if (state.index - digits_begin >= 6)
+      {
+        fail("Unicode escapes contain at most six hexadecimal digits", escape_begin, state.index + 1);
       }
       codepoint *= 16;
       if (digit >= '0' && digit <= '9')
@@ -424,9 +447,13 @@ namespace
     };
 
     scan_digits();
-    if (state.index + 1 < static_cast<int>(state.text.size()) && state.text[state.index] == '.' &&
-        std::isdigit(static_cast<unsigned char>(state.text[state.index + 1])) != 0)
+    if (state.index < static_cast<int>(state.text.size()) && state.text[state.index] == '.')
     {
+      if (state.index + 1 >= static_cast<int>(state.text.size()) ||
+          std::isdigit(static_cast<unsigned char>(state.text[state.index + 1])) == 0)
+      {
+        fail("A decimal point requires digits on both sides", begin, state.index + 1);
+      }
       floating = true;
       state.index++;
       scan_digits();
@@ -450,14 +477,17 @@ namespace
       scan_digits();
     }
 
-    if (state.index < static_cast<int>(state.text.size()) &&
-        is_identifier_continue(static_cast<unsigned char>(state.text[state.index])))
+    if (state.index < static_cast<int>(state.text.size()) && identifier_continue_length(state, state.index) > 0)
     {
-      int end = state.index + 1;
-      while (end < static_cast<int>(state.text.size()) &&
-             is_identifier_continue(static_cast<unsigned char>(state.text[end])))
+      int end = state.index;
+      while (end < static_cast<int>(state.text.size()))
       {
-        end++;
+        const int length = identifier_continue_length(state, end);
+        if (length == 0)
+        {
+          break;
+        }
+        end += length;
       }
       fail("Malformed numeric literal", begin, end);
     }
@@ -478,11 +508,16 @@ namespace
 
   auto scan_identifier(programText &state) -> token
   {
-    const int begin = state.index++;
-    while (state.index < static_cast<int>(state.text.size()) &&
-           is_identifier_continue(static_cast<unsigned char>(state.text[state.index])))
+    const int begin = state.index;
+    state.index += identifier_start_length(state, state.index);
+    while (state.index < static_cast<int>(state.text.size()))
     {
-      state.index++;
+      const int length = identifier_continue_length(state, state.index);
+      if (length == 0)
+      {
+        break;
+      }
+      state.index += length;
     }
 
     bool method = false;
@@ -493,8 +528,14 @@ namespace
       state.index++;
     }
 
-    std::string text = state.text.substr(static_cast<std::size_t>(begin),
-                                         static_cast<std::size_t>(state.index - begin));
+    const int identifier_end = method ? state.index - 1 : state.index;
+    std::string text = sagan::unicode::normalize_nfc(
+        std::string_view(state.text).substr(static_cast<std::size_t>(begin),
+                                            static_cast<std::size_t>(identifier_end - begin)));
+    if (method)
+    {
+      text.push_back('!');
+    }
     if (!method)
     {
       const auto found = keywords.find(text);
@@ -651,6 +692,15 @@ namespace
 
 auto get_token(parser::programText &state) -> std::optional<parser::token>
 {
+  if (!state.source_validated)
+  {
+    state.source_validated = true;
+    if (const auto invalid = sagan::unicode::first_invalid_utf8(state.text))
+    {
+      fail("Source contains malformed UTF-8", static_cast<int>(*invalid), static_cast<int>(*invalid + 1));
+    }
+  }
+
   if (!state.pending.empty())
   {
     token next = std::move(state.pending.front());
@@ -676,9 +726,12 @@ auto get_token(parser::programText &state) -> std::optional<parser::token>
     if (c == '\r' || c == '\n')
     {
       const int begin = state.index;
-      if (c == '\r' && state.index + 1 < static_cast<int>(state.text.size()) &&
-          state.text[state.index + 1] == '\n')
+      if (c == '\r')
       {
+        if (state.index + 1 >= static_cast<int>(state.text.size()) || state.text[state.index + 1] != '\n')
+        {
+          fail("A carriage return must be followed by a line feed", begin, begin + 1);
+        }
         state.index += 2;
       }
       else
@@ -756,7 +809,13 @@ auto get_token(parser::programText &state) -> std::optional<parser::token>
       return scan_number(state);
     }
 
-    if (is_identifier_start(c))
+    if (c == '.' && state.index + 1 < static_cast<int>(state.text.size()) &&
+        std::isdigit(static_cast<unsigned char>(state.text[state.index + 1])) != 0)
+    {
+      fail("A decimal point requires digits on both sides", state.index, state.index + 1);
+    }
+
+    if (identifier_start_length(state, state.index) > 0)
     {
       return scan_identifier(state);
     }
