@@ -8,3 +8,30 @@ verified_by: null
 ---
 
 # Sagan Documentation
+Sagan is an experimental, strongly typed programming language for geometry,
+astrodynamics, numerical work, and real-time simulation.
+
+!!! info "Current implementation"
+    The repository currently contains a complete **tokenizer** for the current
+    lexical specification and a
+    token-dump command-line program. It does not yet contain a Sagan parser,
+    semantic analyzer, runtime, or C++ code generator.
+
+## Where to begin
+
+- [Getting started](getting-started/index.md) explains how to build and run the
+  tokenizer demonstration.
+- [Language tour](tour/index.md) introduces the intended language. Its examples
+  are design sketches until the parser exists.
+- [Lexical specification](reference/lexical-specification.md) records the
+  tokenizer's implemented UTF-8, Unicode, literal, comment, and operator rules.
+- [Project status](design/status.md) separates implemented behavior, settled
+  design, provisional design, planned work, and open questions.
+- [Implementation](implementation/index.md) describes the compiler roadmap and
+  current source layout.
+
+## Documentation maturity
+
+This is internal documentation version **0.1.0-internal.1**. Pages are
+work-in-progress unless their banner explicitly says they are publication-ready.
+Content being present does not mean it has completed review.
