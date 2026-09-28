@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.4.0](https://img.shields.io/badge/development-0.4.0-2563eb)](#development-versions)
+[![Development version 0.5.0](https://img.shields.io/badge/development-0.5.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -210,11 +210,15 @@ if condition {
 }
 
 for item in items {
-  // ...
+  if item.invalid {
+    continue
+  }
 }
 
 while condition {
-  // ...
+  if should_stop {
+    break
+  }
 }
 
 until condition {
@@ -222,7 +226,10 @@ until condition {
 }
 ```
 
-Sagan also reserves `match`, `case`, `break`, `continue`, `return`, and `yield`.
+The parser implements these three loop forms, unlabeled `break` and `continue`,
+and both value-bearing and bare `return`. `break` and `continue` are valid only
+inside loops. Sagan also reserves `match`, `case`, and `yield` for later parser
+milestones.
 
 The conditional expression uses `?` and `;`:
 
@@ -501,7 +508,9 @@ ordinary, raw, multiline, and interpolated string expressions, arithmetic,
 arrays, dictionaries, vectors, coordinates, spread expressions, comparisons,
 equality, logical operations, conditional expressions, and value-producing
 `:=` assignment. It also parses statement blocks, ordinary `=` assignments and
-expression statements within blocks, plus `if`/`else if`/`else` control flow.
+expression statements within blocks, `if`/`else if`/`else`, `for`/`in`,
+`while`, and `until` control flow, unlabeled `break` and `continue`, and bare or
+value-bearing `return` statements.
 Named block-bodied functions provide the executable scope, with optional type
 annotations on parameters and returns; the program root remains declaration-only.
 Postfix operations can be chained freely, as

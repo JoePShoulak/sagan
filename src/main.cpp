@@ -532,9 +532,76 @@ namespace
     passed &= expect_syntax_error("top-level expression statement", "launch()\n");
     passed &= expect_syntax_error("top-level control flow", "if ready {\n}\n");
     passed &= expect_syntax_error("unterminated statement block", "fun launch() {\n  launch_engine()\n");
+    passed &= expect_ast(
+        "loops control transfer and returns",
+        "fun navigate(items): Result {\n"
+        "  for item in items {\n"
+        "    if item.ready {\n"
+        "      continue\n"
+        "    }\n"
+        "    while item.pending {\n"
+        "      item.poll()\n"
+        "      break\n"
+        "    }\n"
+        "  }\n"
+        "  until finished {\n"
+        "    finished = check()\n"
+        "  }\n"
+        "  if failed {\n"
+        "    return\n"
+        "  }\n"
+        "  return result\n"
+        "}\n",
+        "Program\n"
+        "  Function(navigate: Result)\n"
+        "    Parameter(items)\n"
+        "    Block\n"
+        "      For(item)\n"
+        "        Iterable\n"
+        "          Identifier(items)\n"
+        "        Block\n"
+        "          If\n"
+        "            Condition\n"
+        "              Member(ready)\n"
+        "                Identifier(item)\n"
+        "            Then\n"
+        "              Block\n"
+        "                Continue\n"
+        "          While\n"
+        "            Condition\n"
+        "              Member(pending)\n"
+        "                Identifier(item)\n"
+        "            Block\n"
+        "              ExpressionStatement\n"
+        "                Call\n"
+        "                  Member(poll)\n"
+        "                    Identifier(item)\n"
+        "              Break\n"
+        "      Until\n"
+        "        Condition\n"
+        "          Identifier(finished)\n"
+        "        Block\n"
+        "          Assignment(=)\n"
+        "            Identifier(finished)\n"
+        "            Call\n"
+        "              Identifier(check)\n"
+        "      If\n"
+        "        Condition\n"
+        "          Identifier(failed)\n"
+        "        Then\n"
+        "          Block\n"
+        "            Return\n"
+        "      Return\n"
+        "        Identifier(result)\n");
+    passed &= expect_syntax_error("break outside loop", "fun invalid() {\n  break\n}\n");
+    passed &= expect_syntax_error("continue outside loop", "fun invalid() {\n  continue\n}\n");
+    passed &= expect_syntax_error("missing for in", "fun invalid(items) {\n  for item items {\n  }\n}\n");
+    passed &= expect_syntax_error("labeled break is unsupported",
+                                  "fun invalid(items) {\n  for item in items {\n    break outer\n  }\n}\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
     passed &= expect_visual_ast("visual statement AST",
-                                "fun update() {\n  if ready {\n    result = calculate()\n  }\n}\n");
+                                "fun update(items) {\n  for item in items {\n    if item.ready {\n"
+                                "      return item\n    }\n  }\n  return\n}\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;

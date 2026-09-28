@@ -34,8 +34,9 @@ interpolations containing member access and arithmetic expressions.
 The collection section demonstrates arrays, dictionaries with expression keys,
 vectors, coordinates, spreads, trailing commas, and multiline formatting.
 Its control-flow section adds nested blocks, declarations, ordinary assignment,
-expression statements, and an `if`/`else if`/`else` chain inside a typed,
-block-bodied function.
+expression statements, an `if`/`else if`/`else` chain, all three loop forms,
+`break`, `continue`, and both return forms inside a typed, block-bodied
+function.
 
 ```bash
 bash scripts/parser_demo.sh
@@ -44,8 +45,8 @@ bash scripts/ast_demo.sh
 
 The first command prints the tree and confirms the intentional errors in
 `examples/parser_error.sagan`, `examples/postfix_error.sagan`, and
-`examples/string_error.sagan`, `examples/collection_error.sagan`, and
-`examples/block_error.sagan`. The second
+`examples/string_error.sagan`, `examples/collection_error.sagan`,
+`examples/block_error.sagan`, and `examples/control_flow_error.sagan`. The second
 opens a self-contained page showing the input source beside a colored tree. The
 page supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
 `bash scripts/ast_demo.sh --no-open` to generate `build/ast-demo.html` without
@@ -55,7 +56,8 @@ The string error fixture demonstrates the focused diagnostic for an empty
 `${}` interpolation. The collection fixture demonstrates the minimum
 two-element vector rule.
 The block fixture demonstrates the focused diagnostic for a missing closing
-brace.
+brace. The control-flow fixture demonstrates the diagnostic for `break` outside
+a loop.
 
 ## Intentional lexical error
 

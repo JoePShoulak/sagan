@@ -8,16 +8,32 @@ verified_by: null
 ---
 
 # Control flow
-The tokenizer reserves `if`, `else`, `match`, `case`, `for`, `in`,
-`while`, `until`, `break`, `continue`, `return`, and `yield`.
+The parser implements `if`, `else`, `for`, `in`, `while`, `until`, `break`,
+`continue`, and `return`. The tokenizer also reserves `match`, `case`, and
+`yield` for later milestones.
 
 ```sagan
-if ready and not failed {
-  return
-} else {
-  continue
+for item in items {
+  if item.invalid {
+    continue
+  }
+  while item.pending {
+    item.poll()
+    if item.failed {
+      break
+    }
+  }
 }
+
+until simulation.complete {
+  simulation.step!()
+}
+
+return simulation.result
 ```
+
+`break` and `continue` are unlabeled and valid only inside a loop. A `return`
+may carry an expression or stand alone to return without a value.
 
 **Settled design:** `and`, `or`, `not`, and `!` provide logical operations.
 A conditional expression uses `?` and `;`:
@@ -30,6 +46,5 @@ Newlines normally terminate statements; `;` is not an ordinary statement
 terminator. The tokenizer already suppresses newlines inside parentheses and
 brackets and after tokens that leave an expression incomplete.
 
-**Provisional design:** complete grammar, operator precedence, matching,
-iteration protocols, yield semantics, and parser-informed handling of braces
-and angle brackets.
+**Provisional design:** matching, iteration protocols, yield semantics,
+unreachable-code analysis, and the runtime meaning of returned values.

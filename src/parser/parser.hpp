@@ -14,6 +14,7 @@ namespace parser
     std::vector<token> input;
     std::size_t current = 0;
     std::size_t vector_literal_depth = 0;
+    std::size_t loop_depth = 0;
 
     auto at_end() const -> bool;
     auto peek() const -> const token *;
@@ -28,6 +29,10 @@ namespace parser
     auto parse_function_declaration() -> statement_ref;
     auto parse_expression_statement() -> statement_ref;
     auto parse_if_statement() -> statement_ref;
+    auto parse_condition_loop(condition_loop_statement::kind type) -> statement_ref;
+    auto parse_for_statement() -> statement_ref;
+    auto parse_loop_control(loop_control_statement::kind type) -> statement_ref;
+    auto parse_return_statement() -> statement_ref;
     auto parse_block() -> std::unique_ptr<block_statement>;
     auto parse_expression() -> expression_ref;
     auto parse_nested_expression() -> expression_ref;

@@ -108,6 +108,30 @@ namespace parser
     {
       return parse_if_statement();
     }
+    if (match(tokens::KWD_WHILE))
+    {
+      return parse_condition_loop(condition_loop_statement::kind::while_loop);
+    }
+    if (match(tokens::KWD_UNTIL))
+    {
+      return parse_condition_loop(condition_loop_statement::kind::until_loop);
+    }
+    if (match(tokens::KWD_FOR))
+    {
+      return parse_for_statement();
+    }
+    if (match(tokens::KWD_BREAK))
+    {
+      return parse_loop_control(loop_control_statement::kind::break_loop);
+    }
+    if (match(tokens::KWD_CONTINUE))
+    {
+      return parse_loop_control(loop_control_statement::kind::continue_loop);
+    }
+    if (match(tokens::KWD_RETURN))
+    {
+      return parse_return_statement();
+    }
     return parse_expression_statement();
   }
 
@@ -198,6 +222,52 @@ namespace parser
     const int end = else_branch ? else_branch->range.end : then_branch->range.end;
     return std::make_unique<if_statement>(span{keyword.range.begin, end}, std::move(condition),
                                           std::move(then_branch), std::move(else_branch));
+  }
+
+  auto syntax_parser::parse_condition_loop(const condition_loop_statement::kind type) -> statement_ref
+  {
+    const token &keyword = previous();
+    auto condition = parse_expression();
+    loop_depth++;
+    auto body = parse_block();
+    loop_depth--;
+    return std::make_unique<condition_loop_statement>(span{keyword.range.begin, body->range.end}, type,
+                                                       std::move(condition), std::move(body));
+  }
+
+  auto syntax_parser::parse_for_statement() -> statement_ref
+  {
+    const token &keyword = previous();
+    const token &binding = expect(tokens::IDENTIFIER, "an identifier after 'for'");
+    expect(tokens::KWD_IN, "'in' after the loop binding");
+    auto iterable = parse_expression();
+    loop_depth++;
+    auto body = parse_block();
+    loop_depth--;
+    return std::make_unique<for_statement>(span{keyword.range.begin, body->range.end}, binding.text,
+                                            std::move(iterable), std::move(body));
+  }
+
+  auto syntax_parser::parse_loop_control(const loop_control_statement::kind type) -> statement_ref
+  {
+    const token &keyword = previous();
+    if (loop_depth == 0)
+    {
+      throw parse_error("'" + keyword.text + "' is only valid inside a loop", keyword.range);
+    }
+    return std::make_unique<loop_control_statement>(keyword.range, type);
+  }
+
+  auto syntax_parser::parse_return_statement() -> statement_ref
+  {
+    const token &keyword = previous();
+    if (at_end() || check(tokens::NEWLINE) || check(tokens::RBRACE))
+    {
+      return std::make_unique<return_statement>(keyword.range, nullptr);
+    }
+    auto value = parse_expression();
+    const int end = value->range.end;
+    return std::make_unique<return_statement>(span{keyword.range.begin, end}, std::move(value));
   }
 
   auto syntax_parser::parse_block() -> std::unique_ptr<block_statement>

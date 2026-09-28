@@ -49,4 +49,22 @@ fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
     let fallback_course = guidance.safe_course(orbital_position)
     ship.guidance.course = fallback_course
   }
+  for sample in trajectory_samples {
+    if sample.invalid {
+      continue
+    }
+    while sample.pending {
+      sample.refresh!()
+      if sample.failed {
+        break
+      }
+    }
+  }
+  until guidance.converged {
+    guidance.refine!(orbital_position, target_position)
+  }
+  if guidance.failed {
+    return
+  }
+  return guidance.state
 }

@@ -32,9 +32,9 @@ vector.normalize!()
 
 !!! note "Implementation status"
     Named, block-bodied functions with optional parameter and return type
-    annotations now parse into the AST. Calls also parse. Return statements,
-    expression-bodied functions, lambdas, name resolution, typing, overloads,
-    and execution remain future work.
+    annotations now parse into the AST. Calls and bare or value-bearing return
+    statements also parse. Expression-bodied functions, lambdas, name
+    resolution, typing, overloads, and execution remain future work.
 
 **Provisional design:** multiple returns, destructuring, variadic parameters,
 yielding, overload selection, capture behavior, and inference rules.

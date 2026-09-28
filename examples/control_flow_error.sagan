@@ -1,0 +1,6 @@
+// This file intentionally uses break outside a loop.
+fun invalid_control_flow() {
+  if mission.failed {
+    break
+  }
+}

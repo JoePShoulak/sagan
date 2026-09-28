@@ -245,6 +245,41 @@ namespace parser
         }
         return node;
       }
+      if (const auto *loop = dynamic_cast<const condition_loop_statement *>(&value))
+      {
+        const std::string label = loop->loop_kind == condition_loop_statement::kind::while_loop ? "While" : "Until";
+        auto node = std::make_unique<visual_node>(visual_node{label, "control"});
+        auto condition = std::make_unique<visual_node>(visual_node{"Condition", "control"});
+        condition->children.push_back(make_expression_node(*loop->condition));
+        node->children.push_back(std::move(condition));
+        node->children.push_back(make_statement_node(*loop->body));
+        return node;
+      }
+      if (const auto *loop = dynamic_cast<const for_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"For\n" + loop->binding, "control"});
+        auto iterable = std::make_unique<visual_node>(visual_node{"Iterable", "control"});
+        iterable->children.push_back(make_expression_node(*loop->iterable));
+        node->children.push_back(std::move(iterable));
+        node->children.push_back(make_statement_node(*loop->body));
+        return node;
+      }
+      if (const auto *control = dynamic_cast<const loop_control_statement *>(&value))
+      {
+        const std::string label = control->control_kind == loop_control_statement::kind::break_loop
+                                      ? "Break"
+                                      : "Continue";
+        return std::make_unique<visual_node>(visual_node{label, "control"});
+      }
+      if (const auto *returned = dynamic_cast<const return_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Return", "control"});
+        if (returned->value)
+        {
+          node->children.push_back(make_expression_node(*returned->value));
+        }
+        return node;
+      }
       if (const auto *function = dynamic_cast<const function_declaration *>(&value))
       {
         std::string label = "Function\n" + function->name;

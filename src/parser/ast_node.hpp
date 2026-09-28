@@ -242,6 +242,56 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct condition_loop_statement final : statement
+  {
+    enum class kind
+    {
+      while_loop,
+      until_loop,
+    };
+
+    kind loop_kind;
+    expression_ref condition;
+    std::unique_ptr<block_statement> body;
+
+    condition_loop_statement(span source_range, kind type, expression_ref condition_value,
+                             std::unique_ptr<block_statement> loop_body);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct for_statement final : statement
+  {
+    std::string binding;
+    expression_ref iterable;
+    std::unique_ptr<block_statement> body;
+
+    for_statement(span source_range, std::string binding_name, expression_ref iterable_value,
+                  std::unique_ptr<block_statement> loop_body);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct loop_control_statement final : statement
+  {
+    enum class kind
+    {
+      break_loop,
+      continue_loop,
+    };
+
+    kind control_kind;
+
+    loop_control_statement(span source_range, kind type);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct return_statement final : statement
+  {
+    expression_ref value;
+
+    return_statement(span source_range, expression_ref returned_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct function_parameter
   {
     std::string name;

@@ -13,8 +13,9 @@ No complete normative grammar exists yet.
 **Implemented:** the tokenizer supplies tokens and newline boundaries. The
 parser implements `let` declarations, blocks, assignment and expression
 statements, `if`/`else`, named block-bodied functions with typed parameters and
-return annotations, primary and string expressions, the settled precedence
-table, postfix chains, and collection literals.
+return annotations, `for`/`in`, `while`, and `until` loops, loop control,
+returns, primary and string expressions, the settled precedence table, postfix
+chains, and collection literals.
 
 **Provisional design:** declarations use words such as `let`, `fun`, `face`,
 `class`, and `enum`; braces delimit bodies; newlines normally terminate
@@ -33,6 +34,10 @@ spread      := "..." expression
 group       := "(" expression ")"
 block       := "{" newline* (statement newline+)* statement? newline* "}"
 if_statement := "if" expression block ("else" (if_statement | block))?
+for_statement := "for" identifier "in" expression block
+condition_loop := ("while" | "until") expression block
+loop_control := "break" | "continue"
+return_statement := "return" expression?
 assignment_statement := expression "=" expression
 expression_statement := expression
 function_declaration := "fun" identifier "(" parameters? ")" (":" type)? block
@@ -56,8 +61,8 @@ The program root accepts declarations only. Executable statements and control
 flow belong inside function bodies.
 
 **Open questions:** the remaining statement and declaration productions,
-function return and expression-body parsing, and error recovery beyond the
-first syntax error.
+expression-body parsing, semantic validation of returned values, and error
+recovery beyond the first syntax error.
 
 Implemented parser demos are accepted parser input but are not yet executable;
 semantic analysis and code generation remain future stages.

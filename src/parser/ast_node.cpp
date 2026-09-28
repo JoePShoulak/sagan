@@ -354,6 +354,66 @@ namespace parser
     }
   }
 
+  condition_loop_statement::condition_loop_statement(const span source_range, const kind type,
+                                                     expression_ref condition_value,
+                                                     std::unique_ptr<block_statement> loop_body)
+      : statement(source_range), loop_kind(type), condition(std::move(condition_value)), body(std::move(loop_body))
+  {
+  }
+
+  auto condition_loop_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << (loop_kind == kind::while_loop ? "While\n" : "Until\n");
+    write_indent(stream, indent + 2);
+    stream << "Condition\n";
+    condition->print(stream, indent + 4);
+    body->print(stream, indent + 2);
+  }
+
+  for_statement::for_statement(const span source_range, std::string binding_name,
+                               expression_ref iterable_value, std::unique_ptr<block_statement> loop_body)
+      : statement(source_range), binding(std::move(binding_name)), iterable(std::move(iterable_value)),
+        body(std::move(loop_body))
+  {
+  }
+
+  auto for_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "For(" << binding << ")\n";
+    write_indent(stream, indent + 2);
+    stream << "Iterable\n";
+    iterable->print(stream, indent + 4);
+    body->print(stream, indent + 2);
+  }
+
+  loop_control_statement::loop_control_statement(const span source_range, const kind type)
+      : statement(source_range), control_kind(type)
+  {
+  }
+
+  auto loop_control_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << (control_kind == kind::break_loop ? "Break\n" : "Continue\n");
+  }
+
+  return_statement::return_statement(const span source_range, expression_ref returned_value)
+      : statement(source_range), value(std::move(returned_value))
+  {
+  }
+
+  auto return_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Return\n";
+    if (value)
+    {
+      value->print(stream, indent + 2);
+    }
+  }
+
   function_parameter::function_parameter(std::string identifier, std::optional<std::string> annotation)
       : name(std::move(identifier)), type_name(std::move(annotation))
   {

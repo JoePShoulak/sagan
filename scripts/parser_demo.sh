@@ -42,3 +42,10 @@ if bin/sagan --ast examples/block_error.sagan; then
 fi
 
 echo "Statement-block error demo failed as expected."
+
+if bin/sagan --ast examples/control_flow_error.sagan; then
+  echo "Expected examples/control_flow_error.sagan to produce a syntax error." >&2
+  exit 1
+fi
+
+echo "Control-flow error demo failed as expected."
