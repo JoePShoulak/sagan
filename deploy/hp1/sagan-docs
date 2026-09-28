@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+data_dir="$HOME/.local/share/sagan-docs"
+runtime_dir="$HOME/.local/state/sagan-docs"
+server="$HOME/.local/lib/sagan-docs/server.py"
+pid_file="$runtime_dir/server.pid"
+log_file="$runtime_dir/server.log"
+
+is_running() {
+  [[ -f "$pid_file" ]] || return 1
+  local pid
+  pid="$(cat "$pid_file")"
+  kill -0 "$pid" 2>/dev/null
+}
+
+case "${1:-}" in
+  start)
+    install -d -m 0755 "$runtime_dir"
+    if is_running; then
+      echo "Sagan documentation server is already running (PID $(cat "$pid_file"))."
+      exit 0
+    fi
+    test -f "$data_dir/current/index.html" || {
+      echo "No installed documentation release was found." >&2
+      exit 1
+    }
+    nohup python3 "$server" --root "$data_dir/current" --port 8781 >>"$log_file" 2>&1 &
+    echo "$!" >"$pid_file"
+    sleep 1
+    is_running || { echo "Sagan documentation server failed to start. See $log_file" >&2; exit 1; }
+    echo "Sagan documentation server started (PID $(cat "$pid_file"))."
+    ;;
+  stop)
+    if is_running; then
+      kill "$(cat "$pid_file")"
+      echo "Sagan documentation server stopped."
+    fi
+    rm -f "$pid_file"
+    ;;
+  restart)
+    "$0" stop
+    "$0" start
+    ;;
+  status)
+    if is_running; then
+      echo "running (PID $(cat "$pid_file"))"
+    else
+      echo "stopped"
+      exit 1
+    fi
+    ;;
+  logs)
+    tail -n 100 "$log_file"
+    ;;
+  *)
+    echo "Usage: sagan-docs {start|stop|restart|status|logs}" >&2
+    exit 2
+    ;;
+esac

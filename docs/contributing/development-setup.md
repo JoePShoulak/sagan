@@ -8,6 +8,36 @@ verified_by: null
 ---
 
 # Development setup
+Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
+
+```bash
+git clone <repository-url>
+cd sagan
+bash scripts/test.sh
+```
+
+The test script expects `make`, `g++`, and `cygpath`, builds with C++23
+warnings enabled as errors, runs tokenizer self-tests, and prints the current
+version.
+
+Useful commands:
+
+```bash
+make demo
+make get-version
+bin/sagan examples/tokenizer_error.sagan
+```
+
+For documentation:
+
+```bash
+bash scripts/docs.sh setup
+bash scripts/docs.sh serve
+bash scripts/docs.sh check
+```
+
+Generated compiler and documentation artifacts live under ignored build/output
+directories and should not be committed.
 
 ## Development build versions
 

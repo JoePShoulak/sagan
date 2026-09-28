@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
 {% block extrahead %}
+  {% if config.extra.documentation.internal_only %}
   <meta name="robots" content="noindex,nofollow,noarchive">
+  {% endif %}
 {% endblock %}

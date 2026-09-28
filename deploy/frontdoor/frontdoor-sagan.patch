@@ -1,0 +1,76 @@
+diff --git a/deploy/fdr/issue-certs.sh b/deploy/fdr/issue-certs.sh
+--- a/deploy/fdr/issue-certs.sh
++++ b/deploy/fdr/issue-certs.sh
+@@ -10,6 +10,7 @@ DOMAINS=(
+   www.pitcherbasinandtowel.com
+   pairodice.shoulak.org
+   farm.shoulak.org
++  sagan.shoulak.org
+   hermes.shoulak.org
+ )
+ 
+diff --git a/deploy/fdr/frontdoor.shoulak.org.conf b/deploy/fdr/frontdoor.shoulak.org.conf
+--- a/deploy/fdr/frontdoor.shoulak.org.conf
++++ b/deploy/fdr/frontdoor.shoulak.org.conf
+@@ -134,6 +134,26 @@
+     CustomLog ${APACHE_LOG_DIR}/farm-chores-access.log combined
+ </VirtualHost>
+ 
++<VirtualHost *:80>
++    ServerName sagan.shoulak.org
++
++    ProxyPreserveHost On
++    ProxyRequests Off
++    ProxyAddHeaders On
++    ProxyErrorOverride On
++
++    ProxyPass /site-unavailable/ !
++    ProxyPass /__hypervisor-error/ !
++    ProxyPass / http://hp1:8781/
++    ProxyPassReverse / http://hp1:8781/
++    ErrorDocument 502 /site-unavailable/
++    ErrorDocument 503 /site-unavailable/
++    ErrorDocument 504 /site-unavailable/
++
++    ErrorLog ${APACHE_LOG_DIR}/sagan-docs-error.log
++    CustomLog ${APACHE_LOG_DIR}/sagan-docs-access.log combined
++</VirtualHost>
++
+ <VirtualHost *:80>
+     ServerName hermes.shoulak.org
+     ServerAlias hermes.local
+diff --git a/deploy/fdr/issue-certs.sh b/deploy/fdr/issue-certs.sh
+--- a/deploy/fdr/issue-certs.sh
++++ b/deploy/fdr/issue-certs.sh
+@@ -139,6 +140,31 @@ if [[ -n "$cert_file" && -n "$key_file" ]]; then
+ </VirtualHost>
+ EOF
+   sudo a2ensite hermes-local-chat-ssl.conf >/dev/null
++
++  sudo sed -i \
++    '/^# BEGIN SAGAN DOCS$/,/^# END SAGAN DOCS$/d' \
++    "$SSL_SITE"
++  sudo tee -a "$SSL_SITE" >/dev/null <<EOF
++# BEGIN SAGAN DOCS
++<VirtualHost *:443>
++    ServerName sagan.shoulak.org
++
++    ProxyPreserveHost On
++    ProxyRequests Off
++    ProxyAddHeaders On
++
++    ProxyPass / http://hp1:8781/
++    ProxyPassReverse / http://hp1:8781/
++
++    ErrorLog \${APACHE_LOG_DIR}/sagan-docs-ssl-error.log
++    CustomLog \${APACHE_LOG_DIR}/sagan-docs-ssl-access.log combined
++
++    SSLCertificateFile $cert_file
++    SSLCertificateKeyFile $key_file
++    Include /etc/letsencrypt/options-ssl-apache.conf
++</VirtualHost>
++# END SAGAN DOCS
++EOF
+ fi
+ 
+ sudo apache2ctl configtest

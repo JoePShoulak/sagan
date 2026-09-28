@@ -8,3 +8,17 @@ verified_by: null
 ---
 
 # Editor support
+The version 0.1.0 VS Code extension in `editors/vscode-sagan/` associates
+`.sagan` files with the language and provides a tokenizer-aligned Sagan TextMate
+grammar. It covers declarations, keywords, types, literals, operators,
+punctuation, comments, strings and nested interpolation, Unicode identifiers,
+private members, and mutating method names.
+
+TextMate remains lexical and cannot resolve whether braces are blocks or
+dictionaries, or whether angle brackets are vectors or comparisons.
+
+There is no parser integration, language server, IntelliSense, completion,
+hover information, go-to-definition, formatter, refactoring, or semantic
+diagnostics. The extension should be evaluated as basic syntax coloring only.
+See [getting-started editor support](../getting-started/editor-support.md) for
+installation.

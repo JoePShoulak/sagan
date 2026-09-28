@@ -8,6 +8,19 @@ verified_by: null
 ---
 
 # Standard-library status
+| Area | Design status | Implementation status |
+| --- | --- | --- |
+| Built-in math availability | Settled | Not implemented |
+| Math types and operations | Direction settled; APIs open | Not implemented |
+| Physics as explicit first-party core library | Settled | Not implemented |
+| Rendering as explicit first-party core library | Settled | Not implemented |
+| Module and package names | Open | Not implemented |
+| General standard-library boundary | Open | Not implemented |
+
+No physics, rendering, or general standard-library API should be inferred from
+the project's intended domains. Physical units and coordinate frames are not
+distinguished by the initial type system; libraries and user-defined types may
+model them.
 
 The high-level core-library structure is decided, but the libraries are not yet
 implemented.

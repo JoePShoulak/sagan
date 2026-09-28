@@ -1,5 +1,6 @@
 site_name: Sagan Documentation
-site_description: Internal documentation for the Sagan programming language
+site_description: Documentation for the Sagan programming language
+site_url: https://sagan.shoulak.org/
 docs_dir: docs
 site_dir: build/docs-site
 strict: true
@@ -132,6 +133,7 @@ nav:
       - contributing/index.md
       - Development setup: contributing/development-setup.md
       - Documentation workflow: contributing/documentation.md
+      - Self-hosting: contributing/hosting.md
       - Testing: contributing/testing.md
       - Licensing and attribution: contributing/licensing-and-attribution.md
   - About:

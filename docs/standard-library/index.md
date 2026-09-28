@@ -8,6 +8,19 @@ verified_by: null
 ---
 
 # Standard library
+Sagan's intended core ecosystem has three layers:
+
+1. **Math** is built in and automatically available.
+2. **Physics** is a tightly integrated, first-party core library requiring an import.
+3. **Rendering** is a tightly integrated, first-party core library requiring an import.
+
+Math is intended to provide the shared scalar, vector, matrix, quaternion,
+coordinate, and numerical vocabulary used by the language and other core
+libraries. Explicit imports keep physics and rendering from imposing cost on
+programs that do not need them.
+
+This architecture is **settled design**. Concrete APIs, module names, package
+layout, import granularity, and implementations are not finalized.
 
 Sagan's planned core libraries are math, physics, and rendering. They are
 designed together around shared numerical and geometric types, but they do not

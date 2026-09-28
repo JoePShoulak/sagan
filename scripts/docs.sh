@@ -41,8 +41,15 @@ case "${1:-}" in
     }
     "$venv_python" -m mkdocs build --strict --clean
     ;;
+  release-check)
+    test -x "$venv_python" || {
+      echo "Documentation environment is missing. Run: bash scripts/docs.sh setup" >&2
+      exit 1
+    }
+    "$venv_python" scripts/docs_release_check.py
+    ;;
   *)
-    echo "Usage: bash scripts/docs.sh {setup|serve|check}" >&2
+    echo "Usage: bash scripts/docs.sh {setup|serve|check|release-check}" >&2
     exit 2
     ;;
 esac
