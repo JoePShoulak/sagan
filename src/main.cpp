@@ -156,6 +156,22 @@ namespace
     return true;
   }
 
+  auto expect_syntax_error(const std::string &name, const std::string &source) -> bool
+  {
+    try
+    {
+      parser::syntax_parser syntax(tokenize(source));
+      static_cast<void>(syntax.parse());
+    }
+    catch (const parser::parse_error &)
+    {
+      std::cout << "[PASS] " << name << '\n';
+      return true;
+    }
+    std::cerr << "[FAIL] " << name << ": expected a syntax error\n";
+    return false;
+  }
+
   auto run_self_tests() -> int
   {
     bool passed = true;
@@ -282,6 +298,42 @@ namespace
         "    Group\n"
         "      Identifier(altitude)\n"
         "  Let(pending)\n");
+    passed &= expect_ast(
+        "expression precedence",
+        "let result = -2^3^2 + 4 * 5\n",
+        "Program\n"
+        "  Let(result)\n"
+        "    Binary(+)\n"
+        "      Prefix(-)\n"
+        "        Binary(^)\n"
+        "          Integer(2)\n"
+        "          Binary(^)\n"
+        "            Integer(3)\n"
+        "            Integer(2)\n"
+        "      Binary(*)\n"
+        "        Integer(4)\n"
+        "        Integer(5)\n");
+    passed &= expect_ast(
+        "conditional and assignment associativity",
+        "let selected = ready and count >= 1 ? count ; fallback\n"
+        "let assigned = target := source := 1\n",
+        "Program\n"
+        "  Let(selected)\n"
+        "    Conditional\n"
+        "      Binary(and)\n"
+        "        Identifier(ready)\n"
+        "        Binary(>=)\n"
+        "          Identifier(count)\n"
+        "          Integer(1)\n"
+        "      Identifier(count)\n"
+        "      Identifier(fallback)\n"
+        "  Let(assigned)\n"
+        "    AssignValue(:=)\n"
+        "      Identifier(target)\n"
+        "      AssignValue(:=)\n"
+        "        Identifier(source)\n"
+        "        Integer(1)\n");
+    passed &= expect_syntax_error("chained comparison", "let invalid = a < b < c\n");
 
     std::cout << (passed ? "All tokenizer tests passed.\n" : "Tokenizer tests failed.\n");
     return passed ? 0 : 1;

@@ -40,6 +40,7 @@ namespace parser
     {
       integer,
       floating_point,
+      boolean,
     };
 
     kind literal_kind;
@@ -55,6 +56,47 @@ namespace parser
     expression_ref value;
 
     grouping_expression(span source_range, expression_ref grouped_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct unary_expression final : expression
+  {
+    std::string operator_text;
+    expression_ref operand;
+    bool postfix;
+
+    unary_expression(span source_range, std::string operation, expression_ref value, bool is_postfix = false);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct binary_expression final : expression
+  {
+    expression_ref left;
+    std::string operator_text;
+    expression_ref right;
+
+    binary_expression(span source_range, expression_ref left_value, std::string operation,
+                      expression_ref right_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct conditional_expression final : expression
+  {
+    expression_ref condition;
+    expression_ref when_true;
+    expression_ref when_false;
+
+    conditional_expression(span source_range, expression_ref condition_value, expression_ref true_value,
+                           expression_ref false_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct assignment_expression final : expression
+  {
+    expression_ref target;
+    expression_ref value;
+
+    assignment_expression(span source_range, expression_ref target_value, expression_ref assigned_value);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 

@@ -118,7 +118,157 @@ namespace parser
 
   auto syntax_parser::parse_expression() -> expression_ref
   {
-    return parse_primary();
+    return parse_assignment();
+  }
+
+  auto syntax_parser::parse_assignment() -> expression_ref
+  {
+    auto target = parse_conditional();
+    if (!match(tokens::ASSIGN_VALUE))
+    {
+      return target;
+    }
+    auto value = parse_assignment();
+    const span range{target->range.begin, value->range.end};
+    return std::make_unique<assignment_expression>(range, std::move(target), std::move(value));
+  }
+
+  auto syntax_parser::parse_conditional() -> expression_ref
+  {
+    auto condition = parse_or();
+    if (!match(tokens::QUESTION))
+    {
+      return condition;
+    }
+    auto when_true = parse_assignment();
+    expect(tokens::SEMICOLON, "';' between conditional branches");
+    auto when_false = parse_conditional();
+    const span range{condition->range.begin, when_false->range.end};
+    return std::make_unique<conditional_expression>(range, std::move(condition), std::move(when_true),
+                                                     std::move(when_false));
+  }
+
+  auto syntax_parser::parse_or() -> expression_ref
+  {
+    auto left = parse_and();
+    while (match(tokens::KWD_OR))
+    {
+      const token operation = previous();
+      auto right = parse_and();
+      const span range{left->range.begin, right->range.end};
+      left = std::make_unique<binary_expression>(range, std::move(left), operation.text, std::move(right));
+    }
+    return left;
+  }
+
+  auto syntax_parser::parse_and() -> expression_ref
+  {
+    auto left = parse_equality();
+    while (match(tokens::KWD_AND))
+    {
+      const token operation = previous();
+      auto right = parse_equality();
+      const span range{left->range.begin, right->range.end};
+      left = std::make_unique<binary_expression>(range, std::move(left), operation.text, std::move(right));
+    }
+    return left;
+  }
+
+  auto syntax_parser::parse_equality() -> expression_ref
+  {
+    auto left = parse_comparison();
+    while (match(tokens::EQUAL_EQUAL) || match(tokens::BANG_EQUAL))
+    {
+      const token operation = previous();
+      auto right = parse_comparison();
+      const span range{left->range.begin, right->range.end};
+      left = std::make_unique<binary_expression>(range, std::move(left), operation.text, std::move(right));
+    }
+    return left;
+  }
+
+  auto syntax_parser::parse_comparison() -> expression_ref
+  {
+    auto left = parse_additive();
+    const bool has_comparison = match(tokens::LANGLE) || match(tokens::LESS_EQUAL) || match(tokens::RANGLE) ||
+                                match(tokens::GREATER_EQUAL) || match(tokens::KWD_IS);
+    if (!has_comparison)
+    {
+      return left;
+    }
+    const token operation = previous();
+    auto right = parse_additive();
+    if (check(tokens::LANGLE) || check(tokens::LESS_EQUAL) || check(tokens::RANGLE) ||
+        check(tokens::GREATER_EQUAL) || check(tokens::KWD_IS))
+    {
+      throw parse_error("Chained comparisons are not allowed; combine comparisons with 'and'", peek()->range);
+    }
+    const span range{left->range.begin, right->range.end};
+    return std::make_unique<binary_expression>(range, std::move(left), operation.text, std::move(right));
+  }
+
+  auto syntax_parser::parse_additive() -> expression_ref
+  {
+    auto left = parse_multiplicative();
+    while (match(tokens::PLUS) || match(tokens::MINUS))
+    {
+      const token operation = previous();
+      auto right = parse_multiplicative();
+      const span range{left->range.begin, right->range.end};
+      left = std::make_unique<binary_expression>(range, std::move(left), operation.text, std::move(right));
+    }
+    return left;
+  }
+
+  auto syntax_parser::parse_multiplicative() -> expression_ref
+  {
+    auto left = parse_unary();
+    while (match(tokens::STAR) || match(tokens::SLASH) || match(tokens::PERCENT))
+    {
+      const token operation = previous();
+      auto right = parse_unary();
+      const span range{left->range.begin, right->range.end};
+      left = std::make_unique<binary_expression>(range, std::move(left), operation.text, std::move(right));
+    }
+    return left;
+  }
+
+  auto syntax_parser::parse_unary() -> expression_ref
+  {
+    if (match(tokens::PLUS_PLUS) || match(tokens::MINUS_MINUS) || match(tokens::BANG) ||
+        match(tokens::KWD_NOT) || match(tokens::PLUS) || match(tokens::MINUS))
+    {
+      const token operation = previous();
+      auto operand = parse_unary();
+      return std::make_unique<unary_expression>(span{operation.range.begin, operand->range.end}, operation.text,
+                                                std::move(operand));
+    }
+    return parse_exponent();
+  }
+
+  auto syntax_parser::parse_exponent() -> expression_ref
+  {
+    auto left = parse_postfix();
+    if (!match(tokens::CARET))
+    {
+      return left;
+    }
+    const token operation = previous();
+    auto right = parse_unary();
+    const span range{left->range.begin, right->range.end};
+    return std::make_unique<binary_expression>(range, std::move(left), operation.text, std::move(right));
+  }
+
+  auto syntax_parser::parse_postfix() -> expression_ref
+  {
+    auto value = parse_primary();
+    while (match(tokens::PLUS_PLUS) || match(tokens::MINUS_MINUS))
+    {
+      const token operation = previous();
+      value = std::make_unique<unary_expression>(span{value->range.begin, operation.range.end}, operation.text,
+                                                 std::move(value), true);
+    }
+    return value;
   }
 
   auto syntax_parser::parse_primary() -> expression_ref
@@ -134,6 +284,18 @@ namespace parser
       const auto type = value.id == tokens::INTEGER ? literal_expression::kind::integer
                                                     : literal_expression::kind::floating_point;
       return std::make_unique<literal_expression>(value.range, type, value.text, value.value);
+    }
+    if (match(tokens::KWD_TRUE) || match(tokens::KWD_FALSE))
+    {
+      const token &value = previous();
+      return std::make_unique<literal_expression>(value.range, literal_expression::kind::boolean, value.text,
+                                                  value.id == tokens::KWD_TRUE ? 1.0 : 0.0);
+    }
+    if (match(tokens::KWD_INF) || match(tokens::KWD_NAN))
+    {
+      const token &value = previous();
+      return std::make_unique<literal_expression>(value.range, literal_expression::kind::floating_point,
+                                                  value.text, value.value);
     }
     if (match(tokens::LPAREN))
     {

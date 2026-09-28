@@ -1,3 +1,7 @@
 let altitude: Float = 125_000.0
 let target_altitude = (altitude)
 let telemetry_pending
+let orbital_energy = -2^3^2 + 4 * 5
+let selected = telemetry_ready and altitude >= 100_000 ? altitude ; target_altitude
+let captured = target_altitude := altitude := 125_500.0
+let previous_count = telemetry_count++

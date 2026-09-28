@@ -25,6 +25,17 @@ namespace parser
     auto parse_statement() -> statement_ref;
     auto parse_let_declaration() -> statement_ref;
     auto parse_expression() -> expression_ref;
+    auto parse_assignment() -> expression_ref;
+    auto parse_conditional() -> expression_ref;
+    auto parse_or() -> expression_ref;
+    auto parse_and() -> expression_ref;
+    auto parse_equality() -> expression_ref;
+    auto parse_comparison() -> expression_ref;
+    auto parse_additive() -> expression_ref;
+    auto parse_multiplicative() -> expression_ref;
+    auto parse_unary() -> expression_ref;
+    auto parse_exponent() -> expression_ref;
+    auto parse_postfix() -> expression_ref;
     auto parse_primary() -> expression_ref;
 
   public:

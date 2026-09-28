@@ -432,11 +432,29 @@ expressions, statements, control flow, types, classes, interfaces, and
 composition. This stage establishes the concrete grammar, operator precedence,
 and syntax-error diagnostics.
 
-The first parser slice now handles programs containing `let` declarations,
-optional simple type annotations, optional initializers, identifiers, numeric
-literals, and grouped primary expressions. It includes an AST-dump command and
-success/error demonstrations. Expression precedence and the remaining syntax
-forms are the next work.
+The parser now handles programs containing `let` declarations, optional simple
+type annotations, optional initializers, identifiers, numeric and Boolean
+literals, grouped expressions, prefix and postfix operators, exponentiation,
+arithmetic, comparisons, equality, logical operations, conditional expressions,
+and value-producing `:=` assignment. It includes an AST-dump command and
+success/error demonstrations.
+
+Implemented expression precedence, from highest to lowest, is:
+
+1. postfix `++` and `--` (calls, indexing, and member access will join this tier);
+2. right-associative exponentiation `^`;
+3. prefix `++`, `--`, `!`, `not`, unary `+`, and unary `-`;
+4. `*`, `/`, and `%`;
+5. `+` and `-`;
+6. `<`, `<=`, `>`, `>=`, and `is`;
+7. `==` and `!=`;
+8. `and`;
+9. `or`;
+10. the right-associative `? ... ; ...` conditional; and
+11. right-associative value-producing assignment `:=`.
+
+Exponentiation binds more tightly than unary minus, so `-2^2` parses as
+`-(2^2)`. Chained comparisons are rejected; write `a < b and b < c` instead.
 
 ### 4. Semantic analysis — planned
 
