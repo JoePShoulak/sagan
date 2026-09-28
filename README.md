@@ -12,6 +12,12 @@ Sagan is currently in the language-design stage. The syntax shown here expresses
 
 Vectors, matrices, quaternions, coordinates, scientific notation, and large numerical workloads are central concerns rather than afterthoughts. Sagan is intended for orbital and cosmic simulations, rocket flight, interacting entities, scientific computing, rendering, and potentially game-engine development.
 
+Sagan's core-library design reflects that purpose. Mathematics is built in and
+automatically available to every program. Physics and rendering are tightly
+coupled, first-party core libraries designed alongside the language and its math
+types, but they must be imported explicitly so lightweight programs do not pay
+for systems they do not use.
+
 ### Strong and explicit types
 
 Sagan minimizes implicit coercion. A conversion is allowed only when it is lossless, including integer-to-floating-point conversion only when the compiler can prove that no information is lost. Arithmetic overflow raises a runtime error.
@@ -47,6 +53,8 @@ Identical inputs are intended to produce identical results across supported plat
 - Classes with interface-based composition
 - Typed interfaces and enums
 - Arrays, dictionaries, vectors, matrices, quaternions, and coordinates
+- Automatically available core mathematics
+- Explicit, tightly integrated core physics and rendering libraries
 - Method chaining and planned element-wise collection operations
 - Exceptions with Sagan-specific vocabulary
 - String interpolation, raw strings, and multiline strings
@@ -55,6 +63,27 @@ Identical inputs are intended to produce identical results across supported plat
 - Initial C++ source backend targeting Windows, Linux, and macOS
 
 Physical units and coordinate frames are not encoded into the initial type system. Libraries and user-defined types may represent units, and vectors of the same dimension are initially compatible regardless of their conceptual frame.
+
+## Core-library model
+
+Three libraries define Sagan's intended core ecosystem and its levels of
+coupling:
+
+1. **Math** is built into Sagan and automatically available. Its scalar,
+   vector, matrix, quaternion, coordinate, and related numerical facilities form
+   the common vocabulary of the language and the other core libraries.
+2. **Physics** is a first-party core library with direct interoperability with
+   Sagan's mathematical types. It is not automatically included and must be
+   imported by programs that need simulation facilities.
+3. **Rendering** is likewise a first-party, tightly integrated core library
+   built around the same math and simulation vocabulary. It is also an explicit
+   import rather than part of every executable.
+
+This arrangement makes physics and rendering feel native when used together
+without forcing their compile-time, binary-size, initialization, or conceptual
+costs on lightweight numerical or general-purpose programs. Exact module names,
+package layout, and import granularity will be settled with the module system
+and standard-library implementation.
 
 ## Key syntax
 
@@ -345,7 +374,8 @@ The bootstrap tokenizer now recognizes Sagan's keywords, operators, punctuation,
 - exception matching and propagation;
 - entry-point forms;
 - deterministic numeric and runtime requirements; and
-- the boundary between language features and the standard library.
+- the exact API boundary between built-in math and the explicitly imported
+  physics and rendering core libraries.
 
 ## Roadmap
 
