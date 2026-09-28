@@ -373,6 +373,10 @@ namespace semantic
             }
           }
           const std::string operand = expression(*unary->operand);
+          if (unary->operator_text == "++" || unary->operator_text == "--")
+          {
+            static_cast<void>(assignment_target(*unary->operand));
+          }
           if (unary->operator_text == "!")
           {
             require_compatible("Bool", operand, value.range, "Logical negation");

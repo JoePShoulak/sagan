@@ -1568,6 +1568,10 @@ namespace
         {"tiny: Int8", "small: Int16", "medium: Int32", "large: Int64",
          "negative: Int8", "wider_negative: Int16", "widened: Int16"});
     passed &= expect_type_model(
+        "prefix and postfix increment types",
+        "let value = 1\nlet old = value++\nlet current = ++value\nlet prior = value--\nlet final = --value\n",
+        {"value: Int8", "old: Int8", "current: Int8", "prior: Int8", "final: Int8"});
+    passed &= expect_type_model(
         "floating widths",
         "let default_value = 1.0\nlet precise: Float64 = 2.0\nlet compact: Float32 = 3.0\n",
         {"default_value: Float64", "precise: Float64", "compact: Float32"});
@@ -1659,6 +1663,11 @@ namespace
     passed &= expect_type_error("invalid assignment target",
                                 "fun invalid(): Void {\n  1 = 2\n}\n",
                                 "Assignment target is not assignable");
+    passed &= expect_type_error("invalid increment target", "let invalid = 1++\n",
+                                "Assignment target is not assignable");
+    passed &= expect_type_error("increment before initialization",
+                                "fun invalid(): Int {\n  let value: Int\n  return value++\n}\n",
+                                "Variable 'value' is used before initialization");
     passed &= expect_type_error("return type mismatch", "fun invalid(): Bool => 1\n",
                                 "Function return requires Bool, but received Int");
     passed &= expect_type_error("operator type mismatch", "let invalid = true + 1\n",

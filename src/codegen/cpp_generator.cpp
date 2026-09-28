@@ -160,7 +160,13 @@ namespace codegen
           return "(" + expression(*group->value) + ")";
         if (const auto *unary = dynamic_cast<const parser::unary_expression *>(&value))
         {
-          if (unary->postfix) fail("postfix operators are not available in the initial native subset", value.range);
+          if (unary->operator_text == "++" || unary->operator_text == "--")
+          {
+            const std::string operand = expression(*unary->operand);
+            return unary->postfix ? "(" + operand + unary->operator_text + ")"
+                                  : "(" + unary->operator_text + operand + ")";
+          }
+          if (unary->postfix) fail("unsupported postfix operator", value.range);
           const std::string op = unary->operator_text == "not" ? "!" : unary->operator_text;
           if (op != "!" && op != "+" && op != "-") fail("unsupported unary operator", value.range);
           return "(" + op + expression(*unary->operand) + ")";

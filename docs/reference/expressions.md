@@ -21,6 +21,10 @@ chaining.
 `!` are logical operators; `? ... ; ...` is the conditional expression; and
 prefix/postfix increment return new/old values respectively.
 
+**Implemented semantics:** `++` and `--` require an assignable numeric operand.
+The prefix form mutates before producing its value; the postfix form produces
+the old value and then mutates.
+
 **Implemented syntax:** anonymous lambdas use `fun(parameters) => expression`,
 with optional parameter and return annotations. A lambda is a primary expression
 and can participate in postfix chains, including immediate calls when grouped.

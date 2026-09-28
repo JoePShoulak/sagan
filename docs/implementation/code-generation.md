@@ -18,6 +18,7 @@ the resulting native executable.
 The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
+prefix and postfix numeric increment and decrement,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Homogeneous array literals preserve the element width inferred by the
 type checker, array indexing is bounds-checked, and `for … in` iterates values

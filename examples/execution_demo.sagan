@@ -8,11 +8,14 @@ fun main(): Int {
   let phase_defaults = {"countdown": 5, "liftoff": 1}
   let phases = {...phase_defaults, "countdown": 3}
   let configured_countdown = phases["countdown"]
+  let launch_number = 0
 
   print("The answer from 🚀 is:")
   print(answer)
   print("Countdown:")
   print("Configured countdown: ${configured_countdown}")
+  print("Launch number before increment: ${launch_number++}")
+  print("Launch number after prefix increment: ${++launch_number}")
   match configured_countdown {
     case 3 print("Match selected the nominal countdown")
     case else print("Match selected the fallback")
@@ -31,6 +34,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 return 0
+  if answer == 42 and launch_number == 2 return 0
   else return 1
 }
