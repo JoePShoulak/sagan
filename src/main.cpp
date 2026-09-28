@@ -16,6 +16,18 @@
 
 namespace
 {
+  struct unsupported_expression final : parser::expression
+  {
+    using expression::expression;
+    auto print(std::ostream &, int) const -> void override {}
+  };
+
+  struct unsupported_statement final : parser::statement
+  {
+    using statement::statement;
+    auto print(std::ostream &, int) const -> void override {}
+  };
+
   auto escape_text(const std::string &text) -> std::string
   {
     std::string result;
@@ -282,6 +294,41 @@ namespace
     return true;
   }
 
+  auto expect_renderer_rejects_unknown_nodes() -> bool
+  {
+    bool expression_rejected = false;
+    bool statement_rejected = false;
+    try
+    {
+      std::vector<parser::statement_ref> statements;
+      statements.push_back(std::make_unique<parser::let_declaration>(
+          parser::span{0, 1}, "value", std::nullopt,
+          std::make_unique<unsupported_expression>(parser::span{0, 1})));
+      static_cast<void>(parser::render_ast_dot(parser::program(std::move(statements))));
+    }
+    catch (const std::runtime_error &)
+    {
+      expression_rejected = true;
+    }
+    try
+    {
+      std::vector<parser::statement_ref> statements;
+      statements.push_back(std::make_unique<unsupported_statement>(parser::span{0, 1}));
+      static_cast<void>(parser::render_ast_dot(parser::program(std::move(statements))));
+    }
+    catch (const std::runtime_error &)
+    {
+      statement_rejected = true;
+    }
+    if (!(expression_rejected && statement_rejected))
+    {
+      std::cerr << "[FAIL] renderer rejects unknown AST nodes\n";
+      return false;
+    }
+    std::cout << "[PASS] renderer rejects unknown AST nodes\n";
+    return true;
+  }
+
   auto run_self_tests() -> int
   {
     bool passed = true;
@@ -413,6 +460,20 @@ namespace
     passed &= expect_error("unterminated Unicode escape", "\"\\u{1234\"\n");
     passed &= expect_error("unterminated raw string at newline", "r\"unfinished\n");
     passed &= expect_error("unterminated raw string at end", "r\"unfinished");
+    passed &= expect_error("seven-digit Unicode escape", "\"\\u{1234567}\"\n");
+    passed &= expect_error("numeric identifier suffix", "let invalid = 12parsecs\n");
+    passed &= expect_error("unterminated interpolation", "\"${value");
+    passed &= expect_ids(
+        "interpolation begins immediately and nests braces",
+        "\"${{1: 2}}\"\n",
+        {tokens::STRING_BEGIN, tokens::INTERPOLATION_BEGIN, tokens::LBRACE, tokens::INTEGER,
+         tokens::COLON, tokens::INTEGER, tokens::RBRACE, tokens::INTERPOLATION_END,
+         tokens::STRING_END, tokens::NEWLINE});
+    passed &= expect_ids(
+        "CRLF logical newline",
+        "let first = 1\r\nlet second = 2\r\n",
+        {tokens::KWD_LET, tokens::IDENTIFIER, tokens::EQUAL, tokens::INTEGER, tokens::NEWLINE,
+         tokens::KWD_LET, tokens::IDENTIFIER, tokens::EQUAL, tokens::INTEGER, tokens::NEWLINE});
     passed &= expect_robustness("random byte robustness");
     passed &= expect_ast(
         "parser foundation",
@@ -460,6 +521,22 @@ namespace
         "        Identifier(source)\n"
         "        Integer(1)\n");
     passed &= expect_syntax_error("chained comparison", "let invalid = a < b < c\n");
+    passed &= expect_ast(
+        "or equality and special floating values",
+        "let compared = (left == right) or (value != nan) or inf\n",
+        "Program\n"
+        "  Let(compared)\n"
+        "    Binary(or)\n"
+        "      Binary(or)\n"
+        "        Group\n"
+        "          Binary(==)\n"
+        "            Identifier(left)\n"
+        "            Identifier(right)\n"
+        "        Group\n"
+        "          Binary(!=)\n"
+        "            Identifier(value)\n"
+        "            Float(nan)\n"
+        "      Float(inf)\n");
     passed &= expect_ast(
         "postfix calls indexing and member access",
         "let course = fleet[active_index]?.navigator.current_course(origin, destination).magnitude()\n",
@@ -520,6 +597,13 @@ namespace
         "            String\n"
         "              Text(\"telemetry\")\n");
     passed &= expect_syntax_error("empty string interpolation", "let invalid = \"value: ${}\"\n");
+    passed &= expect_ast(
+        "escaped AST string text",
+        "let escaped = \"\\r\\t\\0\\\\\\\"\"\n",
+        "Program\n"
+        "  Let(escaped)\n"
+        "    String\n"
+        "      Text(\"\\r\\t\\0\\\\\\\"\")\n");
     passed &= expect_ast(
         "arrays trailing commas and spread",
         "let values = [1, ...defaults, calculate(2, 3,),]\n",
@@ -588,6 +672,10 @@ namespace
     passed &= expect_syntax_error("empty vector", "let invalid = <>\n");
     passed &= expect_syntax_error("single-element vector", "let invalid = <1>\n");
     passed &= expect_syntax_error("single-element coordinate", "let invalid = (1,)\n");
+    passed &= expect_syntax_error("empty parentheses", "let invalid = ()\n");
+    passed &= expect_syntax_error("array elements require commas", "let invalid = [1 2]\n");
+    passed &= expect_syntax_error("dictionary entries require commas", "let invalid = {1: 2 3: 4}\n");
+    passed &= expect_syntax_error("coordinate elements require commas", "let invalid = (1, 2 3)\n");
     passed &= expect_syntax_error("dictionary entry without colon", "let invalid = {\"name\",}\n");
     passed &= expect_ast(
         "blocks assignments and conditional statements",
@@ -1102,6 +1190,10 @@ namespace
                                 "let vessel = Ship\n");
     passed &= expect_visual_ast("visual documentation AST",
                                 "/// Documented value.\nlet value = other\n");
+    passed &= expect_visual_ast(
+        "visual escaped and truncated string AST",
+        "let value = \"&'\\r\\tabcdefghijklmnopqrstuvwxyz0123456789\" + other\n");
+    passed &= expect_renderer_rejects_unknown_nodes();
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
