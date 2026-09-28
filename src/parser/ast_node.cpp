@@ -445,6 +445,55 @@ namespace parser
     }
   }
 
+  exception_handler::exception_handler(expression_ref matched_pattern,
+                                       std::unique_ptr<block_statement> handler_body,
+                                       const span source_range)
+      : pattern(std::move(matched_pattern)), body(std::move(handler_body)), range(source_range)
+  {
+  }
+
+  hope_statement::hope_statement(const span source_range, std::unique_ptr<block_statement> body,
+                                 std::vector<exception_handler> exception_handlers,
+                                 std::unique_ptr<block_statement> cleanup_body)
+      : statement(source_range), protected_body(std::move(body)), handlers(std::move(exception_handlers)),
+        cleanup(std::move(cleanup_body))
+  {
+  }
+
+  auto hope_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Hope\n";
+    write_indent(stream, indent + 2);
+    stream << "Protected\n";
+    protected_body->print(stream, indent + 4);
+    for (const auto &handler : handlers)
+    {
+      write_indent(stream, indent + 2);
+      stream << "Unless\n";
+      handler.pattern->print(stream, indent + 4);
+      handler.body->print(stream, indent + 4);
+    }
+    if (cleanup)
+    {
+      write_indent(stream, indent + 2);
+      stream << "Finally\n";
+      cleanup->print(stream, indent + 4);
+    }
+  }
+
+  scream_statement::scream_statement(const span source_range, expression_ref exception_value)
+      : statement(source_range), value(std::move(exception_value))
+  {
+  }
+
+  auto scream_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Scream\n";
+    value->print(stream, indent + 2);
+  }
+
   function_parameter::function_parameter(std::string identifier, std::optional<std::string> annotation)
       : name(std::move(identifier)), type_name(std::move(annotation))
   {

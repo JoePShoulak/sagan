@@ -301,6 +301,35 @@ namespace parser
         }
         return node;
       }
+      if (const auto *hope = dynamic_cast<const hope_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Hope", "control"});
+        auto protected_body = std::make_unique<visual_node>(visual_node{"Protected", "control"});
+        protected_body->children.push_back(make_statement_node(*hope->protected_body));
+        node->children.push_back(std::move(protected_body));
+        for (const auto &handler : hope->handlers)
+        {
+          auto unless = std::make_unique<visual_node>(visual_node{"Unless", "control"});
+          auto pattern = std::make_unique<visual_node>(visual_node{"Pattern", "control"});
+          pattern->children.push_back(make_expression_node(*handler.pattern));
+          unless->children.push_back(std::move(pattern));
+          unless->children.push_back(make_statement_node(*handler.body));
+          node->children.push_back(std::move(unless));
+        }
+        if (hope->cleanup)
+        {
+          auto cleanup = std::make_unique<visual_node>(visual_node{"Finally", "control"});
+          cleanup->children.push_back(make_statement_node(*hope->cleanup));
+          node->children.push_back(std::move(cleanup));
+        }
+        return node;
+      }
+      if (const auto *scream = dynamic_cast<const scream_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Scream", "control"});
+        node->children.push_back(make_expression_node(*scream->value));
+        return node;
+      }
       if (const auto *function = dynamic_cast<const function_declaration *>(&value))
       {
         std::string label = "Function\n" + function->name;

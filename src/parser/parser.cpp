@@ -140,6 +140,18 @@ namespace parser
     {
       throw parse_error("'case' is only valid inside a match statement", previous().range);
     }
+    if (match(tokens::KWD_HOPE))
+    {
+      return parse_hope_statement();
+    }
+    if (match(tokens::KWD_SCREAM))
+    {
+      return parse_scream_statement();
+    }
+    if (match(tokens::KWD_UNLESS) || match(tokens::KWD_FINALLY))
+    {
+      throw parse_error("'" + previous().text + "' is only valid after a hope block", previous().range);
+    }
     return parse_expression_statement();
   }
 
@@ -326,6 +338,46 @@ namespace parser
     }
     return std::make_unique<match_statement>(span{keyword.range.begin, close.range.end}, std::move(subject),
                                              std::move(cases));
+  }
+
+  auto syntax_parser::parse_hope_statement() -> statement_ref
+  {
+    const token &keyword = previous();
+    auto protected_body = parse_block();
+    std::vector<exception_handler> handlers;
+    while (match(tokens::KWD_UNLESS))
+    {
+      const token &unless_keyword = previous();
+      auto pattern = parse_expression();
+      auto body = parse_block();
+      const span handler_range{unless_keyword.range.begin, body->range.end};
+      handlers.emplace_back(std::move(pattern), std::move(body), handler_range);
+    }
+    std::unique_ptr<block_statement> cleanup;
+    if (match(tokens::KWD_FINALLY))
+    {
+      cleanup = parse_block();
+    }
+    if (handlers.empty() && !cleanup)
+    {
+      throw parse_error("A hope statement requires at least one 'unless' or 'finally' clause",
+                        keyword.range);
+    }
+    const int end = cleanup ? cleanup->range.end : handlers.back().range.end;
+    return std::make_unique<hope_statement>(span{keyword.range.begin, end}, std::move(protected_body),
+                                            std::move(handlers), std::move(cleanup));
+  }
+
+  auto syntax_parser::parse_scream_statement() -> statement_ref
+  {
+    const token &keyword = previous();
+    if (at_end() || check(tokens::NEWLINE) || check(tokens::RBRACE))
+    {
+      throw parse_error("Expected an exception value after 'scream'", keyword.range);
+    }
+    auto value = parse_expression();
+    const int end = value->range.end;
+    return std::make_unique<scream_statement>(span{keyword.range.begin, end}, std::move(value));
   }
 
   auto syntax_parser::parse_block() -> std::unique_ptr<block_statement>

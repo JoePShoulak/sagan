@@ -74,6 +74,15 @@ fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
       guidance.wait()
     }
   }
+  hope {
+    telemetry.publish(guidance.state)
+  } unless NetworkError {
+    telemetry.queue(guidance.state)
+  } unless error {
+    scream telemetry.wrap(error)
+  } finally {
+    telemetry.flush!()
+  }
   if guidance.failed {
     return
   }

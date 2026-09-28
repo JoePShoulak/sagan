@@ -15,7 +15,7 @@ verified_by: null
 | Language direction | **Settled enough for early work** | README design and lexical rules |
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
-| Parser and Sagan AST | **In progress** | declarations, functions, expressions, collections, blocks, conditionals, loops, matching, control transfer, AST renderers, parser demos |
+| Parser and Sagan AST | **In progress** | declarations, functions, expressions, collections, blocks, conditionals, loops, matching, exceptions, control transfer, AST renderers, parser demos |
 | Semantic analysis | **Planned; not implemented** | roadmap only |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | README core-library model |
@@ -45,8 +45,10 @@ unlabeled `break` and `continue`, and bare or value-bearing `return` statements
 are implemented and rendered in every AST format. Block-bodied `match`/`case`
 supports expression-shaped patterns plus a unique final `case else`; pattern
 meaning and exhaustiveness remain semantic work. The parser demo includes
-successful source plus focused expression, collection, control-flow, matching,
-and unterminated-block errors.
+`hope`/`unless`/`finally` and value-bearing `scream`; exception matching and
+propagation remain semantic/runtime work. Successful source plus focused
+expression, collection, control-flow, matching, exception, and
+unterminated-block errors are demonstrated.
 
 ## Major open language questions
 

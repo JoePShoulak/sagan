@@ -15,7 +15,8 @@ parser implements `let` declarations, blocks, assignment and expression
 statements, `if`/`else`, named block-bodied functions with typed parameters and
 return annotations, `for`/`in`, `while`, and `until` loops, loop control,
 returns, block-bodied `match`/`case`, primary and string expressions, the
-settled precedence table, postfix chains, and collection literals.
+`hope`/`unless`/`finally`/`scream` exception grammar, settled precedence table,
+postfix chains, and collection literals.
 
 **Provisional design:** declarations use words such as `let`, `fun`, `face`,
 `class`, and `enum`; braces delimit bodies; newlines normally terminate
@@ -41,6 +42,8 @@ return_statement := "return" expression?
 match_statement := "match" expression "{" newline* match_case
                    (newline+ match_case)* newline* "}"
 match_case  := "case" (expression | "else") block
+hope_statement := "hope" block ("unless" expression block)* ("finally" block)?
+scream_statement := "scream" expression
 assignment_statement := expression "=" expression
 expression_statement := expression
 function_declaration := "fun" identifier "(" parameters? ")" (":" type)? block
@@ -57,8 +60,8 @@ level, `>` closes the vector, so a greater-than comparison there must be
 parenthesized.
 
 Blocks may be empty. Statements inside them are newline-separated; semicolons do
-not terminate ordinary statements. `else` currently follows the preceding `}`
-without an intervening logical newline.
+not terminate ordinary statements. `else`, `unless`, and `finally` currently
+follow the preceding `}` without an intervening logical newline.
 
 The program root accepts declarations only. Executable statements and control
 flow belong inside function bodies.

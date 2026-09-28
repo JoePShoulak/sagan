@@ -26,6 +26,12 @@ Empty blocks are valid. `break` and `continue` outside a loop are syntax errors.
 A block brace is recognized from its statement position, while `{...}` in an
 expression remains a dictionary literal.
 
+Exception statements use `hope` for the protected block, expression-shaped
+`unless` handler patterns, optional final `finally` cleanup, and `scream
+expression` to raise a value. A `hope` requires at least one handler or cleanup
+clause. Handler meaning, propagation, and cleanup behavior remain semantic and
+runtime questions.
+
 At the program root, the parser accepts declarations only. Executable control
 flow, expression statements, and assignment statements belong inside function
 bodies. This preserves Sagan's declaration-only module scope while entry-point

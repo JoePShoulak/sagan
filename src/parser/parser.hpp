@@ -34,6 +34,8 @@ namespace parser
     auto parse_loop_control(loop_control_statement::kind type) -> statement_ref;
     auto parse_return_statement() -> statement_ref;
     auto parse_match_statement() -> statement_ref;
+    auto parse_hope_statement() -> statement_ref;
+    auto parse_scream_statement() -> statement_ref;
     auto parse_block() -> std::unique_ptr<block_statement>;
     auto parse_expression() -> expression_ref;
     auto parse_nested_expression() -> expression_ref;

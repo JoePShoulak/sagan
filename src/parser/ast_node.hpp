@@ -312,6 +312,36 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct exception_handler
+  {
+    expression_ref pattern;
+    std::unique_ptr<block_statement> body;
+    span range;
+
+    exception_handler(expression_ref matched_pattern, std::unique_ptr<block_statement> handler_body,
+                      span source_range);
+  };
+
+  struct hope_statement final : statement
+  {
+    std::unique_ptr<block_statement> protected_body;
+    std::vector<exception_handler> handlers;
+    std::unique_ptr<block_statement> cleanup;
+
+    hope_statement(span source_range, std::unique_ptr<block_statement> body,
+                   std::vector<exception_handler> exception_handlers,
+                   std::unique_ptr<block_statement> cleanup_body);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct scream_statement final : statement
+  {
+    expression_ref value;
+
+    scream_statement(span source_range, expression_ref exception_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct function_parameter
   {
     std::string name;

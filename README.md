@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.6.0](https://img.shields.io/badge/development-0.6.0-2563eb)](#development-versions)
+[![Development version 0.7.0](https://img.shields.io/badge/development-0.7.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -294,7 +294,24 @@ Sagan uses its own exception vocabulary:
 - `finally` introduces unconditional cleanup; and
 - `scream` raises an exception.
 
-The detailed grammar for exception matching and propagation remains to be defined.
+```sagan
+hope {
+  update()
+} unless NetworkError {
+  retry()
+} unless error {
+  scream wrap(error)
+} finally {
+  cleanup()
+}
+```
+
+The parser requires a `hope` block followed by at least one `unless` handler or
+a `finally` cleanup block. Multiple expression-shaped `unless` patterns are
+allowed, `finally` is optional and last, and `scream` requires an exception
+expression. Clauses currently follow the preceding `}` without an intervening
+logical newline. Exception matching, caught-value binding, propagation, and
+unwinding remain semantic and runtime work.
 
 ### Strings
 
@@ -527,6 +544,8 @@ expression statements within blocks, `if`/`else if`/`else`, `for`/`in`,
 `while`, and `until` control flow, unlabeled `break` and `continue`, and bare or
 value-bearing `return` statements. Block-bodied `match`/`case` statements
 support expression-shaped patterns and an optional final `case else` fallback.
+Exception syntax includes protected `hope` blocks, one or more expression-shaped
+`unless` handlers, optional `finally` cleanup, and value-bearing `scream`.
 Named block-bodied functions provide the executable scope, with optional type
 annotations on parameters and returns; the program root remains declaration-only.
 Postfix operations can be chained freely, as

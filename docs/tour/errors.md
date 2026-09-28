@@ -25,11 +25,16 @@ hope {
 }
 ```
 
-**Implemented lexically:** all four words have dedicated keyword tokens.
+**Implemented in the parser:** `hope` has a protected block followed by one or
+more expression-shaped `unless` handlers and an optional final `finally` block.
+A `finally`-only `hope` is also valid. At least one handler or cleanup clause is
+required, and `scream` requires an expression. Each clause follows the preceding
+`}` without an intervening logical newline.
 
-!!! warning "Design syntax"
-    The example is tokenizer input, not executable exception handling.
+The AST records handler patterns without assigning them binding or matching
+semantics. The examples parse but are not yet executable because semantic
+analysis, exception lowering, and a runtime do not exist.
 
 **Open questions:** exception types, matching, handler binding, propagation,
-stack unwinding, interaction with reference counting, and whether all failures
-use exceptions.
+stack unwinding, cleanup ordering, interaction with return and reference
+counting, and whether all failures use exceptions.

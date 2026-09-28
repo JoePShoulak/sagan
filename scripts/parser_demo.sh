@@ -56,3 +56,10 @@ if bin/sagan --ast examples/match_error.sagan; then
 fi
 
 echo "Match error demo failed as expected."
+
+if bin/sagan --ast examples/exception_error.sagan; then
+  echo "Expected examples/exception_error.sagan to produce a syntax error." >&2
+  exit 1
+fi
+
+echo "Exception error demo failed as expected."

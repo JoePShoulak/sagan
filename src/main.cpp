@@ -644,10 +644,74 @@ namespace
         "match fallback must be last",
         "fun invalid(value) {\n  match value {\n    case else {\n    }\n    case 1 {\n    }\n  }\n}\n");
     passed &= expect_syntax_error("case outside match", "fun invalid() {\n  case 1 {\n  }\n}\n");
+    passed &= expect_ast(
+        "exception handling and raising",
+        "fun execute() {\n"
+        "  hope {\n"
+        "    launch()\n"
+        "  } unless NetworkError {\n"
+        "    recover()\n"
+        "    scream NetworkError\n"
+        "  } unless error {\n"
+        "    scream wrap(error)\n"
+        "  } finally {\n"
+        "    cleanup()\n"
+        "  }\n"
+        "}\n",
+        "Program\n"
+        "  Function(execute)\n"
+        "    Block\n"
+        "      Hope\n"
+        "        Protected\n"
+        "          Block\n"
+        "            ExpressionStatement\n"
+        "              Call\n"
+        "                Identifier(launch)\n"
+        "        Unless\n"
+        "          Identifier(NetworkError)\n"
+        "          Block\n"
+        "            ExpressionStatement\n"
+        "              Call\n"
+        "                Identifier(recover)\n"
+        "            Scream\n"
+        "              Identifier(NetworkError)\n"
+        "        Unless\n"
+        "          Identifier(error)\n"
+        "          Block\n"
+        "            Scream\n"
+        "              Call\n"
+        "                Identifier(wrap)\n"
+        "                Identifier(error)\n"
+        "        Finally\n"
+        "          Block\n"
+        "            ExpressionStatement\n"
+        "              Call\n"
+        "                Identifier(cleanup)\n");
+    passed &= expect_ast(
+        "finally-only hope",
+        "fun cleanup_only() {\n  hope {\n    work()\n  } finally {\n    cleanup()\n  }\n}\n",
+        "Program\n"
+        "  Function(cleanup_only)\n"
+        "    Block\n"
+        "      Hope\n"
+        "        Protected\n"
+        "          Block\n"
+        "            ExpressionStatement\n"
+        "              Call\n"
+        "                Identifier(work)\n"
+        "        Finally\n"
+        "          Block\n"
+        "            ExpressionStatement\n"
+        "              Call\n"
+        "                Identifier(cleanup)\n");
+    passed &= expect_syntax_error("hope without clauses", "fun invalid() {\n  hope {\n    work()\n  }\n}\n");
+    passed &= expect_syntax_error("scream without value", "fun invalid() {\n  scream\n}\n");
+    passed &= expect_syntax_error("standalone unless", "fun invalid() {\n  unless error {\n  }\n}\n");
+    passed &= expect_syntax_error("standalone finally", "fun invalid() {\n  finally {\n  }\n}\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
     passed &= expect_visual_ast("visual statement AST",
-                                "fun update(value) {\n  match value {\n    case 1 {\n      return value\n"
-                                "    }\n    case else {\n      return\n    }\n  }\n}\n");
+                                "fun update() {\n  hope {\n    work()\n  } unless error {\n"
+                                "    scream error\n  } finally {\n    cleanup()\n  }\n}\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
