@@ -1,0 +1,15 @@
+Sagan VS Code Extension
+
+This extension is part of the Sagan repository and is distributed under the
+GNU General Public License, version 3 (GPLv3).
+
+The complete license terms are published by the Free Software Foundation at:
+
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+Sagan is based on Zachary Westerman's Schematic project, which is published
+under GPLv3. The Sagan repository preserves the applicable attribution and
+license obligations for its derived work. Additional provenance and licensing
+information is available in:
+
+docs/about/license-and-attribution.md
