@@ -25,7 +25,7 @@ case "${1:-}" in
       echo "No installed documentation release was found." >&2
       exit 1
     }
-    nohup python3 "$server" --root "$data_dir/current" --port 8781 >>"$log_file" 2>&1 &
+    env -u RUNNER_TRACKING_ID nohup python3 "$server" --root "$data_dir/current" --port 8781 >>"$log_file" 2>&1 &
     echo "$!" >"$pid_file"
     sleep 1
     is_running || { echo "Sagan documentation server failed to start. See $log_file" >&2; exit 1; }

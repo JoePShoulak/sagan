@@ -88,7 +88,9 @@ bash deploy/hosting/update.sh hp1-local
 That command builds an internal archive, atomically advances the origin's
 `current` release symlink, restarts the unprivileged server, and verifies its
 loopback health endpoint. The lower-level local installer refuses to run unless
-the deployment wrapper supplies its explicit safety flag.
+the deployment wrapper supplies its explicit safety flag. The origin launcher
+also removes GitHub's job-tracking marker from the long-lived server process so
+the runner does not clean it up when the deployment job finishes.
 
 The public-route update exports a clean copy of the sibling Frontdoor
 repository's committed `HEAD`, overlays `deploy/frontdoor/frontdoor-sagan.patch`
