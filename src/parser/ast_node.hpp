@@ -353,14 +353,40 @@ namespace parser
   struct function_declaration final : statement
   {
     std::string name;
+    bool private_member;
     std::vector<function_parameter> parameters;
     std::optional<std::string> return_type;
     std::unique_ptr<block_statement> body;
 
     function_declaration(span source_range, std::string identifier,
+                         bool is_private,
                          std::vector<function_parameter> declared_parameters,
                          std::optional<std::string> result_type,
                          std::unique_ptr<block_statement> function_body);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct type_declaration final : statement
+  {
+    enum class kind
+    {
+      interface_type,
+      class_type,
+      enum_type,
+    };
+
+    kind type_kind;
+    std::string name;
+    std::optional<std::string> composition_keyword;
+    std::vector<std::string> composed_interfaces;
+    std::vector<statement_ref> members;
+    std::vector<std::string> enum_members;
+
+    type_declaration(span source_range, kind declared_kind, std::string identifier,
+                     std::optional<std::string> composition,
+                     std::vector<std::string> interfaces,
+                     std::vector<statement_ref> declared_members,
+                     std::vector<std::string> declared_enum_members);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 

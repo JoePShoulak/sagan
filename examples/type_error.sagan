@@ -1,0 +1,4 @@
+// This class method intentionally omits its required body.
+class InvalidShip has Renderable {
+  fun render(): Frame
+}

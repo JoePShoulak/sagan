@@ -63,3 +63,10 @@ if bin/sagan --ast examples/exception_error.sagan; then
 fi
 
 echo "Exception error demo failed as expected."
+
+if bin/sagan --ast examples/type_error.sagan; then
+  echo "Expected examples/type_error.sagan to produce a syntax error." >&2
+  exit 1
+fi
+
+echo "Type-declaration error demo failed as expected."

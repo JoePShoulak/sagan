@@ -22,15 +22,35 @@ face Spacecraft is Renderable, Movable {
 }
 
 class ExplorerShip has Spacecraft {
+  let name: String = "Explorer"
+
   fun render() {
-    // intended implementation
+    self.renderer.draw(self)
   }
+
+  fun .calculate_internal_state(): Vector {
+    return self.position + self.velocity
+  }
+}
+
+enum GuidanceStatus {
+  waiting
+  ready
+  failed
 }
 ```
 
-`self` names the current object. A leading dot on a member is intended to mark
-it private. `is` is also intended for type or conformance tests.
+**Implemented in the parser:** a `face` contains method signatures or
+block-bodied default methods. A `class` contains `let` fields and block-bodied
+methods. `is` and `has` introduce interchangeable comma-separated composition
+lists on faces and classes. `self` parses as the current-object expression, and
+a leading dot marks a private class method in the AST. Simple enums contain
+identifier members separated by newlines or commas.
 
-**Open questions:** structural versus explicit conformance, default methods,
-conflict resolution, constructor rules, value versus reference behavior, and
-whether limited implementation inheritance will exist.
+The parser records these distinctions but does not yet enforce interface
+conformance, privacy, dispatch, or field and method types.
+
+**Open questions:** structural versus explicit conformance, default-method
+conflict resolution, constructor rules, enum payloads and explicit values,
+value versus reference behavior, visibility enforcement, and whether limited
+implementation inheritance will exist.

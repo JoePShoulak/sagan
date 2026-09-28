@@ -1,3 +1,31 @@
+face Renderable {
+  fun render(): Frame
+}
+
+face Navigable is Renderable, Trackable {
+  fun current_course(origin: Coordinate, destination: Coordinate): Vector
+  fun status_label(): String {
+    return "navigating"
+  }
+}
+
+class ExplorerShip has Navigable, TelemetrySource {
+  let name: String = "Voyager"
+  let active = true
+  fun render(): Frame {
+    return self.renderer.draw(self)
+  }
+  fun .calculate_internal_state(): Vector {
+    return self.position + self.velocity
+  }
+}
+
+enum GuidanceStatus {
+  waiting
+  ready
+  failed
+}
+
 let altitude: Float = 125_000.0
 let target_altitude = (altitude)
 let telemetry_pending

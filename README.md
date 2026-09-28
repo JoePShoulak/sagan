@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.7.0](https://img.shields.io/badge/development-0.7.0-2563eb)](#development-versions)
+[![Development version 0.8.0](https://img.shields.io/badge/development-0.8.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -180,6 +180,8 @@ face Spacecraft is Renderable, Movable {
 }
 
 class ExplorerShip has Spacecraft, Trackable {
+  let name: String = "Explorer"
+
   fun render() {
     // ...
   }
@@ -187,6 +189,12 @@ class ExplorerShip has Spacecraft, Trackable {
   fun .calculate_internal_state(): Vector {
     // A leading dot marks a private member.
   }
+}
+
+enum GuidanceStatus {
+  waiting
+  ready
+  failed
 }
 ```
 
@@ -198,7 +206,13 @@ if object is Renderable {
 }
 ```
 
-Interface default methods, conflict resolution, structural versus explicit conformance, and value-versus-reference type behavior remain under design.
+The parser accepts signature-only interface methods, block-bodied interface
+defaults, class fields declared with `let`, required class method bodies,
+leading-dot private methods, and simple identifier-only enum members. Enum
+members may be newline- or comma-separated. Constructors, enum payloads and
+explicit values, default-method conflict resolution, structural versus explicit
+conformance, visibility enforcement, and value-versus-reference behavior remain
+under design.
 
 ### Control flow
 
@@ -546,6 +560,8 @@ value-bearing `return` statements. Block-bodied `match`/`case` statements
 support expression-shaped patterns and an optional final `case else` fallback.
 Exception syntax includes protected `hope` blocks, one or more expression-shaped
 `unless` handlers, optional `finally` cleanup, and value-bearing `scream`.
+Top-level `face`, `class`, and `enum` declarations include composition lists,
+methods, class fields, private method spelling, `self`, and simple enum members.
 Named block-bodied functions provide the executable scope, with optional type
 annotations on parameters and returns; the program root remains declaration-only.
 Postfix operations can be chained freely, as

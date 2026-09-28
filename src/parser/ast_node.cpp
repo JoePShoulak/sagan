@@ -500,10 +500,12 @@ namespace parser
   }
 
   function_declaration::function_declaration(const span source_range, std::string identifier,
+                                             const bool is_private,
                                              std::vector<function_parameter> declared_parameters,
                                              std::optional<std::string> result_type,
                                              std::unique_ptr<block_statement> function_body)
-      : statement(source_range), name(std::move(identifier)), parameters(std::move(declared_parameters)),
+      : statement(source_range), name(std::move(identifier)), private_member(is_private),
+        parameters(std::move(declared_parameters)),
         return_type(std::move(result_type)), body(std::move(function_body))
   {
   }
@@ -511,7 +513,7 @@ namespace parser
   auto function_declaration::print(std::ostream &stream, const int indent) const -> void
   {
     write_indent(stream, indent);
-    stream << "Function(" << name;
+    stream << "Function(" << (private_member ? "." : "") << name;
     if (return_type)
     {
       stream << ": " << *return_type;
@@ -527,7 +529,51 @@ namespace parser
       }
       stream << ")\n";
     }
-    body->print(stream, indent + 2);
+    if (body)
+    {
+      body->print(stream, indent + 2);
+    }
+    else
+    {
+      write_indent(stream, indent + 2);
+      stream << "Signature\n";
+    }
+  }
+
+  type_declaration::type_declaration(const span source_range, const kind declared_kind,
+                                     std::string identifier, std::optional<std::string> composition,
+                                     std::vector<std::string> interfaces,
+                                     std::vector<statement_ref> declared_members,
+                                     std::vector<std::string> declared_enum_members)
+      : statement(source_range), type_kind(declared_kind), name(std::move(identifier)),
+        composition_keyword(std::move(composition)), composed_interfaces(std::move(interfaces)),
+        members(std::move(declared_members)), enum_members(std::move(declared_enum_members))
+  {
+  }
+
+  auto type_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    const char *kind_name = type_kind == kind::interface_type ? "Face" : type_kind == kind::class_type ? "Class" : "Enum";
+    stream << kind_name << "(" << name;
+    if (composition_keyword)
+    {
+      stream << " " << *composition_keyword;
+      for (const auto &interface_name : composed_interfaces)
+      {
+        stream << " " << interface_name;
+      }
+    }
+    stream << ")\n";
+    for (const auto &member : members)
+    {
+      member->print(stream, indent + 2);
+    }
+    for (const auto &member : enum_members)
+    {
+      write_indent(stream, indent + 2);
+      stream << "EnumMember(" << member << ")\n";
+    }
   }
 
   program::program(std::vector<statement_ref> body)

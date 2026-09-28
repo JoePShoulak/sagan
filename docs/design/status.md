@@ -15,7 +15,7 @@ verified_by: null
 | Language direction | **Settled enough for early work** | README design and lexical rules |
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
-| Parser and Sagan AST | **In progress** | declarations, functions, expressions, collections, blocks, conditionals, loops, matching, exceptions, control transfer, AST renderers, parser demos |
+| Parser and Sagan AST | **In progress** | declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, AST renderers, parser demos |
 | Semantic analysis | **Planned; not implemented** | roadmap only |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | README core-library model |
@@ -48,7 +48,10 @@ meaning and exhaustiveness remain semantic work. The parser demo includes
 `hope`/`unless`/`finally` and value-bearing `scream`; exception matching and
 propagation remain semantic/runtime work. Successful source plus focused
 expression, collection, control-flow, matching, exception, and
-unterminated-block errors are demonstrated.
+unterminated-block errors are demonstrated. Faces, classes, simple enums,
+interface composition, class fields and methods, private method spelling, and
+`self` are parsed and rendered; their conformance and object semantics remain
+future work.
 
 ## Major open language questions
 

@@ -16,7 +16,7 @@ statements, `if`/`else`, named block-bodied functions with typed parameters and
 return annotations, `for`/`in`, `while`, and `until` loops, loop control,
 returns, block-bodied `match`/`case`, primary and string expressions, the
 `hope`/`unless`/`finally`/`scream` exception grammar, settled precedence table,
-postfix chains, and collection literals.
+postfix chains, collection literals, and top-level face/class/enum declarations.
 
 **Provisional design:** declarations use words such as `let`, `fun`, `face`,
 `class`, and `enum`; braces delimit bodies; newlines normally terminate
@@ -47,6 +47,14 @@ scream_statement := "scream" expression
 assignment_statement := expression "=" expression
 expression_statement := expression
 function_declaration := "fun" identifier "(" parameters? ")" (":" type)? block
+method_signature := "fun" identifier "(" parameters? ")" (":" type)?
+face_declaration := "face" identifier composition? "{" face_member* "}"
+face_member := method_signature block?
+class_declaration := "class" identifier composition? "{" class_member* "}"
+class_member := let_declaration | "fun" "."? identifier "(" parameters? ")" (":" type)? block
+composition := ("is" | "has") identifier ("," identifier)*
+enum_declaration := "enum" identifier "{" enum_members? "}"
+enum_members := identifier ((newline+ | ",") identifier)* ","?
 parameters  := parameter ("," parameter)* ","?
 parameter   := identifier (":" type)?
 ```

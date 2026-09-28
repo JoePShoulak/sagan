@@ -38,6 +38,9 @@ expression statements, an `if`/`else if`/`else` chain, all three loop forms,
 `break`, `continue`, both return forms, and `match`/`case` with a fallback inside
 a typed, block-bodied function. It also demonstrates multiple `unless` handlers,
 `scream`, and `finally` cleanup around a protected `hope` block.
+The top of the fixture demonstrates composed faces, signatures and default
+methods, a class with fields, public and private methods, `self`, and a simple
+enum.
 
 ```bash
 bash scripts/parser_demo.sh
@@ -48,7 +51,8 @@ The first command prints the tree and confirms the intentional errors in
 `examples/parser_error.sagan`, `examples/postfix_error.sagan`, and
 `examples/string_error.sagan`, `examples/collection_error.sagan`,
 `examples/block_error.sagan`, `examples/control_flow_error.sagan`, and
-`examples/match_error.sagan`, and `examples/exception_error.sagan`. The second
+`examples/match_error.sagan`, `examples/exception_error.sagan`, and
+`examples/type_error.sagan`. The second
 opens a self-contained page showing the input source beside a colored tree. The
 page supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
 `bash scripts/ast_demo.sh --no-open` to generate `build/ast-demo.html` without
@@ -61,6 +65,7 @@ The block fixture demonstrates the focused diagnostic for a missing closing
 brace. The control-flow fixture demonstrates the diagnostic for `break` outside
 a loop. The match fixture demonstrates that `case else` must be the last branch.
 The exception fixture demonstrates that `scream` requires a value.
+The type fixture demonstrates that class methods require bodies.
 
 ## Intentional lexical error
 

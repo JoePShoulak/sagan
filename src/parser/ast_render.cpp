@@ -332,7 +332,7 @@ namespace parser
       }
       if (const auto *function = dynamic_cast<const function_declaration *>(&value))
       {
-        std::string label = "Function\n" + function->name;
+        std::string label = "Function\n" + std::string(function->private_member ? "." : "") + function->name;
         if (function->return_type)
         {
           label += ": " + *function->return_type;
@@ -348,7 +348,43 @@ namespace parser
           node->children.push_back(
               std::make_unique<visual_node>(visual_node{std::move(parameter_label), "declaration"}));
         }
-        node->children.push_back(make_statement_node(*function->body));
+        if (function->body)
+        {
+          node->children.push_back(make_statement_node(*function->body));
+        }
+        else
+        {
+          node->children.push_back(std::make_unique<visual_node>(visual_node{"Signature", "declaration"}));
+        }
+        return node;
+      }
+      if (const auto *type = dynamic_cast<const type_declaration *>(&value))
+      {
+        const std::string kind_name = type->type_kind == type_declaration::kind::interface_type
+                                          ? "Face"
+                                      : type->type_kind == type_declaration::kind::class_type ? "Class"
+                                                                                              : "Enum";
+        auto node = std::make_unique<visual_node>(visual_node{kind_name + "\n" + type->name, "declaration"});
+        if (type->composition_keyword)
+        {
+          auto composition = std::make_unique<visual_node>(
+              visual_node{"Composition\n" + *type->composition_keyword, "declaration"});
+          for (const auto &interface_name : type->composed_interfaces)
+          {
+            composition->children.push_back(
+                std::make_unique<visual_node>(visual_node{"Interface\n" + interface_name, "declaration"}));
+          }
+          node->children.push_back(std::move(composition));
+        }
+        for (const auto &member : type->members)
+        {
+          node->children.push_back(make_statement_node(*member));
+        }
+        for (const auto &member : type->enum_members)
+        {
+          node->children.push_back(
+              std::make_unique<visual_node>(visual_node{"Enum member\n" + member, "declaration"}));
+        }
         return node;
       }
       throw std::runtime_error("AST renderer encountered an unsupported statement node");

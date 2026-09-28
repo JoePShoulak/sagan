@@ -17,10 +17,13 @@ This composition-first direction is **settled design**. Deep inheritance
 hierarchies are not the intended reuse mechanism. A leading dot is intended to
 mark a private member.
 
-**Implemented lexically:** `face`, `class`, `is`, `has`, `self`, member
-dots, and the surrounding punctuation.
+**Implemented in the parser:** `face` and `class` are top-level declarations.
+Both accept `is` or `has` followed by comma-separated interface names. Faces
+contain signature-only methods or block-bodied defaults. Classes contain `let`
+fields and block-bodied methods. `self` is an expression, and a leading dot on
+a class method is retained as private-member syntax in the AST.
 
-**Open questions:** explicit versus structural conformance, default
-implementations, conflict resolution, object construction, storage layout,
-dispatch, value/reference behavior, visibility semantics, and whether limited
+**Open questions:** explicit versus structural conformance, default-method
+conflict resolution, object construction, storage layout, dispatch,
+value/reference behavior, visibility enforcement, and whether limited
 implementation inheritance will exist.

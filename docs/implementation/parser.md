@@ -42,6 +42,9 @@ syntax trees with source-spanned diagnostics.
 - Bare and value-bearing `return` statements
 - Block-bodied `match`/`case`, with an optional final `case else`
 - `hope`/`unless`/`finally` exception regions and value-bearing `scream`
+- `face` signatures and default methods, plus `is`/`has` composition lists
+- `class` fields, methods, leading-dot private methods, and `self`
+- Simple newline- or comma-separated `enum` members
 - Named block-bodied functions with optional parameter and return annotations
 - Declaration-only program roots; executable statements are function-local
 - Human-readable AST output and success/error demonstrations
@@ -68,5 +71,6 @@ Text, DOT, SVG, and HTML are also available from `bin/sagan` through `--ast`,
 supports every AST node the parser can produce; new node kinds must be added to
 the renderer as their parser slices land.
 
-The next slices are expression-bodied functions, type declarations, and modules.
+The next slices are expression-bodied functions, modules, compound assignment,
+and documentation-comment attachment.
 Error recovery beyond the first syntax error also remains future parser work.

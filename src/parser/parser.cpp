@@ -84,6 +84,18 @@ namespace parser
       {
         declaration = parse_function_declaration();
       }
+      else if (match(tokens::KWD_FACE))
+      {
+        declaration = parse_type_declaration(type_declaration::kind::interface_type);
+      }
+      else if (match(tokens::KWD_CLASS))
+      {
+        declaration = parse_type_declaration(type_declaration::kind::class_type);
+      }
+      else if (match(tokens::KWD_ENUM))
+      {
+        declaration = parse_type_declaration(type_declaration::kind::enum_type);
+      }
       else
       {
         throw parse_error("Only declarations are allowed at the top level", peek()->range);
@@ -176,9 +188,10 @@ namespace parser
                                              std::move(initializer));
   }
 
-  auto syntax_parser::parse_function_declaration() -> statement_ref
+  auto syntax_parser::parse_function_declaration(const bool body_optional, const bool allow_private) -> statement_ref
   {
     const token &keyword = previous();
+    const bool private_member = allow_private && match(tokens::DOT);
     const token &name = expect(tokens::IDENTIFIER, "a function name after 'fun'");
     expect(tokens::LPAREN, "'(' after the function name");
     std::vector<function_parameter> parameters;
@@ -202,11 +215,81 @@ namespace parser
     {
       return_type = expect(tokens::IDENTIFIER, "a return type after ':'").text;
     }
-    auto body = parse_block();
-    const int end = body->range.end;
-    return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text,
+    std::unique_ptr<block_statement> body;
+    if (check(tokens::LBRACE))
+    {
+      body = parse_block();
+    }
+    else if (!body_optional)
+    {
+      expect(tokens::LBRACE, "'{' to begin the function body");
+    }
+    const int end = body ? body->range.end : previous().range.end;
+    return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text, private_member,
                                                   std::move(parameters), std::move(return_type),
                                                   std::move(body));
+  }
+
+  auto syntax_parser::parse_type_declaration(const type_declaration::kind type) -> statement_ref
+  {
+    const token &keyword = previous();
+    const token &name = expect(tokens::IDENTIFIER, "a type name after '" + keyword.text + "'");
+    std::optional<std::string> composition_keyword;
+    std::vector<std::string> interfaces;
+    if (match(tokens::KWD_IS) || match(tokens::KWD_HAS))
+    {
+      composition_keyword = previous().text;
+      do
+      {
+        interfaces.push_back(expect(tokens::IDENTIFIER, "an interface name in the composition list").text);
+      } while (match(tokens::COMMA));
+    }
+
+    const token &open = expect(tokens::LBRACE, "'{' to begin the type body");
+    std::vector<statement_ref> members;
+    std::vector<std::string> enum_members;
+    skip_newlines();
+    while (!check(tokens::RBRACE))
+    {
+      if (at_end())
+      {
+        throw parse_error("Expected '}' after the type body", open.range);
+      }
+      if (type == type_declaration::kind::enum_type)
+      {
+        enum_members.push_back(expect(tokens::IDENTIFIER, "an enum member name").text);
+        if (match(tokens::COMMA))
+        {
+          skip_newlines();
+          continue;
+        }
+      }
+      else if (match(tokens::KWD_FUN))
+      {
+        const bool is_interface = type == type_declaration::kind::interface_type;
+        members.push_back(parse_function_declaration(is_interface, !is_interface));
+      }
+      else if (type == type_declaration::kind::class_type && match(tokens::KWD_LET))
+      {
+        members.push_back(parse_let_declaration());
+      }
+      else
+      {
+        const std::string expected = type == type_declaration::kind::interface_type
+                                         ? "an interface method declaration"
+                                         : "a field or method declaration";
+        throw parse_error("Expected " + expected, peek()->range);
+      }
+      if (!check(tokens::RBRACE))
+      {
+        expect(tokens::NEWLINE, "a newline after the type member");
+        skip_newlines();
+      }
+    }
+    const token &close = expect(tokens::RBRACE, "'}' after the type body");
+    return std::make_unique<type_declaration>(span{keyword.range.begin, close.range.end}, type, name.text,
+                                              std::move(composition_keyword), std::move(interfaces),
+                                              std::move(members), std::move(enum_members));
   }
 
   auto syntax_parser::parse_expression_statement() -> statement_ref
@@ -646,7 +729,7 @@ namespace parser
     {
       return parse_vector();
     }
-    if (match(tokens::IDENTIFIER))
+    if (match(tokens::IDENTIFIER) || match(tokens::KWD_SELF))
     {
       const token &value = previous();
       return std::make_unique<identifier_expression>(value.range, value.text);

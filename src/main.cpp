@@ -708,10 +708,71 @@ namespace
     passed &= expect_syntax_error("scream without value", "fun invalid() {\n  scream\n}\n");
     passed &= expect_syntax_error("standalone unless", "fun invalid() {\n  unless error {\n  }\n}\n");
     passed &= expect_syntax_error("standalone finally", "fun invalid() {\n  finally {\n  }\n}\n");
+    passed &= expect_ast(
+        "faces classes enums and composition",
+        "face Renderable {\n"
+        "  fun render(): Frame\n"
+        "}\n"
+        "face Spacecraft is Renderable, Movable {\n"
+        "  fun trajectory(): Vector\n"
+        "  fun label(): String {\n"
+        "    return \"spacecraft\"\n"
+        "  }\n"
+        "}\n"
+        "class ExplorerShip has Spacecraft, Trackable {\n"
+        "  let name: String = \"Explorer\"\n"
+        "  fun render(): Frame {\n"
+        "    return self.draw()\n"
+        "  }\n"
+        "  fun .calculate_internal_state(): Vector {\n"
+        "    return self.position\n"
+        "  }\n"
+        "}\n"
+        "enum MissionState {\n"
+        "  planned\n"
+        "  running,\n"
+        "  complete\n"
+        "}\n",
+        "Program\n"
+        "  Face(Renderable)\n"
+        "    Function(render: Frame)\n"
+        "      Signature\n"
+        "  Face(Spacecraft is Renderable Movable)\n"
+        "    Function(trajectory: Vector)\n"
+        "      Signature\n"
+        "    Function(label: String)\n"
+        "      Block\n"
+        "        Return\n"
+        "          String\n"
+        "            Text(\"spacecraft\")\n"
+        "  Class(ExplorerShip has Spacecraft Trackable)\n"
+        "    Let(name: String)\n"
+        "      String\n"
+        "        Text(\"Explorer\")\n"
+        "    Function(render: Frame)\n"
+        "      Block\n"
+        "        Return\n"
+        "          Call\n"
+        "            Member(draw)\n"
+        "              Identifier(self)\n"
+        "    Function(.calculate_internal_state: Vector)\n"
+        "      Block\n"
+        "        Return\n"
+        "          Member(position)\n"
+        "            Identifier(self)\n"
+        "  Enum(MissionState)\n"
+        "    EnumMember(planned)\n"
+        "    EnumMember(running)\n"
+        "    EnumMember(complete)\n");
+    passed &= expect_syntax_error("top-level function signature", "fun incomplete(value: Float): Float\n");
+    passed &= expect_syntax_error("face field", "face Invalid {\n  let value: Float\n}\n");
+    passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
+    passed &= expect_syntax_error("enum literal member", "enum Invalid {\n  1\n}\n");
+    passed &= expect_syntax_error("trailing composition comma", "face Invalid is Renderable, {\n}\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
     passed &= expect_visual_ast("visual statement AST",
-                                "fun update() {\n  hope {\n    work()\n  } unless error {\n"
-                                "    scream error\n  } finally {\n    cleanup()\n  }\n}\n");
+                                "face Runnable {\n  fun run()\n}\nclass Mission has Runnable {\n"
+                                "  fun run() {\n    self.launch()\n  }\n}\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
