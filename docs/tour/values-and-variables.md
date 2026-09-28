@@ -38,6 +38,7 @@ both.
 
 Arrays infer one homogeneous element type; dictionaries infer homogeneous key
 and value types; and vectors and coordinates infer a numeric component type and
-dimension. Empty arrays/dictionaries await generic annotation syntax. Runtime
-construction remains future work. Physical units and coordinate frames are
-deliberately not distinguished by the initial type system.
+dimension. Empty arrays/dictionaries await generic annotation syntax. Native
+construction, indexing, iteration, spreads, and display are implemented;
+vector algebra and named components remain future work. Physical units and
+coordinate frames are deliberately not distinguished by the initial type system.

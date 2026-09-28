@@ -82,6 +82,11 @@ semantic analysis will determine whether a key's type is hashable. Vectors and
 coordinates require at least two elements, so `<>`, `<1>`, and `(1,)` are
 syntax errors. `(value)` remains a grouped expression.
 
+**Implemented native semantics:** vectors and coordinates retain distinct,
+fixed-size runtime types. Both support construction, same-family spreading,
+zero-based indexing, iteration, equality, printing, and string interpolation.
+Vector/coordinate arithmetic and named component access remain future math work.
+
 Calls and all collection forms permit trailing commas. `...value` creates a
 spread node; later semantic analysis will validate whether its surrounding call
 or collection supports the value being expanded. A spread dictionary entry

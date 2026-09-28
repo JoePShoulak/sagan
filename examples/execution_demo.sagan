@@ -21,6 +21,11 @@ fun main(): Int {
   arithmetic -= 1
   let product = 6 * 7
   let floating_remainder = 5.5 % 2.0
+  let direction_start = <1.0, 2.0>
+  let direction = <...direction_start, 3.0>
+  let position = (10.0, 20.0, 30.0)
+  let direction_total = 0.0
+  for component in direction direction_total += component
 
   print("The answer from 🚀 is:")
   print(answer)
@@ -34,6 +39,11 @@ fun main(): Int {
   print("Checked compound arithmetic result: ${arithmetic}")
   print("Six times seven: ${product}")
   print("Floating remainder: ${floating_remainder}")
+  print("Direction: ${direction}")
+  print("Position: ${position}")
+  print("Direction Z: ${direction[2]}")
+  print("Position Y: ${position[1]}")
+  print("Direction component total: ${direction_total}")
   match configured_countdown {
     case 3 print("Match selected the nominal countdown")
     case else print("Match selected the fallback")
@@ -52,6 +62,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 return 0
+  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position[1] == 20.0 return 0
   else return 1
 }

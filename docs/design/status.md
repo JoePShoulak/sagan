@@ -19,7 +19,7 @@ verified_by: null
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls/returns, literal collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, output/interpolation, deterministic checked arithmetic and powers, typed collections and collection spreads, loops, expression-pattern matching, native execution demo |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, output/interpolation, deterministic checked arithmetic and powers, typed collections, dimensioned vectors/coordinates and spreads, loops, expression-pattern matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
 
 ## Tokenizer verification

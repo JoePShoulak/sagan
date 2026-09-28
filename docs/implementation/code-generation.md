@@ -19,6 +19,8 @@ The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
 prefix and postfix numeric increment and decrement, checked integer arithmetic,
+dimensioned vector and coordinate values, their spreads, indexing, iteration,
+printing and interpolation,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Homogeneous array literals preserve the element width inferred by the
@@ -56,6 +58,11 @@ increment, decrement, exponentiation, and their compound-assignment forms use
 generated helpers. Integer overflow and zero divisors raise runtime errors;
 floating-point remainder uses `fmod` and floating-point division also rejects a
 zero divisor.
+
+Vectors and coordinates lower to separate fixed-size native runtime types, so a
+coordinate is not silently interchangeable with a vector. Their dimensions and
+component types come from the checked semantic model. Vector algebra, coordinate
+arithmetic, named components, and generic source annotations are not implemented.
 
 Open work includes generated-code structure, runtime interfaces, memory
 management, exception lowering, debug information, compiler selection and flags,

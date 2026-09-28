@@ -127,7 +127,8 @@ countdown array using a spread, reads a checked array index, formats interpolate
 strings,
 constructs a typed dictionary using a spread and later-key override, reads a
 checked key, demonstrates checked powers and prefix/postfix increment values,
-mutates state through
+constructs a vector with a spread, constructs a coordinate, prints and indexes
+both dimensioned values, iterates the vector's components, and mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,
 tests the result, and returns success from `main`. Its `match` cases, `for`
 loop, and final `if` branches demonstrate same-line bodies without braces.

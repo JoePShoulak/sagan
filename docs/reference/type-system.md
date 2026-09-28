@@ -33,6 +33,9 @@ provide compatible collections. Empty arrays and dictionaries cannot yet be
 checked because generic annotation syntax is not implemented. Vector and
 coordinate literals infer their dimension and common numeric component type,
 for example `Vector3<Float64>`; dimensions must match for compatibility.
+The native backend preserves the vector-versus-coordinate distinction and the
+inferred dimension and component type. Generic dimensioned annotations are not
+yet available in source code.
 
 **Implemented for the native numeric subset:** integer arithmetic overflow
 raises a runtime exception. Typed collections and interfaces continue to have
