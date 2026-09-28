@@ -8,7 +8,8 @@ verified_by: null
 ---
 
 # Semantic analysis
-**Status: name resolution and initial scalar type checking implemented.**
+**Status: executable-subset name resolution, type checking, and control-flow
+validation implemented.**
 
 The first semantic pass consumes the source-spanned AST and produces a printable
 semantic model. It creates program and nested lexical scopes, installs built-in
@@ -22,11 +23,12 @@ type members, enum members, imports, exports, composition references, and
 include `Bool`, `Coordinate`, `Float`, `Float32`, `Float64`, `Frame`, `Int`,
 `String`, `Vector`, and `Void`.
 
-This pass deliberately does not establish initialization order, overload
-signatures, match or exception-pattern binding, types, conversions, interface
-conformance, mutation rules, or control-flow correctness. Top-level names are
-collected before bodies are visited, so name resolution alone permits forward
-and self references; later passes must decide whether those uses are valid.
+Name collection deliberately remains separate from type and control-flow
+checking. Top-level names are collected before bodies are visited, permitting
+forward and self references. Later checking establishes overload signatures,
+types, lossless conversions, definite initialization, definite returns, and
+unreachable code. Interface conformance, exception-pattern binding, and the
+general object mutation model remain future work.
 
 The initial type checker infers scalar literals; validates annotations,
 initializers, assignments, Boolean conditions, conditional branches, core
@@ -48,9 +50,10 @@ Vectors and coordinates require numeric components and carry dimension plus
 component type, such as `Vector3<Float64>`; compatibility requires equal
 dimensions and lossless component widening.
 
-Member access, lambda callability, interface conformance, and several
-user-defined-type relationships currently remain `Unknown`. The generic model
-and multi-error recovery strategy also remain open.
+Dimensioned `.x`, `.y`, `.z`, and `.w` members resolve to their component type
+when present. Other member access, lambda callability, interface conformance,
+and several user-defined-type relationships currently remain `Unknown`. The
+generic model and multi-error recovery strategy also remain open.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
 Non-`Void` block-bodied functions must return on every statically guaranteed
@@ -59,4 +62,4 @@ definite initialization and statements after a guaranteed return are rejected.
 
 Executable validation is separate from ordinary module analysis. An executable
 must define exactly one parameterless `main` returning `Int` or `Void`. This
-contract is implemented even though code generation has not begun.
+contract is implemented and feeds the initial C++ backend.

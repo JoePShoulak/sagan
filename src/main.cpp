@@ -1631,6 +1631,13 @@ namespace
         "let scaled = 2.0 * left\nlet divided = scaled / 2.0\nlet reversed = -left\n",
         {"sum: Vector3<Float64>", "difference: Vector3<Float64>", "scaled: Vector3<Float64>",
          "divided: Vector3<Float64>", "reversed: Vector3<Float64>"});
+    passed &= expect_type_model(
+        "named vector and coordinate components",
+        "fun update_components(): Void {\n"
+        "  let direction = <1.0, 2.0, 3.0>\n  let position = (4, 5, 6, 7)\n"
+        "  let horizontal = direction.x\n  let altitude = position.z\n  let frame = position.w\n"
+        "  direction.y = 8.0\n  direction.z += 1.0\n}\n",
+        {"horizontal: Float64", "altitude: Int8", "frame: Int8"});
     passed &= expect_type_error("initializer type mismatch", "let value: Bool = 1\n",
                                 "Variable initializer requires Bool, but received Int");
     passed &= expect_type_error("uninferable variable", "let pending\n",
@@ -1726,6 +1733,13 @@ namespace
     passed &= expect_type_error("vectors have equality but no ordered comparison",
                                 "let invalid = <1.0, 2.0> < <3.0, 4.0>\n",
                                 "Ordered comparison is not defined");
+    passed &= expect_type_error("named component must exist",
+                                "let invalid = <1.0, 2.0>.z\n", "Vector2 has no member 'z'");
+    passed &= expect_type_error("dimensioned values reject unknown members",
+                                "let invalid = (1.0, 2.0).latitude\n", "Coordinate has no member 'latitude'");
+    passed &= expect_type_error("dimensioned values are not optional",
+                                "let invalid = <1.0, 2.0>?.x\n",
+                                "Safe member access is not defined for Vector values");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",

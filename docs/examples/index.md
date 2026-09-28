@@ -128,8 +128,8 @@ strings,
 constructs a typed dictionary using a spread and later-key override, reads a
 checked key, demonstrates checked powers and prefix/postfix increment values,
 constructs a vector with a spread, constructs a coordinate, prints and indexes
-both dimensioned values, iterates the vector's components, performs checked
-vector/scalar arithmetic and compound updates, and mutates state through
+both dimensioned values, reads and updates named components, iterates the
+vector's components, performs checked vector/scalar arithmetic and compound updates, and mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,
 tests the result, and returns success from `main`. Its `match` cases, `for`
 loop, and final `if` branches demonstrate same-line bodies without braces.

@@ -237,6 +237,14 @@ namespace codegen
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
           return expression(*index->target) + ".at(" + expression(*index->index) + ")";
+        if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
+        {
+          const std::string_view component_names = "xyzw";
+          const std::size_t component = component_names.find(member->member_name);
+          if (member->safe || member->member_name.size() != 1 || component == std::string_view::npos)
+            fail("member access is not available in the initial native subset", value.range);
+          return expression(*member->target) + ".at(" + std::to_string(component) + ")";
+        }
         if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
         {
           const std::string checked = expression_type(value);

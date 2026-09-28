@@ -41,5 +41,6 @@ and value types; and vectors and coordinates infer a numeric component type and
 dimension. Empty arrays/dictionaries await generic annotation syntax. Native
 construction, indexing, iteration, spreads, and display are implemented;
 checked vector addition, subtraction, negation, and scalar scaling are also
-implemented. Named components remain future work. Physical units and
+implemented. Dimension-checked `.x`, `.y`, `.z`, and `.w` component reads and
+updates work for vectors and coordinates. Physical units and
 coordinate frames are deliberately not distinguished by the initial type system.

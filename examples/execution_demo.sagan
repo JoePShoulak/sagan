@@ -37,6 +37,9 @@ fun main(): Int {
   maneuver_direction -= correction
   maneuver_direction *= 2.0
   maneuver_direction /= 2.0
+  let guided_direction = direction
+  guided_direction.x += 0.5
+  guided_direction.y = 4.0
 
   print("The answer from 🚀 is:")
   print(answer)
@@ -52,12 +55,13 @@ fun main(): Int {
   print("Floating remainder: ${floating_remainder}")
   print("Direction: ${direction}")
   print("Position: ${position}")
-  print("Direction Z: ${direction[2]}")
-  print("Position Y: ${position[1]}")
+  print("Direction Z: ${direction.z}")
+  print("Position Y: ${position.y}")
   print("Direction component total: ${direction_total}")
   print("Adjusted direction: ${adjusted_direction}")
   print("Reversed direction: ${reversed_direction}")
   print("Restored direction: ${restored_direction}")
+  print("Guided direction: ${guided_direction}")
   match configured_countdown {
     case 3 print("Match selected the nominal countdown")
     case else print("Match selected the fallback")
@@ -76,6 +80,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position[1] == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction[0] == -1.0 return 0
+  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
   else return 1
 }

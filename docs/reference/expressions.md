@@ -87,11 +87,12 @@ fixed-size runtime types. Both support construction, same-family spreading,
 zero-based indexing, iteration, equality, printing, and string interpolation.
 Vectors of equal dimension support `+`, `-`, unary `+`/`-`, equality, scalar
 `*` in either operand order, and vector/scalar `/`; the matching compound forms
-are also supported. Component arithmetic retains the scalar overflow and
-zero-divisor checks. Vector-vector multiplication and ordered comparison are
+are also supported. `.x`, `.y`, `.z`, and `.w` read or mutate components when
+the value's dimension contains that component; requesting a component outside
+the dimension is a compile-time error. Component arithmetic retains the scalar
+overflow and zero-divisor checks. Vector-vector multiplication and ordered comparison are
 undefined rather than implicitly meaning dot, cross, component multiplication,
-or lexicographic ordering. Coordinate arithmetic and named component access
-remain future math work.
+or lexicographic ordering. Coordinate arithmetic remains future math work.
 
 Calls and all collection forms permit trailing commas. `...value` creates a
 spread node; later semantic analysis will validate whether its surrounding call

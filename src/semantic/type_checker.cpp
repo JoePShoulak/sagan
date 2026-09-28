@@ -528,7 +528,21 @@ namespace semantic
         }
         if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
         {
-          static_cast<void>(expression(*member->target));
+          const std::string target = expression(*member->target);
+          if (const auto shaped = dimensioned(target))
+          {
+            require(!member->safe, "Safe member access is not defined for " + shaped->family + " values",
+                    value.range);
+            const std::string_view component_names = "xyzw";
+            const std::size_t component = component_names.find(member->member_name);
+            require(member->member_name.size() == 1 && component != std::string_view::npos,
+                    shaped->family + " has no member '" + member->member_name + "'", value.range);
+            require(component < shaped->dimensions,
+                    shaped->family + std::to_string(shaped->dimensions) + " has no member '" +
+                        member->member_name + "'",
+                    value.range);
+            return record(value, shaped->component);
+          }
           return record(value, std::string(unknown_type));
         }
         if (const auto *spread = dynamic_cast<const parser::spread_expression *>(&value))

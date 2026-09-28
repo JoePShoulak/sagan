@@ -105,6 +105,8 @@ grep -Fq "sagan_dimensioned_spread_0_0" "$work_dir/generated.cpp"
 grep -Fq "sagan_add<sagan_vector<double, 3>>" "$work_dir/generated.cpp"
 grep -Fq "sagan_multiply<sagan_vector<double, 3>>(2.0" "$work_dir/generated.cpp"
 grep -Fq "sagan_negate<sagan_vector<double, 3>>" "$work_dir/generated.cpp"
+grep -Fq ".at(2)" "$work_dir/generated.cpp"
+grep -Fq ".at(1)" "$work_dir/generated.cpp"
 grep -Fq "const auto sagan_match_0" "$work_dir/generated.cpp"
 grep -Fq "else {" "$work_dir/generated.cpp"
 

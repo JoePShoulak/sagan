@@ -19,7 +19,7 @@ The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
 prefix and postfix numeric increment and decrement, checked integer arithmetic,
-dimensioned vector and coordinate values, their spreads, indexing, iteration,
+dimensioned vector and coordinate values, their spreads, indexing, named components, iteration,
 printing and interpolation,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
@@ -65,7 +65,10 @@ component types come from the checked semantic model. Vectors support checked
 addition, subtraction, unary negation, scalar multiplication and division,
 equality, and compound forms. Vector-vector multiplication is deliberately not
 assigned an implicit dot, cross, or component-wise meaning. Coordinate
-arithmetic, named components, and generic source annotations are not implemented.
+arithmetic and generic source annotations are not implemented. Both dimensioned
+families provide `.x`, `.y`, `.z`, and `.w` component access where their
+dimension permits it; components are assignable because variables are mutable
+by default.
 
 Open work includes generated-code structure, runtime interfaces, memory
 management, exception lowering, debug information, compiler selection and flags,

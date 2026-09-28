@@ -16,10 +16,10 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls/returns, literal collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls/returns, literal collections, dimensions and named components, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, output/interpolation, deterministic checked scalar/vector arithmetic and powers, typed collections, dimensioned vectors/coordinates and spreads, loops, expression-pattern matching, native execution demo |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, output/interpolation, deterministic checked scalar/vector arithmetic and powers, typed collections, dimensioned vectors/coordinates, named components and spreads, loops, expression-pattern matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
 
 ## Tokenizer verification
@@ -85,9 +85,9 @@ and runtime work.
 
 ## Major open language questions
 
-Generic annotations, member inference, value/reference behavior, reference-count cycles,
+Generic annotations, general user-defined member inference, value/reference behavior, reference-count cycles,
 interface defaults and conflict resolution, generics and possible sum types,
-constructors, enum semantics, exception propagation, entry points, module
+constructors, enum semantics, exception propagation, module
 resolution and packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

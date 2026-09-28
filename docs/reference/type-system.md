@@ -36,6 +36,10 @@ for example `Vector3<Float64>`; dimensions must match for compatibility.
 The native backend preserves the vector-versus-coordinate distinction and the
 inferred dimension and component type. Generic dimensioned annotations are not
 yet available in source code.
+Named `.x`, `.y`, `.z`, and `.w` access has the inferred component type and is
+accepted only when the dimension contains that component. These members are
+assignable and compound assignment preserves the normal lossless-conversion
+rules.
 Vector arithmetic requires equal dimensions and infers the lossless common
 component type. Scalar multiplication and division likewise widen the component
 type when necessary; compound assignment rejects a result that cannot be stored
@@ -45,7 +49,7 @@ losslessly in its target vector.
 raises a runtime exception. Typed collections and interfaces continue to have
 provisional semantics outside the implemented subset.
 
-**Open questions:** generic annotation syntax, member inference, nullability, value versus
+**Open questions:** generic annotation syntax, user-defined member inference, nullability, value versus
 reference categories, generic semantics, possible sum types, variance,
 compile-time constants, and representation. Deferred cases are currently
 marked `Unknown` by the type model.
