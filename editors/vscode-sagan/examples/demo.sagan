@@ -1,16 +1,144 @@
-// Temporary highlighting smoke test for the draft Sagan syntax.
-class ExplorerShip {
-  fun calculate_trajectory(position, velocity) {
-    let timestep = 0.25
-    let next_position = position + velocity * timestep
-    return next_position
+/// Comprehensive lexical showcase for the current Sagan tokenizer.
+module syntax_showcase
+
+import Telemetry from mission_support
+import Navigator from mission_support as Guidance
+export ExplorerShip
+
+/**
+ * Interfaces are Sagan's primary composition mechanism.
+ * This documentation comment may contain /* a nested block comment */ safely.
+ */
+face Movable {
+  fun velocity(): Vector
+  fun move!(offset: Vector)
+}
+
+face Trackable {
+  fun identifier(): String
+}
+
+face Spacecraft is Movable, Trackable {
+  fun trajectory(origin: Coordinate, duration: Float): Vector
+}
+
+enum MissionState {
+  case idle
+  case flying
+  case landed
+}
+
+class ExplorerShip has Spacecraft {
+  let name: String = "Voyager"
+  let state: MissionState = MissionState.idle
+
+  /// A public method with parameters and a return type.
+  fun trajectory(origin: Coordinate, duration: Float): Vector {
+    let displacement = self.velocity * duration
+    return <origin, displacement, 0.0>
+  }
+
+  // A leading dot marks a private member declaration.
+  fun .calculate_internal_state(sample_count: Integer): Float {
+    return sample_count ^ 2 / 2.0
+  }
+
+  // The trailing ! is part of this mutating method's name.
+  fun move!(offset: Vector) {
+    self.position += offset
   }
 }
 
-let ship_name = "Voyager"
-let orbital_velocity = 7.8e3
+let MAX_ENTITIES: Integer = 100_000
+let entity_count: Integer = 10_000
+let gravity: Float = 6.674_30e-11
+let distance: Float = 1E+9
+let efficiency: Float = 9.5e-1
+let unlimited: Float = inf
+let unavailable: Float = nan
 
-if orbital_velocity > 0 {
-  // JavaScript highlighting is the temporary grammar baseline.
-  calculate_trajectory(<0, 0, 0>, <0, orbital_velocity, 0>)
+entity_count = entity_count + 1
+entity_count++
+--entity_count
+entity_count += 4
+entity_count -= 2
+entity_count *= 3
+entity_count /= 2
+entity_count %= 7
+entity_count ^= 2
+let assigned = entity_count := 42
+
+let values = [1, 2, 3]
+let copied_values = [...values]
+let metadata = {"name": "Voyager", "active": true, "attempts": 3}
+let direction: Vector = <1.0, 0.0, -1.0>
+let position: Coordinate = (100.0, 200.0, 300.0)
+let maybe_name = metadata?.name
+
+let add = fun(left: Float, right: Float): Float => left + right
+let ready = true and not false
+let status = ready ? "running" ; "stopped"
+
+if entity_count >= 1 and entity_count != MAX_ENTITIES {
+  entity_count = entity_count * 2
+} else {
+  entity_count = 0
 }
+
+for value in values {
+  if value == 2 {
+    continue
+  }
+}
+
+while entity_count > 0 {
+  entity_count--
+  break
+}
+
+until ready or !false {
+  ready = true
+}
+
+match status {
+  case "running" {
+    yield status
+  }
+  case "stopped" {
+    yield "idle"
+  }
+}
+
+hope {
+  let result = add(1.0, 2.0)
+} unless error {
+  scream "calculation failed: ${error}"
+} finally {
+  let cleaned_up = true
+}
+
+let escaped = "line one\nline two\t\u{1F680}"
+let single_quoted = 'distance: ${distance / 2.0}'
+let raw_path = r"C:\simulation\data"
+let raw_pattern = r'${not_interpolated}\n'
+let report = """
+Ship: ${metadata["name"]}
+Position: ${position}
+Summary: ${{"count": entity_count, "ready": ready}}
+"""
+let raw_report = r"""
+Raw text preserves \n, ${interpolation}, and indentation.
+"""
+
+let café = "Unicode letters are identifiers"
+let 🌌distance = 42
+let 🚀 = fun(速度: Float): Float => 速度 * 2.0
+
+fun calculate🪐(位置: Coordinate): Coordinate {
+  return 位置
+}
+
+/* Ordinary comments may nest.
+   /* inner comment */
+   outer comment continues here.
+ */

@@ -2,8 +2,13 @@
   "name": "sagan-language",
   "displayName": "Sagan Language",
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "sagan-language",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JoePShoulak/sagan.git",
+    "directory": "editors/vscode-sagan"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },

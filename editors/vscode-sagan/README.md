@@ -1,18 +1,30 @@
 # Sagan Language for VS Code
 
-Early VS Code language support for Sagan.
+VS Code language support for the experimental Sagan programming language.
 
-This first working version associates `.sagan` files with the Sagan language, highlights the current draft keyword set, and temporarily delegates the remaining token coloring to VS Code's JavaScript TextMate grammar. That gives the evolving language useful highlighting for comments, strings, numbers, operators, delimiters, and JavaScript-like constructs without prematurely encoding a complete Sagan grammar.
+The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
 
-## Try it locally
+Sagan is still in language design. This extension provides lexical highlighting only; it does not provide IntelliSense, parsing, semantic analysis, type checking, diagnostics, formatting, or a language server.
+
+## Local development
 
 1. Open the Sagan repository in VS Code.
-2. Press `F5` and choose **Run Sagan Extension** if VS Code asks for a launch configuration.
-3. The Extension Development Host opens the persistent `examples` test workspace and `demo.sagan`.
+2. Press `F5` and choose **Run Sagan Extension** if prompted.
+3. The Extension Development Host opens `examples/demo.sagan` from this extension.
 4. Confirm the status bar identifies the file as **Sagan**.
 
-No dependency installation or compilation is required.
+No compilation is required for development-host testing. TextMate grammar changes require restarting the Extension Development Host.
 
-## Next grammar step
+## Package
 
-Replace the `source.js` include in `syntaxes/sagan.tmLanguage.json` with additional Sagan-specific TextMate patterns as the lexical rules stabilize. The language registration and editor configuration can remain in place.
+From this directory:
+
+```bash
+npx --yes @vscode/vsce package
+```
+
+The resulting `.vsix` can be installed from VS Code's Extensions view or with the `code --install-extension` command.
+
+## Grammar limits
+
+TextMate highlighting is lexical and cannot fully resolve context-sensitive constructs. In particular, braces may delimit blocks or dictionaries, and angle brackets may delimit vectors or serve as comparison operators. The grammar gives their tokens stable scopes while leaving those semantic distinctions to a future parser-backed language service.

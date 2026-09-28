@@ -3,47 +3,300 @@
   "name": "Sagan",
   "scopeName": "source.sagan",
   "patterns": [
-    {
-      "include": "#sagan-keywords"
-    },
-    {
-      "include": "source.js"
-    }
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#declarations" },
+    { "include": "#numbers" },
+    { "include": "#constants" },
+    { "include": "#keywords" },
+    { "include": "#method-identifiers" },
+    { "include": "#type-annotations" },
+    { "include": "#function-calls" },
+    { "include": "#operators" },
+    { "include": "#punctuation" },
+    { "include": "#identifiers" }
   ],
   "repository": {
-    "sagan-keywords": {
+    "comments": {
       "patterns": [
         {
-          "name": "keyword.declaration.sagan",
-          "match": "\\b(?:let|fun|class|face|enum)\\b"
+          "name": "comment.line.documentation.sagan",
+          "begin": "///",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.documentation.sagan" } },
+          "end": "$"
         },
         {
-          "name": "keyword.control.conditional.sagan",
-          "match": "\\b(?:if|else|match|case)\\b"
+          "name": "comment.block.documentation.sagan",
+          "begin": "/\\*\\*",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.begin.sagan" } },
+          "end": "\\*/",
+          "endCaptures": { "0": { "name": "punctuation.definition.comment.end.sagan" } },
+          "patterns": [
+            { "include": "#block-comment" }
+          ]
         },
         {
-          "name": "keyword.control.loop.sagan",
-          "match": "\\b(?:for|in|while|until|break|continue)\\b"
+          "name": "comment.line.double-slash.sagan",
+          "begin": "//",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.sagan" } },
+          "end": "$"
+        },
+        { "include": "#block-comment" }
+      ]
+    },
+    "block-comment": {
+      "name": "comment.block.sagan",
+      "begin": "/\\*",
+      "beginCaptures": { "0": { "name": "punctuation.definition.comment.begin.sagan" } },
+      "end": "\\*/",
+      "endCaptures": { "0": { "name": "punctuation.definition.comment.end.sagan" } },
+      "patterns": [
+        { "include": "#block-comment" }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        { "include": "#raw-multiline-string" },
+        { "include": "#raw-double-string" },
+        { "include": "#raw-single-string" },
+        { "include": "#multiline-string" },
+        { "include": "#double-string" },
+        { "include": "#single-string" }
+      ]
+    },
+    "raw-multiline-string": {
+      "name": "string.quoted.triple.raw.sagan",
+      "begin": "(?<!\\w)(?<![^\\x00-\\x7F])r\"\"\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan" } },
+      "end": "\"\"\"",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan" } }
+    },
+    "raw-double-string": {
+      "name": "string.quoted.double.raw.sagan",
+      "begin": "(?<!\\w)(?<![^\\x00-\\x7F])r\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan" } },
+      "end": "\"",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan" } }
+    },
+    "raw-single-string": {
+      "name": "string.quoted.single.raw.sagan",
+      "begin": "(?<!\\w)(?<![^\\x00-\\x7F])r'",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan" } },
+      "end": "'",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan" } }
+    },
+    "multiline-string": {
+      "name": "string.quoted.triple.sagan",
+      "begin": "\"\"\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan" } },
+      "end": "\"\"\"",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan" } },
+      "patterns": [
+        { "include": "#interpolation" },
+        { "include": "#escape" }
+      ]
+    },
+    "double-string": {
+      "name": "string.quoted.double.sagan",
+      "begin": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan" } },
+      "end": "\"|$",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan" } },
+      "patterns": [
+        { "include": "#interpolation" },
+        { "include": "#escape" }
+      ]
+    },
+    "single-string": {
+      "name": "string.quoted.single.sagan",
+      "begin": "'",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan" } },
+      "end": "'|$",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan" } },
+      "patterns": [
+        { "include": "#interpolation" },
+        { "include": "#escape" }
+      ]
+    },
+    "escape": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.sagan",
+          "match": "\\\\(?:[\\\\\"'nrt0]|u\\{[0-9A-Fa-f]+\\})"
         },
         {
-          "name": "keyword.control.flow.sagan",
-          "match": "\\b(?:return|yield)\\b"
+          "name": "invalid.illegal.escape.sagan",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "interpolation": {
+      "name": "meta.interpolation.sagan",
+      "begin": "\\$\\{",
+      "beginCaptures": { "0": { "name": "punctuation.section.interpolation.begin.sagan" } },
+      "end": "\\}",
+      "endCaptures": { "0": { "name": "punctuation.section.interpolation.end.sagan" } },
+      "contentName": "source.sagan",
+      "patterns": [
+        { "include": "#interpolation-braces" },
+        { "include": "$self" }
+      ]
+    },
+    "interpolation-braces": {
+      "name": "meta.brace.curly.sagan",
+      "begin": "\\{",
+      "beginCaptures": { "0": { "name": "punctuation.section.block.begin.sagan" } },
+      "end": "\\}",
+      "endCaptures": { "0": { "name": "punctuation.section.block.end.sagan" } },
+      "patterns": [
+        { "include": "#interpolation-braces" },
+        { "include": "$self" }
+      ]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "match": "\\b(fun)(\\s+)(\\.?)(?:\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*!?)",
+          "captures": {
+            "1": { "name": "keyword.declaration.function.sagan" },
+            "3": { "name": "punctuation.accessor.private.sagan" },
+            "4": { "name": "entity.name.function.sagan" }
+          }
+        },
+        {
+          "match": "\\b(class|face|enum)(\\s+)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.type.sagan" },
+            "3": { "name": "entity.name.type.sagan" }
+          }
+        },
+        {
+          "match": "\\b(module)(\\s+)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.module.sagan" },
+            "3": { "name": "entity.name.namespace.sagan" }
+          }
+        },
+        {
+          "match": "\\b(let)(\\s+)([A-Z][A-Z0-9_]*)\\b",
+          "captures": {
+            "1": { "name": "keyword.declaration.variable.sagan" },
+            "3": { "name": "constant.other.definition.naming-convention.sagan" }
+          }
+        },
+        {
+          "match": "\\b(let)(\\s+)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.variable.sagan" },
+            "3": { "name": "variable.other.definition.sagan" }
+          }
         },
         {
           "name": "keyword.control.import.sagan",
-          "match": "\\b(?:import|from|as)\\b"
+          "match": "\\b(?:import|export|from|as)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.sagan",
+          "match": "\\b\\d(?:_?\\d)*(?:(?:\\.\\d(?:_?\\d)*)(?:[eE][+-]?\\d(?:_?\\d)*)?|[eE][+-]?\\d(?:_?\\d)*)\\b"
         },
         {
-          "name": "keyword.operator.logical.sagan",
-          "match": "\\b(?:and|or|not)\\b"
+          "name": "constant.numeric.integer.sagan",
+          "match": "\\b\\d(?:_?\\d)*\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        { "name": "constant.language.boolean.sagan", "match": "\\b(?:true|false)\\b" },
+        { "name": "constant.language.numeric.sagan", "match": "\\b(?:inf|nan)\\b" },
+        { "name": "constant.other.naming-convention.sagan", "match": "\\b[A-Z][A-Z0-9_]*\\b" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        { "name": "keyword.control.conditional.sagan", "match": "\\b(?:if|else|match|case)\\b" },
+        { "name": "keyword.control.loop.sagan", "match": "\\b(?:for|in|while|until|break|continue)\\b" },
+        { "name": "keyword.control.flow.sagan", "match": "\\b(?:return|yield)\\b" },
+        { "name": "keyword.control.exception.sagan", "match": "\\b(?:hope|unless|finally|scream)\\b" },
+        { "name": "keyword.operator.logical.sagan", "match": "\\b(?:and|or|not)\\b" },
+        { "name": "keyword.operator.type.sagan", "match": "\\b(?:is|has)\\b" },
+        { "name": "variable.language.self.sagan", "match": "\\bself\\b" },
+        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|fun|class|face|enum|module)\\b" }
+      ]
+    },
+    "method-identifiers": {
+      "patterns": [
+        {
+          "name": "entity.name.function.mutating.sagan",
+          "match": "(?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*!"
         },
         {
-          "name": "constant.language.boolean.sagan",
-          "match": "\\b(?:true|false)\\b"
+          "match": "(\\.)(\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "punctuation.accessor.dot.sagan" },
+            "3": { "name": "entity.name.function.member.sagan" }
+          }
+        }
+      ]
+    },
+    "type-annotations": {
+      "patterns": [
+        {
+          "match": "((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)(\\s*)(:)(\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "captures": {
+            "1": { "name": "variable.parameter.sagan" },
+            "3": { "name": "punctuation.separator.type.sagan" },
+            "5": { "name": "entity.name.type.sagan" }
+          }
         },
         {
-          "name": "constant.language.numeric.sagan",
-          "match": "\\b(?:inf|nan)\\b"
+          "match": "(:)(\\s*)((?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*)",
+          "captures": {
+            "1": { "name": "punctuation.separator.type.sagan" },
+            "3": { "name": "entity.name.type.sagan" }
+          }
+        }
+      ]
+    },
+    "function-calls": {
+      "patterns": [
+        {
+          "name": "entity.name.function.call.sagan",
+          "match": "(?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*(?=\\s*\\()"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        { "name": "keyword.operator.spread.sagan", "match": "\\.\\.\\." },
+        { "name": "keyword.operator.access.safe.sagan", "match": "\\?\\." },
+        { "name": "keyword.operator.arrow.sagan", "match": "=>" },
+        { "name": "keyword.operator.comparison.sagan", "match": "==|!=|<=|>=|<|>" },
+        { "name": "keyword.operator.increment-decrement.sagan", "match": "\\+\\+|--" },
+        { "name": "keyword.operator.assignment.sagan", "match": ":=|[+\\-*/%^]=|=(?!=|>)" },
+        { "name": "keyword.operator.arithmetic.sagan", "match": "[+\\-*/%^]" },
+        { "name": "keyword.operator.logical.sagan", "match": "!" }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        { "name": "punctuation.section.parens.sagan", "match": "[()]" },
+        { "name": "punctuation.section.brackets.sagan", "match": "[\\[\\]]" },
+        { "name": "punctuation.section.braces.sagan", "match": "[{}]" },
+        { "name": "punctuation.separator.sagan", "match": "[,;:]" },
+        { "name": "punctuation.accessor.dot.sagan", "match": "\\." },
+        { "name": "punctuation.definition.conditional.sagan", "match": "\\?" }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.sagan",
+          "match": "(?:[_\\p{L}]|[^\\x00-\\x7F])(?:[_\\p{L}\\p{N}]|[^\\x00-\\x7F])*"
         }
       ]
     }
