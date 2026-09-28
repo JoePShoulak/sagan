@@ -28,3 +28,10 @@ if bin/sagan --ast examples/string_error.sagan; then
 fi
 
 echo "String-interpolation error demo failed as expected."
+
+if bin/sagan --ast examples/collection_error.sagan; then
+  echo "Expected examples/collection_error.sagan to produce a syntax error." >&2
+  exit 1
+fi
+
+echo "Collection error demo failed as expected."

@@ -24,6 +24,10 @@ syntax trees with source-spanned diagnostics.
 - Ruby-style mutating method names such as `normalize!()`
 - Ordinary, raw, and multiline string expressions
 - Interpolated strings with complete embedded expressions
+- Arrays and dictionaries, including empty forms and expression keys
+- Vectors and coordinates with a minimum of two elements
+- Trailing commas in calls and every collection form
+- Spread expressions and dictionary spread entries
 - Right-associative exponentiation
 - Multiplicative and additive arithmetic
 - Non-chainable comparisons and equality expressions
@@ -54,6 +58,5 @@ Text, DOT, SVG, and HTML are also available from `bin/sagan` through `--ast`,
 supports every AST node the parser can produce; new node kinds must be added to
 the renderer as their parser slices land.
 
-The next slices are collection literals, statements and blocks, functions, and
-type declarations.
+The next slices are statements and blocks, functions, and type declarations.
 Error recovery beyond the first syntax error also remains future parser work.

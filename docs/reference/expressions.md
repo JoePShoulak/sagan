@@ -17,8 +17,8 @@ decrement, and compound-assignment tokens.
 `!` are logical operators; `? ... ; ...` is the conditional expression; and
 prefix/postfix increment return new/old values respectively.
 
-**Provisional design:** collection literals, vector and coordinate construction,
-lambdas, and the semantic rules for safe access and assignment expressions.
+**Provisional design:** lambdas and the semantic rules for spread, safe access,
+dictionary-key hashability, and assignment expressions.
 
 ## String expressions
 
@@ -36,13 +36,39 @@ same precedence rules as an expression outside a string. `${}` is a syntax
 error because every interpolation requires an expression. Raw strings never
 interpolate; `${literal_text}` in the raw example is ordinary text.
 
+## Collection expressions
+
+The parser implements four collection forms:
+
+```sagan
+let values = [1, 2, ...additional_values,]
+let metadata = {"name": "Voyager", active_key: true, ...defaults,}
+let direction = <1.0, 0.0, 0.0,>
+let position = (100.0, 200.0, 300.0,)
+```
+
+Arrays and dictionaries may be empty. Dictionary keys accept any expression;
+semantic analysis will determine whether a key's type is hashable. Vectors and
+coordinates require at least two elements, so `<>`, `<1>`, and `(1,)` are
+syntax errors. `(value)` remains a grouped expression.
+
+Calls and all collection forms permit trailing commas. `...value` creates a
+spread node; later semantic analysis will validate whether its surrounding call
+or collection supports the value being expanded. A spread dictionary entry
+does not use a colon.
+
+At the top level of a vector element, `>` closes the vector. Parentheses make a
+greater-than comparison explicit inside a vector, as in
+`<(left > right), true>`. Outside a vector-opening expression position, `<` and
+`>` retain their comparison meanings.
+
 ## Implemented precedence
 
 From highest to lowest:
 
 1. calls, indexing, member access, safe member access, and postfix `++` and `--`;
 2. right-associative `^`;
-3. prefix `++`, `--`, `!`, `not`, unary `+`, and unary `-`;
+3. prefix `++`, `--`, `!`, `not`, `...`, unary `+`, and unary `-`;
 4. `*`, `/`, `%`;
 5. `+`, `-`;
 6. `<`, `<=`, `>`, `>=`, `is`;

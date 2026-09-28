@@ -147,6 +147,47 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct spread_expression final : expression
+  {
+    expression_ref value;
+
+    spread_expression(span source_range, expression_ref spread_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct collection_expression final : expression
+  {
+    enum class kind
+    {
+      array,
+      vector,
+      coordinate,
+    };
+
+    kind collection_kind;
+    std::vector<expression_ref> elements;
+
+    collection_expression(span source_range, kind type, std::vector<expression_ref> values);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct dictionary_entry
+  {
+    expression_ref key;
+    expression_ref value;
+
+    dictionary_entry(expression_ref entry_key, expression_ref entry_value);
+    explicit dictionary_entry(expression_ref spread_value);
+  };
+
+  struct dictionary_expression final : expression
+  {
+    std::vector<dictionary_entry> entries;
+
+    dictionary_expression(span source_range, std::vector<dictionary_entry> values);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct statement : ast_node
   {
     using ast_node::ast_node;

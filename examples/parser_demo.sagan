@@ -20,3 +20,21 @@ Altitude and trajectory data are retained exactly.
 Current altitude: ${altitude}
 Computed course magnitude: ${course}
 """
+let sensor_values = [1.0, ...baseline_samples, calculate_sample(altitude, course,),]
+let mission_metadata = {
+  "mission": mission_name,
+  "active": true,
+  active_ship.name: active_ship,
+  ...default_metadata,
+}
+let thrust_direction = <
+  1.0,
+  0.0,
+  0.0,
+>
+let orbital_position = (100.0, 200.0, altitude,)
+let trajectory_samples = [
+  orbital_position,
+  (110.0, 205.0, altitude + 10.0,),
+  ...historical_positions,
+]

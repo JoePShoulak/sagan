@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.2.0](https://img.shields.io/badge/development-0.2.0-2563eb)](#development-versions)
+[![Development version 0.3.0](https://img.shields.io/badge/development-0.3.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -136,13 +136,19 @@ let position = (100.0, 200.0, 300.0)
 ```
 
 - `[]` creates and indexes arrays.
-- `{key: value}` creates dictionaries; context distinguishes them from code blocks.
-- `<>` creates vectors; `<` and `>` also perform comparisons.
+- `{key: value}` creates dictionaries; keys may be any expression, with
+  hashability checked during semantic analysis. Context distinguishes them from
+  code blocks.
+- `<>` creates vectors; `<` and `>` also perform comparisons. Vectors require
+  at least two elements.
 - `(x, y, ...)` creates coordinates with at least two elements.
 - `(value)` is grouping, and Sagan does not have tuple literals.
 - Generic type arguments use parentheses, such as `Array(Float)`, although generic semantics remain under design.
 
-Spread uses `...value`, and safe member access uses `?.`.
+Calls and every collection literal allow a trailing comma. Arrays and
+dictionaries may be empty; vectors and coordinates may not. Spread uses
+`...value`, including inside calls and collection literals, and safe member
+access uses `?.`.
 
 ### Functions and lambdas
 
@@ -333,6 +339,7 @@ The current executable reads Sagan source and prints the resulting token stream.
 ```bash
 bash scripts/test.sh
 make demo
+make coverage
 ```
 
 `bash scripts/test.sh` builds the executable and runs the tokenizer self-tests. `make demo` tokenizes `examples/tokenizer_demo.sagan`. To inspect another source file:
@@ -340,6 +347,12 @@ make demo
 ```bash
 bin/sagan path/to/program.sagan
 ```
+
+`make coverage` performs a clean GCC coverage build and runs the complete
+front-end suite. When `lcov` is available it writes `build/coverage.info`;
+otherwise it retains the raw `.gcno` and `.gcda` data under `obj/`. GitHub
+Actions generates the LCOV report on every push and pull request and uploads it
+to Codecov using OIDC, without a repository upload token.
 
 `examples/tokenizer_error.sagan` intentionally contains a malformed number and demonstrates focused lexical-error reporting.
 
@@ -483,8 +496,9 @@ type annotations, optional initializers, identifiers, numeric and Boolean
 literals, grouped expressions, prefix and postfix operators, calls, indexing,
 ordinary and safe member access, mutating method calls, exponentiation,
 ordinary, raw, multiline, and interpolated string expressions, arithmetic,
-comparisons, equality, logical operations, conditional expressions, and
-value-producing `:=` assignment. Postfix operations can be chained freely, as
+arrays, dictionaries, vectors, coordinates, spread expressions, comparisons,
+equality, logical operations, conditional expressions, and value-producing
+`:=` assignment. Postfix operations can be chained freely, as
 in `fleet[index]?.navigator.course(origin).magnitude()`. It includes text, DOT,
 SVG, and self-contained HTML AST output, plus success/error demonstrations.
 
@@ -492,7 +506,7 @@ Implemented expression precedence, from highest to lowest, is:
 
 1. calls, indexing, member access, safe member access, and postfix `++` and `--`;
 2. right-associative exponentiation `^`;
-3. prefix `++`, `--`, `!`, `not`, unary `+`, and unary `-`;
+3. prefix `++`, `--`, `!`, `not`, `...`, unary `+`, and unary `-`;
 4. `*`, `/`, and `%`;
 5. `+` and `-`;
 6. `<`, `<=`, `>`, `>=`, and `is`;

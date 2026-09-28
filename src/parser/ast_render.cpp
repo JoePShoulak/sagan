@@ -147,6 +147,44 @@ namespace parser
         }
         return result;
       }
+      if (const auto *spread = dynamic_cast<const spread_expression *>(&value))
+      {
+        auto result = std::make_unique<visual_node>(visual_node{"Spread\n...", "collection"});
+        result->children.push_back(make_expression_node(*spread->value));
+        return result;
+      }
+      if (const auto *collection = dynamic_cast<const collection_expression *>(&value))
+      {
+        const char *kind = collection->collection_kind == collection_expression::kind::array        ? "Array"
+                           : collection->collection_kind == collection_expression::kind::vector     ? "Vector"
+                                                                                                     : "Coordinate";
+        auto result = std::make_unique<visual_node>(
+            visual_node{std::string(kind) + "\n" + std::to_string(collection->elements.size()) + " element(s)",
+                        "collection"});
+        for (const auto &element : collection->elements)
+        {
+          result->children.push_back(make_expression_node(*element));
+        }
+        return result;
+      }
+      if (const auto *dictionary = dynamic_cast<const dictionary_expression *>(&value))
+      {
+        auto result = std::make_unique<visual_node>(visual_node{
+            "Dictionary\n" + std::to_string(dictionary->entries.size()) + " entry(s)", "collection"});
+        for (const auto &entry : dictionary->entries)
+        {
+          if (!entry.key)
+          {
+            result->children.push_back(make_expression_node(*entry.value));
+            continue;
+          }
+          auto item = std::make_unique<visual_node>(visual_node{"Entry\nkey : value", "entry"});
+          item->children.push_back(make_expression_node(*entry.key));
+          item->children.push_back(make_expression_node(*entry.value));
+          result->children.push_back(std::move(item));
+        }
+        return result;
+      }
       throw std::runtime_error("AST renderer encountered an unsupported expression node");
     }
 
@@ -239,6 +277,8 @@ namespace parser
       if (category == "access") return {"#0369a1", "#f0f9ff"};
       if (category == "string") return {"#be185d", "#fdf2f8"};
       if (category == "text") return {"#a16207", "#fefce8"};
+      if (category == "collection") return {"#4338ca", "#eef2ff"};
+      if (category == "entry") return {"#0f766e", "#f0fdfa"};
       if (category == "literal") return {"#15803d", "#f0fdf4"};
       if (category == "identifier") return {"#c2410c", "#fff7ed"};
       return {"#475569", "#f8fafc"};
@@ -359,7 +399,7 @@ namespace parser
               "const viewport=document.querySelector('.tree'),svg=viewport.querySelector('svg'),label=document.querySelector('.zoom-value');"
               "const natural=Number(svg.dataset.naturalWidth);let scale=1,drag=false,lastX=0,lastY=0;"
               "function setZoom(next,cx=viewport.clientWidth/2,cy=viewport.clientHeight/2){"
-              "next=Math.min(3,Math.max(.15,next));const x=(viewport.scrollLeft+cx)/scale,y=(viewport.scrollTop+cy)/scale;"
+              "next=Math.min(3,Math.max(.02,next));const x=(viewport.scrollLeft+cx)/scale,y=(viewport.scrollTop+cy)/scale;"
               "scale=next;svg.style.width=(natural*scale)+'px';label.textContent=Math.round(scale*100)+'%';"
               "viewport.scrollLeft=x*scale-cx;viewport.scrollTop=y*scale-cy;}"
               "function fit(){setZoom(Math.min(1,(viewport.clientWidth-24)/natural),0,0);viewport.scrollLeft=0;viewport.scrollTop=0;}"

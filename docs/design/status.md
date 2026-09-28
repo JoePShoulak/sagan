@@ -34,8 +34,9 @@ and is not unfinished tokenizer behavior.
 
 The parser currently verifies `let` declarations, core primary expressions,
 the settled operator-precedence table, chained calls/indexing/member access,
-ordinary and safe access, mutating method calls, and ordinary, raw, multiline,
-and interpolated strings. Text, DOT, SVG, and interactive HTML tree renderers
+ordinary and safe access, mutating method calls, ordinary/raw/multiline/
+interpolated strings, and array/dictionary/vector/coordinate expressions with
+spreads and trailing commas. Text, DOT, SVG, and interactive HTML tree renderers
 cover every implemented AST node. The parser demo includes successful source
 plus focused chained-comparison, incomplete-member, and empty-interpolation
 errors.

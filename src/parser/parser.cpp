@@ -121,6 +121,15 @@ namespace parser
     return parse_assignment();
   }
 
+  auto syntax_parser::parse_nested_expression() -> expression_ref
+  {
+    const std::size_t surrounding_vector_depth = vector_literal_depth;
+    vector_literal_depth = 0;
+    auto value = parse_expression();
+    vector_literal_depth = surrounding_vector_depth;
+    return value;
+  }
+
   auto syntax_parser::parse_assignment() -> expression_ref
   {
     auto target = parse_conditional();
@@ -190,7 +199,8 @@ namespace parser
   auto syntax_parser::parse_comparison() -> expression_ref
   {
     auto left = parse_additive();
-    const bool has_comparison = match(tokens::LANGLE) || match(tokens::LESS_EQUAL) || match(tokens::RANGLE) ||
+    const bool has_comparison = match(tokens::LANGLE) || match(tokens::LESS_EQUAL) ||
+                                (vector_literal_depth == 0 && match(tokens::RANGLE)) ||
                                 match(tokens::GREATER_EQUAL) || match(tokens::KWD_IS);
     if (!has_comparison)
     {
@@ -198,7 +208,8 @@ namespace parser
     }
     const token operation = previous();
     auto right = parse_additive();
-    if (check(tokens::LANGLE) || check(tokens::LESS_EQUAL) || check(tokens::RANGLE) ||
+    if (check(tokens::LANGLE) || check(tokens::LESS_EQUAL) ||
+        (vector_literal_depth == 0 && check(tokens::RANGLE)) ||
         check(tokens::GREATER_EQUAL) || check(tokens::KWD_IS))
     {
       throw parse_error("Chained comparisons are not allowed; combine comparisons with 'and'", peek()->range);
@@ -235,6 +246,12 @@ namespace parser
 
   auto syntax_parser::parse_unary() -> expression_ref
   {
+    if (match(tokens::SPREAD))
+    {
+      const token operation = previous();
+      auto value = parse_unary();
+      return std::make_unique<spread_expression>(span{operation.range.begin, value->range.end}, std::move(value));
+    }
     if (match(tokens::PLUS_PLUS) || match(tokens::MINUS_MINUS) || match(tokens::BANG) ||
         match(tokens::KWD_NOT) || match(tokens::PLUS) || match(tokens::MINUS))
     {
@@ -269,10 +286,14 @@ namespace parser
         std::vector<expression_ref> arguments;
         if (!check(tokens::RPAREN))
         {
-          do
+          while (true)
           {
-            arguments.push_back(parse_expression());
-          } while (match(tokens::COMMA));
+            arguments.push_back(parse_nested_expression());
+            if (!match(tokens::COMMA) || check(tokens::RPAREN))
+            {
+              break;
+            }
+          }
         }
         const token &close = expect(tokens::RPAREN, "')' after the call arguments");
         value = std::make_unique<call_expression>(span{value->range.begin, close.range.end}, std::move(value),
@@ -281,7 +302,7 @@ namespace parser
       }
       if (match(tokens::LBRACKET))
       {
-        auto index = parse_expression();
+        auto index = parse_nested_expression();
         const token &close = expect(tokens::RBRACKET, "']' after the index expression");
         value = std::make_unique<index_expression>(span{value->range.begin, close.range.end}, std::move(value),
                                                    std::move(index));
@@ -327,6 +348,18 @@ namespace parser
     {
       return parse_string();
     }
+    if (check(tokens::LBRACKET))
+    {
+      return parse_array();
+    }
+    if (check(tokens::LBRACE))
+    {
+      return parse_dictionary();
+    }
+    if (check(tokens::LANGLE))
+    {
+      return parse_vector();
+    }
     if (match(tokens::IDENTIFIER))
     {
       const token &value = previous();
@@ -351,12 +384,9 @@ namespace parser
       return std::make_unique<literal_expression>(value.range, literal_expression::kind::floating_point,
                                                   value.text, value.value);
     }
-    if (match(tokens::LPAREN))
+    if (check(tokens::LPAREN))
     {
-      const token &open = previous();
-      auto value = parse_expression();
-      const token &close = expect(tokens::RPAREN, "')' after the grouped expression");
-      return std::make_unique<grouping_expression>(span{open.range.begin, close.range.end}, std::move(value));
+      return parse_parenthesized();
     }
     const span error_range = at_end()
                                  ? (input.empty() ? span{0, 0}
@@ -388,7 +418,7 @@ namespace parser
         {
           throw parse_error("Expected an expression inside string interpolation", peek()->range);
         }
-        auto embedded = parse_expression();
+        auto embedded = parse_nested_expression();
         expect(tokens::INTERPOLATION_END, "'}' after the interpolated expression");
         parts.emplace_back(std::move(embedded));
         continue;
@@ -399,5 +429,122 @@ namespace parser
     const token &end = expect(tokens::STRING_END, "the end of the string");
     return std::make_unique<string_expression>(span{begin.range.begin, end.range.end}, std::move(parts), false,
                                                multiline);
+  }
+
+  auto syntax_parser::parse_array() -> expression_ref
+  {
+    const token &open = expect(tokens::LBRACKET, "'[' to begin an array");
+    std::vector<expression_ref> elements;
+    while (!check(tokens::RBRACKET))
+    {
+      elements.push_back(parse_nested_expression());
+      if (!match(tokens::COMMA))
+      {
+        break;
+      }
+      if (check(tokens::RBRACKET))
+      {
+        break;
+      }
+    }
+    const token &close = expect(tokens::RBRACKET, "']' after the array elements");
+    return std::make_unique<collection_expression>(span{open.range.begin, close.range.end},
+                                                   collection_expression::kind::array, std::move(elements));
+  }
+
+  auto syntax_parser::parse_dictionary() -> expression_ref
+  {
+    const token &open = expect(tokens::LBRACE, "'{' to begin a dictionary");
+    std::vector<dictionary_entry> entries;
+    skip_newlines();
+    while (!check(tokens::RBRACE))
+    {
+      auto key_or_spread = parse_nested_expression();
+      if (dynamic_cast<spread_expression *>(key_or_spread.get()) != nullptr)
+      {
+        entries.emplace_back(std::move(key_or_spread));
+      }
+      else
+      {
+        expect(tokens::COLON, "':' between a dictionary key and value");
+        auto value = parse_nested_expression();
+        entries.emplace_back(std::move(key_or_spread), std::move(value));
+      }
+      skip_newlines();
+      if (!match(tokens::COMMA))
+      {
+        break;
+      }
+      skip_newlines();
+      if (check(tokens::RBRACE))
+      {
+        break;
+      }
+    }
+    const token &close = expect(tokens::RBRACE, "'}' after the dictionary entries");
+    return std::make_unique<dictionary_expression>(span{open.range.begin, close.range.end}, std::move(entries));
+  }
+
+  auto syntax_parser::parse_vector() -> expression_ref
+  {
+    const token &open = expect(tokens::LANGLE, "'<' to begin a vector");
+    std::vector<expression_ref> elements;
+    vector_literal_depth++;
+    skip_newlines();
+    while (!check(tokens::RANGLE))
+    {
+      elements.push_back(parse_expression());
+      skip_newlines();
+      if (!match(tokens::COMMA))
+      {
+        break;
+      }
+      skip_newlines();
+      if (check(tokens::RANGLE))
+      {
+        break;
+      }
+    }
+    vector_literal_depth--;
+    const token &close = expect(tokens::RANGLE, "'>' after the vector elements");
+    if (elements.size() < 2)
+    {
+      throw parse_error("A vector literal requires at least two elements", span{open.range.begin, close.range.end});
+    }
+    return std::make_unique<collection_expression>(span{open.range.begin, close.range.end},
+                                                   collection_expression::kind::vector, std::move(elements));
+  }
+
+  auto syntax_parser::parse_parenthesized() -> expression_ref
+  {
+    const token &open = expect(tokens::LPAREN, "'(' to begin a grouped expression or coordinate");
+    if (check(tokens::RPAREN))
+    {
+      throw parse_error("Empty parentheses are not an expression", peek()->range);
+    }
+    auto first = parse_nested_expression();
+    if (!match(tokens::COMMA))
+    {
+      const token &close = expect(tokens::RPAREN, "')' after the grouped expression");
+      return std::make_unique<grouping_expression>(span{open.range.begin, close.range.end}, std::move(first));
+    }
+
+    std::vector<expression_ref> elements;
+    elements.push_back(std::move(first));
+    while (!check(tokens::RPAREN))
+    {
+      elements.push_back(parse_nested_expression());
+      if (!match(tokens::COMMA))
+      {
+        break;
+      }
+    }
+    const token &close = expect(tokens::RPAREN, "')' after the coordinate elements");
+    if (elements.size() < 2)
+    {
+      throw parse_error("A coordinate literal requires at least two elements", span{open.range.begin, close.range.end});
+    }
+    return std::make_unique<collection_expression>(span{open.range.begin, close.range.end},
+                                                   collection_expression::kind::coordinate, std::move(elements));
   }
 }

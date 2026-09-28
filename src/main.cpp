@@ -415,6 +415,75 @@ namespace
         "            String\n"
         "              Text(\"telemetry\")\n");
     passed &= expect_syntax_error("empty string interpolation", "let invalid = \"value: ${}\"\n");
+    passed &= expect_ast(
+        "arrays trailing commas and spread",
+        "let values = [1, ...defaults, calculate(2, 3,),]\n",
+        "Program\n"
+        "  Let(values)\n"
+        "    Array\n"
+        "      Integer(1)\n"
+        "      Spread\n"
+        "        Identifier(defaults)\n"
+        "      Call\n"
+        "        Identifier(calculate)\n"
+        "        Integer(2)\n"
+        "        Integer(3)\n");
+    passed &= expect_ast(
+        "empty array and dictionary",
+        "let values = []\nlet metadata = {}\n",
+        "Program\n"
+        "  Let(values)\n"
+        "    Array\n"
+        "  Let(metadata)\n"
+        "    Dictionary\n");
+    passed &= expect_ast(
+        "dictionary expression keys and spread",
+        "let metadata = {\"name\": \"Voyager\", active_key: true, ...defaults,}\n",
+        "Program\n"
+        "  Let(metadata)\n"
+        "    Dictionary\n"
+        "      Entry\n"
+        "        String\n"
+        "          Text(\"name\")\n"
+        "        String\n"
+        "          Text(\"Voyager\")\n"
+        "      Entry\n"
+        "        Identifier(active_key)\n"
+        "        Bool(true)\n"
+        "      Spread\n"
+        "        Identifier(defaults)\n");
+    passed &= expect_ast(
+        "vectors coordinates and delimiter ambiguity",
+        "let direction = <1.0, 0.0, 0.0,>\n"
+        "let position = (x, y, z,)\n"
+        "let relation = left < right\n"
+        "let flags = <(left > right), true>\n",
+        "Program\n"
+        "  Let(direction)\n"
+        "    Vector\n"
+        "      Float(1.0)\n"
+        "      Float(0.0)\n"
+        "      Float(0.0)\n"
+        "  Let(position)\n"
+        "    Coordinate\n"
+        "      Identifier(x)\n"
+        "      Identifier(y)\n"
+        "      Identifier(z)\n"
+        "  Let(relation)\n"
+        "    Binary(<)\n"
+        "      Identifier(left)\n"
+        "      Identifier(right)\n"
+        "  Let(flags)\n"
+        "    Vector\n"
+        "      Group\n"
+        "        Binary(>)\n"
+        "          Identifier(left)\n"
+        "          Identifier(right)\n"
+        "      Bool(true)\n");
+    passed &= expect_syntax_error("empty vector", "let invalid = <>\n");
+    passed &= expect_syntax_error("single-element vector", "let invalid = <1>\n");
+    passed &= expect_syntax_error("single-element coordinate", "let invalid = (1,)\n");
+    passed &= expect_syntax_error("dictionary entry without colon", "let invalid = {\"name\",}\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");

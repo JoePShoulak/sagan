@@ -13,6 +13,7 @@ namespace parser
   {
     std::vector<token> input;
     std::size_t current = 0;
+    std::size_t vector_literal_depth = 0;
 
     auto at_end() const -> bool;
     auto peek() const -> const token *;
@@ -25,6 +26,7 @@ namespace parser
     auto parse_statement() -> statement_ref;
     auto parse_let_declaration() -> statement_ref;
     auto parse_expression() -> expression_ref;
+    auto parse_nested_expression() -> expression_ref;
     auto parse_assignment() -> expression_ref;
     auto parse_conditional() -> expression_ref;
     auto parse_or() -> expression_ref;
@@ -38,6 +40,10 @@ namespace parser
     auto parse_postfix() -> expression_ref;
     auto parse_primary() -> expression_ref;
     auto parse_string() -> expression_ref;
+    auto parse_array() -> expression_ref;
+    auto parse_dictionary() -> expression_ref;
+    auto parse_vector() -> expression_ref;
+    auto parse_parenthesized() -> expression_ref;
 
   public:
     explicit syntax_parser(std::vector<token> tokens);

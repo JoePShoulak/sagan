@@ -205,6 +205,67 @@ namespace parser
     }
   }
 
+  spread_expression::spread_expression(const span source_range, expression_ref spread_value)
+      : expression(source_range), value(std::move(spread_value))
+  {
+  }
+
+  auto spread_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Spread\n";
+    value->print(stream, indent + 2);
+  }
+
+  collection_expression::collection_expression(const span source_range, const kind type,
+                                               std::vector<expression_ref> values)
+      : expression(source_range), collection_kind(type), elements(std::move(values))
+  {
+  }
+
+  auto collection_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    const char *name = collection_kind == kind::array        ? "Array"
+                       : collection_kind == kind::vector     ? "Vector"
+                                                             : "Coordinate";
+    stream << name << '\n';
+    for (const auto &element : elements)
+    {
+      element->print(stream, indent + 2);
+    }
+  }
+
+  dictionary_entry::dictionary_entry(expression_ref entry_key, expression_ref entry_value)
+      : key(std::move(entry_key)), value(std::move(entry_value))
+  {
+  }
+
+  dictionary_entry::dictionary_entry(expression_ref spread_value) : value(std::move(spread_value)) {}
+
+  dictionary_expression::dictionary_expression(const span source_range, std::vector<dictionary_entry> values)
+      : expression(source_range), entries(std::move(values))
+  {
+  }
+
+  auto dictionary_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Dictionary\n";
+    for (const auto &entry : entries)
+    {
+      if (!entry.key)
+      {
+        entry.value->print(stream, indent + 2);
+        continue;
+      }
+      write_indent(stream, indent + 2);
+      stream << "Entry\n";
+      entry.key->print(stream, indent + 4);
+      entry.value->print(stream, indent + 4);
+    }
+  }
+
   let_declaration::let_declaration(const span source_range, std::string identifier,
                                    std::optional<std::string> annotation, expression_ref initial_value)
       : statement(source_range), name(std::move(identifier)), type_name(std::move(annotation)),
