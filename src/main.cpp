@@ -1,3 +1,4 @@
+#include "codegen/cpp_generator.hpp"
 #include "parser/lex.hpp"
 #include "parser/ast_render.hpp"
 #include "parser/parse_error.hpp"
@@ -1686,6 +1687,7 @@ auto main(const int argc, char **argv) -> int
     semantic,
     types,
     entry,
+    emit_cpp,
   };
 
   output_mode mode = output_mode::tokens;
@@ -1728,6 +1730,12 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::entry;
     path = argv[2];
   }
+  else if ((argc == 3 || argc == 4) && std::string(argv[1]) == "--emit-cpp")
+  {
+    mode = output_mode::emit_cpp;
+    path = argv[2];
+    if (argc == 4) output_path = argv[3];
+  }
   else if (argc == 2)
   {
     path = argv[1];
@@ -1740,7 +1748,7 @@ auto main(const int argc, char **argv) -> int
   {
     std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
-                 "--entry FILE | FILE]\n";
+                 "--entry FILE | --emit-cpp FILE [OUTPUT] | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
@@ -1772,6 +1780,19 @@ auto main(const int argc, char **argv) -> int
         static_cast<void>(semantic::check_types(tree));
         semantic::validate_entry_point(tree);
         std::cout << "Sagan " << SAGAN_VERSION << " executable entry point is valid: " << path << '\n';
+      }
+      else if (mode == output_mode::emit_cpp)
+      {
+        static_cast<void>(semantic::analyze(tree));
+        static_cast<void>(semantic::check_types(tree));
+        semantic::validate_entry_point(tree);
+        const std::string generated = codegen::generate_cpp(tree);
+        if (output_path.empty()) std::cout << generated;
+        else
+        {
+          write_file(output_path, generated);
+          std::cout << "Wrote generated C++ to " << output_path << '\n';
+        }
       }
       else if (mode == output_mode::ast_text)
       {

@@ -1,0 +1,11 @@
+fun 🚀(value: Int): Int => value + 2
+
+fun main(): Int {
+  let answer = 🚀(40)
+
+  if answer == 42 {
+    return 0
+  } else {
+    return 1
+  }
+}

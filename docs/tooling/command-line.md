@@ -21,6 +21,8 @@ bin/sagan --ast-html path/to/source.sagan build/tree.html
 bin/sagan --semantic path/to/source.sagan
 bin/sagan --types path/to/source.sagan
 bin/sagan --entry path/to/source.sagan
+bin/sagan --emit-cpp path/to/source.sagan
+bin/sagan --emit-cpp path/to/source.sagan build/program.cpp
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -37,6 +39,9 @@ or duplicate names, but it does not type-check or execute the program.
 declaration and expression types.
 `--entry` performs name and type checks, then validates the executable `main`
 contract. It does not generate or run a program.
+`--emit-cpp` performs the same front-end and entry checks, then prints generated
+C++ or writes it to the optional output path. It does not itself invoke a C++
+compiler.
 
 The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
@@ -53,13 +58,15 @@ bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
+bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 ```
 
 Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
 Type output confirms the documented scalar/function and literal-collection
-subset, but does not yet establish member types or generic annotations. No
-command generates C++ or executes Sagan code.
+subset, but does not yet establish member types or generic annotations.
+Generated C++ supports only the initial executable subset documented under
+[code generation](../implementation/code-generation.md).
 
 ## Make targets
 
@@ -73,6 +80,7 @@ make ast-demo
 make semantic-demo
 make type-demo
 make entry-demo
+make execution-demo
 make get-version
 make clean
 ```
@@ -86,6 +94,7 @@ bash scripts/ast_demo.sh --no-open
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
+bash scripts/execution_demo.sh
 bash scripts/docs.sh check
 ```
 
@@ -97,7 +106,9 @@ prints the calculated build identity; `semantic-demo` prints the successful
 semantic model; `type-demo` prints the successful type model; and `clean`
 removes compiler objects and the binary. `entry-demo` validates a successful
 entry point and focused control-flow failures. The test target exercises
-semantic/type/entry success plus focused failures.
+semantic/type/entry/code-generation success plus focused failures.
+`execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
+runs it, and reports the native exit code.
 
 Development versions have the form
 `MAJOR.MINOR.PATCH+gREVISION[.dirty]`. Conventional Commit markers after the

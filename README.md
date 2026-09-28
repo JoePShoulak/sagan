@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.16.0](https://img.shields.io/badge/development-0.16.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.17.0](https://img.shields.io/badge/development-0.17.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -28,8 +28,9 @@ all-path returns, definite initialization, unreachable code, and executable
 entry points. Sagan can print semantic and type models as
 well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
 and dictionaries plus dimensioned vectors and coordinates are inferred. Generic
-annotations, member typing, the runtime, C++ generation, and the standard
-library are not yet implemented.
+annotations, member typing, the runtime, and the standard library are not yet
+implemented. An initial C++ emitter can compile the validated scalar/control-
+flow subset into a native executable.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checking
@@ -37,7 +38,7 @@ UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checki
                                   |                    +-> semantic model   +-> type model
                                   +-> text / DOT / SVG / HTML
 
-Planned: typed program -> C++ generation -> native executable
+Initial subset: typed program -> C++ generation -> native executable
 ```
 
 The detailed and continuously maintained status lives in the
@@ -72,6 +73,7 @@ make parser-demo
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
+bash scripts/execution_demo.sh
 bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
 make coverage
@@ -89,6 +91,7 @@ bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
+bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 bin/sagan --version
 ```
 

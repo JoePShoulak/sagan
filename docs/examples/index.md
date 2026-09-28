@@ -119,6 +119,20 @@ The script confirms the valid entry point and demonstrates missing-entry,
 uninitialized-read, and unreachable-statement diagnostics. It still does not
 generate or execute native code.
 
+## Native execution demonstration
+
+`examples/execution_demo.sagan` is the first end-to-end executable fixture. It
+calls an emoji-named function to compute `40 + 2`, tests the result, and returns
+success from `main`.
+
+```bash
+bash scripts/execution_demo.sh
+```
+
+The script prints the Sagan input, emits and prints C++, compiles it with
+`g++`, runs the native program, and reports its exit code. This demonstrates
+only the documented initial backend subset, not the entire parsed language.
+
 The string error fixture demonstrates the focused diagnostic for an empty
 `${}` interpolation. The collection fixture demonstrates the minimum
 two-element vector rule.

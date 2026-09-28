@@ -15,6 +15,7 @@ It can also analyze lexical scopes and print symbols and resolved references.
 The `--types` mode prints the implemented scalar/function type model.
 The `--entry` mode validates whether a fully checked unit has a legal executable
 entry point.
+The `--emit-cpp` mode emits C++ for the initial executable subset.
 
 ```bash
 make all
@@ -33,6 +34,7 @@ bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
+bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 ```
 
 The HTML output is self-contained and supports button or mouse-wheel zoom and
@@ -49,5 +51,6 @@ the second prints the Git-derived development build identity. The complete
 
 !!! warning
     The type mode does not yet resolve members, generic annotations, interface
-    conformance, or every user-defined relationship. The executable does not
-    perform runtime execution, C++ generation, or native compiler invocation.
+    conformance, or every user-defined relationship. C++ generation is limited
+    to the documented initial subset, and `sagan` does not yet invoke the native
+    compiler itself; the execution demo script performs that step.

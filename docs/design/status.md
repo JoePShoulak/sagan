@@ -19,7 +19,7 @@ verified_by: null
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls/returns, literal collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Planned; not implemented** | roadmap only |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, native execution demo |
 | Deterministic execution | **Goal; contract open** | design intent only |
 
 ## Tokenizer verification
@@ -37,7 +37,9 @@ DOT, SVG, or interactive HTML ASTs, and print the initial semantic model. The
 HTML renderer supports zooming and panning. Parser and semantic demonstrations
 provide broad successful source files plus focused malformed examples. The
 semantic mode validates names and scopes. Type mode additionally validates the
-implemented scalar and function rules, but no mode executes Sagan source.
+implemented scalar and function rules. The initial backend can emit C++ for a
+validated scalar/function/control-flow subset, and the execution demo compiles
+that output with `g++` and runs it.
 Entry mode performs the complete implemented checks and requires exactly one
 parameterless `main` returning `Int` or `Void`.
 

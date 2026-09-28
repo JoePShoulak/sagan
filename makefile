@@ -9,6 +9,7 @@ SAGAN_VERSION := $(shell bash scripts/version.sh current 2>/dev/null || echo 0.0
 
 SOURCES := \
 	src/main.cpp \
+	src/codegen/cpp_generator.cpp \
 	src/parser/ast_render.cpp \
 	src/parser/ast_node.cpp \
 	src/parser/lex.cpp \
@@ -31,7 +32,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo execution-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -72,6 +73,9 @@ type-demo: $(TARGET)
 
 entry-demo: $(TARGET)
 	$(TARGET) --entry examples/entry_demo.sagan
+
+execution-demo: $(TARGET)
+	bash scripts/execution_demo.sh
 
 ast-demo: $(TARGET)
 	@mkdir -p build

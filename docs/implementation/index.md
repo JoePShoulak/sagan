@@ -12,22 +12,23 @@ The present executable implements the syntactic front end and initial semantic
 pass of a future compiler:
 
 ```text
-UTF-8 source -> tokenizer -> token stream -> parser -> AST -> scope/name analysis -> scalar type checking
+UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> initial C++ emission
 ```
 
-The remaining planned pipeline is:
+The initial executable path is:
 
 ```text
-typed program -> C++ generation -> C++ compiler -> native executable
+validated subset -> generated C++ -> g++ (demo script) -> native executable
 ```
 
-The first line is operational. Read about the [architecture](architecture.md),
+This path is operational for the documented minimal subset. Read about the [architecture](architecture.md),
 [tokenizer](tokenizer.md), [parser](parser.md), and
 [Schematic-derived foundations](schematic-foundations.md). The
 [semantic analyzer](semantic-analysis.md) page records the implemented first
-pass and its next boundary. The [code generator](code-generation.md) remains
-future work.
+pass and its next boundary. The [code generator](code-generation.md) records
+the supported initial native subset and its deliberate limitations.
 
 The implemented semantic subset is now sufficient to validate the shape and
-control-flow safety of a small executable program. C++ emission and native
-toolchain invocation are the next pipeline stage.
+control-flow safety of a small executable program. The first C++ emission slice
+is complete; widening backend coverage and integrating runtime facilities are
+the next pipeline stage.
