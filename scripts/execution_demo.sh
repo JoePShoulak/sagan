@@ -6,6 +6,10 @@ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 mkdir -p build/tmp
+repo_tmp_native="$(cygpath -w "$repo_root/build/tmp")"
+export TMPDIR="$repo_tmp_native"
+export TMP="$repo_tmp_native"
+export TEMP="$repo_tmp_native"
 
 echo "Sagan input:"
 echo "------------"
