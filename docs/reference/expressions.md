@@ -31,6 +31,12 @@ raises a runtime error when the result overflows its checked type. Floating-
 point bases permit negative exponents. `0 ^ 0` is a runtime error for every
 numeric type.
 
+The native executable subset checks signed integer addition, subtraction,
+multiplication, division, remainder, unary negation, increment, and decrement.
+Overflow raises a runtime error. Division and remainder by zero raise runtime
+errors for integer and floating-point operands. Compound assignments use the
+same checks. Floating-point remainder follows `fmod` semantics.
+
 **Implemented syntax:** anonymous lambdas use `fun(parameters) => expression`,
 with optional parameter and return annotations. A lambda is a primary expression
 and can participate in postfix chains, including immediate calls when grouped.

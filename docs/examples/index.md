@@ -139,7 +139,9 @@ bash scripts/execution_demo.sh
 The script prints the Sagan input, emits and prints C++, compiles it with
 `g++`, runs the native program, displays the program's own `print` output, and
 reports its exit code. It also compiles and runs focused fixtures proving that
-negative integer exponents, `0 ^ 0`, and fixed-width integer power overflow
+negative integer exponents, `0 ^ 0`, fixed-width integer power overflow,
+checked addition, subtraction, multiplication, division, remainder, negation,
+increment, and decrement failures
 raise runtime errors. This demonstrates only the documented initial backend
 subset, not the entire parsed language.
 

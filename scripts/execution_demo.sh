@@ -74,5 +74,25 @@ expect_runtime_error examples/execution_exponent_negative_error.sagan \
   "Sagan integer exponentiation requires a non-negative exponent"
 expect_runtime_error examples/execution_exponent_overflow_error.sagan \
   "Sagan integer exponentiation overflow"
+expect_runtime_error examples/execution_addition_overflow_error.sagan \
+  "Sagan integer addition overflow"
+expect_runtime_error examples/execution_subtraction_overflow_error.sagan \
+  "Sagan integer subtraction overflow"
+expect_runtime_error examples/execution_multiplication_overflow_error.sagan \
+  "Sagan integer multiplication overflow"
+expect_runtime_error examples/execution_division_zero_error.sagan \
+  "Sagan division by zero"
+expect_runtime_error examples/execution_division_overflow_error.sagan \
+  "Sagan integer division overflow"
+expect_runtime_error examples/execution_modulo_zero_error.sagan \
+  "Sagan modulo by zero"
+expect_runtime_error examples/execution_negation_overflow_error.sagan \
+  "Sagan integer negation overflow"
+expect_runtime_error examples/execution_increment_overflow_error.sagan \
+  "Sagan integer addition overflow"
+expect_runtime_error examples/execution_decrement_overflow_error.sagan \
+  "Sagan integer subtraction overflow"
+expect_runtime_error examples/execution_float_division_zero_error.sagan \
+  "Sagan division by zero"
 
-echo "Execution demo passed: Sagan executed checked powers, increment expressions, compact bodies, collection spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."
+echo "Execution demo passed: Sagan executed deterministic checked arithmetic and powers, increment expressions, compact bodies, collection spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."

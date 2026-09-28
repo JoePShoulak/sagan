@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.27.0](https://img.shields.io/badge/development-0.27.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.28.0](https://img.shields.io/badge/development-0.28.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -40,6 +40,8 @@ are executable as well.
 Expression-pattern `match` statements execute with ordered cases and a fallback.
 Control-flow bodies may use braces or a single statement on the same line.
 Prefix and postfix numeric increment and decrement expressions also execute.
+Integer arithmetic is checked: overflow, division by zero, and modulo by zero
+raise runtime errors instead of inheriting undefined native behavior.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text

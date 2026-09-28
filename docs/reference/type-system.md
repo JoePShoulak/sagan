@@ -34,8 +34,9 @@ checked because generic annotation syntax is not implemented. Vector and
 coordinate literals infer their dimension and common numeric component type,
 for example `Vector3<Float64>`; dimensions must match for compatibility.
 
-**Provisional design:** typed collections and interfaces exist, and arithmetic
-overflow raises an exception.
+**Implemented for the native numeric subset:** integer arithmetic overflow
+raises a runtime exception. Typed collections and interfaces continue to have
+provisional semantics outside the implemented subset.
 
 **Open questions:** generic annotation syntax, member inference, nullability, value versus
 reference categories, generic semantics, possible sum types, variance,

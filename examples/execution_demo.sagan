@@ -13,6 +13,14 @@ fun main(): Int {
   let reciprocal = 2.0 ^ -1
   let powered = 2
   powered ^= 3
+  let arithmetic = 10
+  arithmetic += 5
+  arithmetic *= 2
+  arithmetic /= 3
+  arithmetic %= 6
+  arithmetic -= 1
+  let product = 6 * 7
+  let floating_remainder = 5.5 % 2.0
 
   print("The answer from 🚀 is:")
   print(answer)
@@ -23,6 +31,9 @@ fun main(): Int {
   print("Three squared: ${squared}")
   print("Two to the negative one: ${reciprocal}")
   print("Two cubed through ^=: ${powered}")
+  print("Checked compound arithmetic result: ${arithmetic}")
+  print("Six times seven: ${product}")
+  print("Floating remainder: ${floating_remainder}")
   match configured_countdown {
     case 3 print("Match selected the nominal countdown")
     case else print("Match selected the fallback")
@@ -41,6 +52,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 return 0
+  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 return 0
   else return 1
 }

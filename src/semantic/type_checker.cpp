@@ -731,6 +731,11 @@ namespace semantic
           const std::string target = assignment->operation == "=" ? assignment_target(*assignment->target)
                                                                   : expression(*assignment->target);
           const std::string assigned = expression(*assignment->value);
+          if (assignment->operation != "=")
+            require((is_unknown(target) || is_numeric(target)) && (is_unknown(assigned) || is_numeric(assigned)),
+                    "Compound operator '" + assignment->operation +
+                        "' requires numeric operands, but received " + target + " and " + assigned,
+                    assignment->range);
           require_compatible(target, assigned, assignment->range, "Assignment");
           mark_initialized(*assignment->target);
         }

@@ -128,8 +128,7 @@ namespace codegen
         if (value == "or") return "||";
         if (value == "is") return "==";
         if (value == "is not") return "!=";
-        if (value == "+" || value == "-" || value == "*" || value == "/" || value == "%" ||
-            value == "==" || value == "!=" || value == "<" || value == "<=" || value == ">" ||
+        if (value == "==" || value == "!=" || value == "<" || value == "<=" || value == ">" ||
             value == ">=") return value;
         fail("operator '" + value + "' is not available in the initial native subset", range);
         return {};
@@ -162,13 +161,21 @@ namespace codegen
         {
           if (unary->operator_text == "++" || unary->operator_text == "--")
           {
-            const std::string operand = expression(*unary->operand);
-            return unary->postfix ? "(" + operand + unary->operator_text + ")"
-                                  : "(" + unary->operator_text + operand + ")";
+            return "sagan_" + std::string(unary->operator_text == "++" ? "increment" : "decrement") + "<" +
+                   type_name(expression_type(value), value.range) + ">(" + expression(*unary->operand) + ", " +
+                   (unary->postfix ? "true" : "false") + ")";
           }
           if (unary->postfix) fail("unsupported postfix operator", value.range);
           const std::string op = unary->operator_text == "not" ? "!" : unary->operator_text;
           if (op != "!" && op != "+" && op != "-") fail("unsupported unary operator", value.range);
+          if (op == "-")
+          {
+            if (const auto *literal = dynamic_cast<const parser::literal_expression *>(unary->operand.get()))
+              return "static_cast<" + type_name(expression_type(value), value.range) + ">(-" +
+                     expression(*literal) + ")";
+            return "sagan_negate<" + type_name(expression_type(value), value.range) + ">(" +
+                   expression(*unary->operand) + ")";
+          }
           return "(" + op + expression(*unary->operand) + ")";
         }
         if (const auto *binary = dynamic_cast<const parser::binary_expression *>(&value))
@@ -176,6 +183,22 @@ namespace codegen
           if (binary->operator_text == "^")
             return "sagan_power<" + type_name(expression_type(value), value.range) + ">(" +
                    expression(*binary->left) + ", " + expression(*binary->right) + ")";
+          const std::string checked_type = type_name(expression_type(value), value.range);
+          if (binary->operator_text == "+")
+            return "sagan_add<" + checked_type + ">(" + expression(*binary->left) + ", " +
+                   expression(*binary->right) + ")";
+          if (binary->operator_text == "-")
+            return "sagan_subtract<" + checked_type + ">(" + expression(*binary->left) + ", " +
+                   expression(*binary->right) + ")";
+          if (binary->operator_text == "*")
+            return "sagan_multiply<" + checked_type + ">(" + expression(*binary->left) + ", " +
+                   expression(*binary->right) + ")";
+          if (binary->operator_text == "/")
+            return "sagan_divide<" + checked_type + ">(" + expression(*binary->left) + ", " +
+                   expression(*binary->right) + ")";
+          if (binary->operator_text == "%")
+            return "sagan_modulo<" + checked_type + ">(" + expression(*binary->left) + ", " +
+                   expression(*binary->right) + ")";
           return "(" + expression(*binary->left) + " " + operation(binary->operator_text, value.range) + " " +
                  expression(*binary->right) + ")";
         }
@@ -298,6 +321,16 @@ namespace codegen
           if (assignment->operation == "^=")
             output << "sagan_power_assign<" << type_name(expression_type(*assignment->target), assignment->range)
                    << ">(" << expression(*assignment->target) << ", " << expression(*assignment->value) << ");\n";
+          else if (assignment->operation != "=")
+          {
+            const std::string operation_name = assignment->operation == "+=" ? "add" :
+                                               assignment->operation == "-=" ? "subtract" :
+                                               assignment->operation == "*=" ? "multiply" :
+                                               assignment->operation == "/=" ? "divide" : "modulo";
+            output << "sagan_" << operation_name << "_assign<"
+                   << type_name(expression_type(*assignment->target), assignment->range) << '>' << '('
+                   << expression(*assignment->target) << ", " << expression(*assignment->value) << ");\n";
+          }
           else
             output << expression(*assignment->target) << ' ' << assignment->operation << ' '
                    << expression(*assignment->value) << ";\n";
@@ -435,9 +468,40 @@ namespace codegen
                   "{\n"
                   "  return std::to_string(static_cast<int>(value));\n"
                   "}\n\n"
-                  "template <typename Result>\n"
-                  "Result sagan_checked_multiply(const Result left, const Result right)\n"
+                  "template <typename Result, typename Left, typename Right>\n"
+                  "Result sagan_add(const Left left_value, const Right right_value)\n"
                   "{\n"
+                  "  const Result left = static_cast<Result>(left_value);\n"
+                  "  const Result right = static_cast<Result>(right_value);\n"
+                  "  if constexpr (std::is_integral_v<Result>)\n"
+                  "  {\n"
+                  "    constexpr Result minimum = std::numeric_limits<Result>::min();\n"
+                  "    constexpr Result maximum = std::numeric_limits<Result>::max();\n"
+                  "    if ((right > 0 && left > maximum - right) || (right < 0 && left < minimum - right))\n"
+                  "      throw std::overflow_error(\"Sagan integer addition overflow\");\n"
+                  "  }\n"
+                  "  return static_cast<Result>(left + right);\n"
+                  "}\n\n"
+                  "template <typename Result, typename Left, typename Right>\n"
+                  "Result sagan_subtract(const Left left_value, const Right right_value)\n"
+                  "{\n"
+                  "  const Result left = static_cast<Result>(left_value);\n"
+                  "  const Result right = static_cast<Result>(right_value);\n"
+                  "  if constexpr (std::is_integral_v<Result>)\n"
+                  "  {\n"
+                  "    constexpr Result minimum = std::numeric_limits<Result>::min();\n"
+                  "    constexpr Result maximum = std::numeric_limits<Result>::max();\n"
+                  "    if ((right > 0 && left < minimum + right) || (right < 0 && left > maximum + right))\n"
+                  "      throw std::overflow_error(\"Sagan integer subtraction overflow\");\n"
+                  "  }\n"
+                  "  return static_cast<Result>(left - right);\n"
+                  "}\n\n"
+                  "template <typename Result, typename Left, typename Right>\n"
+                  "Result sagan_multiply(const Left left_value, const Right right_value)\n"
+                  "{\n"
+                  "  const Result left = static_cast<Result>(left_value);\n"
+                  "  const Result right = static_cast<Result>(right_value);\n"
+                  "  if constexpr (!std::is_integral_v<Result>) return static_cast<Result>(left * right);\n"
                   "  constexpr Result minimum = std::numeric_limits<Result>::min();\n"
                   "  constexpr Result maximum = std::numeric_limits<Result>::max();\n"
                   "  const bool overflow =\n"
@@ -445,8 +509,62 @@ namespace codegen
                   "               : (left < 0 ? (right > 0 ? left < minimum / right\n"
                   "                                      : right < maximum / left)\n"
                   "                           : false);\n"
-                  "  if (overflow) throw std::overflow_error(\"Sagan integer exponentiation overflow\");\n"
+                  "  if (overflow) throw std::overflow_error(\"Sagan integer multiplication overflow\");\n"
                   "  return static_cast<Result>(left * right);\n"
+                  "}\n\n"
+                  "template <typename Result>\n"
+                  "Result sagan_power_multiply(const Result left, const Result right)\n"
+                  "{\n"
+                  "  try { return sagan_multiply<Result>(left, right); }\n"
+                  "  catch (const std::overflow_error &)\n"
+                  "  { throw std::overflow_error(\"Sagan integer exponentiation overflow\"); }\n"
+                  "}\n\n"
+                  "template <typename Result, typename Left, typename Right>\n"
+                  "Result sagan_divide(const Left left_value, const Right right_value)\n"
+                  "{\n"
+                  "  const Result left = static_cast<Result>(left_value);\n"
+                  "  const Result right = static_cast<Result>(right_value);\n"
+                  "  if (right == Result{0}) throw std::domain_error(\"Sagan division by zero\");\n"
+                  "  if constexpr (std::is_integral_v<Result>)\n"
+                  "    if (left == std::numeric_limits<Result>::min() && right == Result{-1})\n"
+                  "      throw std::overflow_error(\"Sagan integer division overflow\");\n"
+                  "  return static_cast<Result>(left / right);\n"
+                  "}\n\n"
+                  "template <typename Result, typename Left, typename Right>\n"
+                  "Result sagan_modulo(const Left left_value, const Right right_value)\n"
+                  "{\n"
+                  "  const Result left = static_cast<Result>(left_value);\n"
+                  "  const Result right = static_cast<Result>(right_value);\n"
+                  "  if (right == Result{0}) throw std::domain_error(\"Sagan modulo by zero\");\n"
+                  "  if constexpr (std::is_integral_v<Result>)\n"
+                  "  {\n"
+                  "    if (left == std::numeric_limits<Result>::min() && right == Result{-1}) return Result{0};\n"
+                  "    return static_cast<Result>(left % right);\n"
+                  "  }\n"
+                  "  return static_cast<Result>(std::fmod(left, right));\n"
+                  "}\n\n"
+                  "template <typename Result, typename Value>\n"
+                  "Result sagan_negate(const Value value_input)\n"
+                  "{\n"
+                  "  const Result value = static_cast<Result>(value_input);\n"
+                  "  if constexpr (std::is_integral_v<Result>)\n"
+                  "    if (value == std::numeric_limits<Result>::min())\n"
+                  "      throw std::overflow_error(\"Sagan integer negation overflow\");\n"
+                  "  return static_cast<Result>(-value);\n"
+                  "}\n\n"
+                  "template <typename Result, typename Target>\n"
+                  "Result sagan_increment(Target &target, const bool postfix)\n"
+                  "{\n"
+                  "  const Result previous = static_cast<Result>(target);\n"
+                  "  target = sagan_add<Result>(target, Result{1});\n"
+                  "  return postfix ? previous : static_cast<Result>(target);\n"
+                  "}\n\n"
+                  "template <typename Result, typename Target>\n"
+                  "Result sagan_decrement(Target &target, const bool postfix)\n"
+                  "{\n"
+                  "  const Result previous = static_cast<Result>(target);\n"
+                  "  target = sagan_subtract<Result>(target, Result{1});\n"
+                  "  return postfix ? previous : static_cast<Result>(target);\n"
                   "}\n\n"
                   "template <typename Result, typename Base, typename Exponent>\n"
                   "Result sagan_power(const Base base_value, const Exponent exponent_value)\n"
@@ -465,9 +583,9 @@ namespace codegen
                   "    Result result = Result{1};\n"
                   "    while (remaining != 0)\n"
                   "    {\n"
-                  "      if ((remaining & Unsigned{1}) != 0) result = sagan_checked_multiply(result, factor);\n"
+                  "      if ((remaining & Unsigned{1}) != 0) result = sagan_power_multiply(result, factor);\n"
                   "      remaining >>= 1;\n"
-                  "      if (remaining != 0) factor = sagan_checked_multiply(factor, factor);\n"
+                  "      if (remaining != 0) factor = sagan_power_multiply(factor, factor);\n"
                   "    }\n"
                   "    return result;\n"
                   "  }\n"
@@ -477,7 +595,22 @@ namespace codegen
                   "void sagan_power_assign(Target &target, const Exponent exponent)\n"
                   "{\n"
                   "  target = sagan_power<Result>(target, exponent);\n"
-                  "}\n\n";
+                  "}\n\n"
+                  "template <typename Result, typename Target, typename Value>\n"
+                  "void sagan_add_assign(Target &target, const Value value)\n"
+                  "{ target = sagan_add<Result>(target, value); }\n\n"
+                  "template <typename Result, typename Target, typename Value>\n"
+                  "void sagan_subtract_assign(Target &target, const Value value)\n"
+                  "{ target = sagan_subtract<Result>(target, value); }\n\n"
+                  "template <typename Result, typename Target, typename Value>\n"
+                  "void sagan_multiply_assign(Target &target, const Value value)\n"
+                  "{ target = sagan_multiply<Result>(target, value); }\n\n"
+                  "template <typename Result, typename Target, typename Value>\n"
+                  "void sagan_divide_assign(Target &target, const Value value)\n"
+                  "{ target = sagan_divide<Result>(target, value); }\n\n"
+                  "template <typename Result, typename Target, typename Value>\n"
+                  "void sagan_modulo_assign(Target &target, const Value value)\n"
+                  "{ target = sagan_modulo<Result>(target, value); }\n\n";
         for (const auto &entry : tree.statements)
         {
           const auto *declaration = dynamic_cast<const parser::function_declaration *>(entry.get());

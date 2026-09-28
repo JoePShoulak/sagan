@@ -22,10 +22,11 @@ defined.
 
 ## Strong and explicit types
 
-**Settled design.** Sagan minimizes implicit coercion. A conversion is intended
-to be implicit only when it is lossless. Arithmetic overflow is intended to
-raise a runtime error. The semantic rules needed to prove losslessness and
-enforce overflow behavior are not implemented.
+**Settled design.** Sagan minimizes implicit coercion. A conversion is implicit
+only when the implemented checker can prove it lossless. The native executable
+subset raises runtime errors for integer arithmetic overflow and division or
+modulo by zero. Extending those guarantees to future numeric and user-defined
+types remains ongoing work.
 
 ## Composition before inheritance
 

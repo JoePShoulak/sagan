@@ -18,7 +18,7 @@ the resulting native executable.
 The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
-prefix and postfix numeric increment and decrement,
+prefix and postfix numeric increment and decrement, checked integer arithmetic,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Homogeneous array literals preserve the element width inferred by the
@@ -51,8 +51,15 @@ source order, and executes the first equal case or the final `case else`
 fallback. Destructuring and type-pattern matching are not part of the current
 language subset.
 
+Integer addition, subtraction, multiplication, division, remainder, negation,
+increment, decrement, exponentiation, and their compound-assignment forms use
+generated helpers. Integer overflow and zero divisors raise runtime errors;
+floating-point remainder uses `fmod` and floating-point division also rejects a
+zero divisor.
+
 Open work includes generated-code structure, runtime interfaces, memory
 management, exception lowering, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
-and statement lowering, and deterministic numeric constraints. Native compiler
+and statement lowering, and deterministic constraints beyond the implemented
+numeric subset. Native compiler
 invocation remains in the demo script rather than the `sagan` executable.

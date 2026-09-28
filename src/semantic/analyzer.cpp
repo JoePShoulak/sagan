@@ -333,7 +333,8 @@ namespace semantic
         model.scopes.push_back(scope{0, no_parent, "program", {}});
         names.emplace_back();
         for (const std::string_view builtin : {"Bool", "Coordinate", "Float", "Float32", "Float64", "Frame",
-                                               "Int", "String", "Vector", "Void"})
+                                               "Int", "Int8", "Int16", "Int32", "Int64", "String", "Vector",
+                                               "Void"})
         {
           declare(std::string(builtin), "builtin type", parser::span{0, 0});
         }

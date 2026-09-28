@@ -1645,6 +1645,9 @@ namespace
     passed &= expect_type_error("compound assignment before initialization",
                                 "fun invalid(): Int {\n  let value: Int\n  value += 1\n  return value\n}\n",
                                 "Variable 'value' is used before initialization");
+    passed &= expect_type_error("compound assignment requires numeric operands",
+                                "fun invalid(): Int {\n  let value = \"Sagan\"\n  value += \"!\"\n  return 0\n}\n",
+                                "requires numeric operands");
     passed &= expect_type_error("partial branch initialization",
                                 "fun invalid(flag: Bool): Int {\n  let value: Int\n"
                                 "  if flag {\n    value = 1\n  }\n  return value\n}\n",
