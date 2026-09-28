@@ -18,6 +18,7 @@ namespace codegen
       const semantic::type_model &types;
       std::ostringstream output;
       int depth = 0;
+      std::size_t temporary_index = 0;
 
       auto indentation() const -> std::string
       {
@@ -285,6 +286,25 @@ namespace codegen
           output << "return";
           if (returned->value) output << ' ' << expression(*returned->value);
           output << ";\n";
+        }
+        else if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
+        {
+          const std::string temporary = "sagan_match_" + std::to_string(temporary_index++);
+          output << "const auto " << temporary << " = " << expression(*matched->subject) << ";\n";
+          bool emitted_condition = false;
+          for (const auto &branch : matched->cases)
+          {
+            output << indentation();
+            if (branch.pattern)
+            {
+              output << (emitted_condition ? "else if" : "if") << " (" << temporary << " == "
+                     << expression(*branch.pattern) << ") ";
+              emitted_condition = true;
+            }
+            else output << (emitted_condition ? "else " : "if (true) ");
+            block(*branch.body);
+            output << "\n";
+          }
         }
         else fail("statement is not available in the initial native subset", value.range);
       }

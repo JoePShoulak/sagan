@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.21.0](https://img.shields.io/badge/development-0.21.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.22.0](https://img.shields.io/badge/development-0.22.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -36,6 +36,7 @@ array literals, checked indexing, and `for … in` iteration.
 Interpolated strings and mutable `while`/`until` loops also execute in the
 current native subset.
 Homogeneous dictionary literals and checked key lookup are executable as well.
+Expression-pattern `match` statements execute with ordered cases and a fallback.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checking

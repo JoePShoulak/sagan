@@ -42,6 +42,11 @@ types lower to `std::unordered_map`. Key lookup is checked and raises the native
 out-of-range exception when a key is absent. Dictionary spreads and dictionary
 iteration are not lowered yet.
 
+`match` evaluates its subject exactly once, compares expression-shaped cases in
+source order, and executes the first equal case or the final `case else`
+fallback. Destructuring and type-pattern matching are not part of the current
+language subset.
+
 Open work includes generated-code structure, runtime interfaces, memory
 management, exception lowering, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
