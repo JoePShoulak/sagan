@@ -15,7 +15,9 @@ bash scripts/test.sh
 ```
 
 This performs a clean C++ build, calculates the development version, runs the
-compiled-in tokenizer self-tests, and checks `--version`.
+compiled-in tokenizer and parser self-tests, exercises every command-line output
+mode, verifies generated AST files, checks representative CLI failures and
+diagnostics, and checks `--version`.
 
 ## Coverage
 

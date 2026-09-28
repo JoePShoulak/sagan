@@ -47,7 +47,8 @@ instrumented build and produces LCOV output when `lcov` is installed; `demo` tok
 repository example; `parser-demo` prints the parser example's AST; `ast-demo`
 writes the visual source-and-tree page to `build/ast-demo.html`; `get-version`
 prints the calculated build identity; and `clean` removes compiler objects and
-the binary.
+the binary. The test target also exercises the CLI's token, text AST, DOT, SVG,
+and HTML modes plus its usage, file, lexical, and syntax error paths.
 
 Development versions have the form
 `MAJOR.MINOR.PATCH+gREVISION[.dirty]`. Conventional Commit markers after the

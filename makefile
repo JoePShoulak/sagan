@@ -51,6 +51,7 @@ obj/version.o: obj/version.cpp src/version.hpp
 
 test: $(TARGET)
 	$(TARGET) --self-test
+	bash scripts/cli_test.sh
 
 coverage:
 	bash scripts/coverage.sh
