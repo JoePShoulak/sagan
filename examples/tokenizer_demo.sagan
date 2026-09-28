@@ -1,0 +1,43 @@
+/// Demonstrates the first Sagan tokenizer.
+module orbital_demo
+
+import Vector from math
+export ExplorerShip
+
+face Movable {
+  fun velocity(): Vector
+}
+
+face Spacecraft is Movable, Renderable {
+  fun trajectory(): Vector
+}
+
+class ExplorerShip has Spacecraft {
+  fun status(active: Bool): String =>
+    active ? "flying" ; "idle"
+
+  fun normalize_velocity!() {
+    self.velocity = self.velocity.normalize()
+  }
+}
+
+let entity_count: Integer = 10_000
+let gravity: Float = 6.674_30e-11
+let direction: Vector = <1.0, 0.0, 0.0>
+let position: Coordinate = (100.0, 200.0, 300.0)
+let metadata = {"name": "Voyager", "active": true}
+let path = r"C:\simulation\data"
+let report = """
+Vehicle: ${metadata["name"]}
+Gravity: ${gravity}
+"""
+
+hope {
+  entity_count++
+} unless error {
+  scream error
+} finally {
+  let finished = true
+}
+let 🌌distance = 42
+

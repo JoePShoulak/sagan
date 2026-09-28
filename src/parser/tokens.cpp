@@ -1,25 +1,107 @@
-const char *const map[] = {
-    "<unknown>",    // UNKNOWN
-    "<identifier>", // IDENTIFIER
-    "<@tag>",       // TAG
-    "<!event>",     // EVENT
-    "<text>",       // STRING
-    "<code block>", // CODE
-    "<number>",     // NUMBER
+#include "tokens.hpp"
 
-    "`{`", // LBRACE
-    "`}`", // RBRACE
-    "`[`", // LBRACKET
-    "`]`", // RBRACKET
-    "`:`", // COLON
-    "`,`", // COMMA
+#include <array>
 
-    "`node`",    // KWD_NODE
-    "`as`",      // KWD_AS
-    "`in`",      // KWD_IN
-    "`out`",     // KWD_OUT
-    "`on`",      // KWD_ON
-    "`include`", // KWD_INCLUDE
-    "`partial`", // KWD_PARTIAL
-    "`extends`", // KWD_EXTENDS
-};
+namespace tokens
+{
+  namespace
+  {
+    constexpr std::array<std::string_view, TOKEN_COUNT> names = {
+        "UNKNOWN",
+        "NEWLINE",
+        "IDENTIFIER",
+        "METHOD_IDENTIFIER",
+        "INTEGER",
+        "FLOAT",
+        "STRING",
+        "STRING_BEGIN",
+        "STRING_SEGMENT",
+        "STRING_END",
+        "INTERPOLATION_BEGIN",
+        "INTERPOLATION_END",
+        "DOC_COMMENT",
+        "LPAREN",
+        "RPAREN",
+        "LBRACKET",
+        "RBRACKET",
+        "LBRACE",
+        "RBRACE",
+        "LANGLE",
+        "RANGLE",
+        "COMMA",
+        "COLON",
+        "DOT",
+        "QUESTION",
+        "SEMICOLON",
+        "PLUS",
+        "MINUS",
+        "STAR",
+        "SLASH",
+        "PERCENT",
+        "CARET",
+        "EQUAL",
+        "BANG",
+        "SPREAD",
+        "SAFE_DOT",
+        "ASSIGN_VALUE",
+        "FAT_ARROW",
+        "EQUAL_EQUAL",
+        "BANG_EQUAL",
+        "LESS_EQUAL",
+        "GREATER_EQUAL",
+        "PLUS_PLUS",
+        "MINUS_MINUS",
+        "PLUS_EQUAL",
+        "MINUS_EQUAL",
+        "STAR_EQUAL",
+        "SLASH_EQUAL",
+        "PERCENT_EQUAL",
+        "CARET_EQUAL",
+        "KWD_LET",
+        "KWD_FUN",
+        "KWD_CLASS",
+        "KWD_FACE",
+        "KWD_ENUM",
+        "KWD_IF",
+        "KWD_ELSE",
+        "KWD_MATCH",
+        "KWD_CASE",
+        "KWD_FOR",
+        "KWD_IN",
+        "KWD_WHILE",
+        "KWD_UNTIL",
+        "KWD_BREAK",
+        "KWD_CONTINUE",
+        "KWD_RETURN",
+        "KWD_YIELD",
+        "KWD_IMPORT",
+        "KWD_FROM",
+        "KWD_AS",
+        "KWD_MODULE",
+        "KWD_EXPORT",
+        "KWD_HOPE",
+        "KWD_UNLESS",
+        "KWD_FINALLY",
+        "KWD_SCREAM",
+        "KWD_AND",
+        "KWD_OR",
+        "KWD_NOT",
+        "KWD_SELF",
+        "KWD_IS",
+        "KWD_HAS",
+        "KWD_TRUE",
+        "KWD_FALSE",
+        "KWD_INF",
+        "KWD_NAN",
+    };
+  }
+
+  auto name(const int token_id) -> std::string_view
+  {
+    if (token_id < 0 || token_id >= TOKEN_COUNT)
+    {
+      return "INVALID_TOKEN";
+    }
+    return names[static_cast<std::size_t>(token_id)];
+  }
+}

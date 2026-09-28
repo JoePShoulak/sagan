@@ -1,0 +1,2 @@
+// This file intentionally fails tokenization.
+let malformed_number = 1e
