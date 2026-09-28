@@ -1,5 +1,6 @@
 #include "parser/lex.hpp"
 #include "parser/parse_error.hpp"
+#include "parser/parser.hpp"
 #include "parser/tokenizer.hpp"
 #include "parser/tokens.hpp"
 #include "parser/unicode.hpp"
@@ -140,6 +141,21 @@ namespace
     return true;
   }
 
+  auto expect_ast(const std::string &name, const std::string &source, const std::string &expected) -> bool
+  {
+    parser::syntax_parser syntax(tokenize(source));
+    const auto tree = syntax.parse();
+    std::ostringstream output;
+    tree.print(output);
+    if (output.str() != expected)
+    {
+      std::cerr << "[FAIL] " << name << ":\n" << output.str();
+      return false;
+    }
+    std::cout << "[PASS] " << name << '\n';
+    return true;
+  }
+
   auto run_self_tests() -> int
   {
     bool passed = true;
@@ -256,6 +272,16 @@ namespace
     passed &= expect_error("surrogate Unicode escape", "let value = \"\\u{d800}\"\n");
     passed &= expect_error("oversized Unicode escape", "let value = \"\\u{110000}\"\n");
     passed &= expect_robustness("random byte robustness");
+    passed &= expect_ast(
+        "parser foundation",
+        "let altitude: Float = 125_000.0\nlet target = (altitude)\nlet pending\n",
+        "Program\n"
+        "  Let(altitude: Float)\n"
+        "    Float(125_000.0)\n"
+        "  Let(target)\n"
+        "    Group\n"
+        "      Identifier(altitude)\n"
+        "  Let(pending)\n");
 
     std::cout << (passed ? "All tokenizer tests passed.\n" : "Tokenizer tests failed.\n");
     return passed ? 0 : 1;
@@ -273,7 +299,7 @@ namespace
     return contents.str();
   }
 
-  auto print_error(const std::string &source, const parser::parse_error &error) -> void
+  auto print_error(const std::string &source, const parser::parse_error &error, const std::string &category) -> void
   {
     int line = 1;
     int column = 1;
@@ -293,7 +319,7 @@ namespace
         i += current ? current->width : 1;
       }
     }
-    std::cerr << "lexical error at " << line << ':' << column << ": " << error.what() << '\n';
+    std::cerr << category << " error at " << line << ':' << column << ": " << error.what() << '\n';
   }
 }
 
@@ -310,11 +336,26 @@ auto main(const int argc, char **argv) -> int
     return run_self_tests();
   }
 
-  const std::string path = argc == 2 ? argv[1] : "examples/tokenizer_demo.sagan";
+  const bool ast_mode = argc == 3 && std::string(argv[1]) == "--ast";
+  if (argc > 1 && !ast_mode && argc != 2)
+  {
+    std::cerr << "usage: sagan [--version | --self-test | --ast FILE | FILE]\n";
+    return 2;
+  }
+  const std::string path = ast_mode ? argv[2] : (argc == 2 ? argv[1] : "examples/tokenizer_demo.sagan");
   try
   {
     const std::string source = read_file(path);
     const auto result = tokenize(source);
+
+    if (ast_mode)
+    {
+      parser::syntax_parser syntax(result);
+      const auto tree = syntax.parse();
+      std::cout << "Sagan " << SAGAN_VERSION << " AST: " << path << "\n\n";
+      tree.print(std::cout);
+      return 0;
+    }
 
     std::cout << "Sagan " << SAGAN_VERSION << " tokenizer: " << path << "\n\n";
     std::cout << std::left << std::setw(24) << "TOKEN" << std::setw(18) << "SPAN" << "TEXT\n";
@@ -330,7 +371,7 @@ auto main(const int argc, char **argv) -> int
   {
     try
     {
-      print_error(read_file(path), error);
+      print_error(read_file(path), error, ast_mode ? "syntax" : "lexical");
     }
     catch (const std::exception &)
     {

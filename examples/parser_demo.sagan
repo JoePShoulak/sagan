@@ -1,0 +1,3 @@
+let altitude: Float = 125_000.0
+let target_altitude = (altitude)
+let telemetry_pending

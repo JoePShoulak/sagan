@@ -16,8 +16,10 @@ SAGAN_VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)+g$(VERSION_R
 
 SOURCES := \
 	src/main.cpp \
+	src/parser/ast_node.cpp \
 	src/parser/lex.cpp \
 	src/parser/parse_error.cpp \
+	src/parser/parser.cpp \
 	src/parser/tokenizer.cpp \
 	src/parser/tokens.cpp \
 	src/parser/unicode.cpp
@@ -29,7 +31,7 @@ BUILD_TMP := build/tmp
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test demo get-version FORCE
+.PHONY: all clean test demo parser-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -54,6 +56,9 @@ test: $(TARGET)
 
 demo: $(TARGET)
 	$(TARGET) examples/tokenizer_demo.sagan
+
+parser-demo: $(TARGET)
+	$(TARGET) --ast examples/parser_demo.sagan
 
 get-version:
 	@echo $(SAGAN_VERSION)

@@ -335,6 +335,20 @@ bin/sagan path/to/program.sagan
 
 `examples/tokenizer_error.sagan` intentionally contains a malformed number and demonstrates focused lexical-error reporting.
 
+Parser development includes a runnable AST demonstration from its first
+milestone onward:
+
+```bash
+make parser-demo
+bash scripts/parser_demo.sh
+```
+
+`make parser-demo` parses `examples/parser_demo.sagan` and prints its current
+AST. The script also runs `examples/parser_error.sagan` and confirms that the
+intentional syntax error is diagnosed. Every major compiler stage will retain a
+similar runnable success demo and focused error demo before being marked
+complete.
+
 ## Development versions
 
 Sagan identifies development builds with a Git-derived version such as
@@ -411,12 +425,18 @@ operator coverage, lexical diagnostics, and randomized malformed-input testing.
 Context-dependent interpretation of newlines and ambiguous delimiters belongs
 to the parser rather than the tokenizer.
 
-### 3. Parser and syntax tree — next
+### 3. Parser and syntax tree — in progress
 
 Turn the token stream into a structured syntax tree representing declarations,
 expressions, statements, control flow, types, classes, interfaces, and
 composition. This stage establishes the concrete grammar, operator precedence,
 and syntax-error diagnostics.
+
+The first parser slice now handles programs containing `let` declarations,
+optional simple type annotations, optional initializers, identifiers, numeric
+literals, and grouped primary expressions. It includes an AST-dump command and
+success/error demonstrations. Expression precedence and the remaining syntax
+forms are the next work.
 
 ### 4. Semantic analysis — planned
 
