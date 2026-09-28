@@ -19,6 +19,7 @@ namespace codegen
       std::ostringstream output;
       int depth = 0;
       std::size_t temporary_index = 0;
+      std::size_t array_index = 0;
 
       auto indentation() const -> std::string
       {
@@ -192,12 +193,35 @@ namespace codegen
           if (!checked.starts_with(prefix) || !checked.ends_with('>'))
             fail("array expression has no checked element type", value.range);
           const std::string element = checked.substr(prefix.size(), checked.size() - prefix.size() - 1);
+          const bool has_spread = std::any_of(collection->elements.begin(), collection->elements.end(),
+                                              [](const auto &entry)
+          {
+            return dynamic_cast<const parser::spread_expression *>(entry.get()) != nullptr;
+          });
+          if (has_spread)
+          {
+            const std::size_t current_array_index = array_index++;
+            const std::string temporary = "sagan_array_" + std::to_string(current_array_index);
+            std::string result = "([&]() { std::vector<" + type_name(element, value.range) + "> " + temporary + "; ";
+            for (std::size_t index_value = 0; index_value < collection->elements.size(); ++index_value)
+            {
+              if (const auto *spread =
+                      dynamic_cast<const parser::spread_expression *>(collection->elements[index_value].get()))
+              {
+                const std::string spread_temporary =
+                    "sagan_spread_" + std::to_string(current_array_index) + "_" + std::to_string(index_value);
+                result += "const auto &" + spread_temporary + " = " + expression(*spread->value) + "; ";
+                result += temporary + ".insert(" + temporary + ".end(), " + spread_temporary + ".begin(), " +
+                          spread_temporary + ".end()); ";
+              }
+              else result += temporary + ".push_back(" + expression(*collection->elements[index_value]) + "); ";
+            }
+            return result + "return " + temporary + "; }())";
+          }
           std::string result = "std::vector<" + type_name(element, value.range) + ">{";
           for (std::size_t index_value = 0; index_value < collection->elements.size(); ++index_value)
           {
             if (index_value != 0) result += ", ";
-            if (dynamic_cast<const parser::spread_expression *>(collection->elements[index_value].get()))
-              fail("array spreads are not available in the initial native subset", value.range);
             result += expression(*collection->elements[index_value]);
           }
           return result + "}";

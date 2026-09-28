@@ -21,7 +21,8 @@ local declarations, assignment, calls, grouping, common unary/binary operators,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Homogeneous array literals preserve the element width inferred by the
 type checker, array indexing is bounds-checked, and `for … in` iterates values
-by local copy. Array spreads are not lowered yet. The built-in `print(value)`
+by local copy. Array spreads evaluate each operand once and append its elements
+in source order. The built-in `print(value)`
 accepts one checked value, writes its
 human-readable form followed by a newline, and lowers to the generated C++
 output helper. Generated entry points select UTF-8 console input and output on

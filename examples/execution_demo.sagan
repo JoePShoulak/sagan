@@ -2,7 +2,9 @@ fun 🚀(value: Int): Int => value + 2
 
 fun main(): Int {
   let answer = 🚀(40)
-  let countdown = [3, 2, 1]
+  let countdown_start = [3]
+  let countdown_end = [1]
+  let countdown = [...countdown_start, 2, ...countdown_end]
   let phases = {"countdown": 3, "liftoff": 1}
   let configured_countdown = phases["countdown"]
 
