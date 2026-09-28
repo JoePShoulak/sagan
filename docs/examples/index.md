@@ -125,7 +125,8 @@ generate or execute native code.
 calls an emoji-named function to compute `40 + 2`, builds and iterates a typed
 countdown array using a spread, reads a checked array index, formats interpolated
 strings,
-constructs a typed dictionary and reads a checked key, mutates state through
+constructs a typed dictionary using a spread and later-key override, reads a
+checked key, mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,
 tests the result, and returns success from `main`.
 

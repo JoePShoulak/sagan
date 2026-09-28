@@ -26,7 +26,13 @@ with optional parameter and return annotations. A lambda is a primary expression
 and can participate in postfix chains, including immediate calls when grouped.
 
 **Provisional semantics:** lambda capture behavior and the semantic rules for
-spread, safe access, dictionary-key hashability, and assignment expressions.
+spread outside array and dictionary literals, safe access, dictionary-key
+hashability, and assignment expressions.
+
+**Settled dictionary-spread behavior:** dictionary entries are applied from
+left to right. When an explicit entry or later spread repeats an existing key,
+the later value replaces the earlier value. Each spread operand is evaluated
+once.
 
 ## String expressions
 

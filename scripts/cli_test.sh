@@ -85,6 +85,8 @@ grep -Fq "std::unordered_map<std::string, std::int8_t>" "$work_dir/generated.cpp
 grep -Fq "sagan_array_0.insert" "$work_dir/generated.cpp"
 grep -Fq "sagan_spread_0_0" "$work_dir/generated.cpp"
 grep -Fq "sagan_spread_0_2" "$work_dir/generated.cpp"
+grep -Fq "sagan_dictionary_1.insert_or_assign" "$work_dir/generated.cpp"
+grep -Fq "sagan_dictionary_spread_1_0" "$work_dir/generated.cpp"
 grep -Fq "const auto sagan_match_0" "$work_dir/generated.cpp"
 grep -Fq "else {" "$work_dir/generated.cpp"
 

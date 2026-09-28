@@ -5,7 +5,8 @@ fun main(): Int {
   let countdown_start = [3]
   let countdown_end = [1]
   let countdown = [...countdown_start, 2, ...countdown_end]
-  let phases = {"countdown": 3, "liftoff": 1}
+  let phase_defaults = {"countdown": 5, "liftoff": 1}
+  let phases = {...phase_defaults, "countdown": 3}
   let configured_countdown = phases["countdown"]
 
   print("The answer from 🚀 is:")

@@ -40,8 +40,9 @@ root.
 
 Homogeneous dictionary literals with backend-supported scalar key and value
 types lower to `std::unordered_map`. Key lookup is checked and raises the native
-out-of-range exception when a key is absent. Dictionary spreads and dictionary
-iteration are not lowered yet.
+out-of-range exception when a key is absent. Dictionary spreads evaluate each
+operand once and apply entries from left to right; later entries replace earlier
+values for the same key. Dictionary iteration is not lowered yet.
 
 `match` evaluates its subject exactly once, compares expression-shaped cases in
 source order, and executes the first equal case or the final `case else`

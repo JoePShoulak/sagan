@@ -41,4 +41,4 @@ if [[ "$status" -ne 0 ]]; then
   echo "Execution demo failed." >&2
   exit 1
 fi
-echo "Execution demo passed: Sagan executed array spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."
+echo "Execution demo passed: Sagan executed collection spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."

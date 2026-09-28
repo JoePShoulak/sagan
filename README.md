@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.23.0](https://img.shields.io/badge/development-0.23.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.24.0](https://img.shields.io/badge/development-0.24.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -35,7 +35,8 @@ built-in `print(value)` function. The executable subset also supports typed
 array literals and spreads, checked indexing, and `for … in` iteration.
 Interpolated strings and mutable `while`/`until` loops also execute in the
 current native subset.
-Homogeneous dictionary literals and checked key lookup are executable as well.
+Homogeneous dictionary literals, left-to-right spreads, and checked key lookup
+are executable as well.
 Expression-pattern `match` statements execute with ordered cases and a fallback.
 
 ```text

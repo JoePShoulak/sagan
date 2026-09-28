@@ -20,6 +20,7 @@ namespace codegen
       int depth = 0;
       std::size_t temporary_index = 0;
       std::size_t array_index = 0;
+      std::size_t dictionary_index = 0;
 
       auto indentation() const -> std::string
       {
@@ -229,16 +230,31 @@ namespace codegen
         if (const auto *dictionary = dynamic_cast<const parser::dictionary_expression *>(&value))
         {
           const auto [key, mapped] = dictionary_components(expression_type(value), value.range);
-          std::string result = "std::unordered_map<" + type_name(key, value.range) + ", " +
-                               type_name(mapped, value.range) + ">{";
+          const std::size_t current_dictionary_index = dictionary_index++;
+          const std::string temporary = "sagan_dictionary_" + std::to_string(current_dictionary_index);
+          std::string result = "([&]() { std::unordered_map<" + type_name(key, value.range) + ", " +
+                               type_name(mapped, value.range) + "> " + temporary + "; ";
           for (std::size_t index_value = 0; index_value < dictionary->entries.size(); ++index_value)
           {
             const auto &entry = dictionary->entries[index_value];
-            if (!entry.key) fail("dictionary spreads are not available in the initial native subset", value.range);
-            if (index_value != 0) result += ", ";
-            result += "{" + expression(*entry.key) + ", " + expression(*entry.value) + "}";
+            if (!entry.key)
+            {
+              const auto *spread = dynamic_cast<const parser::spread_expression *>(entry.value.get());
+              if (!spread) fail("dictionary spread entry is malformed", entry.value->range);
+              const std::string spread_temporary = "sagan_dictionary_spread_" +
+                                                   std::to_string(current_dictionary_index) + "_" +
+                                                   std::to_string(index_value);
+              result += "const auto &" + spread_temporary + " = " + expression(*spread->value) + "; ";
+              result += "for (const auto &[sagan_key, sagan_value] : " + spread_temporary + ") " + temporary +
+                        ".insert_or_assign(sagan_key, sagan_value); ";
+            }
+            else
+            {
+              result += temporary + ".insert_or_assign(" + expression(*entry.key) + ", " +
+                        expression(*entry.value) + "); ";
+            }
           }
-          return result + "}";
+          return result + "return " + temporary + "; }())";
         }
         fail("expression is not available in the initial native subset", value.range);
         return {};
