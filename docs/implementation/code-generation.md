@@ -18,7 +18,10 @@ the resulting native executable.
 The current subset supports typed functions, scalar literals, plain strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
-returns. The built-in `print(value)` accepts one checked value, writes its
+returns. Homogeneous array literals preserve the element width inferred by the
+type checker, array indexing is bounds-checked, and `for … in` iterates values
+by local copy. Array spreads are not lowered yet. The built-in `print(value)`
+accepts one checked value, writes its
 human-readable form followed by a newline, and lowers to the generated C++
 output helper. Generated entry points select UTF-8 console input and output on
 Windows, preventing Unicode text from being interpreted through a legacy code

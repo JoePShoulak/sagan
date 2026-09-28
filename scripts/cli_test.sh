@@ -75,6 +75,9 @@ expect_output "C++ output file" "Wrote generated C++" \
   "$binary" --emit-cpp examples/execution_demo.sagan "$work_dir/generated.cpp"
 grep -Fq "int main()" "$work_dir/generated.cpp"
 grep -Fq "SetConsoleOutputCP(CP_UTF8)" "$work_dir/generated.cpp"
+grep -Fq "std::vector<std::int8_t>" "$work_dir/generated.cpp"
+grep -Fq "for (auto" "$work_dir/generated.cpp"
+grep -Fq ".at(2)" "$work_dir/generated.cpp"
 
 expect_output "SVG AST file" "Wrote SVG AST" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/parser.svg"

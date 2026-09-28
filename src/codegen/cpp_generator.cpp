@@ -14,6 +14,7 @@ namespace codegen
   {
     class cpp_generator
     {
+      const semantic::type_model &types;
       std::ostringstream output;
       int depth = 0;
 
@@ -37,22 +38,38 @@ namespace codegen
         return encoded.str();
       }
 
+      auto type_name(const std::string &name, const parser::span range,
+                     const bool entry = false) const -> std::string
+      {
+        if (entry && name == "Int") return "int";
+        if (entry && name == "Void") return "int";
+        if (name == "Void") return "void";
+        if (name == "Bool") return "bool";
+        if (name == "String") return "std::string";
+        if (name == "Float" || name == "Float64") return "double";
+        if (name == "Float32") return "float";
+        if (name == "Int" || name == "Int64") return "std::int64_t";
+        if (name == "Int32") return "std::int32_t";
+        if (name == "Int16") return "std::int16_t";
+        if (name == "Int8") return "std::int8_t";
+        fail("type '" + name + "' is not available in the initial native subset", range);
+        return {};
+      }
+
       auto type(const std::optional<std::string> &name, const parser::span range,
                 const bool entry = false) const -> std::string
       {
         if (!name) fail("native functions require explicit parameter and return types", range);
-        if (entry && *name == "Int") return "int";
-        if (entry && *name == "Void") return "int";
-        if (*name == "Void") return "void";
-        if (*name == "Bool") return "bool";
-        if (*name == "String") return "std::string";
-        if (*name == "Float" || *name == "Float64") return "double";
-        if (*name == "Float32") return "float";
-        if (*name == "Int" || *name == "Int64") return "std::int64_t";
-        if (*name == "Int32") return "std::int32_t";
-        if (*name == "Int16") return "std::int16_t";
-        if (*name == "Int8") return "std::int8_t";
-        fail("type '" + *name + "' is not available in the initial native subset", range);
+        return type_name(*name, range, entry);
+      }
+
+      auto expression_type(const parser::expression &value) const -> std::string
+      {
+        for (auto entry = types.expressions.rbegin(); entry != types.expressions.rend(); ++entry)
+        {
+          if (entry->range.begin == value.range.begin && entry->range.end == value.range.end) return entry->type;
+        }
+        fail("missing checked type for expression", value.range);
         return {};
       }
 
@@ -133,6 +150,27 @@ namespace codegen
           }
           return result + ")";
         }
+        if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
+          return expression(*index->target) + ".at(" + expression(*index->index) + ")";
+        if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
+        {
+          if (collection->collection_kind != parser::collection_expression::kind::array)
+            fail("only array collections are available in the initial native subset", value.range);
+          const std::string checked = expression_type(value);
+          constexpr std::string_view prefix = "Array<";
+          if (!checked.starts_with(prefix) || !checked.ends_with('>'))
+            fail("array expression has no checked element type", value.range);
+          const std::string element = checked.substr(prefix.size(), checked.size() - prefix.size() - 1);
+          std::string result = "std::vector<" + type_name(element, value.range) + ">{";
+          for (std::size_t index_value = 0; index_value < collection->elements.size(); ++index_value)
+          {
+            if (index_value != 0) result += ", ";
+            if (dynamic_cast<const parser::spread_expression *>(collection->elements[index_value].get()))
+              fail("array spreads are not available in the initial native subset", value.range);
+            result += expression(*collection->elements[index_value]);
+          }
+          return result + "}";
+        }
         fail("expression is not available in the initial native subset", value.range);
         return {};
       }
@@ -189,6 +227,12 @@ namespace codegen
           block(*loop->body);
           output << "\n";
         }
+        else if (const auto *loop = dynamic_cast<const parser::for_statement *>(&value))
+        {
+          output << "for (auto " << identifier(loop->binding) << " : " << expression(*loop->iterable) << ") ";
+          block(*loop->body);
+          output << "\n";
+        }
         else if (const auto *control = dynamic_cast<const parser::loop_control_statement *>(&value))
           output << (control->control_kind == parser::loop_control_statement::kind::break_loop ? "break;\n" :
                                                                                               "continue;\n");
@@ -235,9 +279,11 @@ namespace codegen
       }
 
     public:
+      explicit cpp_generator(const semantic::type_model &checked_types) : types(checked_types) {}
+
       auto generate(const parser::program &tree) -> std::string
       {
-        output << "// Generated by Sagan.\n#include <cstdint>\n#include <iostream>\n#include <string>\n"
+        output << "// Generated by Sagan.\n#include <cstdint>\n#include <iostream>\n#include <string>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
                   "#include <windows.h>\n"
                   "#endif\n\n"
@@ -252,6 +298,10 @@ namespace codegen
                   "void sagan_print(const T &value)\n"
                   "{\n"
                   "  std::cout << std::boolalpha << value << '\\n';\n"
+                  "}\n\n"
+                  "void sagan_print(const std::int8_t value)\n"
+                  "{\n"
+                  "  std::cout << static_cast<int>(value) << '\\n';\n"
                   "}\n\n";
         for (const auto &entry : tree.statements)
         {
@@ -264,8 +314,8 @@ namespace codegen
     };
   }
 
-  auto generate_cpp(const parser::program &tree) -> std::string
+  auto generate_cpp(const parser::program &tree, const semantic::type_model &types) -> std::string
   {
-    return cpp_generator().generate(tree);
+    return cpp_generator(types).generate(tree);
   }
 }

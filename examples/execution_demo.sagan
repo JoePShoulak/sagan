@@ -2,8 +2,16 @@ fun 🚀(value: Int): Int => value + 2
 
 fun main(): Int {
   let answer = 🚀(40)
+  let countdown = [3, 2, 1]
+
   print("The answer from 🚀 is:")
   print(answer)
+  print("Countdown:")
+  for value in countdown {
+    print(value)
+  }
+  print("Liftoff marker:")
+  print(countdown[2])
 
   if answer == 42 {
     return 0

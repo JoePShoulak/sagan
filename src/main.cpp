@@ -1788,9 +1788,9 @@ auto main(const int argc, char **argv) -> int
       else if (mode == output_mode::emit_cpp)
       {
         static_cast<void>(semantic::analyze(tree));
-        static_cast<void>(semantic::check_types(tree));
+        const auto types = semantic::check_types(tree);
         semantic::validate_entry_point(tree);
-        const std::string generated = codegen::generate_cpp(tree);
+        const std::string generated = codegen::generate_cpp(tree, types);
         if (output_path.empty()) std::cout << generated;
         else
         {

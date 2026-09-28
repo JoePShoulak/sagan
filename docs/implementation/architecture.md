@@ -25,7 +25,8 @@ verified_by: null
   overload/call/return checks, and a printable type model.
 - `src/semantic/semantic_error.hpp`: source-located semantic diagnostics.
 - `src/codegen/cpp_generator.*`: C++ emission for the initial executable
-  subset, including portable identifier encoding and built-in output.
+  subset, including portable identifier encoding, built-in output, and typed
+  array/index/iteration lowering driven by the checked type model.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
