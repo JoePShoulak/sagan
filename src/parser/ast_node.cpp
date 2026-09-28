@@ -461,6 +461,21 @@ namespace parser
     }
   }
 
+  yield_statement::yield_statement(const span source_range, expression_ref yielded_value)
+      : statement(source_range), value(std::move(yielded_value))
+  {
+  }
+
+  auto yield_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Yield\n";
+    if (value)
+    {
+      value->print(stream, indent + 2);
+    }
+  }
+
   match_case::match_case(expression_ref matched_pattern, std::unique_ptr<block_statement> case_body,
                          const span source_range)
       : pattern(std::move(matched_pattern)), body(std::move(case_body)), range(source_range)
@@ -600,10 +615,16 @@ namespace parser
                                      std::string identifier, std::optional<std::string> composition,
                                      std::vector<std::string> interfaces,
                                      std::vector<statement_ref> declared_members,
-                                     std::vector<std::string> declared_enum_members)
+                                     std::vector<enum_member> declared_enum_members)
       : statement(source_range), type_kind(declared_kind), name(std::move(identifier)),
         composition_keyword(std::move(composition)), composed_interfaces(std::move(interfaces)),
         members(std::move(declared_members)), enum_members(std::move(declared_enum_members))
+  {
+  }
+
+  type_declaration::enum_member::enum_member(std::string identifier, const span source_range,
+                                             std::vector<documentation_comment> comments)
+      : name(std::move(identifier)), range(source_range), documentation(std::move(comments))
   {
   }
 
@@ -629,7 +650,12 @@ namespace parser
     for (const auto &member : enum_members)
     {
       write_indent(stream, indent + 2);
-      stream << "EnumMember(" << member << ")\n";
+      stream << "EnumMember(" << member.name << ")\n";
+      for (const auto &comment : member.documentation)
+      {
+        write_indent(stream, indent + 4);
+        stream << "Documentation(\"" << escaped_string_text(comment.text) << "\")\n";
+      }
     }
   }
 

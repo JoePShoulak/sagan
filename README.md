@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.12.0](https://img.shields.io/badge/development-0.12.0-2563eb)](#development-versions)
+[![Development version 0.13.0](https://img.shields.io/badge/development-0.13.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -264,8 +264,9 @@ and both value-bearing and bare `return`. `break` and `continue` are valid only
 inside loops. `match` contains one or more block-bodied `case` branches. An
 optional `case else` fallback must be unique and last. Cases currently accept
 expression-shaped patterns; their eventual binding, type, and exhaustiveness
-semantics belong to semantic analysis. Sagan reserves `yield` for a later
-parser milestone.
+semantics belong to semantic analysis. Both `yield value` and bare `yield` are
+parsed as generator statements; generator typing, suspension, and iteration
+behavior belong to semantic analysis and the runtime.
 
 The conditional expression uses `?` and `;`:
 
@@ -420,8 +421,8 @@ Documentation comments attach to the declaration immediately following them.
 They may document modules, imports, exports, variables, functions, faces,
 classes, enums, fields, and methods. Local documentation comments may precede
 `let` declarations. They must occupy their own logical line; orphaned comments
-and comments before executable statements are syntax errors. Individual enum
-members do not yet accept documentation comments.
+and comments before executable statements are syntax errors. Enum members may
+also carry documentation comments.
 
 Schematic's `@tag`, special `!event`, and backtick code-block tokens are not part of Sagan. `!event` is ordinary logical negation of an identifier, while standalone `@` and backticks are invalid.
 
@@ -549,8 +550,9 @@ operators, punctuation, Unicode and emoji identifiers, numbers, comments,
 documentation comments, strings, raw and multiline strings, and nested string
 interpolation. It includes a token-dump CLI, strict UTF-8 and Unicode handling,
 focused lexical errors, comprehensive vocabulary checks, and deterministic
-malformed-input robustness tests. Parser, semantic-analysis, runtime, and
-standard-library decisions remain, including:
+malformed-input robustness tests. The parser is complete for the current syntax
+specification. Semantic-analysis, runtime, and standard-library decisions
+remain, including:
 
 - complete type inference and declaration rules;
 - reference-count cycle handling and value/reference semantics;
@@ -569,7 +571,7 @@ standard-library decisions remain, including:
 
 Define what Sagan is for and establish its design philosophy, core features,
 and lexical rules. The language is sufficiently defined to support tokenizer
-work, while parser and semantic decisions will continue to be refined when
+work, while syntax and semantic decisions will continue to be refined when
 their implementation makes the tradeoffs concrete.
 
 ### 2. Tokenizer — complete
@@ -585,7 +587,7 @@ operator coverage, lexical diagnostics, and randomized malformed-input testing.
 Context-dependent interpretation of newlines and ambiguous delimiters belongs
 to the parser rather than the tokenizer.
 
-### 3. Parser and syntax tree — in progress
+### 3. Parser and syntax tree — complete for the current syntax specification
 
 Turn the token stream into a structured syntax tree representing declarations,
 modules, imports and exports, expressions, statements, control flow, types,
@@ -613,7 +615,9 @@ Named functions and methods may use block bodies or `=>` expression bodies, and
 anonymous `fun(...) => expression` lambdas are expression values.
 Line and block documentation comments are retained with source spans and attach
 to the declarations they describe; every AST output format renders them.
-Named block-bodied functions provide the executable scope, with optional type
+Bare and value-bearing `yield` statements complete the current control-flow
+grammar; their generator semantics are deferred. Named block-bodied functions
+provide the executable scope, with optional type
 annotations on parameters and returns; the program root remains declaration-only.
 Postfix operations can be chained freely, as
 in `fleet[index]?.navigator.course(origin).magnitude()`. It includes text, DOT,
@@ -635,6 +639,12 @@ Implemented expression precedence, from highest to lowest, is:
 
 Exponentiation binds more tightly than unary minus, so `-2^2` parses as
 `-(2^2)`. Chained comparisons are rejected; write `a < b and b < c` instead.
+
+The parser stage is complete for Sagan's current syntax specification. It has
+typed, source-spanned AST nodes, complete text and visual renderers, runnable
+success/error demonstrations, and focused diagnostics for the established
+grammar. Multi-error recovery and future language additions may extend it, but
+they are not blockers for semantic analysis.
 
 ### 4. Semantic analysis — planned
 

@@ -21,7 +21,7 @@ ordinary `=` and compound `+=`, `-=`, `*=`, `/=`, `%=`, and `^=` assignment
 statements, expression statements inside blocks,
 `if`/`else` including `else if` chains, `for name in expression`, `while`, and
 `until` loops, unlabeled `break` and `continue`, and bare or value-bearing
-`return`. The parser also accepts `match expression` with one or more
+`return` and `yield`. The parser also accepts `match expression` with one or more
 block-bodied `case` branches. An optional `case else` must be unique and last.
 Empty blocks are valid. `break` and `continue` outside a loop are syntax errors.
 A block brace is recognized from its statement position, while `{...}` in an
@@ -46,7 +46,10 @@ support.
 `unless` is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.
 
+`yield expression` and bare `yield` are syntactically valid inside function
+bodies. Semantic analysis will determine which functions are generators and
+validate their yielded types; the runtime will define suspension behavior.
+
 **Open questions:** iterable protocol semantics, match-pattern binding and
-exhaustiveness, yield restrictions, unreachable-code rules, entry-point
-selection, and parser-informed newline handling in the remaining statement
-forms.
+exhaustiveness, generator typing, unreachable-code rules, entry-point
+selection, and the runtime behavior of control transfer.

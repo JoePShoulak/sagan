@@ -16,6 +16,7 @@ type inference and checking, lossless-conversion validation, overload
 resolution, interface conformance, mutation rules, control-flow checks, and
 semantic diagnostics.
 
-Exact passes, symbol-table structure, type representation, inference algorithm,
-generic model, and error-recovery strategy remain open. This page intentionally
-does not specify them before parser and type-system decisions are made.
+Semantic analysis is the next implementation stage now that the current parser
+grammar is complete. Exact passes, symbol-table structure, type representation,
+inference algorithm, generic model, and semantic error-recovery strategy remain
+open.

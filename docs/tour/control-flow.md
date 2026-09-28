@@ -9,8 +9,7 @@ verified_by: null
 
 # Control flow
 The parser implements `if`, `else`, `for`, `in`, `while`, `until`, `break`,
-`continue`, `return`, `match`, and `case`. The tokenizer also reserves `yield`
-for a later milestone.
+`continue`, `return`, `yield`, `match`, and `case`.
 
 ```sagan
 for item in items {
@@ -34,6 +33,19 @@ return simulation.result
 
 `break` and `continue` are unlabeled and valid only inside a loop. A `return`
 may carry an expression or stand alone to return without a value.
+
+`yield` has the same two syntactic forms:
+
+```sagan
+fun telemetry_samples(samples) {
+  for sample in samples {
+    yield sample
+  }
+}
+```
+
+Generator typing, suspension, and iteration behavior remain semantic and
+runtime work.
 
 A match statement contains one or more block-bodied cases:
 

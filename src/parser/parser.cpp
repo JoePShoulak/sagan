@@ -202,6 +202,10 @@ namespace parser
     {
       return parse_return_statement();
     }
+    if (match(tokens::KWD_YIELD))
+    {
+      return parse_yield_statement();
+    }
     if (match(tokens::KWD_MATCH))
     {
       return parse_match_statement();
@@ -217,6 +221,10 @@ namespace parser
     if (match(tokens::KWD_SCREAM))
     {
       return parse_scream_statement();
+    }
+    if (match(tokens::KWD_ELSE))
+    {
+      throw parse_error("'else' is only valid after an if statement", previous().range);
     }
     if (match(tokens::KWD_UNLESS) || match(tokens::KWD_FINALLY))
     {
@@ -310,7 +318,7 @@ namespace parser
 
     const token &open = expect(tokens::LBRACE, "'{' to begin the type body");
     std::vector<statement_ref> members;
-    std::vector<std::string> enum_members;
+    std::vector<type_declaration::enum_member> enum_members;
     skip_newlines();
     while (!check(tokens::RBRACE))
     {
@@ -325,12 +333,8 @@ namespace parser
       }
       if (type == type_declaration::kind::enum_type)
       {
-        if (!documentation.empty())
-        {
-          throw parse_error("Documentation comments cannot attach to individual enum members",
-                            documentation.back().range);
-        }
-        enum_members.push_back(expect(tokens::IDENTIFIER, "an enum member name").text);
+        const token &member = expect(tokens::IDENTIFIER, "an enum member name");
+        enum_members.emplace_back(member.text, member.range, std::move(documentation));
         if (match(tokens::COMMA))
         {
           skip_newlines();
@@ -418,7 +422,18 @@ namespace parser
       return std::make_unique<expression_statement>(range, std::move(target));
     }
     const token assignment = previous();
+    if (at_end() || check(tokens::NEWLINE) || check(tokens::RBRACE))
+    {
+      throw parse_error("Expected an expression after '" + assignment.text + "'", assignment.range);
+    }
     auto value = parse_expression();
+    if (check(tokens::EQUAL) || check(tokens::PLUS_EQUAL) || check(tokens::MINUS_EQUAL) ||
+        check(tokens::STAR_EQUAL) || check(tokens::SLASH_EQUAL) || check(tokens::PERCENT_EQUAL) ||
+        check(tokens::CARET_EQUAL))
+    {
+      throw parse_error("Assignment statements cannot be chained; use ':=' for value-producing assignment",
+                        peek()->range);
+    }
     const span range{target->range.begin, value->range.end};
     return std::make_unique<assignment_statement>(range, std::move(target), assignment.text, std::move(value));
   }
@@ -489,6 +504,18 @@ namespace parser
     auto value = parse_expression();
     const int end = value->range.end;
     return std::make_unique<return_statement>(span{keyword.range.begin, end}, std::move(value));
+  }
+
+  auto syntax_parser::parse_yield_statement() -> statement_ref
+  {
+    const token &keyword = previous();
+    if (at_end() || check(tokens::NEWLINE) || check(tokens::RBRACE))
+    {
+      return std::make_unique<yield_statement>(keyword.range, nullptr);
+    }
+    auto value = parse_expression();
+    const int end = value->range.end;
+    return std::make_unique<yield_statement>(span{keyword.range.begin, end}, std::move(value));
   }
 
   auto syntax_parser::parse_match_statement() -> statement_ref

@@ -36,12 +36,20 @@ class ExplorerShip has Navigable, TelemetrySource {
 
 enum GuidanceStatus {
   waiting
+  /// Guidance has converged and can be applied.
   ready
   failed
 }
 
 fun clamp(value: Float, minimum: Float, maximum: Float): Float =>
   value < minimum ? minimum ; value > maximum ? maximum ; value
+
+/// Lazily yields telemetry samples in source order.
+fun telemetry_samples(samples) {
+  for sample in samples {
+    yield sample
+  }
+}
 
 let select_greater = fun(left: Float, right: Float): Float =>
   left > right ? left ; right

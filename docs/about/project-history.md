@@ -23,7 +23,7 @@ Development currently proceeds through five broad stages:
 
 1. language definition — sufficiently defined for early implementation;
 2. tokenizer — complete for the current lexical specification;
-3. parser and syntax tree — in progress;
+3. parser and syntax tree — complete for the current syntax specification;
 4. semantic analysis — planned; and
 5. C++ code generation — planned.
 

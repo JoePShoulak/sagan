@@ -21,7 +21,7 @@ forms.
 immediately follows them. The AST preserves each comment separately with its
 source span and text. Supported targets are modules, imports, exports, `let`,
 `fun`, `face`, `class`, and `enum` declarations, including fields, methods, and
-local variables. Individual enum-member documentation remains future syntax.
+local variables and individual enum members.
 
 ```sagan
 let altitude: Float = 125_000.0
@@ -38,4 +38,4 @@ conformance declared with interchangeable `is` or `has` composition lists.
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, constructors, enum payloads and explicit values, generic
 declarations, module resolution and visibility, and entry-point forms. These require semantic
-analysis or later parser slices.
+analysis or future language revisions.

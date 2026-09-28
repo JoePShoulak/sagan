@@ -41,6 +41,9 @@ The parser demo includes line and block documentation comments on a module,
 face, class, field, method, function, and local variable.
 `examples/documentation_error.sagan` demonstrates rejection of a documentation
 comment placed before executable control flow.
+
+The success demo also includes a documented enum member and a generator-shaped
+function using `yield`, so both appear in text and interactive visual AST output.
 It also includes ordinary, raw, multiline, and interpolated strings, including
 interpolations containing member access and arithmetic expressions.
 The collection section demonstrates arrays, dictionaries with expression keys,

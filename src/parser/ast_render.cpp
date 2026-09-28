@@ -301,6 +301,15 @@ namespace parser
         }
         return node;
       }
+      if (const auto *yielded = dynamic_cast<const yield_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Yield", "control"});
+        if (yielded->value)
+        {
+          node->children.push_back(make_expression_node(*yielded->value));
+        }
+        return node;
+      }
       if (const auto *matched = dynamic_cast<const match_statement *>(&value))
       {
         auto node = std::make_unique<visual_node>(visual_node{"Match", "control"});
@@ -409,8 +418,14 @@ namespace parser
         }
         for (const auto &member : type->enum_members)
         {
-          node->children.push_back(
-              std::make_unique<visual_node>(visual_node{"Enum member\n" + member, "declaration"}));
+          auto member_node = std::make_unique<visual_node>(
+              visual_node{"Enum member\n" + member.name, "declaration"});
+          for (const auto &comment : member.documentation)
+          {
+            member_node->children.push_back(std::make_unique<visual_node>(
+                visual_node{"Documentation\n" + string_preview(comment.text), "documentation"}));
+          }
+          node->children.push_back(std::move(member_node));
         }
         return node;
       }

@@ -38,6 +38,7 @@ namespace parser
     auto parse_for_statement() -> statement_ref;
     auto parse_loop_control(loop_control_statement::kind type) -> statement_ref;
     auto parse_return_statement() -> statement_ref;
+    auto parse_yield_statement() -> statement_ref;
     auto parse_match_statement() -> statement_ref;
     auto parse_hope_statement() -> statement_ref;
     auto parse_scream_statement() -> statement_ref;

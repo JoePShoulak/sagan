@@ -324,6 +324,14 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct yield_statement final : statement
+  {
+    expression_ref value;
+
+    yield_statement(span source_range, expression_ref yielded_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct match_case
   {
     expression_ref pattern;
@@ -406,13 +414,23 @@ namespace parser
     std::optional<std::string> composition_keyword;
     std::vector<std::string> composed_interfaces;
     std::vector<statement_ref> members;
-    std::vector<std::string> enum_members;
+    struct enum_member
+    {
+      std::string name;
+      span range;
+      std::vector<documentation_comment> documentation;
+
+      enum_member(std::string identifier, span source_range,
+                  std::vector<documentation_comment> comments);
+    };
+
+    std::vector<enum_member> enum_members;
 
     type_declaration(span source_range, kind declared_kind, std::string identifier,
                      std::optional<std::string> composition,
                      std::vector<std::string> interfaces,
                      std::vector<statement_ref> declared_members,
-                     std::vector<std::string> declared_enum_members);
+                     std::vector<enum_member> declared_enum_members);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 

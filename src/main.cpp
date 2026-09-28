@@ -81,6 +81,35 @@ namespace
     return true;
   }
 
+  auto expect_tokenizer_lifecycle() -> bool
+  {
+    parser::tokenizer lexer(parser::programText{"let x = 1\n"}, get_token);
+    const bool initial = !lexer.started() && !lexer.empty() && !lexer.existing_token().has_value() &&
+                         lexer.get_span().begin == 0 && lexer.get_span().end == 0;
+    const auto first = lexer.get_token();
+    const auto cached = lexer.get_token();
+    const bool pulled = lexer.started() && !lexer.empty() && first.has_value() && cached.has_value() &&
+                        first->id == tokens::KWD_LET && cached->id == first->id &&
+                        lexer.existing_token()->id == first->id && lexer.get_span().begin == 0 &&
+                        lexer.get_span().end == 3;
+    const auto second = lexer.next();
+    const bool advanced = second.has_value() && second->id == tokens::IDENTIFIER &&
+                          lexer.get_span().begin == 3 && lexer.get_span().end == 5;
+    while (lexer.next())
+    {
+    }
+    const bool exhausted = lexer.empty() && !lexer.existing_token().has_value() && !lexer.next().has_value();
+    const bool token_names = tokens::name(-1) == "INVALID_TOKEN" &&
+                             tokens::name(tokens::TOKEN_COUNT) == "INVALID_TOKEN";
+    if (!(initial && pulled && advanced && exhausted && token_names))
+    {
+      std::cerr << "[FAIL] tokenizer lifecycle and token-name boundaries\n";
+      return false;
+    }
+    std::cout << "[PASS] tokenizer lifecycle and token-name boundaries\n";
+    return true;
+  }
+
   auto expect_error(const std::string &name, const std::string &source) -> bool
   {
     try
@@ -173,6 +202,29 @@ namespace
     return false;
   }
 
+  auto expect_syntax_error_contains(const std::string &name, const std::string &source,
+                                    const std::string &expected_message) -> bool
+  {
+    try
+    {
+      parser::syntax_parser syntax(tokenize(source));
+      static_cast<void>(syntax.parse());
+    }
+    catch (const parser::parse_error &error)
+    {
+      if (std::string(error.what()).contains(expected_message))
+      {
+        std::cout << "[PASS] " << name << '\n';
+        return true;
+      }
+      std::cerr << "[FAIL] " << name << ": expected diagnostic containing '" << expected_message
+                << "', but found '" << error.what() << "'\n";
+      return false;
+    }
+    std::cerr << "[FAIL] " << name << ": expected a syntax error\n";
+    return false;
+  }
+
   auto expect_visual_ast(const std::string &name, const std::string &source) -> bool
   {
     std::string escaped_source;
@@ -209,6 +261,8 @@ namespace
   auto run_self_tests() -> int
   {
     bool passed = true;
+
+    passed &= expect_tokenizer_lifecycle();
 
     passed &= expect_ids(
         "declaration",
@@ -574,11 +628,16 @@ namespace
         "      Assignment(^=)\n"
         "        Identifier(energy)\n"
         "        Identifier(exponent)\n");
-    passed &= expect_syntax_error("compound assignment without value", "fun invalid() {\n  total +=\n}\n");
-    passed &= expect_syntax_error("chained compound assignment",
-                                  "fun invalid() {\n  first += second += third\n}\n");
+    passed &= expect_syntax_error_contains("compound assignment without value",
+                                           "fun invalid() {\n  total +=\n}\n",
+                                           "Expected an expression after '+='");
+    passed &= expect_syntax_error_contains("chained compound assignment",
+                                           "fun invalid() {\n  first += second += third\n}\n",
+                                           "Assignment statements cannot be chained");
     passed &= expect_syntax_error("top-level expression statement", "launch()\n");
     passed &= expect_syntax_error("top-level control flow", "if ready {\n}\n");
+    passed &= expect_syntax_error_contains("standalone else", "fun invalid() {\n  else {\n  }\n}\n",
+                                           "'else' is only valid after an if statement");
     passed &= expect_syntax_error("unterminated statement block", "fun launch() {\n  launch_engine()\n");
     passed &= expect_ast(
         "loops control transfer and returns",
@@ -646,6 +705,25 @@ namespace
     passed &= expect_syntax_error("missing for in", "fun invalid(items) {\n  for item items {\n  }\n}\n");
     passed &= expect_syntax_error("labeled break is unsupported",
                                   "fun invalid(items) {\n  for item in items {\n    break outer\n  }\n}\n");
+    passed &= expect_ast(
+        "yield statements",
+        "fun generate(items) {\n"
+        "  for item in items {\n"
+        "    yield item\n"
+        "  }\n"
+        "  yield\n"
+        "}\n",
+        "Program\n"
+        "  Function(generate)\n"
+        "    Parameter(items)\n"
+        "    Block\n"
+        "      For(item)\n"
+        "        Iterable\n"
+        "          Identifier(items)\n"
+        "        Block\n"
+        "          Yield\n"
+        "            Identifier(item)\n"
+        "      Yield\n");
     passed &= expect_ast(
         "match cases and fallback",
         "fun describe(status): String {\n"
@@ -883,6 +961,7 @@ namespace
         "}\n"
         "/// Mission states.\n"
         "enum Status {\n"
+        "  /// Ready to begin.\n"
         "  ready\n"
         "}\n",
         "Program\n"
@@ -918,12 +997,13 @@ namespace
         "      Block\n"
         "  Enum(Status)\n"
         "    Documentation(\"Mission states.\")\n"
-        "    EnumMember(ready)\n");
+        "    EnumMember(ready)\n"
+        "      Documentation(\"Ready to begin.\")\n");
     passed &= expect_syntax_error("orphaned documentation comment", "/// No declaration follows.\n");
     passed &= expect_syntax_error("documentation before control flow",
                                   "fun invalid() {\n  /// Not a declaration.\n  if ready {\n  }\n}\n");
-    passed &= expect_syntax_error("documentation before enum member",
-                                  "enum Invalid {\n  /// Member docs are not supported yet.\n  value\n}\n");
+    passed &= expect_syntax_error("orphaned enum-member documentation",
+                                  "enum Invalid {\n  /// No member follows.\n}\n");
     passed &= expect_syntax_error("documentation requires following newline", "/**Same line.*/ fun invalid() {\n}\n");
     passed &= expect_ast(
         "expression-bodied functions and lambdas",
@@ -977,7 +1057,8 @@ namespace
     passed &= expect_syntax_error("expression body missing value", "fun invalid() =>\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
     passed &= expect_visual_ast("visual statement AST",
-                                "fun choose(value) => value\nlet mapper = fun(value) => value * 2\n");
+                                "fun choose(value) => value\nlet mapper = fun(value) => value * 2\n"
+                                "fun generate(value) {\n  yield value\n}\n");
     passed &= expect_visual_ast("visual module AST",
                                 "module demo\nimport Vector from math as Vector3\nexport Ship\nclass Ship {\n}\n"
                                 "let vessel = Ship\n");
