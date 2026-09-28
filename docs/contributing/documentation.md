@@ -17,7 +17,16 @@ bash scripts/docs.sh serve
 bash scripts/docs.sh check
 ```
 
-The documentation is internal-only. There is intentionally no deployment workflow.
+The documentation is internal-only, but it has a deployment workflow for the
+privately hosted preview. Documentation changes on pull requests are validated
+on a GitHub-hosted runner. After a matching change reaches `main`, the same
+validation must pass before the dedicated HP1 runner installs a new origin
+release.
+
+The workflow watches the documentation tree, MkDocs configuration and
+requirements, documentation scripts, and HP1 deployment files. It can also be
+started manually from GitHub Actions. See [Self-hosting](hosting.md) for runner
+setup and deployment safeguards.
 
 ## Documentation version
 

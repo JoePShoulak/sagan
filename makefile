@@ -22,10 +22,14 @@ OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 OBJECTS += obj/version.o
 TARGET := bin/$(APPNAME)
 BUILD_TMP := build/tmp
+ifeq ($(OS),Windows_NT)
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
+else
+BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
+endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test demo parser-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -47,6 +51,9 @@ obj/version.o: obj/version.cpp src/version.hpp
 
 test: $(TARGET)
 	$(TARGET) --self-test
+
+coverage:
+	bash scripts/coverage.sh
 
 demo: $(TARGET)
 	$(TARGET) examples/tokenizer_demo.sagan

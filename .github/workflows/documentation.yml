@@ -1,0 +1,71 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "requirements-docs.txt"
+      - "scripts/docs.sh"
+      - "scripts/docs_status.py"
+      - "scripts/docs_release_check.py"
+      - "deploy/docs/**"
+      - "deploy/hp1/**"
+      - "deploy/hosting/update.sh"
+      - ".github/workflows/documentation.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "requirements-docs.txt"
+      - "scripts/docs.sh"
+      - "scripts/docs_status.py"
+      - "scripts/docs_release_check.py"
+      - "deploy/docs/**"
+      - "deploy/hp1/**"
+      - "deploy/hosting/update.sh"
+      - ".github/workflows/documentation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up documentation environment
+        run: bash scripts/docs.sh setup
+
+      - name: Build documentation strictly
+        run: bash scripts/docs.sh check
+
+  deploy:
+    name: Deploy documentation to HP1
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on:
+      - self-hosted
+      - sagan-docs-hp1
+    environment: documentation
+    timeout-minutes: 15
+    concurrency:
+      group: sagan-docs-hp1
+      cancel-in-progress: false
+    steps:
+      - name: Check out the validated commit
+        uses: actions/checkout@v7
+        with:
+          clean: true
+
+      - name: Set up documentation environment
+        run: bash scripts/docs.sh setup
+
+      - name: Install origin release locally
+        run: bash deploy/hosting/update.sh hp1-local

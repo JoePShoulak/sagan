@@ -4,7 +4,13 @@ set -euo pipefail
 export PATH="/ucrt64/bin:/usr/bin:/bin:$PATH"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-venv_python="$repo_root/build/docs-venv/Scripts/python.exe"
+venv_dir="$repo_root/build/docs-venv"
+
+if [[ -x "$venv_dir/Scripts/python.exe" ]]; then
+  venv_python="$venv_dir/Scripts/python.exe"
+else
+  venv_python="$venv_dir/bin/python"
+fi
 
 cd "$repo_root"
 
@@ -23,7 +29,12 @@ find_python() {
 case "${1:-}" in
   setup)
     bootstrap_python="$(find_python)"
-    "$bootstrap_python" -m venv build/docs-venv
+    "$bootstrap_python" -m venv "$venv_dir"
+    if [[ -x "$venv_dir/Scripts/python.exe" ]]; then
+      venv_python="$venv_dir/Scripts/python.exe"
+    else
+      venv_python="$venv_dir/bin/python"
+    fi
     "$venv_python" -m pip install --upgrade pip
     "$venv_python" -m pip install -r requirements-docs.txt
     ;;

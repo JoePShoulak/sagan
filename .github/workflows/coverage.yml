@@ -1,0 +1,36 @@
+name: Coverage
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  codecov:
+    name: GCC coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install coverage tools
+        run: sudo apt-get update && sudo apt-get install --yes lcov
+
+      - name: Build and collect coverage
+        run: bash scripts/coverage.sh --require-lcov
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
+          files: ./build/coverage.info
+          disable_search: true
+          fail_ci_if_error: true
+          flags: front-end
+          name: sagan-gcc

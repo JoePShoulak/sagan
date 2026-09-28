@@ -12,6 +12,7 @@ Current tooling is intentionally small:
 
 - the `bin/sagan` tokenizer demonstration;
 - Make targets for build, tests, examples, cleanup, and version display;
+- GCC/LCOV coverage instrumentation with Codecov reporting in GitHub Actions;
 - Bash scripts for compiler tests and documentation;
 - an early VS Code syntax-highlighting extension; and
 - MkDocs for internal project documentation.

@@ -17,6 +17,24 @@ bash scripts/test.sh
 This performs a clean C++ build, calculates the development version, runs the
 compiled-in tokenizer self-tests, and checks `--version`.
 
+## Coverage
+
+Run an instrumented build from Bash with:
+
+```bash
+make coverage
+```
+
+The coverage script performs a clean build with GCC's `--coverage`
+instrumentation and runs the complete front-end suite. If `lcov` is installed,
+the portable report is written to `build/coverage.info`; otherwise the raw
+`.gcno` and `.gcda` files remain under `obj/` for local inspection.
+
+`.github/workflows/coverage.yml` repeats this process on Ubuntu for every push
+and pull request, then uploads `build/coverage.info` to Codecov. Authentication
+uses GitHub OIDC rather than a stored `CODECOV_TOKEN`. Codecov upload failures
+fail the coverage job so a missing report cannot appear successful.
+
 The self-tests cover representative valid tokens and expected lexical failures.
 Also inspect the full demo and intentional error case when changing token output:
 

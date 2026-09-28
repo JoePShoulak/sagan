@@ -34,6 +34,7 @@ large syntax trees.
 ```bash
 make all
 make test
+make coverage
 make demo
 make parser-demo
 make ast-demo
@@ -41,7 +42,8 @@ make get-version
 make clean
 ```
 
-`all` builds `bin/sagan`; `test` runs self-tests; `demo` tokenizes the
+`all` builds `bin/sagan`; `test` runs self-tests; `coverage` performs a clean
+instrumented build and produces LCOV output when `lcov` is installed; `demo` tokenizes the
 repository example; `parser-demo` prints the parser example's AST; `ast-demo`
 writes the visual source-and-tree page to `build/ast-demo.html`; `get-version`
 prints the calculated build identity; and `clean` removes compiler objects and

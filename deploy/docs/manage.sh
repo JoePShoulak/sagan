@@ -34,8 +34,20 @@ case "${1:-}" in
     echo "Staged the internal site in hp1:~/sagan-docs-staging."
     echo "Install it without sudo: ssh hp1 'cd sagan-docs-staging && bash install-user.sh'"
     ;;
+  install-hp1-local)
+    test "${SAGAN_DOCS_ALLOW_LOCAL_INSTALL:-}" = "1" || {
+      echo "Local HP1 installation requires SAGAN_DOCS_ALLOW_LOCAL_INSTALL=1." >&2
+      exit 1
+    }
+    bash "$0" package-internal
+    staging_dir="$(mktemp -d)"
+    trap 'rm -rf "$staging_dir"' EXIT
+    cp "$archive" deploy/hp1/server.py deploy/hp1/sagan-docs deploy/hp1/install-user.sh "$staging_dir/"
+    cd "$staging_dir"
+    bash install-user.sh
+    ;;
   *)
-    echo "Usage: bash deploy/docs/manage.sh {build|release-check|package|package-internal|stage-hp1}" >&2
+    echo "Usage: bash deploy/docs/manage.sh {build|release-check|package|package-internal|stage-hp1|install-hp1-local}" >&2
     echo "Public packaging remains guarded; HP1 installation is user-owned and needs no sudo." >&2
     exit 2
     ;;

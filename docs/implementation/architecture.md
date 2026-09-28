@@ -19,6 +19,8 @@ verified_by: null
 - span, diagnostic, generator, parse-error, parser-support, and AST files:
   foundations retained or adapted from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
+- `.github/workflows/coverage.yml` plus `scripts/coverage.sh`: repeatable GCC
+  coverage collection and Codecov upload.
 
 ## Current data flow
 

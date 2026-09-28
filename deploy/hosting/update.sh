@@ -25,6 +25,13 @@ update_origin() {
   printf '\n'
 }
 
+update_hp1_local() {
+  cd "$repo_root"
+  SAGAN_DOCS_ALLOW_LOCAL_INSTALL=1 bash deploy/docs/manage.sh install-hp1-local
+  curl --fail --silent --show-error http://127.0.0.1:8781/healthz
+  printf '\n'
+}
+
 prepare_frontdoor_source() {
   test -d "$frontdoor_repo/.git" || {
     echo "Frontdoor repository not found: $frontdoor_repo" >&2
@@ -53,6 +60,9 @@ case "$mode" in
   origin)
     update_origin
     ;;
+  hp1-local)
+    update_hp1_local
+    ;;
   public-route)
     update_public_route
     ;;
@@ -61,7 +71,7 @@ case "$mode" in
     update_public_route
     ;;
   *)
-    echo "Usage: bash deploy/hosting/update.sh {origin|public-route|all}" >&2
+    echo "Usage: bash deploy/hosting/update.sh {origin|hp1-local|public-route|all}" >&2
     exit 2
     ;;
 esac
