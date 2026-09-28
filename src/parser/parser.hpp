@@ -25,6 +25,10 @@ namespace parser
     auto skip_newlines() -> void;
     auto parse_statement() -> statement_ref;
     auto parse_let_declaration() -> statement_ref;
+    auto parse_function_declaration() -> statement_ref;
+    auto parse_expression_statement() -> statement_ref;
+    auto parse_if_statement() -> statement_ref;
+    auto parse_block() -> std::unique_ptr<block_statement>;
     auto parse_expression() -> expression_ref;
     auto parse_nested_expression() -> expression_ref;
     auto parse_assignment() -> expression_ref;

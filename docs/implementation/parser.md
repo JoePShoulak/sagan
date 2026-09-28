@@ -34,6 +34,11 @@ syntax trees with source-spanned diagnostics.
 - Logical `and` and `or`
 - Conditional expressions
 - Right-associative value-producing `:=` assignment
+- Statement blocks, including empty and nested blocks
+- Ordinary `=` assignment and expression statements inside blocks
+- `if`/`else` statements and `else if` chains
+- Named block-bodied functions with optional parameter and return annotations
+- Declaration-only program roots; executable statements are function-local
 - Human-readable AST output and success/error demonstrations
 - DOT and standalone SVG AST rendering
 - A self-contained HTML view that places source input beside the visual tree
@@ -58,5 +63,6 @@ Text, DOT, SVG, and HTML are also available from `bin/sagan` through `--ast`,
 supports every AST node the parser can produce; new node kinds must be added to
 the renderer as their parser slices land.
 
-The next slices are statements and blocks, functions, and type declarations.
+The next slices are return statements and expression-bodied functions, loop
+statements, and type declarations.
 Error recovery beyond the first syntax error also remains future parser work.

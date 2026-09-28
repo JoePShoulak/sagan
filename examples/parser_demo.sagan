@@ -38,3 +38,15 @@ let trajectory_samples = [
   (110.0, 205.0, altitude + 10.0,),
   ...historical_positions,
 ]
+fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
+  if telemetry_ready and altitude >= target_altitude {
+    let next_course = navigator.current_course(orbital_position, target_position)
+    ship.guidance.course = next_course
+    ship.guidance.commit!()
+  } else if retrying {
+    telemetry.retry()
+  } else {
+    let fallback_course = guidance.safe_course(orbital_position)
+    ship.guidance.course = fallback_course
+  }
+}

@@ -75,7 +75,20 @@ namespace parser
     skip_newlines();
     while (!at_end())
     {
-      body.push_back(parse_statement());
+      statement_ref declaration;
+      if (match(tokens::KWD_LET))
+      {
+        declaration = parse_let_declaration();
+      }
+      else if (match(tokens::KWD_FUN))
+      {
+        declaration = parse_function_declaration();
+      }
+      else
+      {
+        throw parse_error("Only declarations are allowed at the top level", peek()->range);
+      }
+      body.push_back(std::move(declaration));
       if (!at_end())
       {
         expect(tokens::NEWLINE, "a newline after the declaration");
@@ -91,8 +104,11 @@ namespace parser
     {
       return parse_let_declaration();
     }
-    const span error_range = at_end() ? span{0, 0} : peek()->range;
-    throw parse_error("Expected a declaration or statement", error_range);
+    if (match(tokens::KWD_IF))
+    {
+      return parse_if_statement();
+    }
+    return parse_expression_statement();
   }
 
   auto syntax_parser::parse_let_declaration() -> statement_ref
@@ -114,6 +130,96 @@ namespace parser
     const int end = initializer ? initializer->range.end : (type_name ? previous().range.end : name.range.end);
     return std::make_unique<let_declaration>(span{keyword.range.begin, end}, name.text, std::move(type_name),
                                              std::move(initializer));
+  }
+
+  auto syntax_parser::parse_function_declaration() -> statement_ref
+  {
+    const token &keyword = previous();
+    const token &name = expect(tokens::IDENTIFIER, "a function name after 'fun'");
+    expect(tokens::LPAREN, "'(' after the function name");
+    std::vector<function_parameter> parameters;
+    while (!check(tokens::RPAREN))
+    {
+      const token &parameter_name = expect(tokens::IDENTIFIER, "a parameter name");
+      std::optional<std::string> parameter_type;
+      if (match(tokens::COLON))
+      {
+        parameter_type = expect(tokens::IDENTIFIER, "a parameter type after ':'").text;
+      }
+      parameters.emplace_back(parameter_name.text, std::move(parameter_type));
+      if (!match(tokens::COMMA) || check(tokens::RPAREN))
+      {
+        break;
+      }
+    }
+    expect(tokens::RPAREN, "')' after the function parameters");
+    std::optional<std::string> return_type;
+    if (match(tokens::COLON))
+    {
+      return_type = expect(tokens::IDENTIFIER, "a return type after ':'").text;
+    }
+    auto body = parse_block();
+    const int end = body->range.end;
+    return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text,
+                                                  std::move(parameters), std::move(return_type),
+                                                  std::move(body));
+  }
+
+  auto syntax_parser::parse_expression_statement() -> statement_ref
+  {
+    auto target = parse_expression();
+    if (!match(tokens::EQUAL))
+    {
+      const span range = target->range;
+      return std::make_unique<expression_statement>(range, std::move(target));
+    }
+    auto value = parse_expression();
+    const span range{target->range.begin, value->range.end};
+    return std::make_unique<assignment_statement>(range, std::move(target), std::move(value));
+  }
+
+  auto syntax_parser::parse_if_statement() -> statement_ref
+  {
+    const token &keyword = previous();
+    auto condition = parse_expression();
+    auto then_branch = parse_block();
+    statement_ref else_branch;
+    if (match(tokens::KWD_ELSE))
+    {
+      if (match(tokens::KWD_IF))
+      {
+        else_branch = parse_if_statement();
+      }
+      else
+      {
+        else_branch = parse_block();
+      }
+    }
+    const int end = else_branch ? else_branch->range.end : then_branch->range.end;
+    return std::make_unique<if_statement>(span{keyword.range.begin, end}, std::move(condition),
+                                          std::move(then_branch), std::move(else_branch));
+  }
+
+  auto syntax_parser::parse_block() -> std::unique_ptr<block_statement>
+  {
+    const token &open = expect(tokens::LBRACE, "'{' to begin a block");
+    std::vector<statement_ref> body;
+    skip_newlines();
+    while (!check(tokens::RBRACE))
+    {
+      if (at_end())
+      {
+        throw parse_error("Expected '}' after the block", span{open.range.begin, open.range.end});
+      }
+      body.push_back(parse_statement());
+      if (!check(tokens::RBRACE))
+      {
+        expect(tokens::NEWLINE, "a newline after the statement");
+        skip_newlines();
+      }
+    }
+    const token &close = expect(tokens::RBRACE, "'}' after the block");
+    return std::make_unique<block_statement>(span{open.range.begin, close.range.end}, std::move(body));
   }
 
   auto syntax_parser::parse_expression() -> expression_ref

@@ -180,9 +180,9 @@ namespace
     const std::string dot = parser::render_ast_dot(tree);
     const std::string svg = parser::render_ast_svg(tree);
     const std::string html = parser::render_ast_html(source, tree, "AST test");
-    const bool passed = dot.contains("digraph SaganAST") && dot.contains("Binary\\n+") &&
+    const bool passed = dot.contains("digraph SaganAST") && dot.contains("Identifier") &&
                         svg.contains("<svg") && svg.contains("Identifier") &&
-                        html.contains("Input source") && html.contains("let result = 1 + value") &&
+                        html.contains("Input source") && html.contains(source) &&
                         html.contains("data-action=\"fit\"") && html.contains("Wheel to zoom");
     if (!passed)
     {
@@ -484,7 +484,57 @@ namespace
     passed &= expect_syntax_error("single-element vector", "let invalid = <1>\n");
     passed &= expect_syntax_error("single-element coordinate", "let invalid = (1,)\n");
     passed &= expect_syntax_error("dictionary entry without colon", "let invalid = {\"name\",}\n");
+    passed &= expect_ast(
+        "blocks assignments and conditional statements",
+        "fun update(telemetry_ready: Bool): Bool {\n"
+        "if telemetry_ready {\n"
+        "  let course = navigator.course(origin)\n"
+        "  ship.course = course\n"
+        "  ship.commit!()\n"
+        "} else if retrying {\n"
+        "  retry()\n"
+        "} else {\n"
+        "}\n"
+        "}\n",
+        "Program\n"
+        "  Function(update: Bool)\n"
+        "    Parameter(telemetry_ready: Bool)\n"
+        "    Block\n"
+        "      If\n"
+        "        Condition\n"
+        "          Identifier(telemetry_ready)\n"
+        "        Then\n"
+        "          Block\n"
+        "            Let(course)\n"
+        "              Call\n"
+        "                Member(course)\n"
+        "                  Identifier(navigator)\n"
+        "                Identifier(origin)\n"
+        "            Assignment(=)\n"
+        "              Member(course)\n"
+        "                Identifier(ship)\n"
+        "              Identifier(course)\n"
+        "            ExpressionStatement\n"
+        "              Call\n"
+        "                Member(commit!)\n"
+        "                  Identifier(ship)\n"
+        "        Else\n"
+        "          If\n"
+        "            Condition\n"
+        "              Identifier(retrying)\n"
+        "            Then\n"
+        "              Block\n"
+        "                ExpressionStatement\n"
+        "                  Call\n"
+        "                    Identifier(retry)\n"
+        "            Else\n"
+        "              Block\n");
+    passed &= expect_syntax_error("top-level expression statement", "launch()\n");
+    passed &= expect_syntax_error("top-level control flow", "if ready {\n}\n");
+    passed &= expect_syntax_error("unterminated statement block", "fun launch() {\n  launch_engine()\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
+    passed &= expect_visual_ast("visual statement AST",
+                                "fun update() {\n  if ready {\n    result = calculate()\n  }\n}\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;

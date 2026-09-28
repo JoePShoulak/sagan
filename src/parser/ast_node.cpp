@@ -288,6 +288,108 @@ namespace parser
     }
   }
 
+  expression_statement::expression_statement(const span source_range, expression_ref statement_value)
+      : statement(source_range), value(std::move(statement_value))
+  {
+  }
+
+  auto expression_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "ExpressionStatement\n";
+    value->print(stream, indent + 2);
+  }
+
+  assignment_statement::assignment_statement(const span source_range, expression_ref target_value,
+                                               expression_ref assigned_value)
+      : statement(source_range), target(std::move(target_value)), value(std::move(assigned_value))
+  {
+  }
+
+  auto assignment_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Assignment(=)\n";
+    target->print(stream, indent + 2);
+    value->print(stream, indent + 2);
+  }
+
+  block_statement::block_statement(const span source_range, std::vector<statement_ref> body)
+      : statement(source_range), statements(std::move(body))
+  {
+  }
+
+  auto block_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Block\n";
+    for (const auto &entry : statements)
+    {
+      entry->print(stream, indent + 2);
+    }
+  }
+
+  if_statement::if_statement(const span source_range, expression_ref condition_value,
+                             std::unique_ptr<block_statement> true_branch, statement_ref false_branch)
+      : statement(source_range), condition(std::move(condition_value)), then_branch(std::move(true_branch)),
+        else_branch(std::move(false_branch))
+  {
+  }
+
+  auto if_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "If\n";
+    write_indent(stream, indent + 2);
+    stream << "Condition\n";
+    condition->print(stream, indent + 4);
+    write_indent(stream, indent + 2);
+    stream << "Then\n";
+    then_branch->print(stream, indent + 4);
+    if (else_branch)
+    {
+      write_indent(stream, indent + 2);
+      stream << "Else\n";
+      else_branch->print(stream, indent + 4);
+    }
+  }
+
+  function_parameter::function_parameter(std::string identifier, std::optional<std::string> annotation)
+      : name(std::move(identifier)), type_name(std::move(annotation))
+  {
+  }
+
+  function_declaration::function_declaration(const span source_range, std::string identifier,
+                                             std::vector<function_parameter> declared_parameters,
+                                             std::optional<std::string> result_type,
+                                             std::unique_ptr<block_statement> function_body)
+      : statement(source_range), name(std::move(identifier)), parameters(std::move(declared_parameters)),
+        return_type(std::move(result_type)), body(std::move(function_body))
+  {
+  }
+
+  auto function_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Function(" << name;
+    if (return_type)
+    {
+      stream << ": " << *return_type;
+    }
+    stream << ")\n";
+    for (const auto &parameter : parameters)
+    {
+      write_indent(stream, indent + 2);
+      stream << "Parameter(" << parameter.name;
+      if (parameter.type_name)
+      {
+        stream << ": " << *parameter.type_name;
+      }
+      stream << ")\n";
+    }
+    body->print(stream, indent + 2);
+  }
+
   program::program(std::vector<statement_ref> body)
       : ast_node(body.empty() ? span{0, 0} : span{body.front()->range.begin, body.back()->range.end}),
         statements(std::move(body))

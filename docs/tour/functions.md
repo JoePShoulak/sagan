@@ -30,8 +30,11 @@ a distinct method-identifier token:
 vector.normalize!()
 ```
 
-!!! warning "Design syntax"
-    These examples tokenize, but no parser or call semantics exist yet.
+!!! note "Implementation status"
+    Named, block-bodied functions with optional parameter and return type
+    annotations now parse into the AST. Calls also parse. Return statements,
+    expression-bodied functions, lambdas, name resolution, typing, overloads,
+    and execution remain future work.
 
 **Provisional design:** multiple returns, destructuring, variadic parameters,
 yielding, overload selection, capture behavior, and inference rules.

@@ -1,0 +1,4 @@
+// This file intentionally contains an unterminated statement block.
+fun update_guidance() {
+  if telemetry_ready {
+    let course = navigator.current_course(origin, destination)

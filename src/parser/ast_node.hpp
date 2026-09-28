@@ -206,6 +206,64 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct expression_statement final : statement
+  {
+    expression_ref value;
+
+    expression_statement(span source_range, expression_ref statement_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct assignment_statement final : statement
+  {
+    expression_ref target;
+    expression_ref value;
+
+    assignment_statement(span source_range, expression_ref target_value, expression_ref assigned_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct block_statement final : statement
+  {
+    std::vector<statement_ref> statements;
+
+    block_statement(span source_range, std::vector<statement_ref> body);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct if_statement final : statement
+  {
+    expression_ref condition;
+    std::unique_ptr<block_statement> then_branch;
+    statement_ref else_branch;
+
+    if_statement(span source_range, expression_ref condition_value,
+                 std::unique_ptr<block_statement> true_branch, statement_ref false_branch);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct function_parameter
+  {
+    std::string name;
+    std::optional<std::string> type_name;
+
+    function_parameter(std::string identifier, std::optional<std::string> annotation);
+  };
+
+  struct function_declaration final : statement
+  {
+    std::string name;
+    std::vector<function_parameter> parameters;
+    std::optional<std::string> return_type;
+    std::unique_ptr<block_statement> body;
+
+    function_declaration(span source_range, std::string identifier,
+                         std::vector<function_parameter> declared_parameters,
+                         std::optional<std::string> result_type,
+                         std::unique_ptr<block_statement> function_body);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct program final : ast_node
   {
     std::vector<statement_ref> statements;

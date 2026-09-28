@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.3.0](https://img.shields.io/badge/development-0.3.0-2563eb)](#development-versions)
+[![Development version 0.4.0](https://img.shields.io/badge/development-0.4.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -498,7 +498,11 @@ ordinary and safe member access, mutating method calls, exponentiation,
 ordinary, raw, multiline, and interpolated string expressions, arithmetic,
 arrays, dictionaries, vectors, coordinates, spread expressions, comparisons,
 equality, logical operations, conditional expressions, and value-producing
-`:=` assignment. Postfix operations can be chained freely, as
+`:=` assignment. It also parses statement blocks, ordinary `=` assignments and
+expression statements within blocks, plus `if`/`else if`/`else` control flow.
+Named block-bodied functions provide the executable scope, with optional type
+annotations on parameters and returns; the program root remains declaration-only.
+Postfix operations can be chained freely, as
 in `fleet[index]?.navigator.course(origin).magnitude()`. It includes text, DOT,
 SVG, and self-contained HTML AST output, plus success/error demonstrations.
 

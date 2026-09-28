@@ -28,6 +28,7 @@ namespace parser
     };
 
     auto make_expression_node(const expression &value) -> std::unique_ptr<visual_node>;
+    auto make_statement_node(const statement &value) -> std::unique_ptr<visual_node>;
 
     auto string_preview(std::string_view text) -> std::string
     {
@@ -188,27 +189,92 @@ namespace parser
       throw std::runtime_error("AST renderer encountered an unsupported expression node");
     }
 
+    auto make_statement_node(const statement &value) -> std::unique_ptr<visual_node>
+    {
+      if (const auto *declaration = dynamic_cast<const let_declaration *>(&value))
+      {
+        std::string label = "Let\n" + declaration->name;
+        if (declaration->type_name)
+        {
+          label += ": " + *declaration->type_name;
+        }
+        auto node = std::make_unique<visual_node>(visual_node{std::move(label), "declaration"});
+        if (declaration->initializer)
+        {
+          node->children.push_back(make_expression_node(*declaration->initializer));
+        }
+        return node;
+      }
+      if (const auto *expression = dynamic_cast<const expression_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Expression statement", "statement"});
+        node->children.push_back(make_expression_node(*expression->value));
+        return node;
+      }
+      if (const auto *assignment = dynamic_cast<const assignment_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Assignment\n=", "statement"});
+        node->children.push_back(make_expression_node(*assignment->target));
+        node->children.push_back(make_expression_node(*assignment->value));
+        return node;
+      }
+      if (const auto *block = dynamic_cast<const block_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(
+            visual_node{"Block\n" + std::to_string(block->statements.size()) + " statement(s)", "block"});
+        for (const auto &statement : block->statements)
+        {
+          node->children.push_back(make_statement_node(*statement));
+        }
+        return node;
+      }
+      if (const auto *conditional = dynamic_cast<const if_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"If", "control"});
+        auto condition = std::make_unique<visual_node>(visual_node{"Condition", "control"});
+        condition->children.push_back(make_expression_node(*conditional->condition));
+        node->children.push_back(std::move(condition));
+        auto when_true = std::make_unique<visual_node>(visual_node{"Then", "control"});
+        when_true->children.push_back(make_statement_node(*conditional->then_branch));
+        node->children.push_back(std::move(when_true));
+        if (conditional->else_branch)
+        {
+          auto when_false = std::make_unique<visual_node>(visual_node{"Else", "control"});
+          when_false->children.push_back(make_statement_node(*conditional->else_branch));
+          node->children.push_back(std::move(when_false));
+        }
+        return node;
+      }
+      if (const auto *function = dynamic_cast<const function_declaration *>(&value))
+      {
+        std::string label = "Function\n" + function->name;
+        if (function->return_type)
+        {
+          label += ": " + *function->return_type;
+        }
+        auto node = std::make_unique<visual_node>(visual_node{std::move(label), "declaration"});
+        for (const auto &parameter : function->parameters)
+        {
+          std::string parameter_label = "Parameter\n" + parameter.name;
+          if (parameter.type_name)
+          {
+            parameter_label += ": " + *parameter.type_name;
+          }
+          node->children.push_back(
+              std::make_unique<visual_node>(visual_node{std::move(parameter_label), "declaration"}));
+        }
+        node->children.push_back(make_statement_node(*function->body));
+        return node;
+      }
+      throw std::runtime_error("AST renderer encountered an unsupported statement node");
+    }
+
     auto make_tree(const program &tree) -> std::unique_ptr<visual_node>
     {
       auto root = std::make_unique<visual_node>(visual_node{"Program", "program"});
       for (const auto &statement : tree.statements)
       {
-        if (const auto *declaration = dynamic_cast<const let_declaration *>(statement.get()))
-        {
-          std::string label = "Let\n" + declaration->name;
-          if (declaration->type_name)
-          {
-            label += ": " + *declaration->type_name;
-          }
-          auto node = std::make_unique<visual_node>(visual_node{std::move(label), "declaration"});
-          if (declaration->initializer)
-          {
-            node->children.push_back(make_expression_node(*declaration->initializer));
-          }
-          root->children.push_back(std::move(node));
-          continue;
-        }
-        throw std::runtime_error("AST renderer encountered an unsupported statement node");
+        root->children.push_back(make_statement_node(*statement));
       }
       return root;
     }
