@@ -279,6 +279,47 @@ namespace semantic
         return std::string(unknown_type);
       }
 
+      auto arithmetic_type(const std::string &operation, const std::string &left, const std::string &right,
+                           const parser::span range) const -> std::string
+      {
+        if (is_unknown(left) || is_unknown(right)) return std::string(unknown_type);
+        const auto left_dimensioned = dimensioned(left);
+        const auto right_dimensioned = dimensioned(right);
+        if (!left_dimensioned && !right_dimensioned)
+        {
+          require(is_numeric(left) && is_numeric(right),
+                  "Operator '" + operation + "' requires numeric operands, but received " + left + " and " + right,
+                  range);
+          return common_type(left, right, range, "Operator operands");
+        }
+
+        if (operation == "+" || operation == "-")
+        {
+          require(left_dimensioned && right_dimensioned && left_dimensioned->family == "Vector" &&
+                      right_dimensioned->family == "Vector" &&
+                      left_dimensioned->dimensions == right_dimensioned->dimensions,
+                  "Operator '" + operation + "' requires vectors with equal dimensions, but received " + left +
+                      " and " + right,
+                  range);
+          return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
+                 common_type(left_dimensioned->component, right_dimensioned->component, range,
+                             "Vector components") + ">";
+        }
+
+        if (operation == "*" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
+          return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
+                 common_type(left_dimensioned->component, right, range, "Vector scalar operands") + ">";
+        if (operation == "*" && right_dimensioned && right_dimensioned->family == "Vector" && is_numeric(left))
+          return "Vector" + std::to_string(right_dimensioned->dimensions) + "<" +
+                 common_type(left, right_dimensioned->component, range, "Vector scalar operands") + ">";
+        if (operation == "/" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
+          return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
+                 common_type(left_dimensioned->component, right, range, "Vector scalar operands") + ">";
+
+        require(false, "Operator '" + operation + "' is not defined for " + left + " and " + right, range);
+        return std::string(unknown_type);
+      }
+
       auto require_compatible(const std::string &expected, const std::string &actual,
                               const parser::span range, const std::string_view context) const -> void
       {
@@ -376,13 +417,20 @@ namespace semantic
           if (unary->operator_text == "++" || unary->operator_text == "--")
           {
             static_cast<void>(assignment_target(*unary->operand));
+            require(is_unknown(operand) || is_numeric(operand),
+                    "Operator '" + unary->operator_text + "' requires a numeric operand, but received " + operand,
+                    value.range);
+            return record(value, operand);
           }
           if (unary->operator_text == "!")
           {
             require_compatible("Bool", operand, value.range, "Logical negation");
             return record(value, "Bool");
           }
-          require(is_unknown(operand) || is_numeric(operand),
+          const auto shaped = dimensioned(operand);
+          require(is_unknown(operand) || is_numeric(operand) ||
+                      (shaped && shaped->family == "Vector" &&
+                       (unary->operator_text == "+" || unary->operator_text == "-")),
                   "Operator '" + unary->operator_text + "' requires a numeric operand, but received " + operand,
                   value.range);
           return record(value, operand);
@@ -397,18 +445,20 @@ namespace semantic
             require_compatible("Bool", right, binary->right->range, "Logical operator");
             return record(value, "Bool");
           }
-          if (binary->operator_text == "==" || binary->operator_text == "!=" ||
-              binary->operator_text == "<" || binary->operator_text == "<=" ||
-              binary->operator_text == ">" || binary->operator_text == ">=")
+          if (binary->operator_text == "==" || binary->operator_text == "!=")
           {
             static_cast<void>(common_type(left, right, value.range, "Comparison operands"));
             return record(value, "Bool");
           }
-          require((is_unknown(left) || is_numeric(left)) && (is_unknown(right) || is_numeric(right)),
-                  "Operator '" + binary->operator_text + "' requires numeric operands, but received " +
-                      left + " and " + right,
-                  value.range);
-          return record(value, common_type(left, right, value.range, "Operator operands"));
+          if (binary->operator_text == "<" || binary->operator_text == "<=" ||
+              binary->operator_text == ">" || binary->operator_text == ">=")
+          {
+            require(!dimensioned(left) && !dimensioned(right),
+                    "Ordered comparison is not defined for " + left + " and " + right, value.range);
+            static_cast<void>(common_type(left, right, value.range, "Comparison operands"));
+            return record(value, "Bool");
+          }
+          return record(value, arithmetic_type(binary->operator_text, left, right, value.range));
         }
         if (const auto *conditional = dynamic_cast<const parser::conditional_expression *>(&value))
         {
@@ -732,11 +782,12 @@ namespace semantic
                                                                   : expression(*assignment->target);
           const std::string assigned = expression(*assignment->value);
           if (assignment->operation != "=")
-            require((is_unknown(target) || is_numeric(target)) && (is_unknown(assigned) || is_numeric(assigned)),
-                    "Compound operator '" + assignment->operation +
-                        "' requires numeric operands, but received " + target + " and " + assigned,
-                    assignment->range);
-          require_compatible(target, assigned, assignment->range, "Assignment");
+          {
+            const std::string result = arithmetic_type(assignment->operation.substr(0, 1), target, assigned,
+                                                       assignment->range);
+            require_compatible(target, result, assignment->range, "Compound assignment");
+          }
+          else require_compatible(target, assigned, assignment->range, "Assignment");
           mark_initialized(*assignment->target);
         }
         else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))

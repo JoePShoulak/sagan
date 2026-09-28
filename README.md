@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.29.0](https://img.shields.io/badge/development-0.29.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.30.0](https://img.shields.io/badge/development-0.30.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -44,6 +44,8 @@ Integer arithmetic is checked: overflow, division by zero, and modulo by zero
 raise runtime errors instead of inheriting undefined native behavior.
 Dimensioned vectors and coordinates execute as distinct runtime values with
 spread construction, indexing, iteration, printing, and interpolation.
+Vectors additionally support checked addition, subtraction, negation, scalar
+multiplication/division, equality, and corresponding compound assignments.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text

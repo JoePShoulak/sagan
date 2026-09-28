@@ -94,5 +94,9 @@ expect_runtime_error examples/execution_decrement_overflow_error.sagan \
   "Sagan integer subtraction overflow"
 expect_runtime_error examples/execution_float_division_zero_error.sagan \
   "Sagan division by zero"
+expect_runtime_error examples/execution_vector_overflow_error.sagan \
+  "Sagan integer addition overflow"
+expect_runtime_error examples/execution_vector_division_zero_error.sagan \
+  "Sagan division by zero"
 
-echo "Execution demo passed: Sagan executed vectors and coordinates, deterministic checked arithmetic and powers, compact bodies, collection spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."
+echo "Execution demo passed: Sagan executed checked vector algebra and coordinates, deterministic scalar arithmetic and powers, compact bodies, collection spreads, matching, interpolation, typed collections, mutable loops, and Unicode output."

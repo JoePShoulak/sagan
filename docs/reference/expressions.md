@@ -85,7 +85,13 @@ syntax errors. `(value)` remains a grouped expression.
 **Implemented native semantics:** vectors and coordinates retain distinct,
 fixed-size runtime types. Both support construction, same-family spreading,
 zero-based indexing, iteration, equality, printing, and string interpolation.
-Vector/coordinate arithmetic and named component access remain future math work.
+Vectors of equal dimension support `+`, `-`, unary `+`/`-`, equality, scalar
+`*` in either operand order, and vector/scalar `/`; the matching compound forms
+are also supported. Component arithmetic retains the scalar overflow and
+zero-divisor checks. Vector-vector multiplication and ordered comparison are
+undefined rather than implicitly meaning dot, cross, component multiplication,
+or lexicographic ordering. Coordinate arithmetic and named component access
+remain future math work.
 
 Calls and all collection forms permit trailing commas. `...value` creates a
 spread node; later semantic analysis will validate whether its surrounding call

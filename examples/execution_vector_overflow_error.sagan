@@ -1,0 +1,7 @@
+fun main(): Int {
+  let maximum = <127, 0>
+  let increment = <1, 0>
+  let result = maximum + increment
+  print(result)
+  return 0
+}

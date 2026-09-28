@@ -61,7 +61,10 @@ zero divisor.
 
 Vectors and coordinates lower to separate fixed-size native runtime types, so a
 coordinate is not silently interchangeable with a vector. Their dimensions and
-component types come from the checked semantic model. Vector algebra, coordinate
+component types come from the checked semantic model. Vectors support checked
+addition, subtraction, unary negation, scalar multiplication and division,
+equality, and compound forms. Vector-vector multiplication is deliberately not
+assigned an implicit dot, cross, or component-wise meaning. Coordinate
 arithmetic, named components, and generic source annotations are not implemented.
 
 Open work includes generated-code structure, runtime interfaces, memory

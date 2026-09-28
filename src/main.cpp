@@ -1624,6 +1624,13 @@ namespace
         "let component = direction[1]\n",
         {"direction: Vector3<Float64>", "origin: Coordinate3<Int8>",
          "extended: Vector4<Float64>", "component: Float64"});
+    passed &= expect_type_model(
+        "vector arithmetic inference",
+        "let left = <1.0, 2.0, 3.0>\nlet right = <4.0, 5.0, 6.0>\n"
+        "let sum = left + right\nlet difference = left - right\n"
+        "let scaled = 2.0 * left\nlet divided = scaled / 2.0\nlet reversed = -left\n",
+        {"sum: Vector3<Float64>", "difference: Vector3<Float64>", "scaled: Vector3<Float64>",
+         "divided: Vector3<Float64>", "reversed: Vector3<Float64>"});
     passed &= expect_type_error("initializer type mismatch", "let value: Bool = 1\n",
                                 "Variable initializer requires Bool, but received Int");
     passed &= expect_type_error("uninferable variable", "let pending\n",
@@ -1710,6 +1717,15 @@ namespace
                                 "let left = <1.0, 2.0>\nlet right = <1.0, 2.0, 3.0>\n"
                                 "let invalid = true ? left ; right\n",
                                 "Conditional branches have incompatible types");
+    passed &= expect_type_error("vector multiplication is not implicit dot or component multiplication",
+                                "let invalid = <1.0, 2.0> * <3.0, 4.0>\n",
+                                "is not defined for Vector2<Float64> and Vector2<Float64>");
+    passed &= expect_type_error("coordinate addition is not vector addition",
+                                "let invalid = (1.0, 2.0) + (3.0, 4.0)\n",
+                                "requires vectors with equal dimensions");
+    passed &= expect_type_error("vectors have equality but no ordered comparison",
+                                "let invalid = <1.0, 2.0> < <3.0, 4.0>\n",
+                                "Ordered comparison is not defined");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",

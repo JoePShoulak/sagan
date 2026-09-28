@@ -36,6 +36,10 @@ for example `Vector3<Float64>`; dimensions must match for compatibility.
 The native backend preserves the vector-versus-coordinate distinction and the
 inferred dimension and component type. Generic dimensioned annotations are not
 yet available in source code.
+Vector arithmetic requires equal dimensions and infers the lossless common
+component type. Scalar multiplication and division likewise widen the component
+type when necessary; compound assignment rejects a result that cannot be stored
+losslessly in its target vector.
 
 **Implemented for the native numeric subset:** integer arithmetic overflow
 raises a runtime exception. Typed collections and interfaces continue to have
