@@ -10,6 +10,10 @@ verified_by: null
 # Semantic analysis
 **Status: planned; not implemented.**
 
+This is the next compiler stage. A successfully parsed program has only passed
+lexical and grammatical checks; it has not passed name resolution, type
+checking, interface conformance, or any other semantic validation.
+
 Semantic analysis will determine whether a parsed program is meaningful. Planned
 responsibilities include name and scope resolution, duplicate-name detection,
 type inference and checking, lossless-conversion validation, overload

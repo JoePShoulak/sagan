@@ -22,7 +22,8 @@ bash scripts/test.sh
 
 That script adds the UCRT64 and Unix tool directories to `PATH`, creates a
 repository-local temporary directory, performs a clean build, prints the
-Git-derived version, runs tokenizer self-tests, and invokes `--version`.
+Git-derived version, runs the tokenizer, parser, renderer, and CLI test suites,
+and verifies `--version`.
 
 To build without running the test script:
 

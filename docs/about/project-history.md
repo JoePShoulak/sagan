@@ -28,13 +28,10 @@ Development currently proceeds through five broad stages:
 5. C++ code generation — planned.
 
 See the [implementation overview](../implementation/index.md) for the present
-boundary between working code and intended architecture.
-
-Sagan began from Zachary Westerman's
-[Schematic](https://github.com/ZacharyWesterman/schematic) compiler work. Among
-the inherited ideas is dynamic in-app version numbering: Schematic constructs a
-major and minor version manually and derives its patch number from the commits
-after a chosen cutoff commit.
+boundary between working code and intended architecture. Among the ideas
+inherited from Schematic is dynamic in-app version numbering: Schematic
+constructs a major and minor version manually and derives its patch number from
+the commits after a chosen cutoff commit.
 
 Sagan retains that playful, traceable connection between the compiler and its
 Git history while adding Conventional Commit declarations for semantic-version

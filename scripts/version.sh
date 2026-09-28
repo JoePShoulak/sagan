@@ -87,12 +87,12 @@ prepare_badge() {
   local next readme badge_pattern
   next="$(bump_version "$(current_numeric_version)" "$impact")"
   readme="$repo_root/README.md"
-  badge_pattern='^\[!\[Development version [0-9]+\.[0-9]+\.[0-9]+\]\(https://img\.shields\.io/badge/development-[0-9]+\.[0-9]+\.[0-9]+-2563eb\)\]\(#development-versions\)$'
+  badge_pattern='^\[!\[Development version [0-9]+\.[0-9]+\.[0-9]+\]\(https://img\.shields\.io/badge/development-[0-9]+\.[0-9]+\.[0-9]+-2563eb\)\]\(docs/contributing/versioning\.md\)$'
   grep -qE "$badge_pattern" "$readme" || {
     echo "Could not find the Sagan development-version badge in README.md" >&2
     exit 1
   }
-  sed -i -E "s|$badge_pattern|[![Development version $next](https://img.shields.io/badge/development-$next-2563eb)](#development-versions)|" "$readme"
+  sed -i -E "s|$badge_pattern|[![Development version $next](https://img.shields.io/badge/development-$next-2563eb)](docs/contributing/versioning.md)|" "$readme"
   printf 'Prepared README badge for %s (%s change).\n' "$next" "$impact"
 }
 

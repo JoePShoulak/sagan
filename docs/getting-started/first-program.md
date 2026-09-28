@@ -29,8 +29,17 @@ The output is a stream such as token name, half-open source span, original token
 text, and decoded value where applicable.
 
 !!! warning "Tokenizer example, not executable Sagan"
-    The demo expresses intended Sagan syntax and is verified as tokenizer input.
-    No parser or evaluator exists, so it cannot yet be compiled or run.
+    This particular demo is a broad lexical fixture. The repository also has a
+    complete parser for the current syntax specification, but no semantic
+    analyzer, code generator, or runtime; successful tokenization or parsing
+    therefore does not make Sagan source executable.
+
+Inspect the parser demonstration as a text tree or interactive HTML tree:
+
+```bash
+bin/sagan --ast examples/parser_demo.sagan
+bash scripts/ast_demo.sh --no-open
+```
 
 To see a deliberate lexical failure:
 

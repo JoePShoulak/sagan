@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.13.0](https://img.shields.io/badge/development-0.13.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.13.1](https://img.shields.io/badge/development-0.13.1-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -36,6 +36,9 @@ Planned: AST -> semantic analysis -> C++ generation -> native executable
 The detailed and continuously maintained status lives in the
 [documentation status](docs/design/status.md) and
 [implementation overview](docs/implementation/index.md).
+The current Codecov report shows **100% line coverage with zero missed tracked
+source lines**; see [testing](docs/contributing/testing.md) for the exercised
+front-end and CLI behavior.
 
 ## Design direction
 
@@ -61,6 +64,9 @@ Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
 bash scripts/test.sh
 make parser-demo
 bash scripts/ast_demo.sh
+bash scripts/ast_demo.sh --no-open
+make coverage
+bash scripts/docs.sh check
 ```
 
 Useful compiler commands include:
@@ -68,6 +74,7 @@ Useful compiler commands include:
 ```bash
 bin/sagan examples/parser_demo.sagan
 bin/sagan --ast examples/parser_demo.sagan
+bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --version
@@ -102,7 +109,7 @@ bash scripts/docs.sh check
 ## Versioning and contributing
 
 Development builds use a Git-derived identity such as
-`0.13.0+g1a2b3c4d[.dirty]`. Conventional Commit declarations determine semantic
+`0.13.1+g1a2b3c4d[.dirty]`. Conventional Commit declarations determine semantic
 version impact after the configured baseline. Documentation and maintenance
 commits do not change the language version.
 

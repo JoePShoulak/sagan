@@ -21,13 +21,28 @@ bin/sagan --ast-html path/to/source.sagan build/tree.html
 ```
 
 With no valid source path, the program reports command usage or a file error.
-`--ast` prints a readable tree. `--ast-dot` prints Graphviz DOT without requiring
-Graphviz itself. SVG and HTML modes write their final argument; HTML includes
-both the original input and an embedded visual tree.
+With a source path and no mode flag, it prints the token stream; it does not
+parse or execute the file. `--ast` prints a readable parsed tree. `--ast-dot`
+prints Graphviz DOT without requiring Graphviz itself. SVG and HTML modes write
+their final argument; HTML includes both the original input and an embedded
+visual tree.
 
 The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
 large syntax trees.
+
+For the repository demonstrations, the concrete forms are:
+
+```bash
+bin/sagan examples/tokenizer_demo.sagan
+bin/sagan --ast examples/parser_demo.sagan
+bin/sagan --ast-dot examples/parser_demo.sagan
+bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
+bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
+```
+
+Successful AST output confirms only lexical and syntactic validity. No current
+command performs semantic validation, generates C++, or executes Sagan code.
 
 ## Make targets
 
@@ -40,6 +55,15 @@ make parser-demo
 make ast-demo
 make get-version
 make clean
+```
+
+The wrapper scripts used for the complete local checks are:
+
+```bash
+bash scripts/test.sh
+bash scripts/ast_demo.sh
+bash scripts/ast_demo.sh --no-open
+bash scripts/docs.sh check
 ```
 
 `all` builds `bin/sagan`; `test` runs self-tests; `coverage` performs a clean

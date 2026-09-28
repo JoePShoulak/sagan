@@ -29,11 +29,14 @@ let entities = 10_000
 let gravity = 6.674_30e-11
 ```
 
-**Implemented lexically:** the tokenizer recognizes those declarations and
-numeric forms and rejects misplaced separators and incomplete exponents.
+**Implemented syntax:** the tokenizer recognizes these numeric forms and the
+parser produces declarations and assignment statements. Neither stage decides
+whether the declared type exists, whether a value is assignable, or what an
+assignment does at runtime.
 
 **Provisional design:** arrays use `[]`, dictionaries use `{key: value}`,
 vectors use `<...>`, and coordinates use parenthesized lists of at least two
-elements. Their construction, typing, and runtime behavior await the parser and
-semantic analyzer. Physical units and coordinate frames are deliberately not
-distinguished by the initial type system.
+elements. Their syntax is parsed; construction, typing, and runtime behavior
+await semantic analysis and later compiler stages. Physical units and
+coordinate frames are deliberately not distinguished by the initial type
+system.

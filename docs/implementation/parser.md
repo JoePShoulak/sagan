@@ -80,6 +80,12 @@ Text, DOT, SVG, and HTML are also available from `bin/sagan` through `--ast`,
 supports every AST node the parser can produce; new node kinds must be added to
 the renderer as their parser slices land.
 
+Focused diagnostics cover malformed assignments, postfix and member access,
+control flow, declarations and types, string interpolation, collections,
+matching, exceptions, lambdas, modules, documentation-comment placement, and
+other established grammar rules. `bash scripts/parser_demo.sh` runs the broad
+successful fixture and the focused failure fixtures together.
+
 The parser now covers the complete current concrete grammar. Semantic analysis
 is the next compiler stage. Error recovery beyond the first syntax error is a
 future usability enhancement rather than a blocker for parser completion.

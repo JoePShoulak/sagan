@@ -20,8 +20,9 @@ interpolation, exception keywords, increment, and an emoji identifier.
 make demo
 ```
 
-The file has been checked as tokenizer input. It is not executable because no
-parser or later compiler stages exist.
+The file is checked as tokenizer input. It is not an executable program:
+although the current parser exists, semantic analysis, code generation, and the
+runtime do not.
 
 ## Parser and visual AST demonstration
 
@@ -63,14 +64,13 @@ bash scripts/parser_demo.sh
 bash scripts/ast_demo.sh
 ```
 
-The first command prints the tree and confirms the intentional errors in
-`examples/parser_error.sagan`, `examples/postfix_error.sagan`, and
-`examples/string_error.sagan`, `examples/collection_error.sagan`,
-`examples/block_error.sagan`, `examples/control_flow_error.sagan`, and
-`examples/match_error.sagan`, `examples/exception_error.sagan`, and
-`examples/type_error.sagan`, and `examples/lambda_error.sagan`. The second
-opens a self-contained page showing the input source beside a colored tree. The
-page supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
+The first command prints the successful tree and confirms that every focused
+error fixture fails as intended. Those fixtures cover general parse errors,
+postfix/member access, strings and interpolation, collections, blocks, control
+flow, matching, exceptions, types and declarations, lambdas, module placement,
+compound assignment, and documentation-comment placement. The second opens a
+self-contained page showing the input source beside a colored tree. The page
+supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
 `bash scripts/ast_demo.sh --no-open` to generate `build/ast-demo.html` without
 launching a browser.
 
@@ -83,7 +83,9 @@ a loop. The match fixture demonstrates that `case else` must be the last branch.
 The exception fixture demonstrates that `scream` requires a value.
 The type fixture demonstrates that class methods require bodies.
 The lambda fixture demonstrates that anonymous functions require `=>` before
-their expression body.
+their expression body. Additional fixtures cover a late module declaration, a
+missing compound-assignment value, and a documentation comment before an
+executable statement.
 
 ## Intentional lexical error
 

@@ -58,9 +58,11 @@ statement.
 
 ## Verification
 
-`bash scripts/test.sh` checks every keyword and operator, representative valid
-program fragments, Unicode normalization, emoji sequences, malformed numbers,
-strings, comments, UTF-8, escapes, and randomized byte input. Randomized tests
-verify that arbitrary input either tokenizes or produces a controlled lexical
-error rather than an unexpected exception.
+`bash scripts/test.sh` checks tokenizer construction, iteration, reset, and
+end-of-input lifecycle behavior; every keyword and operator; representative
+valid fragments; Unicode normalization and edge cases; emoji sequences;
+malformed numbers, strings, comments, UTF-8, and escapes; and randomized byte
+input. Randomized and defensive tests verify that arbitrary or invalid input
+either tokenizes or produces a controlled lexical error rather than an
+unexpected exception.
 See the [lexical specification](../reference/lexical-specification.md).

@@ -38,12 +38,22 @@ and pull request, then uploads `build/coverage.info` to Codecov. Authentication
 uses GitHub OIDC rather than a stored `CODECOV_TOKEN`. Codecov upload failures
 fail the coverage job so a missing report cannot appear successful.
 
-The self-tests cover representative valid tokens and expected lexical failures.
-Also inspect the full demo and intentional error case when changing token output:
+Codecov currently reports **100% line coverage and zero missed tracked source
+lines**. That is the present repository result, not a promise that every future
+commit will retain it. The suite covers tokenizer lifecycle and defensive
+invariants; Unicode, emoji, escapes, and malformed input; positive and negative
+parser cases; every AST renderer; CLI success and failure paths; and generated
+output files.
+
+Also inspect the full demonstrations and intentional error cases when changing
+the front end:
 
 ```bash
 make demo
 bin/sagan examples/tokenizer_error.sagan
+make parser-demo
+bash scripts/parser_demo.sh
+bash scripts/ast_demo.sh --no-open
 ```
 
 Validate documentation metadata, links, navigation, Markdown, and rendering:
@@ -52,5 +62,6 @@ Validate documentation metadata, links, navigation, Markdown, and rendering:
 bash scripts/docs.sh check
 ```
 
-Future parser and semantic work will require separate positive and negative test
-suites. Tokenizer tests cannot establish grammatical or semantic correctness.
+The parser suite establishes syntactic correctness for the current grammar.
+Neither tokenizer nor parser coverage establishes semantic correctness or
+runtime behavior; those stages do not exist yet.

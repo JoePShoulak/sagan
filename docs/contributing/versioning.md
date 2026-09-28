@@ -20,11 +20,11 @@ Use the commit subject or footer to declare the change:
 
 | Impact | Declaration | Example |
 | --- | --- | --- |
-| Patch | `fix:` | `fix: reject empty interpolation` |
-| Minor | `feat:` | `feat: add collection literals` |
-| Major | `!` after the type or scope | `feat(parser)!: replace vector syntax` |
+| Patch | `fix:` | `fix:reject-empty-interpolation` |
+| Minor | `feat:` | `feat:add-collection-literals` |
+| Major | `!` after the type or scope | `feat(parser)!:replace-vector-syntax` |
 | Major | `BREAKING CHANGE:` footer | `BREAKING CHANGE: vectors now require dimensions` |
-| None | any other type | `docs: explain collection parsing` |
+| None | any other type | `docs:explain-collection-parsing` |
 
 Scopes are optional, so `fix(parser): ...` and `feat(renderer): ...` work as
 expected. If a commit contains a breaking marker, major takes precedence over
@@ -44,6 +44,10 @@ bash scripts/version.sh prepare major
 The helper changes only the README badge. It does not stage files, create a
 commit, or push. Documentation-only and maintenance commits have no version
 impact and do not require a badge update.
+
+The repository convention uses the compact `type:description` subject style
+shown above. Before committing, propose escalation if a change appears to need
+a higher impact than originally expected; then prepare the approved impact.
 
 After committing, verify the result:
 

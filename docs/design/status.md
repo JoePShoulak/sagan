@@ -18,7 +18,7 @@ verified_by: null
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
 | Semantic analysis | **Planned; not implemented** | roadmap only |
 | Runtime and memory model | **Provisional/planned** | design intent only |
-| Standard/core libraries | **Model settled; APIs open** | README core-library model |
+| Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Planned; not implemented** | roadmap only |
 | Deterministic execution | **Goal; contract open** | design intent only |
 
@@ -29,6 +29,19 @@ UTF-8 rejection, NFC normalization, every current keyword and operator,
 focused error cases, and randomized byte-input robustness. Interpretation of
 newlines inside ambiguous `<...>` and `{...}` constructs belongs to the parser
 and is not unfinished tokenizer behavior.
+
+## What can run today
+
+The `bin/sagan` front-end can print tokens, parse the current grammar, and emit
+text, DOT, SVG, or interactive HTML ASTs. The HTML renderer supports zooming and
+panning. Parser demonstrations provide a broad successful source file plus
+focused malformed examples. None of these modes executes Sagan source or
+performs semantic validation.
+
+The current Codecov report is 100% line coverage with zero missed tracked source
+lines. Tests exercise tokenizer lifecycle behavior, Unicode and emoji edge
+cases, string escapes, malformed input, parser errors, all AST renderers, CLI
+behavior, and defensive invariants.
 
 ## Parser verification
 
@@ -69,5 +82,6 @@ and runtime work.
 Type inference, value/reference behavior, reference-count cycles, interface
 defaults and conflict resolution, generics and possible sum types, constructors,
 enum and collection semantics, exception propagation, entry points, module
-resolution and packages, and the exact built-in/core-library boundary remain
-unresolved.
+resolution and packages, and the concrete math, physics, and rendering APIs
+remain unresolved. Math's automatic availability and the explicit-import
+status of the first-party physics and rendering libraries are settled.

@@ -32,6 +32,17 @@ it to the parser. AST modes then print or render the resulting tree. Lexical and
 syntax failures throw `parser::parse_error` and are reported with source
 locations.
 
+```text
+UTF-8 source -> tokenizer -> parser -> source-spanned AST
+                                            |
+                                            +-> text / DOT / SVG / HTML
+```
+
+The front-end and CLI suite currently reaches 100% tracked source-line coverage
+in Codecov. Coverage includes lifecycle and malformed-input paths, Unicode and
+emoji edges, parser errors, renderer output, CLI behavior, and defensive
+invariants.
+
 ## Planned components
 
 Semantic passes, runtime support, standard/core libraries, C++ emission, and

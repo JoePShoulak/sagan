@@ -22,6 +22,16 @@ bin/sagan examples/tokenizer_error.sagan
 
 The diagnostic identifies the invalid source region for `1e`.
 
-**Planned:** syntax diagnostics from the parser and semantic diagnostics for
-names, types, interfaces, mutation, and control flow. Their formats and recovery
-behavior are not defined.
+**Implemented:** the parser produces focused syntax diagnostics for malformed
+assignments and member access, misplaced or incomplete declarations, invalid
+control flow, malformed interpolation and collections, exception constructs,
+documentation-comment placement, and other established grammar rules. Run the
+complete positive and negative demonstration with:
+
+```bash
+bash scripts/parser_demo.sh
+```
+
+These errors establish grammatical validity only. **Planned:** semantic
+diagnostics for names, types, interfaces, mutation, control flow, and module
+resolution. Their formats and recovery behavior are not yet defined.
