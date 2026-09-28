@@ -18,6 +18,7 @@ bin/sagan --ast path/to/source.sagan
 bin/sagan --ast-dot path/to/source.sagan
 bin/sagan --ast-svg path/to/source.sagan build/tree.svg
 bin/sagan --ast-html path/to/source.sagan build/tree.html
+bin/sagan --semantic path/to/source.sagan
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -26,6 +27,10 @@ parse or execute the file. `--ast` prints a readable parsed tree. `--ast-dot`
 prints Graphviz DOT without requiring Graphviz itself. SVG and HTML modes write
 their final argument; HTML includes both the original input and an embedded
 visual tree.
+
+`--semantic` parses the file, performs the implemented scope and name-resolution
+pass, and prints scopes, symbols, and resolved references. It reports undefined
+or duplicate names, but it does not type-check or execute the program.
 
 The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
@@ -39,10 +44,12 @@ bin/sagan --ast examples/parser_demo.sagan
 bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
+bin/sagan --semantic examples/semantic_demo.sagan
 ```
 
-Successful AST output confirms only lexical and syntactic validity. No current
-command performs semantic validation, generates C++, or executes Sagan code.
+Successful AST output confirms only lexical and syntactic validity. Successful
+semantic output additionally confirms the implemented name and scope rules. No
+current command type-checks, generates C++, or executes Sagan code.
 
 ## Make targets
 
@@ -53,6 +60,7 @@ make coverage
 make demo
 make parser-demo
 make ast-demo
+make semantic-demo
 make get-version
 make clean
 ```
@@ -63,6 +71,7 @@ The wrapper scripts used for the complete local checks are:
 bash scripts/test.sh
 bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
+bash scripts/semantic_demo.sh
 bash scripts/docs.sh check
 ```
 
@@ -70,9 +79,10 @@ bash scripts/docs.sh check
 instrumented build and produces LCOV output when `lcov` is installed; `demo` tokenizes the
 repository example; `parser-demo` prints the parser example's AST; `ast-demo`
 writes the visual source-and-tree page to `build/ast-demo.html`; `get-version`
-prints the calculated build identity; and `clean` removes compiler objects and
-the binary. The test target also exercises the CLI's token, text AST, DOT, SVG,
-and HTML modes plus its usage, file, lexical, and syntax error paths.
+prints the calculated build identity; `semantic-demo` prints the successful
+semantic model; and `clean` removes compiler objects and the binary. The test
+target also exercises semantic success and focused duplicate/undefined-name
+failures.
 
 Development versions have the form
 `MAJOR.MINOR.PATCH+gREVISION[.dirty]`. Conventional Commit markers after the

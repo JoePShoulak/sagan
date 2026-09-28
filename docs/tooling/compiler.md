@@ -11,6 +11,7 @@ verified_by: null
 The current `sagan` executable is a front-end inspection driver. It can print a
 token stream or parse source into a source-spanned AST rendered as text, DOT,
 SVG, or interactive HTML.
+It can also analyze lexical scopes and print symbols and resolved references.
 
 ```bash
 make all
@@ -26,6 +27,7 @@ bin/sagan --ast examples/parser_demo.sagan
 bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
+bin/sagan --semantic examples/semantic_demo.sagan
 ```
 
 The HTML output is self-contained and supports button or mouse-wheel zoom and
@@ -41,6 +43,6 @@ the second prints the Git-derived development build identity. The complete
 `bash scripts/test.sh` command also runs the separate CLI integration suite.
 
 !!! warning
-    Parsing is structural only. The executable does not perform name resolution,
-    type checking, interface conformance, runtime execution, C++ generation, or
-    native compiler invocation.
+    The semantic mode performs name resolution only. The executable does not
+    perform type checking, interface conformance, runtime execution, C++
+    generation, or native compiler invocation.

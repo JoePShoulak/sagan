@@ -8,19 +8,26 @@ verified_by: null
 ---
 
 # Semantic analysis
-**Status: planned; not implemented.**
+**Status: initial name-resolution pass implemented.**
 
-This is the next compiler stage. A successfully parsed program has only passed
-lexical and grammatical checks; it has not passed name resolution, type
-checking, interface conformance, or any other semantic validation.
+The first semantic pass consumes the source-spanned AST and produces a printable
+semantic model. It creates program and nested lexical scopes, installs built-in
+type names, collects declarations, resolves identifier references, and reports
+duplicate declarations or undefined names with source locations.
 
-Semantic analysis will determine whether a parsed program is meaningful. Planned
-responsibilities include name and scope resolution, duplicate-name detection,
-type inference and checking, lossless-conversion validation, overload
-resolution, interface conformance, mutation rules, control-flow checks, and
-semantic diagnostics.
+Functions form overload groups, while other duplicate names in one scope are
+rejected. Function and lambda parameters, local declarations, loop variables,
+type members, enum members, imports, exports, composition references, and
+`self` participate in the current traversal. Built-in type symbols currently
+include `Bool`, `Coordinate`, `Float`, `Frame`, `Int`, `String`, `Vector`, and
+`Void`.
 
-Semantic analysis is the next implementation stage now that the current parser
-grammar is complete. Exact passes, symbol-table structure, type representation,
-inference algorithm, generic model, and semantic error-recovery strategy remain
-open.
+This pass deliberately does not establish initialization order, overload
+signatures, match or exception-pattern binding, types, conversions, interface
+conformance, mutation rules, or control-flow correctness. Top-level names are
+collected before bodies are visited, so name resolution alone permits forward
+and self references; later passes must decide whether those uses are valid.
+
+The next semantic milestone is a type representation plus expression and
+declaration type checking. The inference algorithm, generic model, overload
+selection, and multi-error recovery strategy remain open.

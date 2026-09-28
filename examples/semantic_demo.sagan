@@ -1,0 +1,23 @@
+module semantic_demo
+
+face Named {
+  fun name(): String
+}
+
+class Probe has Named {
+  let label: String = "Sagan"
+
+  fun name(): String {
+    return self.label
+  }
+}
+
+fun choose(value: Float): Float {
+  let baseline = 1.0
+  if value > baseline {
+    return value
+  }
+  return baseline
+}
+
+let selected = choose(2.0)

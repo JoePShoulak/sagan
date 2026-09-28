@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.13.2](https://img.shields.io/badge/development-0.13.2-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.14.0](https://img.shields.io/badge/development-0.14.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -21,24 +21,26 @@ up explicit types or predictable behavior.
 ## Current status
 
 The tokenizer and parser are complete for the current lexical and syntax
-specifications. Sagan can validate source structure and emit text, DOT, SVG,
-and interactive HTML syntax trees. Semantic analysis, the runtime, C++ code
-generation, and the standard library are not implemented yet.
+specifications. The first semantic-analysis pass now builds lexical scopes,
+collects symbols, resolves identifiers, and diagnoses duplicate and undefined
+names. Sagan can also emit text, DOT, SVG, and interactive HTML syntax trees.
+Type checking, the runtime, C++ code generation, and the standard library are
+not implemented yet.
 
 ```text
-UTF-8 source -> tokenizer -> parser -> AST
-                                  |
+UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis
+                                  |                    |
+                                  |                    +-> semantic model
                                   +-> text / DOT / SVG / HTML
 
-Planned: AST -> semantic analysis -> C++ generation -> native executable
+Planned: semantic model -> type checking -> C++ generation -> native executable
 ```
 
 The detailed and continuously maintained status lives in the
 [documentation status](docs/design/status.md) and
 [implementation overview](docs/implementation/index.md).
-The current Codecov report shows **100% line coverage with zero missed tracked
-source lines**; see [testing](docs/contributing/testing.md) for the exercised
-front-end and CLI behavior.
+See the live Codecov badge and [testing](docs/contributing/testing.md) for the
+currently measured compiler, semantic-analysis, and CLI coverage.
 
 ## Design direction
 
@@ -63,6 +65,7 @@ Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
 ```bash
 bash scripts/test.sh
 make parser-demo
+bash scripts/semantic_demo.sh
 bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
 make coverage
@@ -77,6 +80,7 @@ bin/sagan --ast examples/parser_demo.sagan
 bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
+bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --version
 ```
 
@@ -109,7 +113,7 @@ bash scripts/docs.sh check
 ## Versioning and contributing
 
 Development builds use a Git-derived identity such as
-`0.13.1+g1a2b3c4d[.dirty]`. Conventional Commit declarations determine semantic
+`0.MINOR.PATCH+g1a2b3c4d[.dirty]`. Conventional Commit declarations determine semantic
 version impact after the configured baseline. Documentation and maintenance
 commits do not change the language version.
 

@@ -15,9 +15,9 @@ bash scripts/test.sh
 ```
 
 This performs a clean C++ build, calculates the development version, runs the
-compiled-in tokenizer and parser self-tests, exercises every command-line output
-mode, verifies generated AST files, checks representative CLI failures and
-diagnostics, and checks `--version`.
+compiled-in tokenizer, parser, renderer, and semantic self-tests; exercises
+every command-line output mode; verifies generated AST files; checks
+representative CLI failures and diagnostics; and checks `--version`.
 
 ## Coverage
 
@@ -38,12 +38,10 @@ and pull request, then uploads `build/coverage.info` to Codecov. Authentication
 uses GitHub OIDC rather than a stored `CODECOV_TOKEN`. Codecov upload failures
 fail the coverage job so a missing report cannot appear successful.
 
-Codecov currently reports **100% line coverage and zero missed tracked source
-lines**. That is the present repository result, not a promise that every future
-commit will retain it. The suite covers tokenizer lifecycle and defensive
-invariants; Unicode, emoji, escapes, and malformed input; positive and negative
-parser cases; every AST renderer; CLI success and failure paths; and generated
-output files.
+The live Codecov badge is authoritative for the current percentage. The suite
+covers tokenizer lifecycle and defensive invariants; Unicode, emoji, escapes,
+and malformed input; positive and negative parser and semantic cases; every AST
+renderer; CLI success and failure paths; and generated output files.
 
 Also inspect the full demonstrations and intentional error cases when changing
 the front end:
@@ -54,6 +52,7 @@ bin/sagan examples/tokenizer_error.sagan
 make parser-demo
 bash scripts/parser_demo.sh
 bash scripts/ast_demo.sh --no-open
+bash scripts/semantic_demo.sh
 ```
 
 Validate documentation metadata, links, navigation, Markdown, and rendering:
@@ -62,6 +61,7 @@ Validate documentation metadata, links, navigation, Markdown, and rendering:
 bash scripts/docs.sh check
 ```
 
-The parser suite establishes syntactic correctness for the current grammar.
-Neither tokenizer nor parser coverage establishes semantic correctness or
-runtime behavior; those stages do not exist yet.
+The parser suite establishes syntactic correctness for the current grammar. The
+semantic suite establishes only the implemented scope and name-resolution
+rules. Coverage does not establish type correctness or runtime behavior; those
+stages do not exist yet.

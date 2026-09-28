@@ -8,20 +8,22 @@ verified_by: null
 ---
 
 # Implementation
-The present executable implements the syntactic front end of a future compiler:
+The present executable implements the syntactic front end and initial semantic
+pass of a future compiler:
 
 ```text
-UTF-8 source -> tokenizer -> token stream -> parser -> AST
+UTF-8 source -> tokenizer -> token stream -> parser -> AST -> scope/name analysis
 ```
 
 The remaining planned pipeline is:
 
 ```text
-AST -> semantic analysis -> C++ generation -> C++ compiler -> native executable
+semantic model -> type checking -> C++ generation -> C++ compiler -> native executable
 ```
 
 The first line is operational. Read about the [architecture](architecture.md),
 [tokenizer](tokenizer.md), [parser](parser.md), and
 [Schematic-derived foundations](schematic-foundations.md). The
-[semantic analyzer](semantic-analysis.md) and
-[code generator](code-generation.md) pages define future boundaries.
+[semantic analyzer](semantic-analysis.md) page records the implemented first
+pass and its next boundary. The [code generator](code-generation.md) remains
+future work.

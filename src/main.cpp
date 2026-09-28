@@ -5,6 +5,8 @@
 #include "parser/tokenizer.hpp"
 #include "parser/tokens.hpp"
 #include "parser/unicode.hpp"
+#include "semantic/analyzer.hpp"
+#include "semantic/semantic_error.hpp"
 #include "version.hpp"
 
 #include <fstream>
@@ -356,6 +358,66 @@ namespace
     }
     std::cout << "[PASS] renderer rejects unknown AST nodes\n";
     return true;
+  }
+
+  auto expect_semantic_model(const std::string &name, const std::string &source,
+                             const std::vector<std::string> &expected) -> bool
+  {
+    try
+    {
+      parser::syntax_parser syntax(tokenize(source));
+      const auto tree = syntax.parse();
+      const auto model = semantic::analyze(tree);
+      std::ostringstream output;
+      model.print(output);
+      for (const auto &fragment : expected)
+      {
+        if (!output.str().contains(fragment))
+        {
+          // LCOV_EXCL_START
+          std::cerr << "[FAIL] " << name << ": missing semantic model fragment '" << fragment << "'\n";
+          return false;
+          // LCOV_EXCL_STOP
+        }
+      }
+      std::cout << "[PASS] " << name << '\n';
+      return true;
+    }
+    catch (const parser::parse_error &error)
+    {
+      // LCOV_EXCL_START
+      std::cerr << "[FAIL] " << name << ": parse error at byte " << error.range.begin << ": "
+                << error.what() << '\n';
+      return false;
+      // LCOV_EXCL_STOP
+    }
+  }
+
+  auto expect_semantic_error(const std::string &name, const std::string &source,
+                             const std::string &expected) -> bool
+  {
+    try
+    {
+      parser::syntax_parser syntax(tokenize(source));
+      const auto tree = syntax.parse();
+      static_cast<void>(semantic::analyze(tree));
+    }
+    catch (const semantic::semantic_error &error)
+    {
+      if (std::string(error.what()).contains(expected))
+      {
+        std::cout << "[PASS] " << name << '\n';
+        return true;
+      }
+      // LCOV_EXCL_START
+      std::cerr << "[FAIL] " << name << ": unexpected semantic error '" << error.what() << "'\n";
+      return false;
+      // LCOV_EXCL_STOP
+    }
+    // LCOV_EXCL_START
+    std::cerr << "[FAIL] " << name << ": expected a semantic error\n";
+    return false;
+    // LCOV_EXCL_STOP
   }
 
   auto run_self_tests() -> int
@@ -1226,6 +1288,65 @@ namespace
         "visual escaped and truncated string AST",
         "let value = \"&'<>\\r\\tabcdefghijklmnopqrstuvwxyz0123456789\" + other\n");
     passed &= expect_renderer_rejects_unknown_nodes();
+    passed &= expect_semantic_model(
+        "semantic scopes and resolutions",
+        "face Named {\n  fun name(): String\n}\n"
+        "class Probe has Named {\n  let label: String = \"Sagan\"\n"
+        "  fun name(): String {\n    return self.label\n  }\n}\n"
+        "fun choose(value: Float): Float {\n  let baseline = 1.0\n"
+        "  if value > baseline {\n    return value\n  }\n  return baseline\n}\n"
+        "let selected = choose(2.0)\n",
+        {"Symbol(type Named", "Symbol(type Probe", "Symbol(function choose", "Scope(",
+         "Symbol(parameter value", "baseline @", "choose @"});
+    passed &= expect_semantic_model(
+        "semantic traversal coverage",
+        "module semantic_demo\n"
+        "import External from support as Imported\n"
+        "face Capability {\n  fun inspect(value: Float): String\n}\n"
+        "class Worker is Capability {\n"
+        "  let label: String = \"worker\"\n"
+        "  fun inspect(value: Float): String => \"${self.label}: ${value}\"\n"
+        "}\n"
+        "enum State {\n  ready\n  waiting\n}\n"
+        "fun overloaded(value: Float): Float => value\n"
+        "fun overloaded(value: String): String => value\n"
+        "fun exercise(input: Float, values: Vector): Float {\n"
+        "  let total: Float = input\n"
+        "  let grouped = (total)\n"
+        "  let negative = -grouped\n"
+        "  let selected = input > 0 ? input ; total\n"
+        "  let assigned = total := selected\n"
+        "  let called = overloaded(assigned)\n"
+        "  let indexed = values[0]\n"
+        "  let member = values.length\n"
+        "  let text = \"value ${called}\"\n"
+        "  let items = [called, ...values]\n"
+        "  let mapping = {called: indexed, ...values}\n"
+        "  let pair = <called, indexed>\n"
+        "  let point = (called, indexed)\n"
+        "  let mapper = fun(value: Float): Float => value + total\n"
+        "  total += called\n"
+        "  if input > 0 {\n    total\n  } else {\n    total\n  }\n"
+        "  while input > 0 {\n    break\n  }\n"
+        "  until input > 0 {\n    continue\n  }\n"
+        "  for item in values {\n    let copy = item\n    yield copy\n  }\n"
+        "  match input {\n    case 0 { total\n    }\n    case else { total\n    }\n  }\n"
+        "  hope {\n    total\n  } unless 0 {\n    scream total\n  } finally {\n    total\n  }\n"
+        "  return mapper(total)\n"
+        "}\n"
+        "export exercise\n"
+        "let result = exercise(1.0, <1.0, 2.0>)\n",
+        {"Symbol(import Imported", "Symbol(type Capability", "Symbol(type Worker",
+         "Symbol(enum member ready", "Symbol(function overloaded", "Scope(",
+         "loop binding item", "Scope(", "lambda", "exercise @"});
+    passed &= expect_semantic_error("duplicate declaration",
+                                    "let value = 1\nlet value = 2\n", "Duplicate declaration of 'value'");
+    passed &= expect_semantic_error("undefined name", "let value = missing\n", "Undefined name 'missing'");
+    passed &= expect_semantic_error("local declaration order", "fun invalid() {\n  let value = value\n}\n",
+                                    "Undefined name 'value'");
+    passed &= expect_semantic_error("duplicate parameter",
+                                    "fun invalid(value, value) => value\n",
+                                    "Duplicate declaration of 'value'");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
@@ -1253,7 +1374,7 @@ namespace
     output << contents;
   }
 
-  auto print_error(const std::string &source, const parser::parse_error &error, const std::string &category) -> void
+  auto print_error(const std::string &source, const auto &error, const std::string &category) -> void
   {
     int line = 1;
     int column = 1;
@@ -1297,6 +1418,7 @@ auto main(const int argc, char **argv) -> int
     ast_dot,
     ast_svg,
     ast_html,
+    semantic,
   };
 
   output_mode mode = output_mode::tokens;
@@ -1324,6 +1446,11 @@ auto main(const int argc, char **argv) -> int
     path = argv[2];
     output_path = argv[3];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--semantic")
+  {
+    mode = output_mode::semantic;
+    path = argv[2];
+  }
   else if (argc == 2)
   {
     path = argv[1];
@@ -1335,7 +1462,7 @@ auto main(const int argc, char **argv) -> int
   else
   {
     std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
-                 "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | FILE]\n";
+                 "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
@@ -1348,7 +1475,13 @@ auto main(const int argc, char **argv) -> int
     {
       parser::syntax_parser syntax(result);
       const auto tree = syntax.parse();
-      if (mode == output_mode::ast_text)
+      if (mode == output_mode::semantic)
+      {
+        const auto model = semantic::analyze(tree);
+        std::cout << "Sagan " << SAGAN_VERSION << " semantic model: " << path << "\n\n";
+        model.print(std::cout);
+      }
+      else if (mode == output_mode::ast_text)
       {
         std::cout << "Sagan " << SAGAN_VERSION << " AST: " << path << "\n\n";
         tree.print(std::cout);
@@ -1392,6 +1525,11 @@ auto main(const int argc, char **argv) -> int
       std::cerr << "lexical error: " << error.what() << '\n';
     }
     // LCOV_EXCL_STOP
+    return 1;
+  }
+  catch (const semantic::semantic_error &error)
+  {
+    print_error(read_file(path), error, "semantic");
     return 1;
   }
   catch (const std::exception &error)

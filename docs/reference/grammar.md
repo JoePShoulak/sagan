@@ -109,5 +109,6 @@ behavior.
 The parser currently stops after the first syntax error. Multi-error recovery
 is a future diagnostic enhancement, not an omitted grammar production.
 
-Implemented parser demos are accepted parser input but are not yet executable;
-semantic analysis and code generation remain future stages.
+Implemented parser demos are accepted parser input but are not yet executable.
+The initial semantic pass can validate scopes and names; type analysis and code
+generation remain future stages.

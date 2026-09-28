@@ -16,7 +16,7 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Planned; not implemented** | roadmap only |
+| Semantic analysis | **Foundation implemented** | lexical scopes, symbol collection, duplicate-name checks, identifier resolution, semantic demo |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Planned; not implemented** | roadmap only |
@@ -32,16 +32,15 @@ and is not unfinished tokenizer behavior.
 
 ## What can run today
 
-The `bin/sagan` front-end can print tokens, parse the current grammar, and emit
-text, DOT, SVG, or interactive HTML ASTs. The HTML renderer supports zooming and
-panning. Parser demonstrations provide a broad successful source file plus
-focused malformed examples. None of these modes executes Sagan source or
-performs semantic validation.
+The `bin/sagan` front-end can print tokens, parse the current grammar, emit text,
+DOT, SVG, or interactive HTML ASTs, and print the initial semantic model. The
+HTML renderer supports zooming and panning. Parser and semantic demonstrations
+provide broad successful source files plus focused malformed examples. The
+semantic mode validates names and scopes, but no mode executes Sagan source.
 
-The current Codecov report is 100% line coverage with zero missed tracked source
-lines. Tests exercise tokenizer lifecycle behavior, Unicode and emoji edge
-cases, string escapes, malformed input, parser errors, all AST renderers, CLI
-behavior, and defensive invariants.
+The live Codecov report tracks tokenizer lifecycle behavior, Unicode and emoji
+edge cases, string escapes, malformed input, parser and semantic errors, all AST
+renderers, CLI behavior, and defensive invariants.
 
 ## Parser verification
 
@@ -79,7 +78,7 @@ and runtime work.
 
 ## Major open language questions
 
-Type inference, value/reference behavior, reference-count cycles, interface
+Type inference and checking, value/reference behavior, reference-count cycles, interface
 defaults and conflict resolution, generics and possible sum types, constructors,
 enum and collection semantics, exception propagation, entry points, module
 resolution and packages, and the concrete math, physics, and rendering APIs

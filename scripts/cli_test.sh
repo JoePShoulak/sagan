@@ -63,6 +63,8 @@ printf '%s\n' 'let escaped = "\r\t\0"' > "$work_dir/escaped.sagan"
 expect_output "escaped token text" '\r\t\0' "$binary" "$work_dir/escaped.sagan"
 expect_output "text AST output" "Program" "$binary" --ast examples/parser_demo.sagan
 expect_output "DOT AST output" "digraph SaganAST" "$binary" --ast-dot examples/parser_demo.sagan
+expect_output "semantic model output" "SemanticModel" \
+  "$binary" --semantic examples/semantic_demo.sagan
 
 expect_output "SVG AST file" "Wrote SVG AST" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/parser.svg"
@@ -76,6 +78,10 @@ expect_failure "invalid arguments" 2 "usage: sagan" "$binary" --ast one.sagan ex
 expect_failure "missing input file" 1 "Could not open" "$binary" "$work_dir/missing.sagan"
 expect_failure "lexical diagnostic" 1 "lexical error at" "$binary" examples/tokenizer_error.sagan
 expect_failure "syntax diagnostic" 1 "syntax error at" "$binary" --ast examples/parser_error.sagan
+expect_failure "undefined-name semantic diagnostic" 1 "Undefined name 'missing_value'" \
+  "$binary" --semantic examples/semantic_undefined_error.sagan
+expect_failure "duplicate-name semantic diagnostic" 1 "Duplicate declaration of 'repeated'" \
+  "$binary" --semantic examples/semantic_duplicate_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

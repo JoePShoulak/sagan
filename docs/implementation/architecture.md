@@ -19,6 +19,9 @@ verified_by: null
 - `src/parser/parser.*`: recursive-descent parser for the current Sagan grammar.
 - `src/parser/ast_node.*`: typed, source-spanned Sagan syntax tree.
 - `src/parser/ast_render.*`: text, DOT, SVG, and interactive HTML AST output.
+- `src/semantic/analyzer.*`: lexical scopes, symbols, name resolution, and a
+  printable semantic model.
+- `src/semantic/semantic_error.hpp`: source-located semantic diagnostics.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
@@ -28,23 +31,22 @@ verified_by: null
 ## Current data flow
 
 The CLI reads a file, tokenizes it, and either prints the token stream or passes
-it to the parser. AST modes then print or render the resulting tree. Lexical and
-syntax failures throw `parser::parse_error` and are reported with source
-locations.
+it to the parser. AST modes print or render the resulting tree; semantic mode
+passes it through scope and name analysis. Lexical, syntax, and semantic
+failures are reported with source locations.
 
 ```text
-UTF-8 source -> tokenizer -> parser -> source-spanned AST
-                                            |
+UTF-8 source -> tokenizer -> parser -> source-spanned AST -> scope/name analysis
+                                            |                         |
                                             +-> text / DOT / SVG / HTML
+                                                                      +-> semantic model
 ```
 
-The front-end and CLI suite currently reaches 100% tracked source-line coverage
-in Codecov. Coverage includes lifecycle and malformed-input paths, Unicode and
-emoji edges, parser errors, renderer output, CLI behavior, and defensive
-invariants.
+Codecov measures the front-end, semantic pass, and CLI suite. Coverage includes
+lifecycle and malformed-input paths, Unicode and emoji edges, parser and
+semantic errors, renderer output, CLI behavior, and defensive invariants.
 
 ## Planned components
 
-Semantic passes, runtime support, standard/core libraries, C++ emission, and
-native-toolchain invocation are not implemented. The parser and AST are complete
-for the current syntax specification and form the input to semantic analysis.
+Type checking and later semantic passes, runtime support, standard/core
+libraries, C++ emission, and native-toolchain invocation are not implemented.

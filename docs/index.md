@@ -17,10 +17,10 @@ Sagan is an experimental, strongly typed programming language for geometry,
 astrodynamics, numerical work, and real-time simulation.
 
 !!! info "Current implementation"
-    The repository currently contains a complete **tokenizer and parser** for
-    the current lexical and syntax specifications. It can emit text, DOT, SVG,
-    and interactive HTML syntax trees. It does not yet contain semantic
-    analysis, a runtime, or C++ code generation.
+    The repository contains a complete **tokenizer and parser** for the current
+    specifications plus the first semantic pass: scopes, symbols, duplicate
+    checks, and name resolution. It can emit syntax trees and a semantic model.
+    It does not yet contain type checking, a runtime, or C++ code generation.
 
 ## Where to begin
 

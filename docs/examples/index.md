@@ -20,9 +20,8 @@ interpolation, exception keywords, increment, and an emoji identifier.
 make demo
 ```
 
-The file is checked as tokenizer input. It is not an executable program:
-although the current parser exists, semantic analysis, code generation, and the
-runtime do not.
+The file is checked as tokenizer input. It is not an executable program and is
+not evidence of successful parsing, semantic validation, or execution.
 
 ## Parser and visual AST demonstration
 
@@ -73,6 +72,22 @@ self-contained page showing the input source beside a colored tree. The page
 supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
 `bash scripts/ast_demo.sh --no-open` to generate `build/ast-demo.html` without
 launching a browser.
+
+## Semantic-analysis demonstration
+
+`examples/semantic_demo.sagan` exercises program, type, function, block, and
+branch scopes; built-in and user-defined type names; parameters; local and
+top-level variables; functions; composition; `self`; and resolved references.
+
+```bash
+bash scripts/semantic_demo.sh
+```
+
+The script prints the input's scope/symbol/resolution model, then confirms that
+`examples/semantic_undefined_error.sagan` and
+`examples/semantic_duplicate_error.sagan` fail with focused diagnostics. This
+demonstrates the first semantic pass only; it does not type-check or execute the
+source.
 
 The string error fixture demonstrates the focused diagnostic for an empty
 `${}` interpolation. The collection fixture demonstrates the minimum
