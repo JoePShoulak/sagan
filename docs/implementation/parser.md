@@ -34,7 +34,8 @@ syntax trees with source-spanned diagnostics.
 - Logical `and` and `or`
 - Conditional expressions
 - Right-associative value-producing `:=` assignment
-- Statement blocks, including empty and nested blocks
+- Statement blocks, including empty and nested blocks, plus same-line
+  single-statement control-flow bodies
 - Ordinary and compound (`+=`, `-=`, `*=`, `/=`, `%=`, `^=`) assignment
   statements, plus expression statements inside blocks
 - `if`/`else` statements and `else if` chains
@@ -42,7 +43,8 @@ syntax trees with source-spanned diagnostics.
 - Unlabeled `break` and `continue`, restricted to loop bodies
 - Bare and value-bearing `return` statements
 - Bare and value-bearing `yield` statements
-- Block-bodied `match`/`case`, with an optional final `case else`
+- Braced or same-line single-statement `match`/`case`, with an optional final
+  `case else`
 - `hope`/`unless`/`finally` exception regions and value-bearing `scream`
 - `face` signatures and default methods, plus `is`/`has` composition lists
 - `class` fields, methods, leading-dot private methods, and `self`

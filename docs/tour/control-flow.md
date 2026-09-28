@@ -31,6 +31,18 @@ until simulation.complete {
 return simulation.result
 ```
 
+When a branch or loop contains exactly one statement, it may remain on the
+header line without braces:
+
+```sagan
+for item in items process(item)
+if simulation.complete return simulation.result
+else return fallback
+```
+
+Moving the body to a later line requires braces; indentation alone never
+creates a block.
+
 `break` and `continue` are unlabeled and valid only inside a loop. A `return`
 may carry an expression or stand alone to return without a value.
 
@@ -47,7 +59,8 @@ fun telemetry_samples(samples) {
 Generator typing, suspension, and iteration behavior remain semantic and
 runtime work.
 
-A match statement contains one or more block-bodied cases:
+A match statement contains one or more cases. Single-statement cases can use
+the same compact form:
 
 ```sagan
 match simulation.status {

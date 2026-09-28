@@ -71,6 +71,15 @@ namespace parser
     }
   }
 
+  auto syntax_parser::match_after_newlines(const int token_id) -> bool
+  {
+    const std::size_t before_newlines = current;
+    skip_newlines();
+    if (match(token_id)) return true;
+    current = before_newlines;
+    return false;
+  }
+
   auto syntax_parser::parse_documentation_comments() -> std::vector<documentation_comment>
   {
     std::vector<documentation_comment> comments;
@@ -444,9 +453,9 @@ namespace parser
   {
     const token &keyword = previous();
     auto condition = parse_expression();
-    auto then_branch = parse_block();
+    auto then_branch = parse_statement_body("the 'if' body");
     statement_ref else_branch;
-    if (match(tokens::KWD_ELSE))
+    if (match_after_newlines(tokens::KWD_ELSE))
     {
       if (match(tokens::KWD_IF))
       {
@@ -454,7 +463,7 @@ namespace parser
       }
       else
       {
-        else_branch = parse_block();
+        else_branch = parse_statement_body("the 'else' body");
       }
     }
     const int end = else_branch ? else_branch->range.end : then_branch->range.end;
@@ -467,7 +476,7 @@ namespace parser
     const token &keyword = previous();
     auto condition = parse_expression();
     loop_depth++;
-    auto body = parse_block();
+    auto body = parse_statement_body("the loop body");
     loop_depth--;
     return std::make_unique<condition_loop_statement>(span{keyword.range.begin, body->range.end}, type,
                                                        std::move(condition), std::move(body));
@@ -480,7 +489,7 @@ namespace parser
     expect(tokens::KWD_IN, "'in' after the loop binding");
     auto iterable = parse_expression();
     loop_depth++;
-    auto body = parse_block();
+    auto body = parse_statement_body("the 'for' body");
     loop_depth--;
     return std::make_unique<for_statement>(span{keyword.range.begin, body->range.end}, binding.text,
                                             std::move(iterable), std::move(body));
@@ -552,7 +561,7 @@ namespace parser
         }
         pattern = parse_expression();
       }
-      auto body = parse_block();
+      auto body = parse_statement_body("the 'case' body");
       const span case_range{case_keyword.range.begin, body->range.end};
       cases.emplace_back(std::move(pattern), std::move(body), case_range);
       if (!check(tokens::RBRACE))
@@ -573,20 +582,20 @@ namespace parser
   auto syntax_parser::parse_hope_statement() -> statement_ref
   {
     const token &keyword = previous();
-    auto protected_body = parse_block();
+    auto protected_body = parse_statement_body("the 'hope' body");
     std::vector<exception_handler> handlers;
-    while (match(tokens::KWD_UNLESS))
+    while (match_after_newlines(tokens::KWD_UNLESS))
     {
       const token &unless_keyword = previous();
       auto pattern = parse_expression();
-      auto body = parse_block();
+      auto body = parse_statement_body("the 'unless' body");
       const span handler_range{unless_keyword.range.begin, body->range.end};
       handlers.emplace_back(std::move(pattern), std::move(body), handler_range);
     }
     std::unique_ptr<block_statement> cleanup;
-    if (match(tokens::KWD_FINALLY))
+    if (match_after_newlines(tokens::KWD_FINALLY))
     {
-      cleanup = parse_block();
+      cleanup = parse_statement_body("the 'finally' body");
     }
     if (handlers.empty() && !cleanup)
     {
@@ -630,6 +639,20 @@ namespace parser
     }
     const token &close = expect(tokens::RBRACE, "'}' after the block");
     return std::make_unique<block_statement>(span{open.range.begin, close.range.end}, std::move(body));
+  }
+
+  auto syntax_parser::parse_statement_body(const std::string &description) -> std::unique_ptr<block_statement>
+  {
+    if (check(tokens::LBRACE)) return parse_block();
+    if (at_end() || check(tokens::NEWLINE) || check(tokens::RBRACE))
+    {
+      const span error_range = at_end() ? previous().range : peek()->range;
+      throw parse_error("Expected '{' or a same-line statement for " + description, error_range);
+    }
+    std::vector<statement_ref> body;
+    body.push_back(parse_statement());
+    const span range = body.front()->range;
+    return std::make_unique<block_statement>(range, std::move(body));
   }
 
   auto syntax_parser::parse_expression() -> expression_ref

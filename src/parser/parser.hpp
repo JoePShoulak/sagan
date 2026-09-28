@@ -24,6 +24,7 @@ namespace parser
     auto match(int token_id) -> bool;
     auto expect(int token_id, const std::string &description) -> const token &;
     auto skip_newlines() -> void;
+    auto match_after_newlines(int token_id) -> bool;
     auto parse_documentation_comments() -> std::vector<documentation_comment>;
     auto parse_statement() -> statement_ref;
     auto parse_let_declaration() -> statement_ref;
@@ -43,6 +44,7 @@ namespace parser
     auto parse_hope_statement() -> statement_ref;
     auto parse_scream_statement() -> statement_ref;
     auto parse_block() -> std::unique_ptr<block_statement>;
+    auto parse_statement_body(const std::string &description) -> std::unique_ptr<block_statement>;
     auto parse_expression() -> expression_ref;
     auto parse_nested_expression() -> expression_ref;
     auto parse_assignment() -> expression_ref;

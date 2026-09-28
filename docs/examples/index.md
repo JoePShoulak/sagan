@@ -128,7 +128,8 @@ strings,
 constructs a typed dictionary using a spread and later-key override, reads a
 checked key, mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,
-tests the result, and returns success from `main`.
+tests the result, and returns success from `main`. Its `match` cases, `for`
+loop, and final `if` branches demonstrate same-line bodies without braces.
 
 ```bash
 bash scripts/execution_demo.sh

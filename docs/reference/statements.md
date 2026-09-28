@@ -21,8 +21,10 @@ ordinary `=` and compound `+=`, `-=`, `*=`, `/=`, `%=`, and `^=` assignment
 statements, expression statements inside blocks,
 `if`/`else` including `else if` chains, `for name in expression`, `while`, and
 `until` loops, unlabeled `break` and `continue`, and bare or value-bearing
-`return` and `yield`. The parser also accepts `match expression` with one or more
-block-bodied `case` branches. An optional `case else` must be unique and last.
+`return` and `yield`. Control-flow bodies may be braced blocks or exactly one
+statement on the same logical line as the header. The parser also accepts
+`match expression` with one or more `case` branches. An optional `case else`
+must be unique and last.
 Empty blocks are valid. `break` and `continue` outside a loop are syntax errors.
 A block brace is recognized from its statement position, while `{...}` in an
 expression remains a dictionary literal.

@@ -14,16 +14,10 @@ fun main(): Int {
   print("Countdown:")
   print("Configured countdown: ${configured_countdown}")
   match configured_countdown {
-    case 3 {
-      print("Match selected the nominal countdown")
-    }
-    case else {
-      print("Match selected the fallback")
-    }
+    case 3 print("Match selected the nominal countdown")
+    case else print("Match selected the fallback")
   }
-  for value in countdown {
-    print("Array item: ${value}")
-  }
+  for value in countdown print("Array item: ${value}")
 
   let ignition = 3
   while ignition > 0 {
@@ -37,9 +31,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 {
-    return 0
-  } else {
-    return 1
-  }
+  if answer == 42 return 0
+  else return 1
 }

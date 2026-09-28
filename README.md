@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.24.0](https://img.shields.io/badge/development-0.24.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.25.0](https://img.shields.io/badge/development-0.25.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -38,6 +38,7 @@ current native subset.
 Homogeneous dictionary literals, left-to-right spreads, and checked key lookup
 are executable as well.
 Expression-pattern `match` statements execute with ordered cases and a fallback.
+Control-flow bodies may use braces or a single statement on the same line.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checking

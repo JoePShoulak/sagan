@@ -17,15 +17,16 @@ grammar.
 parser implements `let` declarations, blocks, assignment and expression
 statements, `if`/`else`, named block-bodied functions with typed parameters and
 return annotations, `for`/`in`, `while`, and `until` loops, loop control,
-returns, yields, block-bodied `match`/`case`, primary and string expressions, the
+returns, yields, braced or same-line `match`/`case`, primary and string expressions, the
 `hope`/`unless`/`finally`/`scream` exception grammar, settled precedence table,
 postfix chains, collection literals, top-level face/class/enum declarations,
 module/import/export declarations, and declaration documentation.
 
 **Concrete conventions:** declarations use words such as `let`, `fun`, `face`,
-`class`, and `enum`; braces delimit bodies; newlines normally terminate
-statements; `=>` introduces expression bodies; and collection-like delimiters
-have the forms shown in the language tour.
+`class`, and `enum`; braces delimit multi-statement bodies; one-statement
+control-flow bodies may remain on their header line without braces; newlines
+normally terminate statements; `=>` introduces expression bodies; and
+collection-like delimiters have the forms shown in the language tour.
 
 The implemented collection grammar is equivalent to this simplified notation:
 
@@ -47,16 +48,20 @@ coordinate  := "(" expression "," expression ("," expression)* ","? ")"
 spread      := "..." expression
 group       := "(" expression ")"
 block       := "{" newline* (statement newline+)* statement? newline* "}"
-if_statement := "if" expression block ("else" (if_statement | block))?
-for_statement := "for" identifier "in" expression block
-condition_loop := ("while" | "until") expression block
+statement_body := block | same_line_statement
+if_statement := "if" expression statement_body
+                ("else" (if_statement | statement_body))?
+for_statement := "for" identifier "in" expression statement_body
+condition_loop := ("while" | "until") expression statement_body
 loop_control := "break" | "continue"
 return_statement := "return" expression?
 yield_statement := "yield" expression?
 match_statement := "match" expression "{" newline* match_case
                    (newline+ match_case)* newline* "}"
-match_case  := "case" (expression | "else") block
-hope_statement := "hope" block ("unless" expression block)* ("finally" block)?
+match_case  := "case" (expression | "else") statement_body
+hope_statement := "hope" statement_body
+                  ("unless" expression statement_body)*
+                  ("finally" statement_body)?
 scream_statement := "scream" expression
 assignment_statement := expression ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=") expression
 expression_statement := expression
@@ -80,6 +85,10 @@ parameters  := parameter ("," parameter)* ","?
 parameter   := identifier (":" type)?
 ```
 
+`same_line_statement` is exactly one statement beginning on the same logical
+line as its controlling header. A newline after the condition or pattern
+therefore requires a braced block.
+
 Dictionary-versus-block interpretation is grammatical: `{...}` in an
 expression position is a dictionary, while a brace following a statement form
 that requires a body will be a block. Vector-versus-comparison interpretation
@@ -89,8 +98,8 @@ level, `>` closes the vector, so a greater-than comparison there must be
 parenthesized.
 
 Blocks may be empty. Statements inside them are newline-separated; semicolons do
-not terminate ordinary statements. `else`, `unless`, and `finally` currently
-follow the preceding `}` without an intervening logical newline.
+not terminate ordinary statements. `else`, `unless`, and `finally` may follow
+the preceding body directly or after logical newlines.
 
 The program root accepts declarations only. Executable statements and control
 flow belong inside function bodies. A program may have at most one module

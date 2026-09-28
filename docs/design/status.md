@@ -54,12 +54,14 @@ the settled operator-precedence table, chained calls/indexing/member access,
 ordinary and safe access, mutating method calls, ordinary/raw/multiline/
 interpolated strings, and array/dictionary/vector/coordinate expressions with
 spreads and trailing commas. Text, DOT, SVG, and interactive HTML tree renderers
-cover every implemented AST node. Blocks, ordinary and compound assignment,
-expression statements, and `if`/`else if`/`else` control flow are also verified. The parser
+cover every implemented AST node. Blocks, same-line single-statement bodies,
+ordinary and compound assignment, expression statements, and
+`if`/`else if`/`else` control flow are also verified. The parser
 enforces declaration-only program roots and provides named, typed, block-bodied
 functions as statement containers. `for`/`in`, `while`, and `until` loops,
 unlabeled `break` and `continue`, and bare or value-bearing `return` statements
-are implemented and rendered in every AST format. Block-bodied `match`/`case`
+are implemented and rendered in every AST format. Braced or same-line
+single-statement `match`/`case`
 supports expression-shaped patterns plus a unique final `case else`; pattern
 meaning and exhaustiveness remain semantic work. The parser demo includes
 `hope`/`unless`/`finally` and value-bearing `scream`; exception matching and
