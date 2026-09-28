@@ -147,9 +147,17 @@ During registration, add the custom label:
   --unattended
 ```
 
-After registration, install and start the runner using the Linux service
-instructions GitHub displays. Confirm that `hp1-sagan-docs` is online and has
-the `sagan-docs-hp1` label before manually dispatching the workflow once.
+After registration, copy `deploy/hp1/sagan-docs-actions-runner` and
+`deploy/hp1/install-actions-runner-user.sh` to HP1, then run the installer from
+the directory containing both files:
+
+```bash
+bash install-actions-runner-user.sh
+```
+
+This installs a user-owned runner manager and an `@reboot` crontab entry, so it
+does not require `sudo`. Confirm that `hp1-sagan-docs` is online and has the
+`sagan-docs-hp1` label before manually dispatching the workflow once.
 
 The HP1 account needs `python3`, Python virtual-environment support, `curl`,
 `tar`, and `crontab`. It does not need repository write permission or Frontdoor
@@ -172,6 +180,8 @@ then check:
 curl --fail http://127.0.0.1:8781/healthz
 ~/.local/bin/sagan-docs status
 ~/.local/bin/sagan-docs logs
+~/.local/bin/sagan-docs-actions-runner status
+~/.local/bin/sagan-docs-actions-runner logs
 ```
 
 Installed releases remain under `~/.local/share/sagan-docs/releases`. If a

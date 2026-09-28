@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+runner_dir="$HOME/.local/share/actions-runner-sagan"
+runner_service="$runner_dir/bin/runsvc.sh"
+runtime_dir="$HOME/.local/state/sagan-docs-actions-runner"
+pid_file="$runtime_dir/runner.pid"
+log_file="$runtime_dir/runner.log"
+
+is_running() {
+  [[ -f "$pid_file" ]] || return 1
+  local pid
+  pid="$(cat "$pid_file")"
+  kill -0 "$pid" 2>/dev/null
+}
+
+case "${1:-}" in
+  start)
+    install -d -m 0755 "$runtime_dir"
+    if is_running; then
+      echo "Sagan documentation runner is already running (PID $(cat "$pid_file"))."
+      exit 0
+    fi
+    test -x "$runner_service" || {
+      echo "GitHub Actions runner is not installed in $runner_dir." >&2
+      exit 1
+    }
+    test -f "$runner_dir/.runner" || {
+      echo "GitHub Actions runner has not been registered." >&2
+      exit 1
+    }
+    (
+      cd "$runner_dir"
+      nohup "$runner_service" >>"$log_file" 2>&1 &
+      echo "$!" >"$pid_file"
+    )
+    sleep 2
+    is_running || {
+      echo "Sagan documentation runner failed to start. See $log_file" >&2
+      exit 1
+    }
+    echo "Sagan documentation runner started (PID $(cat "$pid_file"))."
+    ;;
+  stop)
+    if is_running; then
+      kill "$(cat "$pid_file")"
+      echo "Sagan documentation runner stopped."
+    fi
+    rm -f "$pid_file"
+    ;;
+  restart)
+    "$0" stop
+    "$0" start
+    ;;
+  status)
+    if is_running; then
+      echo "running (PID $(cat "$pid_file"))"
+    else
+      echo "stopped"
+      exit 1
+    fi
+    ;;
+  logs)
+    tail -n 100 "$log_file"
+    ;;
+  *)
+    echo "Usage: sagan-docs-actions-runner {start|stop|restart|status|logs}" >&2
+    exit 2
+    ;;
+esac
