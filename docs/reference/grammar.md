@@ -46,7 +46,9 @@ hope_statement := "hope" block ("unless" expression block)* ("finally" block)?
 scream_statement := "scream" expression
 assignment_statement := expression "=" expression
 expression_statement := expression
-function_declaration := "fun" identifier "(" parameters? ")" (":" type)? block
+function_declaration := "fun" identifier "(" parameters? ")" (":" type)? function_body
+function_body := block | "=>" expression
+lambda := "fun" "(" parameters? ")" (":" type)? "=>" expression
 method_signature := "fun" identifier "(" parameters? ")" (":" type)?
 face_declaration := "face" identifier composition? "{" face_member* "}"
 face_member := method_signature block?
@@ -75,8 +77,8 @@ The program root accepts declarations only. Executable statements and control
 flow belong inside function bodies.
 
 **Open questions:** the remaining statement and declaration productions,
-expression-body parsing, semantic validation of returned values, and error
-recovery beyond the first syntax error. Match-pattern binding, type tests,
+semantic validation of returned values, and error recovery beyond the first
+syntax error. Match-pattern binding, type tests,
 destructuring, and exhaustiveness are semantic questions rather than established
 behavior.
 

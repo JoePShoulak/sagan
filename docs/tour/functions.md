@@ -21,6 +21,8 @@ Expression bodies and lambdas use `=>`:
 
 ```sagan
 let greater = fun(a: Float, b: Float) => a > b
+
+fun square(value: Float): Float => value * value
 ```
 
 A mutating counterpart may conventionally end in `!`, and the tokenizer emits
@@ -32,9 +34,11 @@ vector.normalize!()
 
 !!! note "Implementation status"
     Named, block-bodied functions with optional parameter and return type
-    annotations now parse into the AST. Calls and bare or value-bearing return
-    statements also parse. Expression-bodied functions, lambdas, name
-    resolution, typing, overloads, and execution remain future work.
+    annotations parse into the AST. Named functions, interface defaults, and
+    class methods may instead use `=> expression`. Anonymous lambdas accept
+    typed parameters and an optional return annotation. Calls and bare or
+    value-bearing return statements also parse. Name resolution, typing,
+    captures, overloads, and execution remain future work.
 
 **Provisional design:** multiple returns, destructuring, variadic parameters,
 yielding, overload selection, capture behavior, and inference rules.

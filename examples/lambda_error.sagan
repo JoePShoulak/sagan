@@ -1,0 +1,2 @@
+// This lambda intentionally omits the required => before its expression.
+let invalid_lambda = fun(value: Float) value * 2.0

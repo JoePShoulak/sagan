@@ -57,6 +57,7 @@ namespace parser
     auto parse_dictionary() -> expression_ref;
     auto parse_vector() -> expression_ref;
     auto parse_parenthesized() -> expression_ref;
+    auto parse_lambda() -> expression_ref;
 
   public:
     explicit syntax_parser(std::vector<token> tokens);

@@ -40,7 +40,8 @@ a typed, block-bodied function. It also demonstrates multiple `unless` handlers,
 `scream`, and `finally` cleanup around a protected `hope` block.
 The top of the fixture demonstrates composed faces, signatures and default
 methods, a class with fields, public and private methods, `self`, and a simple
-enum.
+enum. It also contains a multiline expression-bodied function and an anonymous
+typed lambda.
 
 ```bash
 bash scripts/parser_demo.sh
@@ -52,7 +53,7 @@ The first command prints the tree and confirms the intentional errors in
 `examples/string_error.sagan`, `examples/collection_error.sagan`,
 `examples/block_error.sagan`, `examples/control_flow_error.sagan`, and
 `examples/match_error.sagan`, `examples/exception_error.sagan`, and
-`examples/type_error.sagan`. The second
+`examples/type_error.sagan`, and `examples/lambda_error.sagan`. The second
 opens a self-contained page showing the input source beside a colored tree. The
 page supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
 `bash scripts/ast_demo.sh --no-open` to generate `build/ast-demo.html` without
@@ -66,6 +67,8 @@ brace. The control-flow fixture demonstrates the diagnostic for `break` outside
 a loop. The match fixture demonstrates that `case else` must be the last branch.
 The exception fixture demonstrates that `scream` requires a value.
 The type fixture demonstrates that class methods require bodies.
+The lambda fixture demonstrates that anonymous functions require `=>` before
+their expression body.
 
 ## Intentional lexical error
 

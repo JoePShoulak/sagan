@@ -26,6 +26,12 @@ enum GuidanceStatus {
   failed
 }
 
+fun clamp(value: Float, minimum: Float, maximum: Float): Float =>
+  value < minimum ? minimum ; value > maximum ? maximum ; value
+
+let select_greater = fun(left: Float, right: Float): Float =>
+  left > right ? left ; right
+
 let altitude: Float = 125_000.0
 let target_altitude = (altitude)
 let telemetry_pending

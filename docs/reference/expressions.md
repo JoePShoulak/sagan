@@ -17,8 +17,12 @@ decrement, and compound-assignment tokens.
 `!` are logical operators; `? ... ; ...` is the conditional expression; and
 prefix/postfix increment return new/old values respectively.
 
-**Provisional design:** lambdas and the semantic rules for spread, safe access,
-dictionary-key hashability, and assignment expressions.
+**Implemented syntax:** anonymous lambdas use `fun(parameters) => expression`,
+with optional parameter and return annotations. A lambda is a primary expression
+and can participate in postfix chains, including immediate calls when grouped.
+
+**Provisional semantics:** lambda capture behavior and the semantic rules for
+spread, safe access, dictionary-key hashability, and assignment expressions.
 
 ## String expressions
 

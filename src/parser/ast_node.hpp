@@ -10,6 +10,14 @@
 
 namespace parser
 {
+  struct function_parameter
+  {
+    std::string name;
+    std::optional<std::string> type_name;
+
+    function_parameter(std::string identifier, std::optional<std::string> annotation);
+  };
+
   struct ast_node
   {
     span range;
@@ -188,6 +196,17 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct lambda_expression final : expression
+  {
+    std::vector<function_parameter> parameters;
+    std::optional<std::string> return_type;
+    expression_ref body;
+
+    lambda_expression(span source_range, std::vector<function_parameter> declared_parameters,
+                      std::optional<std::string> result_type, expression_ref expression_body);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct statement : ast_node
   {
     using ast_node::ast_node;
@@ -342,14 +361,6 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
-  struct function_parameter
-  {
-    std::string name;
-    std::optional<std::string> type_name;
-
-    function_parameter(std::string identifier, std::optional<std::string> annotation);
-  };
-
   struct function_declaration final : statement
   {
     std::string name;
@@ -357,12 +368,14 @@ namespace parser
     std::vector<function_parameter> parameters;
     std::optional<std::string> return_type;
     std::unique_ptr<block_statement> body;
+    expression_ref expression_body;
 
     function_declaration(span source_range, std::string identifier,
                          bool is_private,
                          std::vector<function_parameter> declared_parameters,
                          std::optional<std::string> result_type,
-                         std::unique_ptr<block_statement> function_body);
+                         std::unique_ptr<block_statement> function_body,
+                         expression_ref function_expression_body);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 

@@ -51,7 +51,9 @@ expression, collection, control-flow, matching, exception, and
 unterminated-block errors are demonstrated. Faces, classes, simple enums,
 interface composition, class fields and methods, private method spelling, and
 `self` are parsed and rendered; their conformance and object semantics remain
-future work.
+future work. Named functions and methods accept block or `=>` expression bodies,
+and anonymous typed lambdas are represented as expressions; capture and callable
+semantics remain future analysis.
 
 ## Major open language questions
 

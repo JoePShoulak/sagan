@@ -266,6 +266,37 @@ namespace parser
     }
   }
 
+  lambda_expression::lambda_expression(const span source_range,
+                                       std::vector<function_parameter> declared_parameters,
+                                       std::optional<std::string> result_type,
+                                       expression_ref expression_body)
+      : expression(source_range), parameters(std::move(declared_parameters)),
+        return_type(std::move(result_type)), body(std::move(expression_body))
+  {
+  }
+
+  auto lambda_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Lambda";
+    if (return_type)
+    {
+      stream << "(: " << *return_type << ")";
+    }
+    stream << "\n";
+    for (const auto &parameter : parameters)
+    {
+      write_indent(stream, indent + 2);
+      stream << "Parameter(" << parameter.name;
+      if (parameter.type_name)
+      {
+        stream << ": " << *parameter.type_name;
+      }
+      stream << ")\n";
+    }
+    body->print(stream, indent + 2);
+  }
+
   let_declaration::let_declaration(const span source_range, std::string identifier,
                                    std::optional<std::string> annotation, expression_ref initial_value)
       : statement(source_range), name(std::move(identifier)), type_name(std::move(annotation)),
@@ -503,10 +534,12 @@ namespace parser
                                              const bool is_private,
                                              std::vector<function_parameter> declared_parameters,
                                              std::optional<std::string> result_type,
-                                             std::unique_ptr<block_statement> function_body)
+                                             std::unique_ptr<block_statement> function_body,
+                                             expression_ref function_expression_body)
       : statement(source_range), name(std::move(identifier)), private_member(is_private),
         parameters(std::move(declared_parameters)),
-        return_type(std::move(result_type)), body(std::move(function_body))
+        return_type(std::move(result_type)), body(std::move(function_body)),
+        expression_body(std::move(function_expression_body))
   {
   }
 
@@ -532,6 +565,12 @@ namespace parser
     if (body)
     {
       body->print(stream, indent + 2);
+    }
+    else if (expression_body)
+    {
+      write_indent(stream, indent + 2);
+      stream << "ExpressionBody\n";
+      expression_body->print(stream, indent + 4);
     }
     else
     {

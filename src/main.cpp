@@ -175,6 +175,19 @@ namespace
 
   auto expect_visual_ast(const std::string &name, const std::string &source) -> bool
   {
+    std::string escaped_source;
+    for (const char character : source)
+    {
+      switch (character)
+      {
+      case '&': escaped_source += "&amp;"; break;
+      case '<': escaped_source += "&lt;"; break;
+      case '>': escaped_source += "&gt;"; break;
+      case '"': escaped_source += "&quot;"; break;
+      case '\'': escaped_source += "&#39;"; break;
+      default: escaped_source.push_back(character); break;
+      }
+    }
     parser::syntax_parser syntax(tokenize(source));
     const auto tree = syntax.parse();
     const std::string dot = parser::render_ast_dot(tree);
@@ -182,7 +195,7 @@ namespace
     const std::string html = parser::render_ast_html(source, tree, "AST test");
     const bool passed = dot.contains("digraph SaganAST") && dot.contains("Identifier") &&
                         svg.contains("<svg") && svg.contains("Identifier") &&
-                        html.contains("Input source") && html.contains(source) &&
+                        html.contains("Input source") && html.contains(escaped_source) &&
                         html.contains("data-action=\"fit\"") && html.contains("Wheel to zoom");
     if (!passed)
     {
@@ -769,10 +782,59 @@ namespace
     passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
     passed &= expect_syntax_error("enum literal member", "enum Invalid {\n  1\n}\n");
     passed &= expect_syntax_error("trailing composition comma", "face Invalid is Renderable, {\n}\n");
+    passed &= expect_ast(
+        "expression-bodied functions and lambdas",
+        "fun square(value: Float): Float => value * value\n"
+        "face Mapper {\n"
+        "  fun map(value: Float): Float => transform(value)\n"
+        "}\n"
+        "class Calculator {\n"
+        "  fun .double(value: Float): Float => value * 2.0\n"
+        "}\n"
+        "let greater = fun(left: Float, right: Float): Bool => left > right\n"
+        "let incremented = (fun(value) => value + 1)(4)\n",
+        "Program\n"
+        "  Function(square: Float)\n"
+        "    Parameter(value: Float)\n"
+        "    ExpressionBody\n"
+        "      Binary(*)\n"
+        "        Identifier(value)\n"
+        "        Identifier(value)\n"
+        "  Face(Mapper)\n"
+        "    Function(map: Float)\n"
+        "      Parameter(value: Float)\n"
+        "      ExpressionBody\n"
+        "        Call\n"
+        "          Identifier(transform)\n"
+        "          Identifier(value)\n"
+        "  Class(Calculator)\n"
+        "    Function(.double: Float)\n"
+        "      Parameter(value: Float)\n"
+        "      ExpressionBody\n"
+        "        Binary(*)\n"
+        "          Identifier(value)\n"
+        "          Float(2.0)\n"
+        "  Let(greater)\n"
+        "    Lambda(: Bool)\n"
+        "      Parameter(left: Float)\n"
+        "      Parameter(right: Float)\n"
+        "      Binary(>)\n"
+        "        Identifier(left)\n"
+        "        Identifier(right)\n"
+        "  Let(incremented)\n"
+        "    Call\n"
+        "      Group\n"
+        "        Lambda\n"
+        "          Parameter(value)\n"
+        "          Binary(+)\n"
+        "            Identifier(value)\n"
+        "            Integer(1)\n"
+        "      Integer(4)\n");
+    passed &= expect_syntax_error("lambda missing arrow", "let invalid = fun(value) value\n");
+    passed &= expect_syntax_error("expression body missing value", "fun invalid() =>\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
     passed &= expect_visual_ast("visual statement AST",
-                                "face Runnable {\n  fun run()\n}\nclass Mission has Runnable {\n"
-                                "  fun run() {\n    self.launch()\n  }\n}\n");
+                                "fun choose(value) => value\nlet mapper = fun(value) => value * 2\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;

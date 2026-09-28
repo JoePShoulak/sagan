@@ -186,6 +186,27 @@ namespace parser
         }
         return result;
       }
+      if (const auto *lambda = dynamic_cast<const lambda_expression *>(&value))
+      {
+        std::string label = "Lambda";
+        if (lambda->return_type)
+        {
+          label += "\n: " + *lambda->return_type;
+        }
+        auto result = std::make_unique<visual_node>(visual_node{std::move(label), "declaration"});
+        for (const auto &parameter : lambda->parameters)
+        {
+          std::string parameter_label = "Parameter\n" + parameter.name;
+          if (parameter.type_name)
+          {
+            parameter_label += ": " + *parameter.type_name;
+          }
+          result->children.push_back(
+              std::make_unique<visual_node>(visual_node{std::move(parameter_label), "declaration"}));
+        }
+        result->children.push_back(make_expression_node(*lambda->body));
+        return result;
+      }
       throw std::runtime_error("AST renderer encountered an unsupported expression node");
     }
 
@@ -351,6 +372,12 @@ namespace parser
         if (function->body)
         {
           node->children.push_back(make_statement_node(*function->body));
+        }
+        else if (function->expression_body)
+        {
+          auto body = std::make_unique<visual_node>(visual_node{"Expression body\n=>", "declaration"});
+          body->children.push_back(make_expression_node(*function->expression_body));
+          node->children.push_back(std::move(body));
         }
         else
         {

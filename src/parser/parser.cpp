@@ -216,18 +216,23 @@ namespace parser
       return_type = expect(tokens::IDENTIFIER, "a return type after ':'").text;
     }
     std::unique_ptr<block_statement> body;
+    expression_ref expression_body;
     if (check(tokens::LBRACE))
     {
       body = parse_block();
+    }
+    else if (match(tokens::FAT_ARROW))
+    {
+      expression_body = parse_expression();
     }
     else if (!body_optional)
     {
       expect(tokens::LBRACE, "'{' to begin the function body");
     }
-    const int end = body ? body->range.end : previous().range.end;
+    const int end = body ? body->range.end : expression_body ? expression_body->range.end : previous().range.end;
     return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text, private_member,
                                                   std::move(parameters), std::move(return_type),
-                                                  std::move(body));
+                                                  std::move(body), std::move(expression_body));
   }
 
   auto syntax_parser::parse_type_declaration(const type_declaration::kind type) -> statement_ref
@@ -753,6 +758,10 @@ namespace parser
       return std::make_unique<literal_expression>(value.range, literal_expression::kind::floating_point,
                                                   value.text, value.value);
     }
+    if (match(tokens::KWD_FUN))
+    {
+      return parse_lambda();
+    }
     if (check(tokens::LPAREN))
     {
       return parse_parenthesized();
@@ -762,6 +771,38 @@ namespace parser
                                                   : span{input.back().range.end, input.back().range.end})
                                  : peek()->range;
     throw parse_error("Expected an expression", error_range);
+  }
+
+  auto syntax_parser::parse_lambda() -> expression_ref
+  {
+    const token &keyword = previous();
+    expect(tokens::LPAREN, "'(' after 'fun' in a lambda");
+    std::vector<function_parameter> parameters;
+    while (!check(tokens::RPAREN))
+    {
+      const token &name = expect(tokens::IDENTIFIER, "a lambda parameter name");
+      std::optional<std::string> type_name;
+      if (match(tokens::COLON))
+      {
+        type_name = expect(tokens::IDENTIFIER, "a lambda parameter type after ':'").text;
+      }
+      parameters.emplace_back(name.text, std::move(type_name));
+      if (!match(tokens::COMMA) || check(tokens::RPAREN))
+      {
+        break;
+      }
+    }
+    expect(tokens::RPAREN, "')' after the lambda parameters");
+    std::optional<std::string> return_type;
+    if (match(tokens::COLON))
+    {
+      return_type = expect(tokens::IDENTIFIER, "a lambda return type after ':'").text;
+    }
+    expect(tokens::FAT_ARROW, "'=>' before the lambda expression");
+    auto body = parse_expression();
+    const int end = body->range.end;
+    return std::make_unique<lambda_expression>(span{keyword.range.begin, end}, std::move(parameters),
+                                               std::move(return_type), std::move(body));
   }
 
   auto syntax_parser::parse_string() -> expression_ref

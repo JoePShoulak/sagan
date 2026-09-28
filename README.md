@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.8.0](https://img.shields.io/badge/development-0.8.0-2563eb)](#development-versions)
+[![Development version 0.9.0](https://img.shields.io/badge/development-0.9.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -162,9 +162,15 @@ Expression-bodied functions and lambdas use `=>`:
 
 ```sagan
 let greater = fun(a: Float, b: Float) => a > b
+
+fun square(value: Float): Float => value * value
 ```
 
-Functions may be overloaded by parameter types. Multiple returns, destructuring, variadic parameters, and yielding are planned but still need complete parser and semantic rules.
+The parser supports expression bodies on named functions, interface defaults,
+class methods, and anonymous lambdas. Lambdas accept typed parameters and an
+optional return annotation. Capture behavior, overload resolution, multiple
+returns, destructuring, variadic parameters, and yielding still need semantic
+or parser design.
 
 ### Classes and interfaces
 
@@ -562,6 +568,8 @@ Exception syntax includes protected `hope` blocks, one or more expression-shaped
 `unless` handlers, optional `finally` cleanup, and value-bearing `scream`.
 Top-level `face`, `class`, and `enum` declarations include composition lists,
 methods, class fields, private method spelling, `self`, and simple enum members.
+Named functions and methods may use block bodies or `=>` expression bodies, and
+anonymous `fun(...) => expression` lambdas are expression values.
 Named block-bodied functions provide the executable scope, with optional type
 annotations on parameters and returns; the program root remains declaration-only.
 Postfix operations can be chained freely, as
