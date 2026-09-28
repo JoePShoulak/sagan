@@ -12,6 +12,11 @@ verified_by: null
 functions; `face`, `class`, and `enum` introduce named types; and
 `module`, `import`, and `export` participate in modular source.
 
+**Implemented syntax:** the parser accepts a single optional leading `module`
+declaration, imports with optional `from` and `as` clauses, and standalone
+exports with an optional alias. See [Modules](modules.md) for the accepted
+forms.
+
 ```sagan
 let altitude: Float = 125_000.0
 ```
@@ -26,5 +31,5 @@ conformance declared with interchangeable `is` or `has` composition lists.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, constructors, enum payloads and explicit values, generic
-declarations, module visibility, and entry-point forms. These require semantic
+declarations, module resolution and visibility, and entry-point forms. These require semantic
 analysis or later parser slices.

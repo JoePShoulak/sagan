@@ -16,7 +16,8 @@ statements, `if`/`else`, named block-bodied functions with typed parameters and
 return annotations, `for`/`in`, `while`, and `until` loops, loop control,
 returns, block-bodied `match`/`case`, primary and string expressions, the
 `hope`/`unless`/`finally`/`scream` exception grammar, settled precedence table,
-postfix chains, collection literals, and top-level face/class/enum declarations.
+postfix chains, collection literals, top-level face/class/enum declarations,
+and module/import/export declarations.
 
 **Provisional design:** declarations use words such as `let`, `fun`, `face`,
 `class`, and `enum`; braces delimit bodies; newlines normally terminate
@@ -57,6 +58,9 @@ class_member := let_declaration | "fun" "."? identifier "(" parameters? ")" (":"
 composition := ("is" | "has") identifier ("," identifier)*
 enum_declaration := "enum" identifier "{" enum_members? "}"
 enum_members := identifier ((newline+ | ",") identifier)* ","?
+module_declaration := "module" identifier
+import_declaration := "import" identifier ("from" identifier)? ("as" identifier)?
+export_declaration := "export" identifier ("as" identifier)?
 parameters  := parameter ("," parameter)* ","?
 parameter   := identifier (":" type)?
 ```
@@ -74,7 +78,8 @@ not terminate ordinary statements. `else`, `unless`, and `finally` currently
 follow the preceding `}` without an intervening logical newline.
 
 The program root accepts declarations only. Executable statements and control
-flow belong inside function bodies.
+flow belong inside function bodies. A program may have at most one module
+declaration, and it must be the first declaration when present.
 
 **Open questions:** the remaining statement and declaration productions,
 semantic validation of returned values, and error recovery beyond the first

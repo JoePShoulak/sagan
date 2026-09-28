@@ -72,6 +72,8 @@ namespace parser
   auto syntax_parser::parse() -> program
   {
     std::vector<statement_ref> body;
+    bool seen_module = false;
+    bool seen_non_module = false;
     skip_newlines();
     while (!at_end())
     {
@@ -96,9 +98,34 @@ namespace parser
       {
         declaration = parse_type_declaration(type_declaration::kind::enum_type);
       }
+      else if (match(tokens::KWD_MODULE))
+      {
+        if (seen_module)
+        {
+          throw parse_error("A source file can declare only one module", previous().range);
+        }
+        if (seen_non_module)
+        {
+          throw parse_error("The module declaration must precede every other declaration", previous().range);
+        }
+        seen_module = true;
+        declaration = parse_module_declaration();
+      }
+      else if (match(tokens::KWD_IMPORT))
+      {
+        declaration = parse_import_declaration();
+      }
+      else if (match(tokens::KWD_EXPORT))
+      {
+        declaration = parse_export_declaration();
+      }
       else
       {
         throw parse_error("Only declarations are allowed at the top level", peek()->range);
+      }
+      if (dynamic_cast<module_declaration *>(declaration.get()) == nullptr)
+      {
+        seen_non_module = true;
       }
       body.push_back(std::move(declaration));
       if (!at_end())
@@ -295,6 +322,44 @@ namespace parser
     return std::make_unique<type_declaration>(span{keyword.range.begin, close.range.end}, type, name.text,
                                               std::move(composition_keyword), std::move(interfaces),
                                               std::move(members), std::move(enum_members));
+  }
+
+  auto syntax_parser::parse_module_declaration() -> statement_ref
+  {
+    const token &keyword = previous();
+    const token &name = expect(tokens::IDENTIFIER, "a module name after 'module'");
+    return std::make_unique<module_declaration>(span{keyword.range.begin, name.range.end}, name.text);
+  }
+
+  auto syntax_parser::parse_import_declaration() -> statement_ref
+  {
+    const token &keyword = previous();
+    const token &name = expect(tokens::IDENTIFIER, "a name after 'import'");
+    std::optional<std::string> source;
+    if (match(tokens::KWD_FROM))
+    {
+      source = expect(tokens::IDENTIFIER, "a module name after 'from'").text;
+    }
+    std::optional<std::string> alias;
+    if (match(tokens::KWD_AS))
+    {
+      alias = expect(tokens::IDENTIFIER, "an alias after 'as'").text;
+    }
+    return std::make_unique<import_declaration>(span{keyword.range.begin, previous().range.end}, name.text,
+                                                std::move(source), std::move(alias));
+  }
+
+  auto syntax_parser::parse_export_declaration() -> statement_ref
+  {
+    const token &keyword = previous();
+    const token &name = expect(tokens::IDENTIFIER, "a name after 'export'");
+    std::optional<std::string> alias;
+    if (match(tokens::KWD_AS))
+    {
+      alias = expect(tokens::IDENTIFIER, "an alias after 'as'").text;
+    }
+    return std::make_unique<export_declaration>(span{keyword.range.begin, previous().range.end}, name.text,
+                                                std::move(alias));
   }
 
   auto syntax_parser::parse_expression_statement() -> statement_ref

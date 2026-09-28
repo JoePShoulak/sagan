@@ -77,3 +77,10 @@ if bin/sagan --ast examples/lambda_error.sagan; then
 fi
 
 echo "Lambda error demo failed as expected."
+
+if bin/sagan --ast examples/module_error.sagan; then
+  echo "Expected examples/module_error.sagan to produce a syntax error." >&2
+  exit 1
+fi
+
+echo "Module-declaration error demo failed as expected."

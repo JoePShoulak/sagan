@@ -47,6 +47,9 @@ syntax trees with source-spanned diagnostics.
 - Simple newline- or comma-separated `enum` members
 - Named block- or expression-bodied functions with optional annotations
 - Anonymous expression-bodied lambdas with optional annotations
+- One optional leading `module` declaration per source file
+- Top-level `import` declarations with optional `from` and `as` clauses
+- Standalone top-level `export` declarations with optional aliases
 - Declaration-only program roots; executable statements are function-local
 - Human-readable AST output and success/error demonstrations
 - DOT and standalone SVG AST rendering
@@ -72,6 +75,6 @@ Text, DOT, SVG, and HTML are also available from `bin/sagan` through `--ast`,
 supports every AST node the parser can produce; new node kinds must be added to
 the renderer as their parser slices land.
 
-The next slices are modules, compound assignment, documentation-comment
-attachment, and final grammar/error cleanup.
+The next slices are compound assignment, documentation-comment attachment, and
+final grammar/error cleanup.
 Error recovery beyond the first syntax error also remains future parser work.

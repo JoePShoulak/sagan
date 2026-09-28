@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.9.0](https://img.shields.io/badge/development-0.9.0-2563eb)](#development-versions)
+[![Development version 0.10.0](https://img.shields.io/badge/development-0.10.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -362,7 +362,27 @@ The initial escapes are `\\`, `\"`, `\'`, `\n`, `\r`, `\t`, `\0`, and `\u{...}`.
 
 ### Modules
 
-Sagan reserves `module`, `export`, `import`, `from`, and `as`. Exact module and package semantics remain under design.
+Source files may declare one module, import names or modules, and export local
+names. A module declaration is optional, but when present it must be the first
+declaration in the file.
+
+```sagan
+module orbital_demo
+
+import math
+import Vector from math
+import Renderer from rendering as SceneRenderer
+import physics as simulation_physics
+
+export ExplorerShip
+export GuidanceStatus as Status
+```
+
+`export` is a standalone declaration naming a symbol; it is not a modifier on
+the symbol's declaration. The parser enforces these forms and module placement.
+File-to-module mapping, package layout, import resolution, visibility,
+initialization order, and dependency cycles remain semantic and module-loader
+work.
 
 ## Source and lexical conventions
 
@@ -548,9 +568,9 @@ to the parser rather than the tokenizer.
 ### 3. Parser and syntax tree — in progress
 
 Turn the token stream into a structured syntax tree representing declarations,
-expressions, statements, control flow, types, classes, interfaces, and
-composition. This stage establishes the concrete grammar, operator precedence,
-and syntax-error diagnostics.
+modules, imports and exports, expressions, statements, control flow, types,
+classes, interfaces, and composition. This stage establishes the concrete
+grammar, operator precedence, and syntax-error diagnostics.
 
 The parser now handles programs containing `let` declarations, optional simple
 type annotations, optional initializers, identifiers, numeric and Boolean

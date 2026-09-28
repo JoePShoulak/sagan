@@ -615,6 +615,57 @@ namespace parser
     }
   }
 
+  module_declaration::module_declaration(const span source_range, std::string module_name)
+      : statement(source_range), name(std::move(module_name))
+  {
+  }
+
+  auto module_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Module(" << name << ")\n";
+  }
+
+  import_declaration::import_declaration(const span source_range, std::string name,
+                                         std::optional<std::string> source,
+                                         std::optional<std::string> imported_alias)
+      : statement(source_range), imported_name(std::move(name)), source_module(std::move(source)),
+        alias(std::move(imported_alias))
+  {
+  }
+
+  auto import_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Import(" << imported_name;
+    if (source_module)
+    {
+      stream << " from " << *source_module;
+    }
+    if (alias)
+    {
+      stream << " as " << *alias;
+    }
+    stream << ")\n";
+  }
+
+  export_declaration::export_declaration(const span source_range, std::string name,
+                                         std::optional<std::string> exported_alias)
+      : statement(source_range), exported_name(std::move(name)), alias(std::move(exported_alias))
+  {
+  }
+
+  auto export_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Export(" << exported_name;
+    if (alias)
+    {
+      stream << " as " << *alias;
+    }
+    stream << ")\n";
+  }
+
   program::program(std::vector<statement_ref> body)
       : ast_node(body.empty() ? span{0, 0} : span{body.front()->range.begin, body.back()->range.end}),
         statements(std::move(body))

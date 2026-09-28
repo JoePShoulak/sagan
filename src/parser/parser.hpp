@@ -28,6 +28,9 @@ namespace parser
     auto parse_let_declaration() -> statement_ref;
     auto parse_function_declaration(bool body_optional = false, bool allow_private = false) -> statement_ref;
     auto parse_type_declaration(type_declaration::kind type) -> statement_ref;
+    auto parse_module_declaration() -> statement_ref;
+    auto parse_import_declaration() -> statement_ref;
+    auto parse_export_declaration() -> statement_ref;
     auto parse_expression_statement() -> statement_ref;
     auto parse_if_statement() -> statement_ref;
     auto parse_condition_loop(condition_loop_statement::kind type) -> statement_ref;

@@ -783,6 +783,41 @@ namespace
     passed &= expect_syntax_error("enum literal member", "enum Invalid {\n  1\n}\n");
     passed &= expect_syntax_error("trailing composition comma", "face Invalid is Renderable, {\n}\n");
     passed &= expect_ast(
+        "modules imports and exports",
+        "module orbital_demo\n"
+        "import math\n"
+        "import Vector from math\n"
+        "import Renderer from rendering as SceneRenderer\n"
+        "import physics as simulation_physics\n"
+        "export ExplorerShip\n"
+        "export GuidanceStatus as Status\n"
+        "class ExplorerShip {\n"
+        "  fun launch() {\n"
+        "  }\n"
+        "}\n"
+        "enum GuidanceStatus {\n"
+        "  ready\n"
+        "}\n",
+        "Program\n"
+        "  Module(orbital_demo)\n"
+        "  Import(math)\n"
+        "  Import(Vector from math)\n"
+        "  Import(Renderer from rendering as SceneRenderer)\n"
+        "  Import(physics as simulation_physics)\n"
+        "  Export(ExplorerShip)\n"
+        "  Export(GuidanceStatus as Status)\n"
+        "  Class(ExplorerShip)\n"
+        "    Function(launch)\n"
+        "      Block\n"
+        "  Enum(GuidanceStatus)\n"
+        "    EnumMember(ready)\n");
+    passed &= expect_syntax_error("duplicate module declaration", "module one\nmodule two\n");
+    passed &= expect_syntax_error("late module declaration", "import math\nmodule invalid\n");
+    passed &= expect_syntax_error("import without name", "import\n");
+    passed &= expect_syntax_error("import from without module", "import Vector from\n");
+    passed &= expect_syntax_error("import alias without name", "import math as\n");
+    passed &= expect_syntax_error("export without name", "export\n");
+    passed &= expect_ast(
         "expression-bodied functions and lambdas",
         "fun square(value: Float): Float => value * value\n"
         "face Mapper {\n"
@@ -835,6 +870,9 @@ namespace
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
     passed &= expect_visual_ast("visual statement AST",
                                 "fun choose(value) => value\nlet mapper = fun(value) => value * 2\n");
+    passed &= expect_visual_ast("visual module AST",
+                                "module demo\nimport Vector from math as Vector3\nexport Ship\nclass Ship {\n}\n"
+                                "let vessel = Ship\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;

@@ -403,6 +403,36 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct module_declaration final : statement
+  {
+    std::string name;
+
+    module_declaration(span source_range, std::string module_name);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct import_declaration final : statement
+  {
+    std::string imported_name;
+    std::optional<std::string> source_module;
+    std::optional<std::string> alias;
+
+    import_declaration(span source_range, std::string name,
+                       std::optional<std::string> source,
+                       std::optional<std::string> imported_alias);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct export_declaration final : statement
+  {
+    std::string exported_name;
+    std::optional<std::string> alias;
+
+    export_declaration(span source_range, std::string name,
+                       std::optional<std::string> exported_alias);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct program final : ast_node
   {
     std::vector<statement_ref> statements;

@@ -15,7 +15,7 @@ verified_by: null
 | Language direction | **Settled enough for early work** | README design and lexical rules |
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
-| Parser and Sagan AST | **In progress** | declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, AST renderers, parser demos |
+| Parser and Sagan AST | **In progress** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, AST renderers, parser demos |
 | Semantic analysis | **Planned; not implemented** | roadmap only |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | README core-library model |
@@ -54,10 +54,14 @@ interface composition, class fields and methods, private method spelling, and
 future work. Named functions and methods accept block or `=>` expression bodies,
 and anonymous typed lambdas are represented as expressions; capture and callable
 semantics remain future analysis.
+Module declarations, import sources and aliases, and standalone exports are
+parsed and rendered. Import resolution, visibility, initialization, and package
+behavior remain semantic and module-loader work.
 
 ## Major open language questions
 
 Type inference, value/reference behavior, reference-count cycles, interface
 defaults and conflict resolution, generics and possible sum types, constructors,
-enum and collection semantics, exception propagation, entry points, modules and
-packages, and the exact built-in/core-library boundary remain unresolved.
+enum and collection semantics, exception propagation, entry points, module
+resolution and packages, and the exact built-in/core-library boundary remain
+unresolved.

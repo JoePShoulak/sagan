@@ -26,9 +26,12 @@ parser or later compiler stages exist.
 ## Parser and visual AST demonstration
 
 `examples/parser_demo.sagan` exercises the parser features implemented so far,
-including precedence, right-associative exponentiation and assignment, the
+including modules, imports, aliases, exports, precedence, right-associative exponentiation and assignment, the
 conditional expression, indexing, ordinary and safe member access, function and
 method calls, mutating method names, and deep postfix chains.
+
+`examples/module_error.sagan` demonstrates the focused diagnostic produced when
+a module declaration appears after another top-level declaration.
 It also includes ordinary, raw, multiline, and interpolated strings, including
 interpolations containing member access and arithmetic expressions.
 The collection section demonstrates arrays, dictionaries with expression keys,

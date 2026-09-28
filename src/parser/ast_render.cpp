@@ -414,6 +414,32 @@ namespace parser
         }
         return node;
       }
+      if (const auto *module = dynamic_cast<const module_declaration *>(&value))
+      {
+        return std::make_unique<visual_node>(visual_node{"Module\n" + module->name, "declaration"});
+      }
+      if (const auto *imported = dynamic_cast<const import_declaration *>(&value))
+      {
+        std::string label = "Import\n" + imported->imported_name;
+        if (imported->source_module)
+        {
+          label += " from " + *imported->source_module;
+        }
+        if (imported->alias)
+        {
+          label += " as " + *imported->alias;
+        }
+        return std::make_unique<visual_node>(visual_node{std::move(label), "declaration"});
+      }
+      if (const auto *exported = dynamic_cast<const export_declaration *>(&value))
+      {
+        std::string label = "Export\n" + exported->exported_name;
+        if (exported->alias)
+        {
+          label += " as " + *exported->alias;
+        }
+        return std::make_unique<visual_node>(visual_node{std::move(label), "declaration"});
+      }
       throw std::runtime_error("AST renderer encountered an unsupported statement node");
     }
 
