@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.5.0](https://img.shields.io/badge/development-0.5.0-2563eb)](#development-versions)
+[![Development version 0.6.0](https://img.shields.io/badge/development-0.6.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -224,12 +224,27 @@ while condition {
 until condition {
   // ...
 }
+
+match status {
+  case "ready" {
+    launch()
+  }
+  case expected_status {
+    prepare()
+  }
+  case else {
+    wait()
+  }
+}
 ```
 
 The parser implements these three loop forms, unlabeled `break` and `continue`,
 and both value-bearing and bare `return`. `break` and `continue` are valid only
-inside loops. Sagan also reserves `match`, `case`, and `yield` for later parser
-milestones.
+inside loops. `match` contains one or more block-bodied `case` branches. An
+optional `case else` fallback must be unique and last. Cases currently accept
+expression-shaped patterns; their eventual binding, type, and exhaustiveness
+semantics belong to semantic analysis. Sagan reserves `yield` for a later
+parser milestone.
 
 The conditional expression uses `?` and `;`:
 
@@ -510,7 +525,8 @@ equality, logical operations, conditional expressions, and value-producing
 `:=` assignment. It also parses statement blocks, ordinary `=` assignments and
 expression statements within blocks, `if`/`else if`/`else`, `for`/`in`,
 `while`, and `until` control flow, unlabeled `break` and `continue`, and bare or
-value-bearing `return` statements.
+value-bearing `return` statements. Block-bodied `match`/`case` statements
+support expression-shaped patterns and an optional final `case else` fallback.
 Named block-bodied functions provide the executable scope, with optional type
 annotations on parameters and returns; the program root remains declaration-only.
 Postfix operations can be chained freely, as

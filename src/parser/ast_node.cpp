@@ -414,6 +414,37 @@ namespace parser
     }
   }
 
+  match_case::match_case(expression_ref matched_pattern, std::unique_ptr<block_statement> case_body,
+                         const span source_range)
+      : pattern(std::move(matched_pattern)), body(std::move(case_body)), range(source_range)
+  {
+  }
+
+  match_statement::match_statement(const span source_range, expression_ref matched_subject,
+                                   std::vector<match_case> branches)
+      : statement(source_range), subject(std::move(matched_subject)), cases(std::move(branches))
+  {
+  }
+
+  auto match_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Match\n";
+    write_indent(stream, indent + 2);
+    stream << "Subject\n";
+    subject->print(stream, indent + 4);
+    for (const auto &branch : cases)
+    {
+      write_indent(stream, indent + 2);
+      stream << (branch.pattern ? "Case\n" : "CaseElse\n");
+      if (branch.pattern)
+      {
+        branch.pattern->print(stream, indent + 4);
+      }
+      branch.body->print(stream, indent + 4);
+    }
+  }
+
   function_parameter::function_parameter(std::string identifier, std::optional<std::string> annotation)
       : name(std::move(identifier)), type_name(std::move(annotation))
   {

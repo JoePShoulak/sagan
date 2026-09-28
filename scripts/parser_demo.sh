@@ -49,3 +49,10 @@ if bin/sagan --ast examples/control_flow_error.sagan; then
 fi
 
 echo "Control-flow error demo failed as expected."
+
+if bin/sagan --ast examples/match_error.sagan; then
+  echo "Expected examples/match_error.sagan to produce a syntax error." >&2
+  exit 1
+fi
+
+echo "Match error demo failed as expected."

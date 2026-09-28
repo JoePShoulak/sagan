@@ -280,6 +280,27 @@ namespace parser
         }
         return node;
       }
+      if (const auto *matched = dynamic_cast<const match_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Match", "control"});
+        auto subject = std::make_unique<visual_node>(visual_node{"Subject", "control"});
+        subject->children.push_back(make_expression_node(*matched->subject));
+        node->children.push_back(std::move(subject));
+        for (const auto &branch : matched->cases)
+        {
+          auto case_node = std::make_unique<visual_node>(
+              visual_node{branch.pattern ? "Case" : "Case else", "control"});
+          if (branch.pattern)
+          {
+            auto pattern = std::make_unique<visual_node>(visual_node{"Pattern", "control"});
+            pattern->children.push_back(make_expression_node(*branch.pattern));
+            case_node->children.push_back(std::move(pattern));
+          }
+          case_node->children.push_back(make_statement_node(*branch.body));
+          node->children.push_back(std::move(case_node));
+        }
+        return node;
+      }
       if (const auto *function = dynamic_cast<const function_declaration *>(&value))
       {
         std::string label = "Function\n" + function->name;

@@ -15,7 +15,7 @@ verified_by: null
 | Language direction | **Settled enough for early work** | README design and lexical rules |
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
-| Parser and Sagan AST | **In progress** | declarations, functions, expressions, collections, blocks, conditionals, loops, control transfer, AST renderers, parser demos |
+| Parser and Sagan AST | **In progress** | declarations, functions, expressions, collections, blocks, conditionals, loops, matching, control transfer, AST renderers, parser demos |
 | Semantic analysis | **Planned; not implemented** | roadmap only |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | README core-library model |
@@ -42,9 +42,11 @@ statements, and `if`/`else if`/`else` control flow are also verified. The parser
 enforces declaration-only program roots and provides named, typed, block-bodied
 functions as statement containers. `for`/`in`, `while`, and `until` loops,
 unlabeled `break` and `continue`, and bare or value-bearing `return` statements
-are implemented and rendered in every AST format. The parser demo includes
-successful source plus focused expression, collection, control-flow, and
-unterminated-block errors.
+are implemented and rendered in every AST format. Block-bodied `match`/`case`
+supports expression-shaped patterns plus a unique final `case else`; pattern
+meaning and exhaustiveness remain semantic work. The parser demo includes
+successful source plus focused expression, collection, control-flow, matching,
+and unterminated-block errors.
 
 ## Major open language questions
 

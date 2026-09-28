@@ -1,0 +1,11 @@
+// This file intentionally places a branch after the fallback branch.
+fun invalid_match(status) {
+  match status {
+    case else {
+      return
+    }
+    case "ready" {
+      return status
+    }
+  }
+}

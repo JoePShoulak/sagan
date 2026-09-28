@@ -292,6 +292,26 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct match_case
+  {
+    expression_ref pattern;
+    std::unique_ptr<block_statement> body;
+    span range;
+
+    match_case(expression_ref matched_pattern, std::unique_ptr<block_statement> case_body,
+               span source_range);
+  };
+
+  struct match_statement final : statement
+  {
+    expression_ref subject;
+    std::vector<match_case> cases;
+
+    match_statement(span source_range, expression_ref matched_subject,
+                    std::vector<match_case> branches);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct function_parameter
   {
     std::string name;

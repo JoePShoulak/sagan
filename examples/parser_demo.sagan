@@ -63,6 +63,17 @@ fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
   until guidance.converged {
     guidance.refine!(orbital_position, target_position)
   }
+  match guidance.status {
+    case "ready" {
+      telemetry.record(guidance.state)
+    }
+    case "failed" {
+      return
+    }
+    case else {
+      guidance.wait()
+    }
+  }
   if guidance.failed {
     return
   }

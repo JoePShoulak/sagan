@@ -598,10 +598,56 @@ namespace
     passed &= expect_syntax_error("missing for in", "fun invalid(items) {\n  for item items {\n  }\n}\n");
     passed &= expect_syntax_error("labeled break is unsupported",
                                   "fun invalid(items) {\n  for item in items {\n    break outer\n  }\n}\n");
+    passed &= expect_ast(
+        "match cases and fallback",
+        "fun describe(status): String {\n"
+        "  match status {\n"
+        "    case 0 {\n"
+        "      return \"idle\"\n"
+        "    }\n"
+        "    case ready {\n"
+        "      return describe_ready(status)\n"
+        "    }\n"
+        "    case else {\n"
+        "      return\n"
+        "    }\n"
+        "  }\n"
+        "}\n",
+        "Program\n"
+        "  Function(describe: String)\n"
+        "    Parameter(status)\n"
+        "    Block\n"
+        "      Match\n"
+        "        Subject\n"
+        "          Identifier(status)\n"
+        "        Case\n"
+        "          Integer(0)\n"
+        "          Block\n"
+        "            Return\n"
+        "              String\n"
+        "                Text(\"idle\")\n"
+        "        Case\n"
+        "          Identifier(ready)\n"
+        "          Block\n"
+        "            Return\n"
+        "              Call\n"
+        "                Identifier(describe_ready)\n"
+        "                Identifier(status)\n"
+        "        CaseElse\n"
+        "          Block\n"
+        "            Return\n");
+    passed &= expect_syntax_error("empty match", "fun invalid(value) {\n  match value {\n  }\n}\n");
+    passed &= expect_syntax_error(
+        "duplicate match fallback",
+        "fun invalid(value) {\n  match value {\n    case else {\n    }\n    case else {\n    }\n  }\n}\n");
+    passed &= expect_syntax_error(
+        "match fallback must be last",
+        "fun invalid(value) {\n  match value {\n    case else {\n    }\n    case 1 {\n    }\n  }\n}\n");
+    passed &= expect_syntax_error("case outside match", "fun invalid() {\n  case 1 {\n  }\n}\n");
     passed &= expect_visual_ast("visual AST renderers", "let result = 1 + value\n");
     passed &= expect_visual_ast("visual statement AST",
-                                "fun update(items) {\n  for item in items {\n    if item.ready {\n"
-                                "      return item\n    }\n  }\n  return\n}\n");
+                                "fun update(value) {\n  match value {\n    case 1 {\n      return value\n"
+                                "    }\n    case else {\n      return\n    }\n  }\n}\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;

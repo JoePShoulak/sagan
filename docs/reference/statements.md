@@ -20,9 +20,11 @@ Intended statements include declarations, assignments, expression statements,
 ordinary `=` assignment statements, expression statements inside blocks,
 `if`/`else` including `else if` chains, `for name in expression`, `while`, and
 `until` loops, unlabeled `break` and `continue`, and bare or value-bearing
-`return`. Empty blocks are valid. `break` and `continue` outside a loop are
-syntax errors. A block brace is recognized from its statement position, while
-`{...}` in an expression remains a dictionary literal.
+`return`. The parser also accepts `match expression` with one or more
+block-bodied `case` branches. An optional `case else` must be unique and last.
+Empty blocks are valid. `break` and `continue` outside a loop are syntax errors.
+A block brace is recognized from its statement position, while `{...}` in an
+expression remains a dictionary literal.
 
 At the program root, the parser accepts declarations only. Executable control
 flow, expression statements, and assignment statements belong inside function
@@ -32,6 +34,7 @@ semantics remain under design.
 `unless` is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.
 
-**Open questions:** iterable protocol semantics, match semantics, yield
-restrictions, unreachable-code rules, entry-point selection, and
-parser-informed newline handling in the remaining statement forms.
+**Open questions:** iterable protocol semantics, match-pattern binding and
+exhaustiveness, yield restrictions, unreachable-code rules, entry-point
+selection, and parser-informed newline handling in the remaining statement
+forms.

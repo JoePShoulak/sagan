@@ -14,8 +14,8 @@ No complete normative grammar exists yet.
 parser implements `let` declarations, blocks, assignment and expression
 statements, `if`/`else`, named block-bodied functions with typed parameters and
 return annotations, `for`/`in`, `while`, and `until` loops, loop control,
-returns, primary and string expressions, the settled precedence table, postfix
-chains, and collection literals.
+returns, block-bodied `match`/`case`, primary and string expressions, the
+settled precedence table, postfix chains, and collection literals.
 
 **Provisional design:** declarations use words such as `let`, `fun`, `face`,
 `class`, and `enum`; braces delimit bodies; newlines normally terminate
@@ -38,6 +38,9 @@ for_statement := "for" identifier "in" expression block
 condition_loop := ("while" | "until") expression block
 loop_control := "break" | "continue"
 return_statement := "return" expression?
+match_statement := "match" expression "{" newline* match_case
+                   (newline+ match_case)* newline* "}"
+match_case  := "case" (expression | "else") block
 assignment_statement := expression "=" expression
 expression_statement := expression
 function_declaration := "fun" identifier "(" parameters? ")" (":" type)? block
@@ -62,7 +65,9 @@ flow belong inside function bodies.
 
 **Open questions:** the remaining statement and declaration productions,
 expression-body parsing, semantic validation of returned values, and error
-recovery beyond the first syntax error.
+recovery beyond the first syntax error. Match-pattern binding, type tests,
+destructuring, and exhaustiveness are semantic questions rather than established
+behavior.
 
 Implemented parser demos are accepted parser input but are not yet executable;
 semantic analysis and code generation remain future stages.

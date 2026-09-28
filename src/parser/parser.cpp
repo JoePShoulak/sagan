@@ -132,6 +132,14 @@ namespace parser
     {
       return parse_return_statement();
     }
+    if (match(tokens::KWD_MATCH))
+    {
+      return parse_match_statement();
+    }
+    if (match(tokens::KWD_CASE))
+    {
+      throw parse_error("'case' is only valid inside a match statement", previous().range);
+    }
     return parse_expression_statement();
   }
 
@@ -268,6 +276,56 @@ namespace parser
     auto value = parse_expression();
     const int end = value->range.end;
     return std::make_unique<return_statement>(span{keyword.range.begin, end}, std::move(value));
+  }
+
+  auto syntax_parser::parse_match_statement() -> statement_ref
+  {
+    const token &keyword = previous();
+    auto subject = parse_expression();
+    const token &open = expect(tokens::LBRACE, "'{' to begin the match body");
+    std::vector<match_case> cases;
+    bool found_fallback = false;
+    skip_newlines();
+    while (!check(tokens::RBRACE))
+    {
+      if (at_end())
+      {
+        throw parse_error("Expected '}' after the match cases", open.range);
+      }
+      const token &case_keyword = expect(tokens::KWD_CASE, "'case' inside the match body");
+      expression_ref pattern;
+      if (match(tokens::KWD_ELSE))
+      {
+        if (found_fallback)
+        {
+          throw parse_error("A match statement can have only one 'case else' branch", previous().range);
+        }
+        found_fallback = true;
+      }
+      else
+      {
+        if (found_fallback)
+        {
+          throw parse_error("'case else' must be the last match branch", case_keyword.range);
+        }
+        pattern = parse_expression();
+      }
+      auto body = parse_block();
+      const span case_range{case_keyword.range.begin, body->range.end};
+      cases.emplace_back(std::move(pattern), std::move(body), case_range);
+      if (!check(tokens::RBRACE))
+      {
+        expect(tokens::NEWLINE, "a newline after the match branch");
+        skip_newlines();
+      }
+    }
+    const token &close = expect(tokens::RBRACE, "'}' after the match cases");
+    if (cases.empty())
+    {
+      throw parse_error("A match statement requires at least one case", span{open.range.begin, close.range.end});
+    }
+    return std::make_unique<match_statement>(span{keyword.range.begin, close.range.end}, std::move(subject),
+                                             std::move(cases));
   }
 
   auto syntax_parser::parse_block() -> std::unique_ptr<block_statement>

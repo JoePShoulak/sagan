@@ -40,6 +40,7 @@ syntax trees with source-spanned diagnostics.
 - `for`/`in`, `while`, and `until` loops
 - Unlabeled `break` and `continue`, restricted to loop bodies
 - Bare and value-bearing `return` statements
+- Block-bodied `match`/`case`, with an optional final `case else`
 - Named block-bodied functions with optional parameter and return annotations
 - Declaration-only program roots; executable statements are function-local
 - Human-readable AST output and success/error demonstrations
@@ -66,6 +67,6 @@ Text, DOT, SVG, and HTML are also available from `bin/sagan` through `--ast`,
 supports every AST node the parser can produce; new node kinds must be added to
 the renderer as their parser slices land.
 
-The next slices are `match`/`case`, exception statements, expression-bodied
-functions, and type declarations.
+The next slices are exception statements, expression-bodied functions, and type
+declarations.
 Error recovery beyond the first syntax error also remains future parser work.
