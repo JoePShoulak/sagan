@@ -17,17 +17,17 @@ Sagan is an experimental, strongly typed programming language for geometry,
 astrodynamics, numerical work, and real-time simulation.
 
 !!! info "Current implementation"
-    The repository currently contains a complete **tokenizer** for the current
-    lexical specification and a
-    token-dump command-line program. It does not yet contain a Sagan parser,
-    semantic analyzer, runtime, or C++ code generator.
+    The repository currently contains a complete **tokenizer and parser** for
+    the current lexical and syntax specifications. It can emit text, DOT, SVG,
+    and interactive HTML syntax trees. It does not yet contain semantic
+    analysis, a runtime, or C++ code generation.
 
 ## Where to begin
 
-- [Getting started](getting-started/index.md) explains how to build and run the
-  tokenizer demonstration.
-- [Language tour](tour/index.md) introduces the intended language. Its examples
-  are design sketches until the parser exists.
+- [Getting started](getting-started/index.md) explains how to build, test, and
+  run the tokenizer and parser demonstrations.
+- [Language tour](tour/index.md) introduces the intended language while clearly
+  separating parsed syntax from unresolved semantics.
 - [Lexical specification](reference/lexical-specification.md) records the
   tokenizer's implemented UTF-8, Unicode, literal, comment, and operator rules.
 - [Project status](design/status.md) separates implemented behavior, settled
