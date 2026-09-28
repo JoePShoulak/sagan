@@ -16,7 +16,7 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Initial type checker implemented** | scopes, names, scalars, lossless widening, calls/returns, operators/conditions, homogeneous literal collections, dimensioned vectors/coordinates, demos |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls/returns, literal collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Planned; not implemented** | roadmap only |
@@ -38,6 +38,8 @@ HTML renderer supports zooming and panning. Parser and semantic demonstrations
 provide broad successful source files plus focused malformed examples. The
 semantic mode validates names and scopes. Type mode additionally validates the
 implemented scalar and function rules, but no mode executes Sagan source.
+Entry mode performs the complete implemented checks and requires exactly one
+parameterless `main` returning `Int` or `Void`.
 
 The live Codecov report tracks tokenizer lifecycle behavior, Unicode and emoji
 edge cases, string escapes, malformed input, parser and semantic errors, all AST

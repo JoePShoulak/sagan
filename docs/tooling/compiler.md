@@ -13,6 +13,8 @@ token stream or parse source into a source-spanned AST rendered as text, DOT,
 SVG, or interactive HTML.
 It can also analyze lexical scopes and print symbols and resolved references.
 The `--types` mode prints the implemented scalar/function type model.
+The `--entry` mode validates whether a fully checked unit has a legal executable
+entry point.
 
 ```bash
 make all
@@ -30,6 +32,7 @@ bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
+bin/sagan --entry examples/entry_demo.sagan
 ```
 
 The HTML output is self-contained and supports button or mouse-wheel zoom and

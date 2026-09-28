@@ -1,0 +1,4 @@
+fun invalid(): Int {
+  return 1
+  let unreachable = 2
+}

@@ -20,6 +20,7 @@ bin/sagan --ast-svg path/to/source.sagan build/tree.svg
 bin/sagan --ast-html path/to/source.sagan build/tree.html
 bin/sagan --semantic path/to/source.sagan
 bin/sagan --types path/to/source.sagan
+bin/sagan --entry path/to/source.sagan
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -34,6 +35,8 @@ pass, and prints scopes, symbols, and resolved references. It reports undefined
 or duplicate names, but it does not type-check or execute the program.
 `--types` additionally runs the implemented type checker and prints inferred
 declaration and expression types.
+`--entry` performs name and type checks, then validates the executable `main`
+contract. It does not generate or run a program.
 
 The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
@@ -49,6 +52,7 @@ bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
+bin/sagan --entry examples/entry_demo.sagan
 ```
 
 Successful AST output confirms only lexical and syntactic validity. Successful
@@ -68,6 +72,7 @@ make parser-demo
 make ast-demo
 make semantic-demo
 make type-demo
+make entry-demo
 make get-version
 make clean
 ```
@@ -80,6 +85,7 @@ bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
+bash scripts/entry_demo.sh
 bash scripts/docs.sh check
 ```
 
@@ -89,8 +95,9 @@ repository example; `parser-demo` prints the parser example's AST; `ast-demo`
 writes the visual source-and-tree page to `build/ast-demo.html`; `get-version`
 prints the calculated build identity; `semantic-demo` prints the successful
 semantic model; `type-demo` prints the successful type model; and `clean`
-removes compiler objects and the binary. The test target exercises semantic and
-type success plus focused name/type failures.
+removes compiler objects and the binary. `entry-demo` validates a successful
+entry point and focused control-flow failures. The test target exercises
+semantic/type/entry success plus focused failures.
 
 Development versions have the form
 `MAJOR.MINOR.PATCH+gREVISION[.dirty]`. Conventional Commit markers after the

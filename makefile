@@ -31,7 +31,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -69,6 +69,9 @@ semantic-demo: $(TARGET)
 
 type-demo: $(TARGET)
 	$(TARGET) --types examples/type_demo.sagan
+
+entry-demo: $(TARGET)
+	$(TARGET) --entry examples/entry_demo.sagan
 
 ast-demo: $(TARGET)
 	@mkdir -p build

@@ -41,3 +41,8 @@ overflow raises an exception.
 reference categories, generic semantics, possible sum types, variance,
 compile-time constants, and representation. Deferred cases are currently
 marked `Unknown` by the type model.
+
+Annotations must name types. Typed variables may begin uninitialized, but they
+must be definitely assigned before use; compound assignment counts as a read.
+Non-`Void` functions must return along every guaranteed path, and statements
+after a guaranteed return are rejected as unreachable.

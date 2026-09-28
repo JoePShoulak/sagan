@@ -51,3 +51,12 @@ dimensions and lossless component widening.
 Member access, lambda callability, interface conformance, and several
 user-defined-type relationships currently remain `Unknown`. The generic model
 and multi-error recovery strategy also remain open.
+
+Type annotations must resolve to built-in, declared, or imported type symbols.
+Non-`Void` block-bodied functions must return on every statically guaranteed
+path; `if` requires both branches and `match` requires a fallback. Reads before
+definite initialization and statements after a guaranteed return are rejected.
+
+Executable validation is separate from ordinary module analysis. An executable
+must define exactly one parameterless `main` returning `Int` or `Void`. This
+contract is implemented even though code generation has not begun.

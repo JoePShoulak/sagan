@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.15.0](https://img.shields.io/badge/development-0.15.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.16.0](https://img.shields.io/badge/development-0.16.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -23,7 +23,9 @@ up explicit types or predictable behavior.
 The tokenizer and parser are complete for the current lexical and syntax
 specifications. The semantic front end now resolves names, infers core scalar
 types, checks calls and returns, validates core operators and conditions, and
-enforces lossless numeric widening. Sagan can print semantic and type models as
+enforces lossless numeric widening. It also validates type annotations,
+all-path returns, definite initialization, unreachable code, and executable
+entry points. Sagan can print semantic and type models as
 well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
 and dictionaries plus dimensioned vectors and coordinates are inferred. Generic
 annotations, member typing, the runtime, C++ generation, and the standard
@@ -69,6 +71,7 @@ bash scripts/test.sh
 make parser-demo
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
+bash scripts/entry_demo.sh
 bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
 make coverage
@@ -85,6 +88,7 @@ bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
 bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
+bin/sagan --entry examples/entry_demo.sagan
 bin/sagan --version
 ```
 

@@ -28,6 +28,7 @@ namespace semantic
     {
       std::string type;
       std::optional<callable_signature> callable;
+      bool initialized = true;
     };
 
     struct dimensioned_type
@@ -164,6 +165,39 @@ namespace semantic
         return nullptr;
       }
 
+      auto find_mutable(const std::string &name) -> std::vector<binding> *
+      {
+        for (auto scope = scopes.rbegin(); scope != scopes.rend(); ++scope)
+        {
+          const auto found = scope->find(name);
+          if (found != scope->end()) return &found->second;
+        }
+        return nullptr;
+      }
+
+      using scope_state = std::vector<std::unordered_map<std::string, std::vector<binding>>>;
+
+      auto merge_initialization(const scope_state &before,
+                                const std::vector<scope_state> &paths) -> void
+      {
+        scopes = before;
+        for (std::size_t scope_index = 0; scope_index < scopes.size(); ++scope_index)
+        {
+          for (auto &[name, overloads] : scopes[scope_index])
+          {
+            for (std::size_t binding_index = 0; binding_index < overloads.size(); ++binding_index)
+            {
+              bool initialized = true;
+              for (const auto &path : paths)
+              {
+                initialized &= path[scope_index].at(name)[binding_index].initialized;
+              }
+              overloads[binding_index].initialized = initialized;
+            }
+          }
+        }
+      }
+
       auto record(const parser::expression &value, std::string type) -> std::string
       {
         model.expressions.push_back(typed_expression{value.range, type});
@@ -277,7 +311,8 @@ namespace semantic
       {
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
-          add_binding(declaration->name, binding{annotation(declaration->type_name), {}});
+          add_binding(declaration->name,
+                      binding{annotation(declaration->type_name), {}, false});
         }
         else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&value))
         {
@@ -318,6 +353,8 @@ namespace semantic
         {
           const auto *matches = find(identifier->name);
           require(matches && !matches->empty(), "Undefined name '" + identifier->name + "'", value.range);
+          require(matches->front().initialized, "Variable '" + identifier->name + "' is used before initialization",
+                  value.range);
           return record(value, matches->front().type);
         }
         if (const auto *grouping = dynamic_cast<const parser::grouping_expression *>(&value))
@@ -379,9 +416,10 @@ namespace semantic
         }
         if (const auto *assignment = dynamic_cast<const parser::assignment_expression *>(&value))
         {
-          const std::string target = expression(*assignment->target);
+          const std::string target = assignment_target(*assignment->target);
           const std::string assigned = expression(*assignment->value);
           require_compatible(target, assigned, value.range, "Assignment");
+          mark_initialized(*assignment->target);
           return record(value, target);
         }
         if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
@@ -547,6 +585,31 @@ namespace semantic
         close_scope();
       }
 
+      auto assignment_target(const parser::expression &value) -> std::string
+      {
+        if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(&value))
+        {
+          const auto *matches = find(identifier->name);
+          require(matches && !matches->empty(), "Undefined name '" + identifier->name + "'", value.range);
+          return matches->front().type;
+        }
+        if (dynamic_cast<const parser::member_expression *>(&value) ||
+            dynamic_cast<const parser::index_expression *>(&value))
+        {
+          return expression(value);
+        }
+        throw semantic_error("Assignment target is not assignable", value.range);
+      }
+
+      auto mark_initialized(const parser::expression &value) -> void
+      {
+        if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(&value))
+        {
+          auto *matches = find_mutable(identifier->name);
+          if (matches && !matches->empty()) matches->front().initialized = true;
+        }
+      }
+
       auto function(const parser::function_declaration &value) -> void
       {
         open_scope();
@@ -566,8 +629,51 @@ namespace semantic
             require_compatible(return_types.back(), body, value.range, "Function return");
           }
         }
+        const bool definitely_returns = value.body && block_returns(*value.body);
+        if (value.body && value.return_type && *value.return_type != "Void" && !definitely_returns)
+        {
+          throw semantic_error("Function '" + value.name + "' may reach the end without returning " +
+                                   fixed_annotation(value.return_type),
+                               value.range);
+        }
         return_types.pop_back();
         close_scope();
+      }
+
+      auto statement_returns(const parser::statement &value) const -> bool
+      {
+        if (dynamic_cast<const parser::return_statement *>(&value)) return true;
+        if (const auto *block_value = dynamic_cast<const parser::block_statement *>(&value))
+        {
+          return block_returns(*block_value);
+        }
+        if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
+        {
+          return conditional->else_branch && block_returns(*conditional->then_branch) &&
+                 statement_returns(*conditional->else_branch);
+        }
+        if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
+        {
+          bool has_fallback = false;
+          for (const auto &branch : matched->cases)
+          {
+            has_fallback |= !branch.pattern;
+            if (!block_returns(*branch.body)) return false;
+          }
+          return has_fallback;
+        }
+        return false;
+      }
+
+      auto block_returns(const parser::block_statement &value) const -> bool
+      {
+        bool returned = false;
+        for (const auto &entry : value.statements)
+        {
+          if (returned) throw semantic_error("Unreachable statement", entry->range);
+          returned = statement_returns(*entry);
+        }
+        return returned;
       }
 
       auto statement(const parser::statement &value, const bool predeclared) -> void
@@ -598,8 +704,15 @@ namespace semantic
                                        ? inferred
                                    : is_unknown(declared) ? inferred
                                                           : declared;
-          if (!predeclared) add_binding(declaration->name, binding{type, {}});
-          else scopes.back()[declaration->name].front().type = type;
+          if (!predeclared)
+          {
+            add_binding(declaration->name, binding{type, {}, declaration->initializer != nullptr});
+          }
+          else
+          {
+            scopes.back()[declaration->name].front().type = type;
+            scopes.back()[declaration->name].front().initialized = declaration->initializer != nullptr;
+          }
           require(!is_unknown(type),
                   "Variable '" + declaration->name + "' requires a type annotation or initializer",
                   declaration->range);
@@ -611,32 +724,43 @@ namespace semantic
         }
         else if (const auto *assignment = dynamic_cast<const parser::assignment_statement *>(&value))
         {
-          const std::string target = expression(*assignment->target);
+          const std::string target = assignment->operation == "=" ? assignment_target(*assignment->target)
+                                                                  : expression(*assignment->target);
           const std::string assigned = expression(*assignment->value);
           require_compatible(target, assigned, assignment->range, "Assignment");
+          mark_initialized(*assignment->target);
         }
         else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
         {
           require_compatible("Bool", expression(*conditional->condition), conditional->condition->range,
                              "If condition");
+          const scope_state before = scopes;
           block(*conditional->then_branch);
+          const scope_state after_then = scopes;
+          scopes = before;
           if (conditional->else_branch) statement(*conditional->else_branch, false);
+          const scope_state after_else = scopes;
+          merge_initialization(before, {after_then, after_else});
         }
         else if (const auto *loop = dynamic_cast<const parser::condition_loop_statement *>(&value))
         {
           require_compatible("Bool", expression(*loop->condition), loop->condition->range, "Loop condition");
+          const scope_state before = scopes;
           block(*loop->body);
+          scopes = before;
         }
         else if (const auto *loop = dynamic_cast<const parser::for_statement *>(&value))
         {
           const std::string iterable = expression(*loop->iterable);
           std::string binding_type = array_element(iterable).value_or(std::string(unknown_type));
           if (const auto shaped = dimensioned(iterable)) binding_type = shaped->component;
+          const scope_state before = scopes;
           open_scope();
           add_binding(loop->binding, binding{binding_type, {}});
           model.declarations.push_back(typed_declaration{loop->range, loop->binding, binding_type});
           block(*loop->body);
           close_scope();
+          scopes = before;
         }
         else if (const auto *returned = dynamic_cast<const parser::return_statement *>(&value))
         {
@@ -653,25 +777,37 @@ namespace semantic
         else if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
         {
           const std::string subject = expression(*matched->subject);
+          const scope_state before = scopes;
+          std::vector<scope_state> paths;
+          bool has_fallback = false;
           for (const auto &branch : matched->cases)
           {
+            scopes = before;
             if (branch.pattern)
             {
               const std::string pattern = expression(*branch.pattern);
               static_cast<void>(common_type(subject, pattern, branch.range, "Match subject and pattern"));
             }
+            else has_fallback = true;
             block(*branch.body);
+            paths.push_back(scopes);
           }
+          if (!has_fallback) paths.push_back(before);
+          merge_initialization(before, paths);
         }
         else if (const auto *hope = dynamic_cast<const parser::hope_statement *>(&value))
         {
+          const scope_state before = scopes;
           block(*hope->protected_body);
           for (const auto &handler : hope->handlers)
           {
+            scopes = before;
             static_cast<void>(expression(*handler.pattern));
             block(*handler.body);
           }
+          scopes = before;
           if (hope->cleanup) block(*hope->cleanup);
+          else scopes = before;
         }
         else if (const auto *scream = dynamic_cast<const parser::scream_statement *>(&value))
         {
@@ -726,5 +862,26 @@ namespace semantic
   auto check_types(const parser::program &tree) -> type_model
   {
     return type_analysis().run(tree);
+  }
+
+  auto validate_entry_point(const parser::program &tree) -> void
+  {
+    const parser::function_declaration *entry = nullptr;
+    for (const auto &statement : tree.statements)
+    {
+      const auto *function = dynamic_cast<const parser::function_declaration *>(statement.get());
+      if (!function || function->name != "main") continue;
+      if (entry) throw semantic_error("Program defines more than one 'main' entry point", function->range);
+      entry = function;
+    }
+    if (!entry) throw semantic_error("Executable program requires a 'main' entry point", tree.range);
+    if (!entry->parameters.empty())
+    {
+      throw semantic_error("Entry point 'main' cannot declare parameters", entry->range);
+    }
+    if (!entry->return_type || (*entry->return_type != "Int" && *entry->return_type != "Void"))
+    {
+      throw semantic_error("Entry point 'main' must return Int or Void", entry->range);
+    }
   }
 }

@@ -30,4 +30,5 @@ namespace semantic
   };
 
   auto check_types(const parser::program &tree) -> type_model;
+  auto validate_entry_point(const parser::program &tree) -> void;
 }

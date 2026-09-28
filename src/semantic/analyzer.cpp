@@ -80,7 +80,16 @@ namespace semantic
       {
         if (name)
         {
-          resolve_name(*name, range);
+          const auto declaration = find(*name);
+          if (!declaration)
+          {
+            throw semantic_error("Undefined type '" + *name + "'", range);
+          }
+          if (declaration->kind != "type" && declaration->kind != "builtin type" && declaration->kind != "import")
+          {
+            throw semantic_error("'" + *name + "' does not name a type", range);
+          }
+          model.resolutions.push_back(resolution{*name, range, declaration->declaration});
         }
       }
 

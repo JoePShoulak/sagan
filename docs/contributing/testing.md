@@ -54,6 +54,7 @@ bash scripts/parser_demo.sh
 bash scripts/ast_demo.sh --no-open
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
+bash scripts/entry_demo.sh
 ```
 
 Validate documentation metadata, links, navigation, Markdown, and rendering:

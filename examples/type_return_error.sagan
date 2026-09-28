@@ -1,0 +1,5 @@
+fun incomplete(flag: Bool): Int {
+  if flag {
+    return 1
+  }
+}

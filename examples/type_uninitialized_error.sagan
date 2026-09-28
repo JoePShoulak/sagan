@@ -1,0 +1,4 @@
+fun invalid(): Int {
+  let value: Int
+  return value
+}

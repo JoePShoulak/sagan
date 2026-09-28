@@ -1,0 +1,8 @@
+fun main(): Int {
+  let answer = 40 + 2
+  if answer == 42 {
+    return 0
+  } else {
+    return 1
+  }
+}

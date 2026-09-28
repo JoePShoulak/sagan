@@ -1,0 +1,2 @@
+let NotAType = 1
+let value: NotAType = 2

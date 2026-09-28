@@ -105,6 +105,20 @@ an incorrect return type, an uninferable variable, heterogeneous collections,
 and an invalid vector component. This is not an execution demo, and `Unknown`
 still marks deferred member and user-defined-type semantics.
 
+## Executable-entry demonstration
+
+`examples/entry_demo.sagan` is the first source fixture shaped like an
+executable program. It has a parameterless `main(): Int`, local arithmetic,
+conditional control flow, and guaranteed returns.
+
+```bash
+bash scripts/entry_demo.sh
+```
+
+The script confirms the valid entry point and demonstrates missing-entry,
+uninitialized-read, and unreachable-statement diagnostics. It still does not
+generate or execute native code.
+
 The string error fixture demonstrates the focused diagnostic for an empty
 `${}` interpolation. The collection fixture demonstrates the minimum
 two-element vector rule.

@@ -11,6 +11,7 @@
 #include "version.hpp"
 
 #include <fstream>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -468,6 +469,46 @@ namespace
     }
     // LCOV_EXCL_START
     std::cerr << "[FAIL] " << name << ": expected a type error\n";
+    return false;
+    // LCOV_EXCL_STOP
+  }
+
+  auto expect_entry_point(const std::string &name, const std::string &source) -> bool
+  {
+    parser::syntax_parser syntax(tokenize(source));
+    const auto tree = syntax.parse();
+    static_cast<void>(semantic::analyze(tree));
+    static_cast<void>(semantic::check_types(tree));
+    semantic::validate_entry_point(tree);
+    std::cout << "[PASS] " << name << '\n';
+    return true;
+  }
+
+  auto expect_entry_error(const std::string &name, const std::string &source,
+                          const std::string &expected) -> bool
+  {
+    try
+    {
+      parser::syntax_parser syntax(tokenize(source));
+      const auto tree = syntax.parse();
+      static_cast<void>(semantic::analyze(tree));
+      static_cast<void>(semantic::check_types(tree));
+      semantic::validate_entry_point(tree);
+    }
+    catch (const semantic::semantic_error &error)
+    {
+      if (std::string(error.what()).contains(expected))
+      {
+        std::cout << "[PASS] " << name << '\n';
+        return true;
+      }
+      // LCOV_EXCL_START
+      std::cerr << "[FAIL] " << name << ": unexpected entry-point error '" << error.what() << "'\n";
+      return false;
+      // LCOV_EXCL_STOP
+    }
+    // LCOV_EXCL_START
+    std::cerr << "[FAIL] " << name << ": expected an entry-point error\n";
     return false;
     // LCOV_EXCL_STOP
   }
@@ -1399,6 +1440,9 @@ namespace
     passed &= expect_semantic_error("duplicate parameter",
                                     "fun invalid(value, value) => value\n",
                                     "Duplicate declaration of 'value'");
+    passed &= expect_semantic_error("annotation must name a type",
+                                    "let NotAType = 1\nlet value: NotAType = 2\n",
+                                    "'NotAType' does not name a type");
     passed &= expect_type_model(
         "built-in type inference and checking",
         "fun choose(value: Float, enabled: Bool): Float {\n"
@@ -1447,6 +1491,14 @@ namespace
         "  return 0\n}\n",
         {"text: String", "enabled: Bool", "values: Vector", "item: Unknown", "Int8 @"});
     passed &= expect_type_model(
+        "definite return through branches and match",
+        "fun choose(flag: Bool): Int {\n"
+        "  if flag {\n    return 1\n  } else {\n    return 2\n  }\n}\n"
+        "fun classify(value: Int): String {\n"
+        "  match value {\n    case 0 {\n      return \"zero\"\n    }\n"
+        "    case else {\n      return \"other\"\n    }\n  }\n}\n",
+        {"flag: Bool", "value: Int64"});
+    passed &= expect_type_model(
         "homogeneous array inference indexing and iteration",
         "fun first(values) {\n  for value in values {\n    yield value\n  }\n  return values[0]\n}\n"
         "let small = [1, 2]\nlet mixed_width = [1, 200]\n"
@@ -1474,6 +1526,38 @@ namespace
     passed &= expect_type_error("condition type mismatch",
                                 "fun invalid(): Int {\n  if 1 {\n    return 1\n  }\n  return 0\n}\n",
                                 "If condition requires Bool, but received Int");
+    passed &= expect_type_error("missing definite return",
+                                "fun incomplete(flag: Bool): Int {\n"
+                                "  if flag {\n    return 1\n  }\n}\n",
+                                "may reach the end without returning Int64");
+    passed &= expect_type_model(
+        "definite initialization by assignment",
+        "fun initialize(): Int {\n  let value: Int\n  value = 1\n  return value\n}\n",
+        {"value: Int64"});
+    passed &= expect_type_error("use before initialization",
+                                "fun invalid(): Int {\n  let value: Int\n  return value\n}\n",
+                                "Variable 'value' is used before initialization");
+    passed &= expect_type_error("compound assignment before initialization",
+                                "fun invalid(): Int {\n  let value: Int\n  value += 1\n  return value\n}\n",
+                                "Variable 'value' is used before initialization");
+    passed &= expect_type_error("partial branch initialization",
+                                "fun invalid(flag: Bool): Int {\n  let value: Int\n"
+                                "  if flag {\n    value = 1\n  }\n  return value\n}\n",
+                                "Variable 'value' is used before initialization");
+    passed &= expect_type_model(
+        "complete branch initialization",
+        "fun valid(flag: Bool): Int {\n  let value: Int\n"
+        "  if flag {\n    value = 1\n  } else {\n    value = 2\n  }\n  return value\n}\n",
+        {"value: Int64"});
+    passed &= expect_type_error("unreachable statement",
+                                "fun invalid(): Int {\n  return 1\n  let unreachable = 2\n}\n",
+                                "Unreachable statement");
+    passed &= expect_type_error("unreachable statement in Void function",
+                                "fun invalid(): Void {\n  return\n  let unreachable = 2\n}\n",
+                                "Unreachable statement");
+    passed &= expect_type_error("invalid assignment target",
+                                "fun invalid(): Void {\n  1 = 2\n}\n",
+                                "Assignment target is not assignable");
     passed &= expect_type_error("return type mismatch", "fun invalid(): Bool => 1\n",
                                 "Function return requires Bool, but received Int");
     passed &= expect_type_error("operator type mismatch", "let invalid = true + 1\n",
@@ -1513,6 +1597,17 @@ namespace
                                 "let left = <1.0, 2.0>\nlet right = <1.0, 2.0, 3.0>\n"
                                 "let invalid = true ? left ; right\n",
                                 "Conditional branches have incompatible types");
+    passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
+    passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
+    passed &= expect_entry_error("missing entry point", "let library_value = 1\n",
+                                 "requires a 'main' entry point");
+    passed &= expect_entry_error("entry point parameters", "fun main(value: Int): Int => value\n",
+                                 "cannot declare parameters");
+    passed &= expect_entry_error("entry point result", "fun main(): String => \"invalid\"\n",
+                                 "must return Int or Void");
+    passed &= expect_entry_error("duplicate entry point",
+                                 "fun main(): Int => 0\nfun main(): Int => 1\n",
+                                 "more than one 'main' entry point");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
@@ -1520,6 +1615,10 @@ namespace
 
   auto read_file(const std::string &path) -> std::string
   {
+    if (!std::filesystem::is_regular_file(path))
+    {
+      throw std::runtime_error("Could not open '" + path + "'");
+    }
     std::ifstream input(path, std::ios::binary);
     if (!input)
     {
@@ -1586,6 +1685,7 @@ auto main(const int argc, char **argv) -> int
     ast_html,
     semantic,
     types,
+    entry,
   };
 
   output_mode mode = output_mode::tokens;
@@ -1623,6 +1723,11 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::types;
     path = argv[2];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--entry")
+  {
+    mode = output_mode::entry;
+    path = argv[2];
+  }
   else if (argc == 2)
   {
     path = argv[1];
@@ -1634,7 +1739,8 @@ auto main(const int argc, char **argv) -> int
   else
   {
     std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
-                 "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | FILE]\n";
+                 "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
+                 "--entry FILE | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
@@ -1659,6 +1765,13 @@ auto main(const int argc, char **argv) -> int
         const auto model = semantic::check_types(tree);
         std::cout << "Sagan " << SAGAN_VERSION << " type model: " << path << "\n\n";
         model.print(std::cout);
+      }
+      else if (mode == output_mode::entry)
+      {
+        static_cast<void>(semantic::analyze(tree));
+        static_cast<void>(semantic::check_types(tree));
+        semantic::validate_entry_point(tree);
+        std::cout << "Sagan " << SAGAN_VERSION << " executable entry point is valid: " << path << '\n';
       }
       else if (mode == output_mode::ast_text)
       {

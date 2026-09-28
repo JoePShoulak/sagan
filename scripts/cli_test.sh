@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export PATH="/ucrt64/bin:/usr/bin:/bin:$PATH"
+export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
@@ -67,6 +67,8 @@ expect_output "semantic model output" "SemanticModel" \
   "$binary" --semantic examples/semantic_demo.sagan
 expect_output "type model output" "TypeModel" \
   "$binary" --types examples/type_demo.sagan
+expect_output "entry-point validation" "executable entry point is valid" \
+  "$binary" --entry examples/entry_demo.sagan
 
 expect_output "SVG AST file" "Wrote SVG AST" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/parser.svg"
@@ -94,6 +96,16 @@ expect_failure "heterogeneous dictionary diagnostic" 1 "Dictionary values have i
   "$binary" --types examples/type_dictionary_error.sagan
 expect_failure "vector component diagnostic" 1 "Vector components must be numeric" \
   "$binary" --types examples/type_vector_error.sagan
+expect_failure "annotation type diagnostic" 1 "does not name a type" \
+  "$binary" --types examples/type_annotation_error.sagan
+expect_failure "definite return diagnostic" 1 "may reach the end without returning Int64" \
+  "$binary" --types examples/type_return_error.sagan
+expect_failure "missing entry-point diagnostic" 1 "requires a 'main' entry point" \
+  "$binary" --entry examples/entry_missing_error.sagan
+expect_failure "uninitialized variable diagnostic" 1 "is used before initialization" \
+  "$binary" --types examples/type_uninitialized_error.sagan
+expect_failure "unreachable statement diagnostic" 1 "Unreachable statement" \
+  "$binary" --types examples/type_unreachable_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

@@ -27,3 +27,7 @@ The first line is operational. Read about the [architecture](architecture.md),
 [semantic analyzer](semantic-analysis.md) page records the implemented first
 pass and its next boundary. The [code generator](code-generation.md) remains
 future work.
+
+The implemented semantic subset is now sufficient to validate the shape and
+control-flow safety of a small executable program. C++ emission and native
+toolchain invocation are the next pipeline stage.
