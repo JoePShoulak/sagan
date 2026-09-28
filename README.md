@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.11.0](https://img.shields.io/badge/development-0.11.0-2563eb)](#development-versions)
+[![Development version 0.12.0](https://img.shields.io/badge/development-0.12.0-2563eb)](#development-versions)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -416,6 +416,13 @@ work.
 - Unknown characters and malformed or unterminated literals produce focused tokenizer errors.
 - When tokens share a prefix, the longest valid token wins.
 
+Documentation comments attach to the declaration immediately following them.
+They may document modules, imports, exports, variables, functions, faces,
+classes, enums, fields, and methods. Local documentation comments may precede
+`let` declarations. They must occupy their own logical line; orphaned comments
+and comments before executable statements are syntax errors. Individual enum
+members do not yet accept documentation comments.
+
 Schematic's `@tag`, special `!event`, and backtick code-block tokens are not part of Sagan. `!event` is ordinary logical negation of an identifier, while standalone `@` and backticks are invalid.
 
 ## Execution model
@@ -604,6 +611,8 @@ Top-level `face`, `class`, and `enum` declarations include composition lists,
 methods, class fields, private method spelling, `self`, and simple enum members.
 Named functions and methods may use block bodies or `=>` expression bodies, and
 anonymous `fun(...) => expression` lambdas are expression values.
+Line and block documentation comments are retained with source spans and attach
+to the declarations they describe; every AST output format renders them.
 Named block-bodied functions provide the executable scope, with optional type
 annotations on parameters and returns; the program root remains declaration-only.
 Postfix operations can be chained freely, as

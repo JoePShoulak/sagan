@@ -210,7 +210,7 @@ namespace parser
       throw std::runtime_error("AST renderer encountered an unsupported expression node");
     }
 
-    auto make_statement_node(const statement &value) -> std::unique_ptr<visual_node>
+    auto make_statement_node_content(const statement &value) -> std::unique_ptr<visual_node>
     {
       if (const auto *declaration = dynamic_cast<const let_declaration *>(&value))
       {
@@ -443,6 +443,22 @@ namespace parser
       throw std::runtime_error("AST renderer encountered an unsupported statement node");
     }
 
+    auto make_statement_node(const statement &value) -> std::unique_ptr<visual_node>
+    {
+      auto node = make_statement_node_content(value);
+      std::vector<std::unique_ptr<visual_node>> comments;
+      comments.reserve(value.documentation.size());
+      for (const auto &comment : value.documentation)
+      {
+        comments.push_back(std::make_unique<visual_node>(
+            visual_node{"Documentation\n" + string_preview(comment.text), "documentation"}));
+      }
+      node->children.insert(node->children.begin(),
+                            std::make_move_iterator(comments.begin()),
+                            std::make_move_iterator(comments.end()));
+      return node;
+    }
+
     auto make_tree(const program &tree) -> std::unique_ptr<visual_node>
     {
       auto root = std::make_unique<visual_node>(visual_node{"Program", "program"});
@@ -517,6 +533,7 @@ namespace parser
       if (category == "access") return {"#0369a1", "#f0f9ff"};
       if (category == "string") return {"#be185d", "#fdf2f8"};
       if (category == "text") return {"#a16207", "#fefce8"};
+      if (category == "documentation") return {"#7c3aed", "#f5f3ff"};
       if (category == "collection") return {"#4338ca", "#eef2ff"};
       if (category == "entry") return {"#0f766e", "#f0fdfa"};
       if (category == "literal") return {"#15803d", "#f0fdf4"};

@@ -106,6 +106,11 @@ process escapes or interpolation.
 `///` and `/** ... */` produce `DOC_COMMENT`; ordinary comments are
 discarded. Spaces, tabs, form feeds, and vertical tabs are non-significant.
 
+The parser attaches `DOC_COMMENT` tokens to declarations. Documentation
+comments must be followed by a logical newline. Ordinary blank lines are not
+represented in the token stream, so attachment is based on the next declaration
+token rather than the count of physical blank lines.
+
 LF and CRLF each count as one logical newline. Blank and comment-only lines do
 not emit newline tokens. Newlines are suppressed inside parentheses and
 brackets and after a continuation token. Brace and angle-bracket newlines are

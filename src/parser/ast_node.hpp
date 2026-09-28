@@ -207,9 +207,20 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct documentation_comment
+  {
+    span range;
+    std::string text;
+
+    documentation_comment(span source_range, std::string comment_text);
+  };
+
   struct statement : ast_node
   {
-    using ast_node::ast_node;
+    std::vector<documentation_comment> documentation;
+
+    explicit statement(span source_range) : ast_node(source_range) {}
+    auto print_documentation(std::ostream &stream, int indent) const -> void;
   };
 
   using statement_ref = std::unique_ptr<statement>;

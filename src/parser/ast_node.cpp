@@ -31,6 +31,20 @@ namespace
 
 namespace parser
 {
+  documentation_comment::documentation_comment(const span source_range, std::string comment_text)
+      : range(source_range), text(std::move(comment_text))
+  {
+  }
+
+  auto statement::print_documentation(std::ostream &stream, const int indent) const -> void
+  {
+    for (const auto &comment : documentation)
+    {
+      write_indent(stream, indent);
+      stream << "Documentation(\"" << escaped_string_text(comment.text) << "\")\n";
+    }
+  }
+
   identifier_expression::identifier_expression(const span source_range, std::string identifier)
       : expression(source_range), name(std::move(identifier))
   {
@@ -313,6 +327,7 @@ namespace parser
       stream << ": " << *type_name;
     }
     stream << ")\n";
+    print_documentation(stream, indent + 2);
     if (initializer)
     {
       initializer->print(stream, indent + 2);
@@ -553,6 +568,7 @@ namespace parser
       stream << ": " << *return_type;
     }
     stream << ")\n";
+    print_documentation(stream, indent + 2);
     for (const auto &parameter : parameters)
     {
       write_indent(stream, indent + 2);
@@ -605,6 +621,7 @@ namespace parser
       }
     }
     stream << ")\n";
+    print_documentation(stream, indent + 2);
     for (const auto &member : members)
     {
       member->print(stream, indent + 2);
@@ -625,6 +642,7 @@ namespace parser
   {
     write_indent(stream, indent);
     stream << "Module(" << name << ")\n";
+    print_documentation(stream, indent + 2);
   }
 
   import_declaration::import_declaration(const span source_range, std::string name,
@@ -648,6 +666,7 @@ namespace parser
       stream << " as " << *alias;
     }
     stream << ")\n";
+    print_documentation(stream, indent + 2);
   }
 
   export_declaration::export_declaration(const span source_range, std::string name,
@@ -665,6 +684,7 @@ namespace parser
       stream << " as " << *alias;
     }
     stream << ")\n";
+    print_documentation(stream, indent + 2);
   }
 
   program::program(std::vector<statement_ref> body)

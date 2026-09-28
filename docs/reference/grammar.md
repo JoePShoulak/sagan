@@ -61,6 +61,7 @@ enum_members := identifier ((newline+ | ",") identifier)* ","?
 module_declaration := "module" identifier
 import_declaration := "import" identifier ("from" identifier)? ("as" identifier)?
 export_declaration := "export" identifier ("as" identifier)?
+documented_declaration := documentation_comment+ declaration
 parameters  := parameter ("," parameter)* ","?
 parameter   := identifier (":" type)?
 ```
@@ -80,6 +81,12 @@ follow the preceding `}` without an intervening logical newline.
 The program root accepts declarations only. Executable statements and control
 flow belong inside function bodies. A program may have at most one module
 declaration, and it must be the first declaration when present.
+
+Documentation comments occupy their own logical lines and attach to the next
+declaration. They are accepted on top-level declarations, face/class methods,
+class fields, and local `let` declarations. They cannot attach to executable
+statements or individual enum members. Orphaned documentation comments are
+syntax errors.
 
 **Open questions:** the remaining statement and declaration productions,
 semantic validation of returned values, and error recovery beyond the first

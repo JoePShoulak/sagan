@@ -1,0 +1,5 @@
+fun invalid() {
+  /// Control flow is not a declaration.
+  if ready {
+  }
+}

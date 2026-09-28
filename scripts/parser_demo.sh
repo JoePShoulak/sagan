@@ -91,3 +91,10 @@ if bin/sagan --ast examples/compound_assignment_error.sagan; then
 fi
 
 echo "Compound-assignment error demo failed as expected."
+
+if bin/sagan --ast examples/documentation_error.sagan; then
+  echo "Expected examples/documentation_error.sagan to produce a syntax error." >&2
+  exit 1
+fi
+
+echo "Documentation-comment error demo failed as expected."

@@ -1,3 +1,4 @@
+/// Demonstrates every currently implemented parser feature.
 module orbital_demo
 
 import Vector from math
@@ -7,7 +8,9 @@ import physics as simulation_physics
 export ExplorerShip
 export GuidanceStatus as Status
 
+/// Produces rendered frames.
 face Renderable {
+  /// Renders the current object.
   fun render(): Frame
 }
 
@@ -18,7 +21,9 @@ face Navigable is Renderable, Trackable {
   }
 }
 
+/**A spacecraft composed from navigation, rendering, and telemetry interfaces.*/
 class ExplorerShip has Navigable, TelemetrySource {
+  /// Human-readable spacecraft name.
   let name: String = "Voyager"
   let active = true
   fun render(): Frame {
@@ -81,6 +86,7 @@ let trajectory_samples = [
   (110.0, 205.0, altitude + 10.0,),
   ...historical_positions,
 ]
+/// Updates guidance state from the latest telemetry sample.
 fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
   telemetry_count += 1
   remaining_fuel -= fuel_burn
@@ -89,6 +95,7 @@ fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
   ring_index %= ring_capacity
   correction_weight ^= correction_exponent
   if telemetry_ready and altitude >= target_altitude {
+    /// Course calculated from the current orbital position.
     let next_course = navigator.current_course(orbital_position, target_position)
     ship.guidance.course = next_course
     ship.guidance.commit!()

@@ -24,6 +24,7 @@ namespace parser
     auto match(int token_id) -> bool;
     auto expect(int token_id, const std::string &description) -> const token &;
     auto skip_newlines() -> void;
+    auto parse_documentation_comments() -> std::vector<documentation_comment>;
     auto parse_statement() -> statement_ref;
     auto parse_let_declaration() -> statement_ref;
     auto parse_function_declaration(bool body_optional = false, bool allow_private = false) -> statement_ref;

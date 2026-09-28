@@ -853,6 +853,79 @@ namespace
     passed &= expect_syntax_error("import alias without name", "import math as\n");
     passed &= expect_syntax_error("export without name", "export\n");
     passed &= expect_ast(
+        "documentation comment attachment",
+        "/// Orbital demonstration module.\n"
+        "module documented\n"
+        "/// Imports vector mathematics.\n"
+        "import Vector from math\n"
+        "/**Exports the spacecraft type.\nAcross modules.*/\n"
+        "export Ship\n"
+        "/// Default altitude.\n"
+        "/// Measured in kilometers.\n"
+        "let altitude = 1\n"
+        "/// Performs launch preparation.\n"
+        "fun prepare() {\n"
+        "  /// Retry counter.\n"
+        "  let retries = 0\n"
+        "}\n"
+        "/// Objects that can render.\n"
+        "face Renderable {\n"
+        "  /// Produces a frame.\n"
+        "  fun render(): Frame\n"
+        "}\n"
+        "/**A documented spacecraft.*/\n"
+        "class Ship {\n"
+        "  /// Display name.\n"
+        "  let name = \"Sagan\"\n"
+        "  /// Advances the spacecraft.\n"
+        "  fun fly() {\n"
+        "  }\n"
+        "}\n"
+        "/// Mission states.\n"
+        "enum Status {\n"
+        "  ready\n"
+        "}\n",
+        "Program\n"
+        "  Module(documented)\n"
+        "    Documentation(\"Orbital demonstration module.\")\n"
+        "  Import(Vector from math)\n"
+        "    Documentation(\"Imports vector mathematics.\")\n"
+        "  Export(Ship)\n"
+        "    Documentation(\"Exports the spacecraft type.\\nAcross modules.\")\n"
+        "  Let(altitude)\n"
+        "    Documentation(\"Default altitude.\")\n"
+        "    Documentation(\"Measured in kilometers.\")\n"
+        "    Integer(1)\n"
+        "  Function(prepare)\n"
+        "    Documentation(\"Performs launch preparation.\")\n"
+        "    Block\n"
+        "      Let(retries)\n"
+        "        Documentation(\"Retry counter.\")\n"
+        "        Integer(0)\n"
+        "  Face(Renderable)\n"
+        "    Documentation(\"Objects that can render.\")\n"
+        "    Function(render: Frame)\n"
+        "      Documentation(\"Produces a frame.\")\n"
+        "      Signature\n"
+        "  Class(Ship)\n"
+        "    Documentation(\"A documented spacecraft.\")\n"
+        "    Let(name)\n"
+        "      Documentation(\"Display name.\")\n"
+        "      String\n"
+        "        Text(\"Sagan\")\n"
+        "    Function(fly)\n"
+        "      Documentation(\"Advances the spacecraft.\")\n"
+        "      Block\n"
+        "  Enum(Status)\n"
+        "    Documentation(\"Mission states.\")\n"
+        "    EnumMember(ready)\n");
+    passed &= expect_syntax_error("orphaned documentation comment", "/// No declaration follows.\n");
+    passed &= expect_syntax_error("documentation before control flow",
+                                  "fun invalid() {\n  /// Not a declaration.\n  if ready {\n  }\n}\n");
+    passed &= expect_syntax_error("documentation before enum member",
+                                  "enum Invalid {\n  /// Member docs are not supported yet.\n  value\n}\n");
+    passed &= expect_syntax_error("documentation requires following newline", "/**Same line.*/ fun invalid() {\n}\n");
+    passed &= expect_ast(
         "expression-bodied functions and lambdas",
         "fun square(value: Float): Float => value * value\n"
         "face Mapper {\n"
@@ -908,6 +981,8 @@ namespace
     passed &= expect_visual_ast("visual module AST",
                                 "module demo\nimport Vector from math as Vector3\nexport Ship\nclass Ship {\n}\n"
                                 "let vessel = Ship\n");
+    passed &= expect_visual_ast("visual documentation AST",
+                                "/// Documented value.\nlet value = other\n");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;

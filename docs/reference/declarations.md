@@ -17,6 +17,12 @@ declaration, imports with optional `from` and `as` clauses, and standalone
 exports with an optional alias. See [Modules](modules.md) for the accepted
 forms.
 
+`///` and `/** ... */` documentation comments attach to the declaration that
+immediately follows them. The AST preserves each comment separately with its
+source span and text. Supported targets are modules, imports, exports, `let`,
+`fun`, `face`, `class`, and `enum` declarations, including fields, methods, and
+local variables. Individual enum-member documentation remains future syntax.
+
 ```sagan
 let altitude: Float = 125_000.0
 ```

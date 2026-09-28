@@ -57,6 +57,9 @@ semantics remain future analysis.
 Module declarations, import sources and aliases, and standalone exports are
 parsed and rendered. Import resolution, visibility, initialization, and package
 behavior remain semantic and module-loader work.
+Documentation comments attach to supported declarations with retained text and
+source spans and appear in every AST renderer. Focused errors cover orphaned,
+same-line, executable-statement, and enum-member placements.
 
 ## Major open language questions
 

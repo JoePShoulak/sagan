@@ -69,6 +69,19 @@ namespace parser
     }
   }
 
+  auto syntax_parser::parse_documentation_comments() -> std::vector<documentation_comment>
+  {
+    std::vector<documentation_comment> comments;
+    while (match(tokens::DOC_COMMENT))
+    {
+      const token comment = previous();
+      comments.emplace_back(comment.range, comment.text);
+      expect(tokens::NEWLINE, "a newline after a documentation comment");
+      skip_newlines();
+    }
+    return comments;
+  }
+
   auto syntax_parser::parse() -> program
   {
     std::vector<statement_ref> body;
@@ -77,6 +90,11 @@ namespace parser
     skip_newlines();
     while (!at_end())
     {
+      auto documentation = parse_documentation_comments();
+      if (!documentation.empty() && at_end())
+      {
+        throw parse_error("A documentation comment must precede a declaration", documentation.back().range);
+      }
       statement_ref declaration;
       if (match(tokens::KWD_LET))
       {
@@ -127,6 +145,7 @@ namespace parser
       {
         seen_non_module = true;
       }
+      declaration->documentation = std::move(documentation);
       body.push_back(std::move(declaration));
       if (!at_end())
       {
@@ -139,6 +158,18 @@ namespace parser
 
   auto syntax_parser::parse_statement() -> statement_ref
   {
+    if (check(tokens::DOC_COMMENT))
+    {
+      auto documentation = parse_documentation_comments();
+      if (!match(tokens::KWD_LET))
+      {
+        throw parse_error("A documentation comment inside a block must precede a variable declaration",
+                          documentation.back().range);
+      }
+      auto declaration = parse_let_declaration();
+      declaration->documentation = std::move(documentation);
+      return declaration;
+    }
     if (match(tokens::KWD_LET))
     {
       return parse_let_declaration();
@@ -287,8 +318,18 @@ namespace parser
       {
         throw parse_error("Expected '}' after the type body", open.range);
       }
+      auto documentation = parse_documentation_comments();
+      if (!documentation.empty() && check(tokens::RBRACE))
+      {
+        throw parse_error("A documentation comment must precede a declaration", documentation.back().range);
+      }
       if (type == type_declaration::kind::enum_type)
       {
+        if (!documentation.empty())
+        {
+          throw parse_error("Documentation comments cannot attach to individual enum members",
+                            documentation.back().range);
+        }
         enum_members.push_back(expect(tokens::IDENTIFIER, "an enum member name").text);
         if (match(tokens::COMMA))
         {
@@ -299,11 +340,15 @@ namespace parser
       else if (match(tokens::KWD_FUN))
       {
         const bool is_interface = type == type_declaration::kind::interface_type;
-        members.push_back(parse_function_declaration(is_interface, !is_interface));
+        auto member = parse_function_declaration(is_interface, !is_interface);
+        member->documentation = std::move(documentation);
+        members.push_back(std::move(member));
       }
       else if (type == type_declaration::kind::class_type && match(tokens::KWD_LET))
       {
-        members.push_back(parse_let_declaration());
+        auto member = parse_let_declaration();
+        member->documentation = std::move(documentation);
+        members.push_back(std::move(member));
       }
       else
       {
