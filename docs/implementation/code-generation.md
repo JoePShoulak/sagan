@@ -37,6 +37,11 @@ silently generating incorrect code. The emitter currently requires explicit
 function signatures and supports only function declarations at the program
 root.
 
+Homogeneous dictionary literals with backend-supported scalar key and value
+types lower to `std::unordered_map`. Key lookup is checked and raises the native
+out-of-range exception when a key is absent. Dictionary spreads and dictionary
+iteration are not lowered yet.
+
 Open work includes generated-code structure, runtime interfaces, memory
 management, exception lowering, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression

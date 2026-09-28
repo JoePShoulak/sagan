@@ -3,10 +3,13 @@ fun 🚀(value: Int): Int => value + 2
 fun main(): Int {
   let answer = 🚀(40)
   let countdown = [3, 2, 1]
+  let phases = {"countdown": 3, "liftoff": 1}
+  let configured_countdown = phases["countdown"]
 
   print("The answer from 🚀 is:")
   print(answer)
   print("Countdown:")
+  print("Configured countdown: ${configured_countdown}")
   for value in countdown {
     print("Array item: ${value}")
   }

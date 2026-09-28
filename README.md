@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.20.0](https://img.shields.io/badge/development-0.20.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.21.0](https://img.shields.io/badge/development-0.21.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -35,6 +35,7 @@ built-in `print(value)` function. The executable subset also supports typed
 array literals, checked indexing, and `for … in` iteration.
 Interpolated strings and mutable `while`/`until` loops also execute in the
 current native subset.
+Homogeneous dictionary literals and checked key lookup are executable as well.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checking
