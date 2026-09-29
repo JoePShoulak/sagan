@@ -2,6 +2,7 @@
 
 #include "semantic_error.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <optional>
 #include <string_view>
