@@ -583,8 +583,6 @@ namespace semantic
         {
           const auto *method = dynamic_cast<const parser::function_declaration *>(member.get());
           if (!method) continue;
-          require(type.type_parameters.empty() || (!method->body && !method->expression_body),
-                  "Default methods on generic faces are not implemented yet", method->range);
           interface.methods[method->name].push_back(signature(*method));
           if (method->body || method->expression_body)
             interface.defaults[method->name].push_back(signature(*method));
@@ -1097,14 +1095,31 @@ namespace semantic
           static_cast<void>(expression(*call->callee));
           const auto callable = callables.find(call->callee.get());
           require(callable != callables.end(), "Called expression is not callable", call->callee->range);
-          require(callable->second.parameters.size() == arguments.size(),
-                  "Callable expects " + std::to_string(callable->second.parameters.size()) +
+          callable_signature instantiated = callable->second;
+          require(instantiated.parameters.size() == arguments.size(),
+                  "Callable expects " + std::to_string(instantiated.parameters.size()) +
                       " arguments, but received " + std::to_string(arguments.size()),
                   value.range);
+          if (!instantiated.type_parameters.empty())
+          {
+            std::vector<std::string> inferred(instantiated.type_parameters.size(), std::string(unknown_type));
+            bool inferred_all = true;
+            for (std::size_t index = 0; index < arguments.size(); ++index)
+              inferred_all &= infer_type_arguments(instantiated.parameters[index], arguments[index],
+                                                   instantiated.type_parameters, inferred);
+            inferred_all &= std::none_of(inferred.begin(), inferred.end(), [](const auto &type)
+            {
+              return is_unknown(type);
+            });
+            require(inferred_all, "Cannot infer every generic argument for called method", value.range);
+            for (auto &parameter : instantiated.parameters)
+              parameter = substitute_type(parameter, instantiated.type_parameters, inferred);
+            instantiated.result = substitute_type(instantiated.result, instantiated.type_parameters, inferred);
+          }
           for (std::size_t index = 0; index < arguments.size(); ++index)
-            require_compatible(callable->second.parameters[index], arguments[index], call->arguments[index]->range,
+            require_compatible(instantiated.parameters[index], arguments[index], call->arguments[index]->range,
                                "Callable argument");
-          return record(value, callable->second.result);
+          return record(value, instantiated.result);
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
         {

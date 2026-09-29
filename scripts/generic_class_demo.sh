@@ -21,4 +21,4 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/generic_class_demo.cpp -o 
 echo
 build/generic_class_demo
 echo
-echo "Generic class/face demo passed: constructor inference specialized Box<T>, Readable<T> dispatched natively, and typed mutation preserved T."
+echo "Generic class/face demo passed: Readable<T> supplied a virtual default, echo<U> inferred independently, and typed mutation preserved T."

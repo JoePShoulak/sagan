@@ -891,6 +891,18 @@ namespace codegen
       auto method(const parser::function_declaration &value, const std::string_view class_name = {},
                   const bool virtual_method = false) -> void
       {
+        const auto previous_type_parameters = active_type_parameters;
+        active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
+        if (!value.type_parameters.empty())
+        {
+          output << indentation() << "template <";
+          for (std::size_t index = 0; index < value.type_parameters.size(); ++index)
+          {
+            if (index != 0) output << ", ";
+            output << "typename " << identifier(value.type_parameters[index]);
+          }
+          output << ">\n";
+        }
         output << indentation();
         if (virtual_method) output << "virtual ";
         if (value.constructor_member)
@@ -917,6 +929,7 @@ namespace codegen
             {
               output << "= 0;\n";
               in_method = previous_method;
+              active_type_parameters = previous_type_parameters;
               return;
             }
             fail("method has no executable body", value.range);
@@ -924,6 +937,7 @@ namespace codegen
           block(*value.body);
         }
         in_method = previous_method;
+        active_type_parameters = previous_type_parameters;
         output << "\n";
       }
 
@@ -1036,6 +1050,8 @@ namespace codegen
         if (private_access) output << "public:\n";
         for (const auto &face_name : value.composed_interfaces)
         {
+          const auto face = face_types.find(face_name.substr(0, face_name.find('<')));
+          if (face != face_types.end() && !face->second->type_parameters.empty()) continue;
           std::unordered_set<std::string> visiting;
           for (const auto *default_method : face_defaults(face_name, visiting))
           {

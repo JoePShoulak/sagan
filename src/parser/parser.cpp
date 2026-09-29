@@ -284,8 +284,8 @@ namespace parser
       } while (match(tokens::COMMA));
       expect(tokens::RANGLE, "'>' after generic type parameters");
     }
-    if (!type_parameters.empty() && (body_optional || allow_private || allow_mutating))
-      throw parse_error("Generic methods are not implemented yet", name.range);
+    if (!type_parameters.empty() && body_optional)
+      throw parse_error("Generic face methods are not supported", name.range);
     expect(tokens::LPAREN, "'(' after the function name");
     std::vector<function_parameter> parameters;
     while (!check(tokens::RPAREN))

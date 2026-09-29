@@ -54,8 +54,11 @@ implemented. Generic classes infer invariant type arguments from constructors,
 and generic face conformance substitutes those arguments through required
 method signatures. Function inference is call-site based and requires every type
 parameter to appear in an inferable parameter position; it does not use the
-expected return type. Generic methods, face defaults, constraints, variance,
-and explicit function or constructor type arguments remain open.
+expected return type. Class-level generic methods use the same argument-driven
+inference after substituting their class specialization. Generic face defaults
+may use the face's parameters, but face methods cannot add independent generic
+parameters. Constraints, variance, and explicit function, method, or
+constructor type arguments remain open.
 
 **Open questions:** user-defined member inference, value versus
 reference categories, broader generic semantics, variance,

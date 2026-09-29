@@ -142,8 +142,9 @@ exhaustive match, shows the tagged-variant C++ excerpts, and runs the result.
 specializes a generic result enum from an expected type and explicit
 `Result<Int, String>.Failure(...)` qualification, then executes both payload matches.
 `generic-class-demo` infers `Box<T>` from constructor arguments, checks typed
-fields and methods, converts it to `Readable<T>`, and executes virtual dispatch
-plus typed mutation through generated C++ templates.
+fields and methods, converts it to `Readable<T>`, executes an inherited generic
+face default with virtual `self` dispatch, infers a class method's independent
+`U`, and performs typed mutation through generated C++ templates.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

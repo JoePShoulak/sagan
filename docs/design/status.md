@@ -108,9 +108,9 @@ numeric enum values remain future semantic and runtime work.
 
 Generic sum enums execute with contextual or explicitly qualified type
 arguments, and top-level generic functions execute with call-site inference.
-Generic classes and requirement-only generic faces execute with specialization.
-Generic methods, generic face defaults, constraints, and explicit function or
-constructor type arguments, automatic handling of all-strong reference cycles,
+Generic classes, generic face defaults, and class-level generic methods execute
+with specialization and inference. Method-specific face generics, constraints,
+and explicit function, method, or constructor type arguments, automatic handling of all-strong reference cycles,
 explicit numeric enum values, catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import

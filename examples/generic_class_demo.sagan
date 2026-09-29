@@ -1,5 +1,6 @@
 face Readable<T> {
   fun get(): T
+  fun describe(): String => "Readable value: ${self.get()}"
 }
 
 class Box<T> is Readable<T> {
@@ -15,6 +16,8 @@ class Box<T> is Readable<T> {
     self.value = value
     return self.value
   }
+
+  fun echo<U>(other: U): U => other
 }
 
 fun main(): Int {
@@ -23,7 +26,9 @@ fun main(): Int {
   let readable: Readable<Int8> = number
 
   print("Number box through Readable<Int8>: ${readable.get()}")
+  print(readable.describe())
   print("Message box: ${message.get()}")
+  print("Generic method: ${number.echo("echo online")}")
   print("Updated number: ${number.replace!(43)}")
 
   if number.get() == 43 return 0

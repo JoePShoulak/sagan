@@ -102,8 +102,12 @@ the corresponding `Box<Int8>` under normal literal inference. An expected
 annotation may supply otherwise uninferable parameters. Fields and methods
 substitute the specialization consistently. Composition accepts specialized
 faces, as in `class Box<T> is Readable<T>`, and conversions preserve invariant
-type arguments. Default methods on generic faces, generic methods, constraints,
-and explicit constructor type arguments remain future work.
+type arguments. A generic face may provide ordinary default methods that use
+its type parameters and dispatch through `self`. Class methods may introduce
+their own inferred parameters, such as `fun echo<U>(value: U): U`. A face
+method cannot introduce method-specific parameters because virtual generic
+methods are intentionally unsupported. Constraints and explicit constructor or
+method type arguments remain future work.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, explicit enum values, constrained and member generics,

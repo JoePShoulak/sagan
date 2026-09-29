@@ -76,7 +76,7 @@ face_member := method_signature function_body?
 class_declaration := "class" identifier generic_parameters? composition? "{" class_member* "}"
 class_member := "weak"? "let" "."? identifier (":" type)? ("=" expression)?
               | constructor_declaration
-              | "fun" "."? identifier "(" parameters? ")" (":" type)? function_body
+              | "fun" "."? identifier generic_parameters? "(" parameters? ")" (":" type)? function_body
 constructor_declaration := "new" "(" typed_parameters? ")" block
 composition := ("is" | "has") type_annotation ("," type_annotation)*
 enum_declaration := "enum" identifier generic_parameters? "{" enum_members? "}"

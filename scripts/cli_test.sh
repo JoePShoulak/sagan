@@ -98,6 +98,8 @@ grep -Fq "std::make_shared<sagan_426f78<std::int8_t>>" "$work_dir/generic-class.
 g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$work_dir/generic-class.cpp" -o "$work_dir/generic-class"
 generic_class_output="$($work_dir/generic-class)"
 grep -Fq "Number box through Readable<Int8>: 42" <<<"$generic_class_output"
+grep -Fq "Readable value: 42" <<<"$generic_class_output"
+grep -Fq "Generic method: echo online" <<<"$generic_class_output"
 grep -Fq "Updated number: 43" <<<"$generic_class_output"
 grep -Fq "int main()" "$work_dir/generated.cpp"
 grep -Fq "enum class sagan_4c61756e6368537461747573" "$work_dir/generated.cpp"
@@ -233,6 +235,10 @@ expect_failure "generic class inference diagnostic" 1 "Cannot infer every generi
   "$binary" --types examples/type_generic_class_inference_error.sagan
 expect_failure "generic face specialization diagnostic" 1 "Variable initializer requires Readable<String>, but received Box<Int8>" \
   "$binary" --types examples/type_generic_face_assignment_error.sagan
+expect_failure "generic method inference diagnostic" 1 "Cannot infer every generic argument for called method" \
+  "$binary" --types examples/type_generic_method_inference_error.sagan
+expect_failure "generic face method syntax diagnostic" 1 "Generic face methods are not supported" \
+  "$binary" --ast examples/generic_face_method_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

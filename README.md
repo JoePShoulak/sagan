@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.51.1](https://img.shields.io/badge/development-0.51.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.52.0](https://img.shields.io/badge/development-0.52.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -37,8 +37,9 @@ arguments from their calls and execute natively. Generic sum enums support both
 contextual construction and explicit qualification such as
 `Result<Int, String>.Failure("problem")`. Generic classes infer their type
 arguments from constructors, preserve them through fields and methods, and may
-conform to specialized generic faces such as `Readable<T>`. Generic methods,
-constraints, default methods on generic faces, automatic reference-cycle
+conform to specialized generic faces such as `Readable<T>`. Generic face
+defaults and class-level generic methods execute with call-site inference.
+Method-specific generics on faces, constraints, automatic reference-cycle
 collection, the full runtime, and the standard library are not yet implemented.
 The built-in `Optional<T>` type,
 `Some(value)`, `None`, payload matching, safe `?.` access, and lazy `??`

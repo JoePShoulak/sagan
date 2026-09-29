@@ -84,7 +84,9 @@ members/types beyond the implemented class and face subset, and the multi-error
 recovery strategy remain open. Generic class construction infers parameters
 from constructor arguments or an expected type. Member access substitutes
 specialized field and method types, while generic face conformance checks the
-instantiated signature and remains invariant.
+instantiated signature and remains invariant. Generic face defaults are checked
+after substituting the face specialization. Class method calls infer any
+method-specific parameters from their arguments after class substitution.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
 Non-`Void` block-bodied functions must return on every statically guaranteed

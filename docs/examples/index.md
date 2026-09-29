@@ -138,8 +138,9 @@ make generic-sum-demo
 `examples/generic_class_demo.sagan` declares `Box<T>` and the requirement-only
 `Readable<T>` face. It infers class specializations from constructor calls,
 checks fields and methods after substituting `T`, converts `Box<Int8>` to
-`Readable<Int8>`, dispatches through that face, mutates the boxed value, and
-executes the generated native program:
+`Readable<Int8>`, executes a face default that calls `self.get()`, infers the
+independent `U` in `echo<U>`, mutates the boxed value, and executes the generated
+native program:
 
 ```bash
 make generic-class-demo

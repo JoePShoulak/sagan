@@ -1,0 +1,11 @@
+class Factory {
+  fun create<T>(): T {
+    scream "no value"
+  }
+}
+
+fun main(): Int {
+  let factory = Factory()
+  let value = factory.create()
+  return 0
+}
