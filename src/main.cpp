@@ -1657,6 +1657,26 @@ namespace
         "fun exercise(): Int {\n  let counter = Counter()\n"
         "  let advanced = counter.increment!()\n  return counter.current() + advanced\n}\n",
         {"counter: Counter", "advanced: Int64"});
+    passed &= expect_type_model(
+        "nominal enum members equality and matching",
+        "enum State {\n  waiting\n  ready\n}\n"
+        "fun exercise(): Bool {\n  let state: State = State.ready\n"
+        "  match state {\n    case State.ready return true\n    case else return false\n  }\n}\n",
+        {"state: State", "State @"});
+    passed &= expect_type_error("enum member must exist",
+                                "enum State {\n  ready\n}\nlet invalid = State.missing\n",
+                                "Enum 'State' has no member 'missing'");
+    passed &= expect_type_error("different enum types are incompatible",
+                                "enum Left {\n  ready\n}\nenum Right {\n  ready\n}\n"
+                                "let invalid = Left.ready == Right.ready\n",
+                                "Comparison operands have incompatible types Left and Right");
+    passed &= expect_type_error("enum members are not assignable",
+                                "enum State {\n  ready\n}\nfun invalid(): Void {\n  State.ready = State.ready\n}\n",
+                                "Enum members are not assignable");
+    passed &= expect_type_error("enum values are not ordered",
+                                "enum State {\n  waiting\n  ready\n}\n"
+                                "let invalid = State.waiting < State.ready\n",
+                                "Ordered comparison is not defined for enum values");
     passed &= expect_type_error("initializer type mismatch", "let value: Bool = 1\n",
                                 "Variable initializer requires Bool, but received Int");
     passed &= expect_type_error("uninferable variable", "let pending\n",

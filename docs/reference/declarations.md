@@ -29,8 +29,11 @@ let altitude: Float = 125_000.0
 
 **Implemented in the parser:** top-level mutable variables, named block-bodied
 functions, faces, classes, and simple enums. Faces accept method signatures and
-default bodies. Classes accept `let` fields and methods. Enums currently contain
-identifier-only members separated by newlines or commas.
+default bodies. Classes accept `let` fields and methods. Enums contain
+identifier-only members separated by newlines or commas. The initial executable
+enum subset uses `EnumName.member` to produce nominal values; those values
+support same-enum equality, `match` cases, interpolation, and printing by member
+name.
 
 **Implemented native class subset:** class fields require explicit types and may
 have default initializers. Calling `ClassName()` constructs an instance from

@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace semantic
@@ -156,6 +157,7 @@ namespace semantic
       std::unordered_map<const parser::expression *, callable_signature> callables;
       std::unordered_map<std::string, object_type> objects;
       std::unordered_map<std::string, interface_type> interfaces;
+      std::unordered_map<std::string, std::unordered_set<std::string>> enums;
 
       auto open_scope() -> void
       {
@@ -416,6 +418,13 @@ namespace semantic
         interfaces.emplace(type.name, std::move(interface));
       }
 
+      auto collect_enum_type(const parser::type_declaration &type) -> void
+      {
+        if (type.type_kind != parser::type_declaration::kind::enum_type) return;
+        auto &members = enums[type.name];
+        for (const auto &member : type.enum_members) members.insert(member.name);
+      }
+
       auto same_signature(const callable_signature &left, const callable_signature &right) const -> bool
       {
         return left.parameters == right.parameters && left.result == right.result;
@@ -541,6 +550,8 @@ namespace semantic
           if (binary->operator_text == "<" || binary->operator_text == "<=" ||
               binary->operator_text == ">" || binary->operator_text == ">=")
           {
+            require(!enums.contains(left) && !enums.contains(right),
+                    "Ordered comparison is not defined for enum values", value.range);
             require(!dimensioned(left) && !dimensioned(right),
                     "Ordered comparison is not defined for " + left + " and " + right, value.range);
             static_cast<void>(common_type(left, right, value.range, "Comparison operands"));
@@ -633,6 +644,18 @@ namespace semantic
         }
         if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
         {
+          if (const auto *type_name = dynamic_cast<const parser::identifier_expression *>(member->target.get()))
+          {
+            if (const auto enumeration = enums.find(type_name->name); enumeration != enums.end())
+            {
+              static_cast<void>(expression(*member->target));
+              require(!member->safe, "Safe member access is not defined for enum type '" + type_name->name + "'",
+                      value.range);
+              require(enumeration->second.contains(member->member_name),
+                      "Enum '" + type_name->name + "' has no member '" + member->member_name + "'", value.range);
+              return record(value, type_name->name);
+            }
+          }
           const std::string target = expression(*member->target);
           if (const auto shaped = dimensioned(target))
           {
@@ -788,8 +811,14 @@ namespace semantic
           require(matches && !matches->empty(), "Undefined name '" + identifier->name + "'", value.range);
           return matches->front().type;
         }
-        if (dynamic_cast<const parser::member_expression *>(&value) ||
-            dynamic_cast<const parser::index_expression *>(&value))
+        if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
+        {
+          if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
+              target && enums.contains(target->name))
+            throw semantic_error("Enum members are not assignable", value.range);
+          return expression(value);
+        }
+        if (dynamic_cast<const parser::index_expression *>(&value))
         {
           return expression(value);
         }
@@ -1049,6 +1078,8 @@ namespace semantic
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_enum_type(*type);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_object_type(*type);
         for (const auto &entry : tree.statements)

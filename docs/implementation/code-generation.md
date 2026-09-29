@@ -23,6 +23,7 @@ dimensioned vector and coordinate values, their spreads, indexing, named compone
 printing and interpolation,
 typed expression lambdas with local lexical captures and immediate or stored calls,
 classes with typed defaulted fields, zero-argument construction, `self`, and methods,
+nominal enums with named output, equality, and match cases,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Homogeneous array literals preserve the element width inferred by the

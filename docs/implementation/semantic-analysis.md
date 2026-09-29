@@ -53,7 +53,9 @@ dimensions and lossless component widening.
 Dimensioned `.x`, `.y`, `.z`, and `.w` members resolve to their component type
 when present. Typed expression lambdas retain parameter and result signatures
 through local bindings; stored and immediate calls validate arity and lossless
-argument compatibility. Class metadata supplies typed field and method access,
+argument compatibility. Simple enum members resolve through `Type.member` to
+their nominal enum type; equality and `match` require matching enum types, and
+unknown members are rejected. Class metadata supplies typed field and method access,
 zero-argument default construction, and `self` typing. Unknown class members and
 constructor arguments are rejected. Escaping closure types, interface
 values remain open, but a class declaring `is` or `has` a signature-only face

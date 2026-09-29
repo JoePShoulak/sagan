@@ -16,7 +16,7 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, class fields and `self`, structural face conformance, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, class fields and `self`, structural face conformance, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, default-constructed classes with fields and methods, local captured/immediate lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
@@ -71,7 +71,9 @@ unterminated-block errors are demonstrated. Classes now execute with typed
 defaulted fields, zero-argument construction, `self`, field access/mutation, and
 ordinary or `!`-suffixed methods. `is` and `has` composition now require a class
 to provide every signature-only face method with an exact signature. Simple
-enums, interface-typed values, default-method composition/conflicts, private
+nominal enums now execute with `Type.member` selection, equality, matching,
+interpolation, and readable printing. Interface-typed values,
+default-method composition/conflicts, private
 access enforcement, custom constructors, and reference ownership remain future
 work. Named functions and methods accept block or `=>` expression bodies.
 Typed expression lambdas are callable, may capture local lexical state, and can
@@ -84,14 +86,14 @@ Documentation comments attach to supported declarations with retained text and
 source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
 Bare and value-bearing `yield` statements and documented enum members complete
-the current parser grammar. Generator behavior and enum meaning remain semantic
-and runtime work.
+the current parser grammar. Payload-bearing enum cases and explicit enum values
+remain future semantic and runtime work.
 
 ## Major open language questions
 
 Generic annotations, value/reference behavior, reference-count cycles,
 interface-typed values, interface defaults and conflict resolution, generics and possible sum types,
-custom constructors, enum semantics, exception propagation, module
+custom constructors, payload-bearing enums and explicit enum values, exception propagation, module
 resolution and packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

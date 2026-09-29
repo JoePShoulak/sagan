@@ -45,17 +45,18 @@ block-bodied default methods. A `class` contains `let` fields and block-bodied
 methods. `is` and `has` introduce interchangeable comma-separated composition
 lists on faces and classes. `self` parses as the current-object expression, and
 a leading dot marks a private class method in the AST. Simple enums contain
-identifier members separated by newlines or commas.
+identifier members separated by newlines or commas. Their nominal values use
+`EnumName.member` and can be compared, matched, interpolated, and printed.
 
 The initial native class subset checks typed fields and methods, supports field
 defaults and zero-argument `ClassName()` construction, types `self`, and executes
 field reads, mutation, and method calls. Methods may use a trailing `!` naming
-convention to identify a mutating alternative. Faces and composition still parse
-but conformance, default-method dispatch, privacy, custom constructors, and
-reference ownership are not implemented yet. Signature-only faces do participate
-in semantic checking: a class using either `is` or `has` must implement every
-required method with the exact signature. This is structural conformance attached
-to an explicit declaration, not superclass inheritance. Face-typed values,
+convention to identify a mutating alternative. Default-method dispatch, privacy,
+custom constructors, reference ownership, payload-bearing enums, and explicit
+enum values are not implemented yet. Signature-only faces participate in semantic
+checking: a class using either `is` or `has` must implement every required method
+with the exact signature. This is structural conformance attached to an explicit
+declaration, not superclass inheritance. Face-typed values,
 dynamic dispatch, and default-method composition are later slices.
 
 **Open questions:** structural versus explicit conformance, default-method
