@@ -3,6 +3,8 @@ enum Result<T, E> {
   Failure(E)
 }
 
+fun identity<T>(value: T): T => value
+
 fun describe(result: Result<Int, String>): String {
   match result {
     case Success(value) return "Result: ${value}"
@@ -11,8 +13,8 @@ fun describe(result: Result<Int, String>): String {
 }
 
 fun main(): Int {
-  let success: Result<Int, String> = Success(42)
-  let failure: Result<Int, String> = Failure("guidance unavailable")
+  let success: Result<Int, String> = Success(identity(42))
+  let failure = Result<Int, String>.Failure(identity("guidance unavailable"))
 
   print(describe(success))
   print(describe(failure))

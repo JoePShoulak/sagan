@@ -566,12 +566,14 @@ namespace parser
   function_declaration::function_declaration(const span source_range, std::string identifier,
                                              const bool is_private,
                                              const bool is_constructor,
+                                             std::vector<std::string> generic_parameters,
                                              std::vector<function_parameter> declared_parameters,
                                              std::optional<std::string> result_type,
                                              std::unique_ptr<block_statement> function_body,
                                              expression_ref function_expression_body)
       : statement(source_range), name(std::move(identifier)), private_member(is_private),
         constructor_member(is_constructor),
+        type_parameters(std::move(generic_parameters)),
         parameters(std::move(declared_parameters)),
         return_type(std::move(result_type)), body(std::move(function_body)),
         expression_body(std::move(function_expression_body))
@@ -583,6 +585,16 @@ namespace parser
     write_indent(stream, indent);
     stream << (constructor_member ? "Constructor(" : "Function(")
            << (private_member ? "." : "") << name;
+    if (!type_parameters.empty())
+    {
+      stream << '<';
+      for (std::size_t index = 0; index < type_parameters.size(); ++index)
+      {
+        if (index != 0) stream << ", ";
+        stream << type_parameters[index];
+      }
+      stream << '>';
+    }
     if (return_type)
     {
       stream << ": " << *return_type;

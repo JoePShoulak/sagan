@@ -143,7 +143,9 @@ namespace semantic
       {
         if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(&value))
         {
-          resolve_name(identifier->name, identifier->range);
+          const std::size_t generic = identifier->name.find('<');
+          if (generic == std::string::npos) resolve_name(identifier->name, identifier->range);
+          else resolve_type(std::optional<std::string>{identifier->name}, identifier->range);
         }
         else if (const auto *grouping = dynamic_cast<const parser::grouping_expression *>(&value))
         {
@@ -240,6 +242,8 @@ namespace semantic
       auto function(const parser::function_declaration &value) -> void
       {
         const std::size_t parent = open_scope("function " + value.name);
+        for (const auto &parameter : value.type_parameters)
+          declare(parameter, "type parameter", value.range);
         for (const auto &parameter : value.parameters)
         {
           resolve_type(parameter.type_name, value.range);

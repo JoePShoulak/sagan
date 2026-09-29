@@ -67,7 +67,7 @@ scream_statement := "scream" expression
 assignment_statement := expression ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=") expression
 expression_statement := expression
 coalesce_expression := logical_or_expression ("??" coalesce_expression)?
-function_declaration := "fun" identifier "(" parameters? ")" (":" type)? function_body
+function_declaration := "fun" identifier generic_parameters? "(" parameters? ")" (":" type)? function_body
 function_body := block | "=>" expression
 lambda := "fun" "(" parameters? ")" (":" type)? "=>" expression
 method_signature := "fun" identifier "(" parameters? ")" (":" type)?
@@ -86,6 +86,7 @@ documented_enum_member := documentation_comment* identifier ("(" type_list? ")")
 type_list := type ("," type)*
 
 type_annotation := identifier ("<" type_annotation ("," type_annotation)* ">")?
+qualified_enum_case := type_annotation "." identifier
 module_declaration := "module" identifier
 import_declaration := "import" identifier ("from" identifier)? ("as" identifier)?
 export_declaration := "export" identifier ("as" identifier)?

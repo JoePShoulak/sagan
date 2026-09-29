@@ -365,6 +365,16 @@ namespace parser
       {
         std::string label = std::string(function->constructor_member ? "Constructor\n" : "Function\n") +
                             std::string(function->private_member ? "." : "") + function->name;
+        if (!function->type_parameters.empty())
+        {
+          label += '<';
+          for (std::size_t index = 0; index < function->type_parameters.size(); ++index)
+          {
+            if (index != 0) label += ", ";
+            label += function->type_parameters[index];
+          }
+          label += '>';
+        }
         if (function->return_type)
         {
           label += ": " + *function->return_type;

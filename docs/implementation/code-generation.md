@@ -75,7 +75,7 @@ component types come from the checked semantic model. Vectors support checked
 addition, subtraction, unary negation, scalar multiplication and division,
 equality, and compound forms. Vector-vector multiplication is deliberately not
 assigned an implicit dot, cross, or component-wise meaning. Coordinate
-arithmetic and generic source annotations are not implemented. Both dimensioned
+arithmetic and explicit generic annotations for dimensioned values are not implemented. Both dimensioned
 families provide `.x`, `.y`, `.z`, and `.w` component access where their
 dimension permits it; components are assignable because variables are mutable
 by default.
@@ -94,6 +94,12 @@ Payload-bearing enums lower to tagged structs whose payload storage uses
 `std::variant`; cases with multiple payload values use `std::tuple`. Generated
 match branches test the case tag and extract typed payload bindings by variant
 index. Payload-free enums retain the smaller native `enum class` representation.
+
+Generic functions lower to C++ function templates and rely on the already
+checked Sagan call-site inference. Generic sum enums use a single tagged,
+type-erased native representation; construction stores statically verified
+payloads in `std::any`, and match bindings recover the substituted payload type.
+This representation is an initial backend strategy, not a settled ABI.
 
 `--emit-cpp-modules` resolves a flat sibling-file module graph and links its
 selective imports and exported namespace members into one checked compilation unit. Dependency-private

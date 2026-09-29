@@ -1,0 +1,9 @@
+enum Result<T, E> {
+  Success(T)
+  Failure(E)
+}
+
+fun main(): Int {
+  let failure = Result<Int, String>.Failure(42)
+  return 0
+}

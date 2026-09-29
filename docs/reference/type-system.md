@@ -30,7 +30,7 @@ initializer.
 Array literals infer invariant `Array<Element>` types, while dictionary literals
 infer `Dictionary<Key, Value>` with homogeneous keys and values. Spreads must
 provide compatible collections. Empty arrays and dictionaries cannot yet be
-checked because generic annotation syntax is not implemented. Vector and
+checked because contextual collection construction is not implemented. Vector and
 coordinate literals infer their dimension and common numeric component type,
 for example `Vector3<Float64>`; dimensions must match for compatibility.
 The native backend preserves the vector-versus-coordinate distinction and the
@@ -49,8 +49,14 @@ losslessly in its target vector.
 raises a runtime exception. Typed collections and interfaces continue to have
 provisional semantics outside the implemented subset.
 
-**Open questions:** generic annotation syntax, user-defined member inference, nullability, value versus
-reference categories, generic semantics, possible sum types, variance,
+Generic enum annotations and inferred top-level generic functions are
+implemented. Function inference is call-site based and requires every type
+parameter to appear in an inferable parameter position; it does not use the
+expected return type. Generic classes, faces, methods, constraints, variance,
+and explicit function type arguments remain open.
+
+**Open questions:** user-defined member inference, value versus
+reference categories, broader generic semantics, variance,
 compile-time constants, and representation. Deferred cases are currently
 marked `Unknown` by the type model.
 

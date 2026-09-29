@@ -74,8 +74,8 @@ bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/module_demo.c
 
 Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
-Type output confirms the documented scalar/function, collection, class, member,
-constructor, and face-dispatch subset, but does not yet establish generic annotations.
+Type output confirms the documented scalar/function, generic-function and
+generic-sum, collection, class, member, constructor, and face-dispatch subset.
 Generated C++ supports only the initial executable subset documented under
 [code generation](../implementation/code-generation.md).
 
@@ -136,8 +136,9 @@ optional construction, payload matching, safe access, and lazy fallback chains.
 owner leave scope, then shows the expired reference resolving to `None`.
 `payload-enum-demo` constructs typed cases, binds their payloads in an
 exhaustive match, shows the tagged-variant C++ excerpts, and runs the result.
-`generic-sum-demo` specializes a generic result enum from expected types and
-executes success and failure payload matches.
+`generic-sum-demo` infers a top-level `identity<T>` function at its call sites,
+specializes a generic result enum from an expected type and explicit
+`Result<Int, String>.Failure(...)` qualification, then executes both payload matches.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

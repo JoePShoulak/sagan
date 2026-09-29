@@ -1,0 +1,8 @@
+fun missing<T>(): T {
+  scream "unreachable"
+}
+
+fun main(): Int {
+  let value = missing()
+  return 0
+}

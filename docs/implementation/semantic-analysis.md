@@ -76,7 +76,11 @@ defaults with the same signature require an explicit class override. Within a
 default body, `self` may call other methods declared by that face.
 Faces may compose other faces. Their requirements and defaults are resolved
 transitively before classes are validated, and composition cycles are rejected.
-The generic model and multi-error recovery strategy also remain open.
+Generic enum cases substitute declared payload parameters from either an
+expected result type or explicit `Enum<...>.Case(...)` qualification. Top-level
+generic calls infer type arguments structurally from their arguments, then
+check the instantiated parameter and return types. Constraints, generic
+members/types beyond enums, and the multi-error recovery strategy remain open.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
 Non-`Void` block-bodied functions must return on every statically guaranteed

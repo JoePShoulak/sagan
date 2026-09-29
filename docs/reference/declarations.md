@@ -85,11 +85,18 @@ Payload-constructor names must currently be unique within that namespace.
 
 Enums may declare type parameters: `enum Result<T, E>`. An expected type such
 as `let result: Result<Int, String> = Failure("problem")` supplies generic
-arguments that the selected case cannot infer. Fully qualified generic case
-construction is reserved but not yet executable; until that increment lands,
-construction with incomplete inference requires an expected type.
+arguments that the selected case cannot infer. Explicit qualification such as
+`let result = Result<Int, String>.Failure("problem")` supplies those arguments
+without an expected type. Both forms are type-checked and execute natively.
+
+Top-level functions may declare type parameters after their name:
+`fun identity<T>(value: T): T => value`. Calls infer each type argument from
+the corresponding argument type, including type parameters nested inside a
+generic annotation. Every declared type parameter must be inferable from the
+call; explicit function type arguments, constraints, generic methods, generic
+classes, and generic faces remain future work.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
-forward references, explicit enum values, generic
-declarations, module resolution and visibility, and entry-point forms. These require semantic
+forward references, explicit enum values, constrained and member generics,
+module resolution and visibility, and entry-point forms. These require semantic
 analysis or future language revisions.

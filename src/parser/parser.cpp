@@ -275,6 +275,17 @@ namespace parser
     const token &name = allow_mutating && match(tokens::METHOD_IDENTIFIER)
                             ? previous()
                             : expect(tokens::IDENTIFIER, "a function name after 'fun'");
+    std::vector<std::string> type_parameters;
+    if (match(tokens::LANGLE))
+    {
+      do
+      {
+        type_parameters.push_back(expect(tokens::IDENTIFIER, "a generic type parameter").text);
+      } while (match(tokens::COMMA));
+      expect(tokens::RANGLE, "'>' after generic type parameters");
+    }
+    if (!type_parameters.empty() && (body_optional || allow_private || allow_mutating))
+      throw parse_error("Generic methods are not implemented yet", name.range);
     expect(tokens::LPAREN, "'(' after the function name");
     std::vector<function_parameter> parameters;
     while (!check(tokens::RPAREN))
@@ -313,6 +324,7 @@ namespace parser
     }
     const int end = body ? body->range.end : expression_body ? expression_body->range.end : previous().range.end;
     return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text, private_member, false,
+                                                  std::move(type_parameters),
                                                   std::move(parameters), std::move(return_type),
                                                   std::move(body), std::move(expression_body));
   }
@@ -333,6 +345,7 @@ namespace parser
     expect(tokens::RPAREN, "')' after the constructor parameters");
     auto body = parse_block();
     return std::make_unique<function_declaration>(span{keyword.range.begin, body->range.end}, "new", false, true,
+                                                  std::vector<std::string>{},
                                                   std::move(parameters), std::optional<std::string>{"Void"},
                                                   std::move(body), nullptr);
   }
@@ -988,7 +1001,34 @@ namespace parser
     if (match(tokens::IDENTIFIER) || match(tokens::KWD_SELF))
     {
       const token &value = previous();
-      return std::make_unique<identifier_expression>(value.range, value.text);
+      std::string name = value.text;
+      int end = value.range.end;
+      if (check(tokens::LANGLE))
+      {
+        std::size_t scan = current;
+        int depth = 0;
+        do
+        {
+          if (input[scan].id == tokens::LANGLE) ++depth;
+          else if (input[scan].id == tokens::RANGLE) --depth;
+          ++scan;
+        } while (scan < input.size() && depth > 0);
+        if (depth == 0 && scan < input.size() && input[scan].id == tokens::DOT)
+        {
+          advance();
+          name += '<';
+          bool first = true;
+          do
+          {
+            if (!first) name += ", ";
+            name += parse_type_annotation("a qualified generic type argument");
+            first = false;
+          } while (match(tokens::COMMA));
+          end = expect(tokens::RANGLE, "'>' after qualified generic type arguments").range.end;
+          name += '>';
+        }
+      }
+      return std::make_unique<identifier_expression>(span{value.range.begin, end}, std::move(name));
     }
     if (match(tokens::INTEGER) || match(tokens::FLOAT))
     {

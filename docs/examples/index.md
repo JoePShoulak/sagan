@@ -124,9 +124,10 @@ make payload-enum-demo
 
 ## Generic-sum demonstration
 
-`examples/generic_sum_demo.sagan` declares `Result<T, E>`, uses expected result
-types to specialize success and failure construction, exhaustively binds both
-payload types, and executes the generated native program:
+`examples/generic_sum_demo.sagan` declares `Result<T, E>` and `identity<T>`.
+It demonstrates call-site function inference, contextual success construction,
+explicit `Result<Int, String>.Failure(...)` qualification, exhaustive payload
+binding, and native execution:
 
 ```bash
 make generic-sum-demo

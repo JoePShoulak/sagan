@@ -16,7 +16,7 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, payload-bearing nominal enums and exhaustive matches, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, generic call inference, generic sum construction, payload-bearing nominal enums and exhaustive matches, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Reference, weak-edge, and absence foundations implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, value exceptions and cleanup, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
@@ -106,8 +106,10 @@ numeric enum values remain future semantic and runtime work.
 
 ## Major open language questions
 
-Generic sum enums execute with contextual type arguments. Generic functions,
-explicit generic case qualification, automatic handling of all-strong reference cycles,
+Generic sum enums execute with contextual or explicitly qualified type
+arguments, and top-level generic functions execute with call-site inference.
+Generic classes, faces, methods, constraints, and explicit function type
+arguments, automatic handling of all-strong reference cycles,
 explicit numeric enum values, catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import

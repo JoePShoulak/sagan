@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.49.0](https://img.shields.io/badge/development-0.49.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.50.0](https://img.shields.io/badge/development-0.50.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -32,8 +32,12 @@ enums can be selected, compared, matched, interpolated, and printed. Cases may
 carry typed payloads, construct values like `Success(42)`, and bind their
 contents through exhaustive `match` branches.
 Class methods declared with a leading dot are private to their declaring class.
-General-purpose generic functions, automatic reference-cycle collection, the full runtime, and the
-standard library are not yet implemented. The built-in `Optional<T>` type,
+Top-level generic functions such as `identity<T>(value: T): T` infer type
+arguments from their calls and execute natively. Generic sum enums support both
+contextual construction and explicit qualification such as
+`Result<Int, String>.Failure("problem")`. Generic classes, faces, and methods,
+automatic reference-cycle collection, the full runtime, and the standard
+library are not yet implemented. The built-in `Optional<T>` type,
 `Some(value)`, `None`, payload matching, safe `?.` access, and lazy `??`
 fallback execute natively. An initial C++ emitter can compile the validated scalar/control-
 flow subset into a native executable, including visible output through the

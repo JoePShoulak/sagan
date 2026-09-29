@@ -16,4 +16,4 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/generic_sum_demo.cpp -o bu
 echo
 build/generic_sum_demo
 echo
-echo "Generic-sum demo passed: contextual type arguments selected both cases and payloads matched safely."
+echo "Generics demo passed: call-site inference executed identity<T>, contextual construction selected Success, and Result<Int, String>.Failure supplied explicit enum arguments."

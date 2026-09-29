@@ -33,6 +33,7 @@ namespace codegen
       std::unordered_map<std::string, const parser::type_declaration *> face_types;
       std::unordered_map<std::string, std::unordered_set<std::string>> weak_fields;
       std::unordered_set<std::string> emitted_faces;
+      std::unordered_set<std::string> active_type_parameters;
       bool in_method = false;
 
       auto indentation() const -> std::string
@@ -70,6 +71,7 @@ namespace codegen
         if (name == "Int32") return "std::int32_t";
         if (name == "Int16") return "std::int16_t";
         if (name == "Int8") return "std::int8_t";
+        if (active_type_parameters.contains(name)) return identifier(name);
         if (std::string_view{name}.starts_with("Optional<") && name.ends_with('>'))
           return "std::optional<" + type_name(name.substr(9, name.size() - 10), range) + ">";
         if (class_types.contains(name) || face_types.contains(name))
@@ -352,6 +354,34 @@ namespace codegen
             }
             return result + ")";
           }
+          if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get()))
+          {
+            if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get()))
+            {
+              const std::size_t open = target->name.find('<');
+              const std::string base = open == std::string::npos ? target->name : target->name.substr(0, open);
+              if (const auto found = enum_cases.find(member->member_name);
+                  found != enum_cases.end() && found->second.first == base)
+              {
+                const auto declaration = enum_declarations.at(base);
+                const auto instantiated = generic_arguments(expression_type(value));
+                const auto &case_declaration = declaration->enum_members[found->second.second];
+                std::string result = identifier(base) + "{" + identifier(base) + "::Tag::" +
+                                     identifier(member->member_name) + ", {";
+                for (std::size_t index = 0; index < call->arguments.size(); ++index)
+                {
+                  if (index != 0) result += ", ";
+                  std::string payload_type = case_declaration.payload_types[index];
+                  for (std::size_t parameter = 0; parameter < declaration->type_parameters.size(); ++parameter)
+                    if (payload_type == declaration->type_parameters[parameter] && parameter < instantiated.size())
+                      payload_type = instantiated[parameter];
+                  result += type_name(payload_type, call->arguments[index]->range) + "{" +
+                            expression(*call->arguments[index]) + "}";
+                }
+                return result + "}}";
+              }
+            }
+          }
           if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get());
               member && member->safe)
           {
@@ -394,10 +424,11 @@ namespace codegen
                    ")->" + identifier(member->member_name) + "} : std::nullopt; }())";
           }
           if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
-              target && enum_types.contains(target->name))
+              target && enum_types.contains(target->name.substr(0, target->name.find('<'))))
           {
-            if (payload_enums.contains(target->name)) return enum_factory(target->name, member->member_name) + "()";
-            return identifier(target->name) + "::" + identifier(member->member_name);
+            const std::string base = target->name.substr(0, target->name.find('<'));
+            if (payload_enums.contains(base)) return enum_factory(base, member->member_name) + "()";
+            return identifier(base) + "::" + identifier(member->member_name);
           }
           const std::string target_type = expression_type(*member->target);
           if (std::string_view{target_type}.starts_with("Vector") ||
@@ -772,6 +803,18 @@ namespace codegen
       auto function(const parser::function_declaration &value) -> void
       {
         const bool entry = value.name == "main";
+        const auto previous_type_parameters = active_type_parameters;
+        active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
+        if (!value.type_parameters.empty())
+        {
+          output << "template <";
+          for (std::size_t index = 0; index < value.type_parameters.size(); ++index)
+          {
+            if (index != 0) output << ", ";
+            output << "typename " << identifier(value.type_parameters[index]);
+          }
+          output << ">\n";
+        }
         output << type(value.return_type, value.range, entry) << ' ' << identifier(value.name) << '(';
         for (std::size_t index = 0; index < value.parameters.size(); ++index)
         {
@@ -785,6 +828,7 @@ namespace codegen
           output << "{ ";
           if (entry) output << "sagan_initialize_runtime(); ";
           output << "return " << expression(*value.expression_body) << "; }\n\n";
+          active_type_parameters = previous_type_parameters;
           return;
         }
         if (!value.body) fail("function has no executable body", value.range);
@@ -800,6 +844,7 @@ namespace codegen
         }
         else block(*value.body);
         output << "\n\n";
+        active_type_parameters = previous_type_parameters;
       }
 
       auto method(const parser::function_declaration &value, const std::string_view class_name = {},
