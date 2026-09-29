@@ -6,6 +6,7 @@
 #include "parser/tokenizer.hpp"
 #include "parser/tokens.hpp"
 #include "parser/unicode.hpp"
+#include "modules/resolver.hpp"
 #include "semantic/analyzer.hpp"
 #include "semantic/semantic_error.hpp"
 #include "semantic/type_checker.hpp"
@@ -2024,6 +2025,7 @@ auto main(const int argc, char **argv) -> int
     semantic,
     types,
     entry,
+    modules,
     emit_cpp,
   };
 
@@ -2067,6 +2069,11 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::entry;
     path = argv[2];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--modules")
+  {
+    mode = output_mode::modules;
+    path = argv[2];
+  }
   else if ((argc == 3 || argc == 4) && std::string(argv[1]) == "--emit-cpp")
   {
     mode = output_mode::emit_cpp;
@@ -2085,12 +2092,19 @@ auto main(const int argc, char **argv) -> int
   {
     std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
-                 "--entry FILE | --emit-cpp FILE [OUTPUT] | FILE]\n";
+                 "--entry FILE | --modules FILE | --emit-cpp FILE [OUTPUT] | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
   try
   {
+    if (mode == output_mode::modules)
+    {
+      const auto graph = modules::resolve(path);
+      std::cout << "Sagan " << SAGAN_VERSION << " module graph: " << path << "\n\n";
+      graph.print(std::cout);
+      return 0;
+    }
     const std::string source = read_file(path);
     const auto result = tokenize(source);
 

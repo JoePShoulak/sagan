@@ -1,0 +1,5 @@
+module main
+
+export missing
+
+fun main(): Int => 0

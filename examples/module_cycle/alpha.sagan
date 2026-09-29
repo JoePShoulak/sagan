@@ -1,0 +1,7 @@
+module alpha
+
+import beta
+
+export alpha_value
+
+let alpha_value = 1

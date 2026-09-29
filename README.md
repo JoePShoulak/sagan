@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.41.0](https://img.shields.io/badge/development-0.41.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.42.0](https://img.shields.io/badge/development-0.42.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -68,6 +68,10 @@ Value-bearing `scream` exceptions execute in the native subset. `unless`
 handlers test exact type-and-value matches in source order, unmatched values
 propagate outward, and `finally` cleanup runs during normal completion,
 propagation, handled exceptions, and early returns.
+The module resolver now loads flat sibling `.sagan` files recursively from the
+entry file's directory, validates filename declarations and public exports,
+applies import/export aliases, orders dependencies, and rejects cycles. Native
+cross-module calls are the next module milestone.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text
@@ -108,6 +112,7 @@ Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
 ```bash
 bash scripts/test.sh
 make parser-demo
+bash scripts/module_demo.sh
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
@@ -129,6 +134,7 @@ bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
+bin/sagan --modules examples/module_demo/main.sagan
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 bin/sagan --version
 ```

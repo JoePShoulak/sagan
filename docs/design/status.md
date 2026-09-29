@@ -21,6 +21,7 @@ verified_by: null
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, value exceptions and cleanup, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
+| Module resolution | **Dependency graph implemented** | flat sibling-file mapping, declaration/export validation, aliases, transitive ordering, cycle diagnostics, module demo |
 
 ## Tokenizer verification
 
@@ -84,8 +85,10 @@ Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and
 function-type annotations remain future runtime and type-system work.
 Module declarations, import sources and aliases, and standalone exports are
-parsed and rendered. Import resolution, visibility, initialization, and package
-behavior remain semantic and module-loader work.
+parsed and rendered. The initial loader resolves sibling files transitively,
+validates module names and public exports, preserves aliases, and rejects
+cycles. Semantic/type linking, namespace access, native cross-module calls,
+initialization, and package behavior remain future work.
 Documentation comments attach to supported declarations with retained text and
 source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
@@ -97,7 +100,7 @@ remain future semantic and runtime work.
 
 Generic annotations, reference-count cycles and weak references,
 generics and possible sum types,
-payload-bearing enums and explicit enum values, catchable native runtime errors, module
-resolution and packages, and the concrete math, physics, and rendering APIs
+payload-bearing enums and explicit enum values, catchable native runtime errors,
+cross-module semantic linking and packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

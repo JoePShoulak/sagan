@@ -1,0 +1,3 @@
+module support
+
+let private_value = 1

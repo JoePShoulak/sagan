@@ -1,0 +1,5 @@
+module telemetry
+
+let offset: Int = 2
+
+export offset

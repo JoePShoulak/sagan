@@ -1,0 +1,6 @@
+module main
+
+import course from guidance as calculate_course
+import telemetry as flight_data
+
+fun main(): Int => calculate_course(40)

@@ -21,6 +21,7 @@ bin/sagan --ast-html path/to/source.sagan build/tree.html
 bin/sagan --semantic path/to/source.sagan
 bin/sagan --types path/to/source.sagan
 bin/sagan --entry path/to/source.sagan
+bin/sagan --modules path/to/main.sagan
 bin/sagan --emit-cpp path/to/source.sagan
 bin/sagan --emit-cpp path/to/source.sagan build/program.cpp
 ```
@@ -39,6 +40,10 @@ or duplicate names, but it does not type-check or execute the program.
 declaration and expression types.
 `--entry` performs name and type checks, then validates the executable `main`
 contract. It does not generate or run a program.
+`--modules` recursively resolves sibling `<module>.sagan` files from the entry
+file's directory, validates module declarations and exports, rejects dependency
+cycles, and prints the dependency-ordered graph. It does not yet link imported
+declarations into semantic analysis or generated code.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
@@ -58,6 +63,7 @@ bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
 bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
+bin/sagan --modules examples/module_demo/main.sagan
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 ```
 
@@ -80,6 +86,7 @@ make ast-demo
 make semantic-demo
 make type-demo
 make entry-demo
+make module-demo
 make execution-demo
 make get-version
 make clean
@@ -94,6 +101,7 @@ bash scripts/ast_demo.sh --no-open
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
+bash scripts/module_demo.sh
 bash scripts/execution_demo.sh
 bash scripts/docs.sh check
 ```
@@ -107,6 +115,8 @@ semantic model; `type-demo` prints the successful type model; and `clean`
 removes compiler objects and the binary. `entry-demo` validates a successful
 entry point and focused control-flow failures. The test target exercises
 semantic/type/entry/code-generation success plus focused failures.
+`module-demo` prints a three-module dependency graph and verifies export,
+filename, and cycle diagnostics.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

@@ -1,0 +1,7 @@
+module guidance
+
+import offset from telemetry
+
+fun calculate(value: Int): Int => value + offset
+
+export calculate as course

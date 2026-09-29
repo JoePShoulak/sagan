@@ -1,0 +1,9 @@
+module main
+
+let first = 1
+let second = 2
+
+export first as value
+export second as value
+
+fun main(): Int => 0

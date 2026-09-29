@@ -29,6 +29,9 @@ Development currently proceeds through five broad stages:
    reference-counted face dispatch and value exception propagation with
    guaranteed cleanup.
 
+The module pipeline has additionally begun with deterministic sibling-file
+resolution, export validation, dependency ordering, and cycle detection.
+
 See the [implementation overview](../implementation/index.md) for the present
 boundary between working code and intended architecture. Among the ideas
 inherited from Schematic is dynamic in-app version numbering: Schematic

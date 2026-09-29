@@ -75,6 +75,20 @@ supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
 `bash scripts/ast_demo.sh --no-open` to generate `build/ast-demo.html` without
 launching a browser.
 
+## Module-resolution demonstration
+
+`examples/module_demo/` contains a three-file dependency graph with a transitive
+selective import, an export alias, a local import alias, and a whole-module
+import. The demo prints every source file and the dependency-ordered graph, then
+confirms focused cycle, missing-export, and filename/declaration diagnostics.
+
+```bash
+make module-demo
+```
+
+This milestone validates module structure and visibility. It does not yet link
+imported declarations into semantic analysis or native code.
+
 ## Semantic-analysis demonstration
 
 `examples/semantic_demo.sagan` exercises program, type, function, block, and

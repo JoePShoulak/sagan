@@ -1,0 +1,5 @@
+module main
+
+import absent
+
+fun main(): Int => 0

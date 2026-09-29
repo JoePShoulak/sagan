@@ -1,0 +1,3 @@
+module wrong_name
+
+fun main(): Int => 0
