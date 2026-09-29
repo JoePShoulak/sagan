@@ -19,7 +19,7 @@ verified_by: null
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, generic call inference, generic sum construction, payload-bearing nominal enums and exhaustive matches, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Reference, weak-edge, and absence foundations implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, value exceptions and cleanup, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, generic and ordinary reference-counted classes, specialized runtime faces, value exceptions and cleanup, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demos |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
 | Module resolution | **Executable imports implemented** | flat sibling-file mapping, declaration/export validation, selective and whole-module namespace access, isolated linked symbols, aliases, transitive ordering, cycle diagnostics, native module demo |
 
@@ -108,8 +108,9 @@ numeric enum values remain future semantic and runtime work.
 
 Generic sum enums execute with contextual or explicitly qualified type
 arguments, and top-level generic functions execute with call-site inference.
-Generic classes, faces, methods, constraints, and explicit function type
-arguments, automatic handling of all-strong reference cycles,
+Generic classes and requirement-only generic faces execute with specialization.
+Generic methods, generic face defaults, constraints, and explicit function or
+constructor type arguments, automatic handling of all-strong reference cycles,
 explicit numeric enum values, catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import

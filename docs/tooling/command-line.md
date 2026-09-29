@@ -96,6 +96,7 @@ make optional-demo
 make weak-demo
 make payload-enum-demo
 make generic-sum-demo
+make generic-class-demo
 make execution-demo
 make get-version
 make clean
@@ -115,6 +116,7 @@ bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 bash scripts/payload_enum_demo.sh
 bash scripts/generic_sum_demo.sh
+bash scripts/generic_class_demo.sh
 bash scripts/execution_demo.sh
 bash scripts/docs.sh check
 ```
@@ -139,6 +141,9 @@ exhaustive match, shows the tagged-variant C++ excerpts, and runs the result.
 `generic-sum-demo` infers a top-level `identity<T>` function at its call sites,
 specializes a generic result enum from an expected type and explicit
 `Result<Int, String>.Failure(...)` qualification, then executes both payload matches.
+`generic-class-demo` infers `Box<T>` from constructor arguments, checks typed
+fields and methods, converts it to `Readable<T>`, and executes virtual dispatch
+plus typed mutation through generated C++ templates.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

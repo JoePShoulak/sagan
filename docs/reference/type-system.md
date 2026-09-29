@@ -50,10 +50,12 @@ raises a runtime exception. Typed collections and interfaces continue to have
 provisional semantics outside the implemented subset.
 
 Generic enum annotations and inferred top-level generic functions are
-implemented. Function inference is call-site based and requires every type
+implemented. Generic classes infer invariant type arguments from constructors,
+and generic face conformance substitutes those arguments through required
+method signatures. Function inference is call-site based and requires every type
 parameter to appear in an inferable parameter position; it does not use the
-expected return type. Generic classes, faces, methods, constraints, variance,
-and explicit function type arguments remain open.
+expected return type. Generic methods, face defaults, constraints, variance,
+and explicit function or constructor type arguments remain open.
 
 **Open questions:** user-defined member inference, value versus
 reference categories, broader generic semantics, variance,

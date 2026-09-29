@@ -1,0 +1,19 @@
+face Readable<T> {
+  fun get(): T
+}
+
+class Box<T> is Readable<T> {
+  let value: T
+
+  new(value: T) {
+    self.value = value
+  }
+
+  fun get(): T => self.value
+}
+
+fun main(): Int {
+  let number = Box(42)
+  let wrong: Readable<String> = number
+  return 0
+}

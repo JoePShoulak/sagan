@@ -71,14 +71,14 @@ function_declaration := "fun" identifier generic_parameters? "(" parameters? ")"
 function_body := block | "=>" expression
 lambda := "fun" "(" parameters? ")" (":" type)? "=>" expression
 method_signature := "fun" identifier "(" parameters? ")" (":" type)?
-face_declaration := "face" identifier composition? "{" face_member* "}"
+face_declaration := "face" identifier generic_parameters? composition? "{" face_member* "}"
 face_member := method_signature function_body?
-class_declaration := "class" identifier composition? "{" class_member* "}"
+class_declaration := "class" identifier generic_parameters? composition? "{" class_member* "}"
 class_member := "weak"? "let" "."? identifier (":" type)? ("=" expression)?
               | constructor_declaration
               | "fun" "."? identifier "(" parameters? ")" (":" type)? function_body
 constructor_declaration := "new" "(" typed_parameters? ")" block
-composition := ("is" | "has") identifier ("," identifier)*
+composition := ("is" | "has") type_annotation ("," type_annotation)*
 enum_declaration := "enum" identifier generic_parameters? "{" enum_members? "}"
 generic_parameters := "<" identifier ("," identifier)* ">"
 enum_members := documented_enum_member ((newline+ | ",") documented_enum_member)* ","?

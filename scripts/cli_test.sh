@@ -91,6 +91,14 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$work_dir/generics.cpp" -o "$wo
 generic_output="$($work_dir/generics)"
 grep -Fq "Result: 42" <<<"$generic_output"
 grep -Fq "Error: guidance unavailable" <<<"$generic_output"
+expect_output "generic class C++ output file" "Wrote generated C++" \
+  "$binary" --emit-cpp examples/generic_class_demo.sagan "$work_dir/generic-class.cpp"
+grep -Fq "template <typename sagan_54>" "$work_dir/generic-class.cpp"
+grep -Fq "std::make_shared<sagan_426f78<std::int8_t>>" "$work_dir/generic-class.cpp"
+g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$work_dir/generic-class.cpp" -o "$work_dir/generic-class"
+generic_class_output="$($work_dir/generic-class)"
+grep -Fq "Number box through Readable<Int8>: 42" <<<"$generic_class_output"
+grep -Fq "Updated number: 43" <<<"$generic_class_output"
 grep -Fq "int main()" "$work_dir/generated.cpp"
 grep -Fq "enum class sagan_4c61756e6368537461747573" "$work_dir/generated.cpp"
 grep -Fq "sagan_4c61756e6368537461747573::sagan_7265616479" "$work_dir/generated.cpp"
@@ -219,6 +227,12 @@ expect_failure "generic function inference diagnostic" 1 "No matching overload f
   "$binary" --types examples/type_generic_function_inference_error.sagan
 expect_failure "qualified generic enum payload diagnostic" 1 "Enum case payload requires String" \
   "$binary" --types examples/type_generic_qualified_payload_error.sagan
+expect_failure "generic class constructor diagnostic" 1 "No matching constructor for 'Box'" \
+  "$binary" --types examples/type_generic_class_constructor_error.sagan
+expect_failure "generic class inference diagnostic" 1 "Cannot infer every generic argument for class 'Marker'" \
+  "$binary" --types examples/type_generic_class_inference_error.sagan
+expect_failure "generic face specialization diagnostic" 1 "Variable initializer requires Readable<String>, but received Box<Int8>" \
+  "$binary" --types examples/type_generic_face_assignment_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

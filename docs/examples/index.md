@@ -133,6 +133,18 @@ binding, and native execution:
 make generic-sum-demo
 ```
 
+## Generic class and face demonstration
+
+`examples/generic_class_demo.sagan` declares `Box<T>` and the requirement-only
+`Readable<T>` face. It infers class specializations from constructor calls,
+checks fields and methods after substituting `T`, converts `Box<Int8>` to
+`Readable<Int8>`, dispatches through that face, mutates the boxed value, and
+executes the generated native program:
+
+```bash
+make generic-class-demo
+```
+
 ## Semantic-analysis demonstration
 
 `examples/semantic_demo.sagan` exercises program, type, function, block, and

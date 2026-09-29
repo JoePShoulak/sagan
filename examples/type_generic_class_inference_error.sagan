@@ -1,0 +1,8 @@
+class Marker<T> {
+  let visible: Bool = true
+}
+
+fun main(): Int {
+  let marker = Marker()
+  return 0
+}

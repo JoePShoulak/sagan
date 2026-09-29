@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.50.1](https://img.shields.io/badge/development-0.50.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.51.0](https://img.shields.io/badge/development-0.51.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -35,9 +35,12 @@ Class methods declared with a leading dot are private to their declaring class.
 Top-level generic functions such as `identity<T>(value: T): T` infer type
 arguments from their calls and execute natively. Generic sum enums support both
 contextual construction and explicit qualification such as
-`Result<Int, String>.Failure("problem")`. Generic classes, faces, and methods,
-automatic reference-cycle collection, the full runtime, and the standard
-library are not yet implemented. The built-in `Optional<T>` type,
+`Result<Int, String>.Failure("problem")`. Generic classes infer their type
+arguments from constructors, preserve them through fields and methods, and may
+conform to specialized generic faces such as `Readable<T>`. Generic methods,
+constraints, default methods on generic faces, automatic reference-cycle
+collection, the full runtime, and the standard library are not yet implemented.
+The built-in `Optional<T>` type,
 `Some(value)`, `None`, payload matching, safe `?.` access, and lazy `??`
 fallback execute natively. An initial C++ emitter can compile the validated scalar/control-
 flow subset into a native executable, including visible output through the
@@ -135,6 +138,7 @@ bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 bash scripts/payload_enum_demo.sh
 bash scripts/generic_sum_demo.sh
+bash scripts/generic_class_demo.sh
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh

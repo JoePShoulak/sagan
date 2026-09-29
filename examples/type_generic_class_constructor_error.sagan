@@ -1,0 +1,12 @@
+class Box<T> {
+  let value: T
+
+  new(value: T) {
+    self.value = value
+  }
+}
+
+fun main(): Int {
+  let wrong: Box<String> = Box(42)
+  return 0
+}

@@ -257,13 +257,13 @@ namespace semantic
 
       auto type(const parser::type_declaration &value) -> void
       {
-        for (const auto &interface_name : value.composed_interfaces)
-        {
-          resolve_name(interface_name, value.range);
-        }
         const std::size_t parent = open_scope("type " + value.name);
         for (const auto &parameter : value.type_parameters)
           declare(parameter, "type parameter", value.range);
+        for (const auto &interface_name : value.composed_interfaces)
+        {
+          resolve_type(std::optional<std::string>{interface_name}, value.range);
+        }
         if (value.type_kind == parser::type_declaration::kind::class_type ||
             value.type_kind == parser::type_declaration::kind::interface_type)
         {

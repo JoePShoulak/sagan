@@ -101,6 +101,12 @@ type-erased native representation; construction stores statically verified
 payloads in `std::any`, and match bindings recover the substituted payload type.
 This representation is an initial backend strategy, not a settled ABI.
 
+Generic classes and requirement-only generic faces lower to C++ class
+templates. Construction uses the checked specialization with `std::make_shared`,
+and conversion to a specialized face uses the corresponding virtual template
+base. Generic face default methods are deliberately rejected until their
+substitution and composition ABI is designed.
+
 `--emit-cpp-modules` resolves a flat sibling-file module graph and links its
 selective imports and exported namespace members into one checked compilation unit. Dependency-private
 top-level names receive deterministic module-qualified identities, imported

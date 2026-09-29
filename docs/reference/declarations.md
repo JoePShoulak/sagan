@@ -93,8 +93,17 @@ Top-level functions may declare type parameters after their name:
 `fun identity<T>(value: T): T => value`. Calls infer each type argument from
 the corresponding argument type, including type parameters nested inside a
 generic annotation. Every declared type parameter must be inferable from the
-call; explicit function type arguments, constraints, generic methods, generic
-classes, and generic faces remain future work.
+call; explicit function type arguments, constraints, and generic methods remain
+future work.
+
+Classes and faces may also declare type parameters. Constructor calls infer a
+generic class specialization from constructor arguments, so `Box(42)` produces
+the corresponding `Box<Int8>` under normal literal inference. An expected
+annotation may supply otherwise uninferable parameters. Fields and methods
+substitute the specialization consistently. Composition accepts specialized
+faces, as in `class Box<T> is Readable<T>`, and conversions preserve invariant
+type arguments. Default methods on generic faces, generic methods, constraints,
+and explicit constructor type arguments remain future work.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, explicit enum values, constrained and member generics,

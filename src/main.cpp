@@ -1882,7 +1882,7 @@ namespace
                                 "has an incompatible signature for method 'measure'");
     passed &= expect_type_error("class composition requires a face",
                                 "class Probe is Missing {\n}\n",
-                                "Undefined name 'Missing'");
+                                "Undefined type 'Missing'");
     passed &= expect_type_model(
         "private method access inside declaring class",
         "class Vault {\n  fun .secret(): Int => 42\n  fun reveal(): Int => self.secret()\n}\n"

@@ -1,0 +1,31 @@
+face Readable<T> {
+  fun get(): T
+}
+
+class Box<T> is Readable<T> {
+  let value: T
+
+  new(value: T) {
+    self.value = value
+  }
+
+  fun get(): T => self.value
+
+  fun replace!(value: T): T {
+    self.value = value
+    return self.value
+  }
+}
+
+fun main(): Int {
+  let number = Box(42)
+  let message: Box<String> = Box("guidance online")
+  let readable: Readable<Int8> = number
+
+  print("Number box through Readable<Int8>: ${readable.get()}")
+  print("Message box: ${message.get()}")
+  print("Updated number: ${number.replace!(43)}")
+
+  if number.get() == 43 return 0
+  else return 1
+}

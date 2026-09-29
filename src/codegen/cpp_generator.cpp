@@ -74,8 +74,24 @@ namespace codegen
         if (active_type_parameters.contains(name)) return identifier(name);
         if (std::string_view{name}.starts_with("Optional<") && name.ends_with('>'))
           return "std::optional<" + type_name(name.substr(9, name.size() - 10), range) + ">";
-        if (class_types.contains(name) || face_types.contains(name))
-          return "std::shared_ptr<" + identifier(name) + ">";
+        const std::size_t generic_open = name.find('<');
+        const std::string generic_base = generic_open == std::string::npos ? name : name.substr(0, generic_open);
+        if (class_types.contains(generic_base) || face_types.contains(generic_base))
+        {
+          std::string concrete = identifier(generic_base);
+          const auto arguments = generic_arguments(name);
+          if (!arguments.empty())
+          {
+            concrete += '<';
+            for (std::size_t index = 0; index < arguments.size(); ++index)
+            {
+              if (index != 0) concrete += ", ";
+              concrete += type_name(arguments[index], range);
+            }
+            concrete += '>';
+          }
+          return "std::shared_ptr<" + concrete + ">";
+        }
         if (user_types.contains(name)) return identifier(name);
         if (const std::size_t open = name.find('<'); open != std::string::npos && name.ends_with('>') &&
             user_types.contains(name.substr(0, open)))
@@ -127,15 +143,16 @@ namespace codegen
       auto weak_member(const parser::member_expression &value) const -> bool
       {
         const std::string target = expression_type(*value.target);
-        const auto fields = weak_fields.find(target);
+        const auto fields = weak_fields.find(target.substr(0, target.find('<')));
         return fields != weak_fields.end() && fields->second.contains(value.member_name);
       }
 
       auto raw_member(const parser::member_expression &value) -> std::string
       {
         const std::string target_type = expression_type(*value.target);
+        const std::string target_base = target_type.substr(0, target_type.find('<'));
         const auto *self = dynamic_cast<const parser::identifier_expression *>(value.target.get());
-        const bool reference = (class_types.contains(target_type) || face_types.contains(target_type)) &&
+        const bool reference = (class_types.contains(target_base) || face_types.contains(target_base)) &&
                                !(self && self->name == "self");
         return expression(*value.target) + (reference ? "->" : ".") + identifier(value.member_name);
       }
@@ -164,6 +181,25 @@ namespace codegen
             result.push_back(std::move(argument));
             begin = index + 1;
           }
+        }
+        return result;
+      }
+
+      auto concrete_user_type(const std::string &type, const parser::span range) const -> std::string
+      {
+        const std::size_t open = type.find('<');
+        const std::string base = open == std::string::npos ? type : type.substr(0, open);
+        std::string result = identifier(base);
+        const auto arguments = generic_arguments(type);
+        if (!arguments.empty())
+        {
+          result += '<';
+          for (std::size_t index = 0; index < arguments.size(); ++index)
+          {
+            if (index != 0) result += ", ";
+            result += type_name(arguments[index], range);
+          }
+          result += '>';
         }
         return result;
       }
@@ -401,8 +437,13 @@ namespace codegen
             return result + ")}; }())";
           }
           std::string result = expression(*call->callee) + "(";
-          if (called_name && class_types.contains(called_name->name))
-            result = "std::make_shared<" + identifier(called_name->name) + ">(";
+          if (called_name && class_types.contains(called_name->name.substr(0, called_name->name.find('<'))))
+          {
+            std::string runtime_type = type_name(expression_type(value), value.range);
+            constexpr std::string_view shared_prefix = "std::shared_ptr<";
+            runtime_type = runtime_type.substr(shared_prefix.size(), runtime_type.size() - shared_prefix.size() - 1);
+            result = "std::make_shared<" + runtime_type + ">(";
+          }
           for (std::size_t index = 0; index < call->arguments.size(); ++index)
           {
             if (index != 0) result += ", ";
@@ -899,7 +940,7 @@ namespace codegen
           -> std::vector<const parser::function_declaration *>
       {
         if (!visiting.insert(name).second) return {};
-        const auto found = face_types.find(name);
+        const auto found = face_types.find(name.substr(0, name.find('<')));
         if (found == face_types.end()) return {};
         std::vector<const parser::function_declaration *> result;
         for (const auto &parent : found->second->composed_interfaces)
@@ -926,6 +967,18 @@ namespace codegen
       {
         if (value.type_kind != parser::type_declaration::kind::class_type)
           fail("only class declarations are available in the initial native object subset", value.range);
+        const auto previous_type_parameters = active_type_parameters;
+        active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
+        if (!value.type_parameters.empty())
+        {
+          output << "template <";
+          for (std::size_t index = 0; index < value.type_parameters.size(); ++index)
+          {
+            if (index != 0) output << ", ";
+            output << "typename " << identifier(value.type_parameters[index]);
+          }
+          output << ">\n";
+        }
         output << "struct " << identifier(value.name);
         if (!value.composed_interfaces.empty())
         {
@@ -933,7 +986,7 @@ namespace codegen
           for (std::size_t index = 0; index < value.composed_interfaces.size(); ++index)
           {
             if (index != 0) output << ", ";
-            output << "public virtual " << identifier(value.composed_interfaces[index]);
+            output << "public virtual " << concrete_user_type(value.composed_interfaces[index], value.range);
           }
         }
         output << "\n{\npublic:\n";
@@ -991,6 +1044,7 @@ namespace codegen
         }
         --depth;
         output << "};\n\n";
+        active_type_parameters = previous_type_parameters;
       }
 
       auto interface(const parser::type_declaration &value) -> void
@@ -998,8 +1052,20 @@ namespace codegen
         if (!emitted_faces.insert(value.name).second) return;
         for (const auto &parent : value.composed_interfaces)
         {
-          const auto found = face_types.find(parent);
+          const auto found = face_types.find(parent.substr(0, parent.find('<')));
           if (found != face_types.end()) interface(*found->second);
+        }
+        const auto previous_type_parameters = active_type_parameters;
+        active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
+        if (!value.type_parameters.empty())
+        {
+          output << "template <";
+          for (std::size_t index = 0; index < value.type_parameters.size(); ++index)
+          {
+            if (index != 0) output << ", ";
+            output << "typename " << identifier(value.type_parameters[index]);
+          }
+          output << ">\n";
         }
         output << "struct " << identifier(value.name);
         if (!value.composed_interfaces.empty())
@@ -1008,7 +1074,7 @@ namespace codegen
           for (std::size_t index = 0; index < value.composed_interfaces.size(); ++index)
           {
             if (index != 0) output << ", ";
-            output << "public virtual " << identifier(value.composed_interfaces[index]);
+            output << "public virtual " << concrete_user_type(value.composed_interfaces[index], value.range);
           }
         }
         output << "\n{\n  virtual ~" << identifier(value.name) << "() = default;\n";
@@ -1021,6 +1087,7 @@ namespace codegen
         }
         --depth;
         output << "};\n\n";
+        active_type_parameters = previous_type_parameters;
       }
 
       auto enumeration(const parser::type_declaration &value) -> void
@@ -1131,7 +1198,10 @@ namespace codegen
                 if (!member.payload_types.empty()) payload_enums.insert(type->name);
               }
             }
-            if (type->type_kind == parser::type_declaration::kind::class_type) class_types.insert(type->name);
+            if (type->type_kind == parser::type_declaration::kind::class_type)
+            {
+              class_types.insert(type->name);
+            }
             if (type->type_kind == parser::type_declaration::kind::interface_type)
               face_types.emplace(type->name, type);
             if (type->type_kind == parser::type_declaration::kind::class_type)
@@ -1475,7 +1545,19 @@ namespace codegen
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
               type && type->type_kind != parser::type_declaration::kind::enum_type)
+          {
+            if (!type->type_parameters.empty())
+            {
+              output << "template <";
+              for (std::size_t index = 0; index < type->type_parameters.size(); ++index)
+              {
+                if (index != 0) output << ", ";
+                output << "typename " << identifier(type->type_parameters[index]);
+              }
+              output << "> ";
+            }
             output << "struct " << identifier(type->name) << ";\n";
+          }
         output << '\n';
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());

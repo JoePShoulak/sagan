@@ -80,7 +80,11 @@ Generic enum cases substitute declared payload parameters from either an
 expected result type or explicit `Enum<...>.Case(...)` qualification. Top-level
 generic calls infer type arguments structurally from their arguments, then
 check the instantiated parameter and return types. Constraints, generic
-members/types beyond enums, and the multi-error recovery strategy remain open.
+members/types beyond the implemented class and face subset, and the multi-error
+recovery strategy remain open. Generic class construction infers parameters
+from constructor arguments or an expected type. Member access substitutes
+specialized field and method types, while generic face conformance checks the
+instantiated signature and remains invariant.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
 Non-`Void` block-bodied functions must return on every statically guaranteed

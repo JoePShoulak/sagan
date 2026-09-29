@@ -370,7 +370,7 @@ namespace parser
       composition_keyword = previous().text;
       do
       {
-        interfaces.push_back(expect(tokens::IDENTIFIER, "an interface name in the composition list").text);
+        interfaces.push_back(parse_type_annotation("an interface name in the composition list"));
       } while (match(tokens::COMMA));
     }
 
