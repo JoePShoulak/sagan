@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.45.0](https://img.shields.io/badge/development-0.45.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.46.0](https://img.shields.io/badge/development-0.46.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -32,7 +32,8 @@ nominal enums can be selected, compared, matched, interpolated, and printed.
 Class methods declared with a leading dot are private to their declaring class.
 General-purpose generics, reference-cycle handling, the full runtime, and the
 standard library are not yet implemented. The built-in `Optional<T>` type,
-`Some(value)`, `None`, and lazy `??` fallback execute natively. An initial C++ emitter can compile the validated scalar/control-
+`Some(value)`, `None`, payload matching, safe `?.` access, and lazy `??`
+fallback execute natively. An initial C++ emitter can compile the validated scalar/control-
 flow subset into a native executable, including visible output through the
 built-in `print(value)` function. The executable subset also supports typed
 array literals and spreads, checked indexing, and `for … in` iteration.

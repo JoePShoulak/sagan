@@ -27,7 +27,7 @@ public/private fields and methods,
 reference-counted class and face values, dynamic face dispatch, and composed
 face default methods with explicit conflict resolution,
 nominal enums with named output, equality, and match cases,
-typed optional values with `Some`, `None`, and lazy `??` fallback,
+typed optional values with payload matching, safe `?.` propagation, and lazy `??` fallback,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Value-bearing `scream` exceptions, ordered exact type-and-value

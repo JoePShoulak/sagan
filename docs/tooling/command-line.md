@@ -125,7 +125,7 @@ semantic/type/entry/code-generation success plus focused failures.
 `module-demo` prints a three-module dependency graph, executes selective and
 namespace imports, and verifies export visibility, filename, and cycle diagnostics.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
-optional construction and lazy fallback chains.
+optional construction, payload matching, safe access, and lazy fallback chains.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

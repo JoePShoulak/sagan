@@ -1,0 +1,6 @@
+fun main(): Int {
+  match 42 {
+    case Some(value) return value
+    case None return 0
+  }
+}

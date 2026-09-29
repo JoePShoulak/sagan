@@ -255,6 +255,24 @@ namespace codegen
           if (called_name && called_name->name == "Some")
             return "std::optional<" + type_name(expression_type(*call->arguments.front()), value.range) + ">{" +
                    expression(*call->arguments.front()) + "}";
+          if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get());
+              member && member->safe)
+          {
+            const std::string temporary = "sagan_optional_" + std::to_string(temporary_index++);
+            const std::string result_type = expression_type(value);
+            const std::string element = result_type.substr(9, result_type.size() - 10);
+            std::string result = "([&]() { auto " + temporary + " = " + expression(*member->target) +
+                                 "; if (!" + temporary + ") return std::optional<" +
+                                 type_name(element, value.range) + ">{std::nullopt}; return std::optional<" +
+                                 type_name(element, value.range) + ">{(*" + temporary + ")->" +
+                                 identifier(member->member_name) + "(";
+            for (std::size_t index = 0; index < call->arguments.size(); ++index)
+            {
+              if (index != 0) result += ", ";
+              result += expression(*call->arguments[index]);
+            }
+            return result + ")}; }())";
+          }
           std::string result = expression(*call->callee) + "(";
           if (called_name && class_types.contains(called_name->name))
             result = "std::make_shared<" + identifier(called_name->name) + ">(";
@@ -269,7 +287,15 @@ namespace codegen
           return expression(*index->target) + ".at(" + expression(*index->index) + ")";
         if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
         {
-          if (member->safe) fail("safe member access is not available in the initial native subset", value.range);
+          if (member->safe)
+          {
+            const std::string temporary = "sagan_optional_" + std::to_string(temporary_index++);
+            const std::string result_type = expression_type(value);
+            const std::string element = result_type.substr(9, result_type.size() - 10);
+            return "([&]() { auto " + temporary + " = " + expression(*member->target) + "; return " +
+                   temporary + " ? std::optional<" + type_name(element, value.range) + ">{(*" + temporary +
+                   ")->" + identifier(member->member_name) + "} : std::nullopt; }())";
+          }
           if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
               target && enum_types.contains(target->name))
             return identifier(target->name) + "::" + identifier(member->member_name);
@@ -513,9 +539,33 @@ namespace codegen
             output << indentation();
             if (branch.pattern)
             {
-              output << (emitted_condition ? "else if" : "if") << " (" << temporary << " == "
-                     << expression(*branch.pattern) << ") ";
+              const auto *call = dynamic_cast<const parser::call_expression *>(branch.pattern.get());
+              const auto *callee = call
+                                       ? dynamic_cast<const parser::identifier_expression *>(call->callee.get())
+                                       : nullptr;
+              const auto *payload = call && call->arguments.size() == 1
+                                        ? dynamic_cast<const parser::identifier_expression *>(call->arguments[0].get())
+                                        : nullptr;
+              const auto *name = dynamic_cast<const parser::identifier_expression *>(branch.pattern.get());
+              const bool some_pattern = callee && callee->name == "Some" && payload;
+              const bool none_pattern = name && name->name == "None";
+              output << (emitted_condition ? "else if" : "if") << " (";
+              if (some_pattern) output << temporary << ".has_value()";
+              else if (none_pattern) output << '!' << temporary << ".has_value()";
+              else output << temporary << " == " << expression(*branch.pattern);
+              output << ") ";
               emitted_condition = true;
+              if (some_pattern)
+              {
+                output << "{\n";
+                ++depth;
+                output << indentation() << "auto " << identifier(payload->name) << " = *" << temporary << ";\n";
+                for (const auto &entry : branch.body->statements) statement(*entry);
+                --depth;
+                output << indentation() << "}";
+                output << "\n";
+                continue;
+              }
             }
             else output << (emitted_condition ? "else " : "if (true) ");
             block(*branch.body);

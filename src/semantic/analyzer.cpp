@@ -303,8 +303,25 @@ namespace semantic
           expression(*matched->subject);
           for (const auto &branch : matched->cases)
           {
-            if (branch.pattern) expression(*branch.pattern);
-            block(*branch.body, "match case");
+            const auto *call = branch.pattern
+                                   ? dynamic_cast<const parser::call_expression *>(branch.pattern.get())
+                                   : nullptr;
+            const auto *callee = call
+                                     ? dynamic_cast<const parser::identifier_expression *>(call->callee.get())
+                                     : nullptr;
+            const auto *binding = call && call->arguments.size() == 1
+                                      ? dynamic_cast<const parser::identifier_expression *>(call->arguments[0].get())
+                                      : nullptr;
+            const bool some_pattern = callee && callee->name == "Some" && binding;
+            if (branch.pattern && !some_pattern) expression(*branch.pattern);
+            const std::size_t parent = open_scope("match case");
+            if (some_pattern)
+            {
+              resolve_name("Some", callee->range);
+              declare(binding->name, "match binding", binding->range);
+            }
+            for (const auto &entry : branch.body->statements) statement(*entry, false);
+            close_scope(parent);
           }
         }
         else if (const auto *hope = dynamic_cast<const parser::hope_statement *>(&value))

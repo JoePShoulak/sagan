@@ -30,4 +30,4 @@ fi
 g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/optional_demo.cpp -o "$native_output"
 
 "$native_output"
-echo "Optional demo passed: Some, None, typed Optional values, lazy ?? fallback, and chaining executed natively."
+echo "Optional demo passed: payload matching, safe member access, safe method calls, lazy ?? fallback, and chaining executed natively."

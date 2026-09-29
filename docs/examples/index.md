@@ -94,9 +94,9 @@ whole-module namespace access, and native cross-file execution.
 ## Optional-value demonstration
 
 `examples/optional_demo.sagan` demonstrates typed `Optional<T>` values,
-`Some(value)`, `None`, lazy `??` fallback, and right-associative fallback
-chains. The script shows the source and generated C++, compiles it, and runs the
-native result:
+`Some(value)`, `None`, payload-binding matches, safe field and method access,
+lazy `??` fallback, and right-associative fallback chains. The script shows the
+source and generated C++, compiles it, and runs the native result:
 
 ```bash
 make optional-demo

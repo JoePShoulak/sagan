@@ -58,7 +58,8 @@ return_statement := "return" expression?
 yield_statement := "yield" expression?
 match_statement := "match" expression "{" newline* match_case
                    (newline+ match_case)* newline* "}"
-match_case  := "case" (expression | "else") statement_body
+match_case  := "case" (optional_pattern | expression | "else") statement_body
+optional_pattern := "Some" "(" identifier ")" | "None"
 hope_statement := "hope" statement_body
                   ("unless" expression statement_body)*
                   ("finally" statement_body)?

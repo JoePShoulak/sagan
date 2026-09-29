@@ -56,6 +56,9 @@ constructs a present optional and `None` constructs an absent value when an
 expected optional type supplies `T`. The right-associative `??` operator unwraps
 its left operand when present and otherwise evaluates its right operand lazily:
 
+`None` is Sagan's sole absence value. There is no general `null` value: ordinary
+types remain guaranteed-present, and absence must be expressed as `Optional<T>`.
+
 ```sagan
 let configured: Optional<Int> = None
 let result = configured ?? 42
@@ -63,8 +66,26 @@ let chained = configured ?? cached ?? calculate_default()
 ```
 
 `Optional<T> ?? T` produces `T`; `Optional<T> ?? Optional<T>` produces
-`Optional<T>`. Optional chaining with `?.`, payload matching, and weak fields
-remain the next pieces of this feature family.
+`Optional<T>`. Safe access propagates absence through fields and method calls,
+and may be chained before a fallback:
+
+```sagan
+let controller_name = possible_ship?.controller?.name ?? "No controller"
+let result = possible_probe?.calculate() ?? 0
+```
+
+`match` can distinguish absence and bind a present payload. The binding exists
+only inside its case:
+
+```sagan
+match possible_result {
+  case Some(result) print(result)
+  case None print("No result")
+}
+```
+
+General payload enums and weak fields remain the next pieces of this feature
+family.
 
 **Settled dictionary-spread behavior:** dictionary entries are applied from
 left to right. When an explicit entry or later spread repeats an existing key,

@@ -19,8 +19,13 @@ backend currently supplies the retain/release behavior; Sagan does not yet
 expose borrowing, weak references, or explicit lifetime operations.
 
 The safe absence foundation for weak references is now executable:
-`Optional<T>`, `Some(value)`, `None`, and lazy `??` fallback. Weak fields will
-use this model so reading an expired reference cannot produce a dangling value.
+`Optional<T>`, `Some(value)`, `None`, payload matching, safe `?.` propagation,
+and lazy `??` fallback. Weak fields will use this model so reading an expired
+reference cannot produce a dangling value.
+
+Sagan does not have a general `null` value. A plain class or face value is
+always present; `None` is valid only where an `Optional<T>` supplies the absent
+case.
 
 **Open questions:** weak-field syntax and lowering, borrowing, cycle detection or collection, destruction order,
 thread interaction, foreign ownership, value semantics, and observable lifetime

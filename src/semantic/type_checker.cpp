@@ -853,6 +853,8 @@ namespace semantic
             }
           }
           const std::string target = expression(*member->target);
+          const auto optional_target = optional_element(target);
+          const std::string accessed_target = optional_target.value_or(target);
           if (const auto shaped = dimensioned(target))
           {
             require(!member->safe, "Safe member access is not defined for " + shaped->family + " values",
@@ -867,45 +869,49 @@ namespace semantic
                     value.range);
             return record(value, shaped->component);
           }
-          if (const auto object = objects.find(target); object != objects.end())
+          require(!member->safe || optional_target.has_value(),
+                  "Safe member access requires Optional, but received " + target, value.range);
+          if (const auto object = objects.find(accessed_target); object != objects.end())
           {
-            require(!member->safe, "Safe member access is not defined for " + target + " values", value.range);
             if (const auto field = object->second.fields.find(member->member_name);
                 field != object->second.fields.end())
             {
               require(!object->second.private_fields.contains(member->member_name) ||
-                          (active_class && *active_class == target),
-                      "Private field '" + member->member_name + "' of class '" + target +
+                          (active_class && *active_class == accessed_target),
+                      "Private field '" + member->member_name + "' of class '" + accessed_target +
                           "' is not accessible here",
                       value.range);
-              return record(value, field->second);
+              return record(value, member->safe ? "Optional<" + field->second + ">" : field->second);
             }
             if (const auto methods = object->second.methods.find(member->member_name);
                 methods != object->second.methods.end())
             {
               require(!object->second.private_methods.contains(member->member_name) ||
-                          (active_class && *active_class == target),
-                      "Private method '" + member->member_name + "' of class '" + target +
+                          (active_class && *active_class == accessed_target),
+                      "Private method '" + member->member_name + "' of class '" + accessed_target +
                           "' is not accessible here",
                       value.range);
               require(methods->second.size() == 1,
                       "Method reference '" + member->member_name + "' is overloaded and requires a call",
                       value.range);
-              callables[&value] = methods->second.front();
+              auto signature = methods->second.front();
+              if (member->safe) signature.result = "Optional<" + signature.result + ">";
+              callables[&value] = std::move(signature);
               return record(value, "Function");
             }
-            throw semantic_error("Type '" + target + "' has no member '" + member->member_name + "'", value.range);
+            throw semantic_error("Type '" + accessed_target + "' has no member '" + member->member_name + "'", value.range);
           }
-          if (const auto interface = interfaces.find(target); interface != interfaces.end())
+          if (const auto interface = interfaces.find(accessed_target); interface != interfaces.end())
           {
-            require(!member->safe, "Safe member access is not defined for face '" + target + "'", value.range);
             const auto methods = interface->second.methods.find(member->member_name);
             require(methods != interface->second.methods.end(),
                     "Face '" + target + "' has no method '" + member->member_name + "'", value.range);
             require(methods->second.size() == 1,
                     "Face method reference '" + member->member_name + "' is overloaded and requires a call",
                     value.range);
-            callables[&value] = methods->second.front();
+            auto signature = methods->second.front();
+            if (member->safe) signature.result = "Optional<" + signature.result + ">";
+            callables[&value] = std::move(signature);
             return record(value, "Function");
           }
           return record(value, std::string(unknown_type));
@@ -1342,18 +1348,53 @@ namespace semantic
           const scope_state before = scopes;
           std::vector<scope_state> paths;
           bool has_fallback = false;
+          bool has_some = false;
+          bool has_none = false;
           for (const auto &branch : matched->cases)
           {
             scopes = before;
             if (branch.pattern)
             {
-              const std::string pattern = expression(*branch.pattern);
-              static_cast<void>(common_type(subject, pattern, branch.range, "Match subject and pattern"));
+              const auto *call = dynamic_cast<const parser::call_expression *>(branch.pattern.get());
+              const auto *callee = call
+                                       ? dynamic_cast<const parser::identifier_expression *>(call->callee.get())
+                                       : nullptr;
+              const auto *payload = call && call->arguments.size() == 1
+                                        ? dynamic_cast<const parser::identifier_expression *>(call->arguments[0].get())
+                                        : nullptr;
+              const auto *name = dynamic_cast<const parser::identifier_expression *>(branch.pattern.get());
+              if (callee && callee->name == "Some" && payload)
+              {
+                const auto contained = optional_element(subject);
+                require(contained.has_value(), "Some pattern requires an Optional subject, but received " + subject,
+                        branch.range);
+                open_scope();
+                add_binding(payload->name, binding{*contained, {}});
+                model.declarations.push_back(typed_declaration{payload->range, payload->name, *contained});
+                block(*branch.body);
+                close_scope();
+                has_some = true;
+                paths.push_back(scopes);
+                continue;
+              }
+              if (name && name->name == "None")
+              {
+                require(optional_element(subject).has_value(),
+                        "None pattern requires an Optional subject, but received " + subject, branch.range);
+                static_cast<void>(expression(*branch.pattern));
+                has_none = true;
+              }
+              else
+              {
+                const std::string pattern = expression(*branch.pattern);
+                static_cast<void>(common_type(subject, pattern, branch.range, "Match subject and pattern"));
+              }
             }
             else has_fallback = true;
             block(*branch.body);
             paths.push_back(scopes);
           }
+          has_fallback |= has_some && has_none;
           if (!has_fallback) paths.push_back(before);
           merge_initialization(before, paths);
         }

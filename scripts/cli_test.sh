@@ -187,6 +187,10 @@ expect_failure "optional coalescing type diagnostic" 1 "Left operand of ?? must 
   "$binary" --types examples/type_optional_coalesce_error.sagan
 expect_failure "Some arity diagnostic" 1 "Some expects exactly one value" \
   "$binary" --types examples/type_some_arity_error.sagan
+expect_failure "safe access requires Optional diagnostic" 1 "Safe member access requires Optional" \
+  "$binary" --types examples/type_safe_access_error.sagan
+expect_failure "optional pattern subject diagnostic" 1 "Some pattern requires an Optional subject" \
+  "$binary" --types examples/type_optional_pattern_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

@@ -1,0 +1,8 @@
+class Probe {
+  let value: Int = 42
+}
+
+fun main(): Int {
+  let probe = Probe()
+  return probe?.value ?? 0
+}

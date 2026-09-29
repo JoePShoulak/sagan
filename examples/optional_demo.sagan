@@ -1,3 +1,13 @@
+class Probe {
+  let value: Int
+
+  new(start: Int) {
+    self.value = start
+  }
+
+  fun answer(): Int => self.value + 2
+}
+
 fun choose(value: Optional<Int>): Int => value ?? 42
 
 fun main(): Int {
@@ -6,11 +16,25 @@ fun main(): Int {
   let direct = known ?? 0
   let fallback = missing ?? 42
   let chained = missing ?? known ?? 0
+  let possible_probe: Optional<Probe> = Some(Probe(40))
+  let absent_probe: Optional<Probe> = None
+  let safe_field = possible_probe?.value ?? 0
+  let safe_method = possible_probe?.answer() ?? 0
+  let absent_method = absent_probe?.answer() ?? -1
+  let matched: Int64 = 0
+
+  match known {
+    case Some(value) matched = value
+    case None matched = -1
+  }
 
   print("Known optional: ${direct}")
   print("Missing optional fallback: ${fallback}")
   print("Chained optional fallback: ${chained}")
+  print("Safely accessed field: ${safe_field}")
+  print("Safely called method: ${safe_method}")
+  print("Optional payload match: ${matched}")
 
-  if direct == 7 and fallback == 42 and chained == 7 and choose(None) == 42 return 0
+  if direct == 7 and fallback == 42 and chained == 7 and safe_field == 40 and safe_method == 42 and absent_method == -1 and matched == 7 and choose(None) == 42 return 0
   else return 1
 }

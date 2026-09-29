@@ -17,7 +17,7 @@ verified_by: null
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
-| Runtime and memory model | **Reference and absence foundations implemented** | shared reference-counted class/face values, dynamic dispatch, `Optional<T>`, `Some`, `None`, and lazy `??`; weak fields remain open |
+| Runtime and memory model | **Reference and absence foundations implemented** | shared reference-counted class/face values, dynamic dispatch, `Optional<T>`, payload matching, safe `?.`, and lazy `??`; weak fields remain open |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, value exceptions and cleanup, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
@@ -79,8 +79,9 @@ requirements through `self`, and require an explicit class override when two
 composed faces provide the same signature. Face requirements and defaults flow
 through composed faces, and cycles are rejected. Face-typed values accept only
 classes with declared transitive conformance and dispatch through shared
-reference-counted objects. Optional values and lazy coalescing now provide the
-safe absence model needed by future weak fields. Reference cycles remain future work. Named functions
+reference-counted objects. Optional values, payload matching, safe access, and
+lazy coalescing now provide the absence model needed by future weak fields.
+Reference cycles remain future work. Named functions
 and methods accept block or `=>` expression bodies.
 Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and
