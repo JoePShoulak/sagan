@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extrahead %}
-  {% if config.extra.documentation.internal_only %}
+  {% if config.extra.documentation.channel == "experimental" %}
   <meta name="robots" content="noindex,nofollow,noarchive">
   {% endif %}
 {% endblock %}

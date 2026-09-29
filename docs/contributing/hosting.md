@@ -9,8 +9,9 @@ verified_by: null
 
 # Self-hosting
 
-The canonical URL is `https://sagan.shoulak.org/`. The repository supports an
-internal documentation origin on HP1 and an independently managed public route.
+The canonical URL is `https://sagan.shoulak.org/`. HP1 serves released
+documentation archives plus the continuously updated `experimental` version
+through an independently managed public route.
 
 ## Hermes ecosystem route
 
@@ -20,7 +21,7 @@ public DNS
   -> active FDR Apache vhost and TLS termination
   -> HP1 origin 192.168.20.21:8781
   -> user-owned static server on port 8781
-  -> files in ~/.local/share/sagan-docs/current
+  -> versioned files in ~/.local/share/sagan-docs/current
 ```
 
 HP1 owns the origin because it is the ecosystem's application host. The Sagan
@@ -38,27 +39,32 @@ own public routing, certificates, and the public VIP.
   user crontab entry so it starts after reboot.
 - `deploy/frontdoor/sagan.shoulak.org.conf` is the Apache route to integrate
   into the Frontdoor project on both peers.
-- `deploy/docs/manage.sh` builds and packages a release only after publication
-  gates pass.
+- `scripts/docs_versions.sh` publishes `experimental` or an approved immutable
+  release to the generated `docs-site` branch using Mike.
+- `deploy/docs/manage.sh` packages the complete generated branch so HP1 receives
+  the selector, default redirect, experimental version, and release archives.
 - `.github/workflows/documentation.yml` validates documentation on GitHub-hosted
   infrastructure and deploys trusted `main` updates on HP1.
 
 ## Publication gate
 
-Public packaging is blocked while either condition is true:
+Publishing a released version is blocked while either condition is true:
 
-- `extra.documentation.internal_only` is not explicitly `false`; or
+- the documentation channel is not `released`; or
 - any Markdown page is not publication-ready and verified for the current
   documentation version.
 
-The site currently fails this gate by design. Check it with:
+The experimental channel fails this gate by design. Check a release candidate
+with `SAGAN_DOCS_VERSION` and `SAGAN_DOCS_CHANNEL=released` set:
 
 ```bash
-bash scripts/docs.sh release-check
+SAGAN_DOCS_VERSION=1.0.0 \
+SAGAN_DOCS_CHANNEL=released \
+  bash scripts/docs.sh release-check
 ```
 
-An internal-only build can be staged on HP1 without weakening the public
-release gate:
+The complete generated versioned site can be staged on HP1 without weakening
+the release gate:
 
 ```bash
 bash deploy/docs/manage.sh stage-hp1
@@ -85,8 +91,8 @@ On HP1 itself, the CI runner uses the local-only route:
 bash deploy/hosting/update.sh hp1-local
 ```
 
-That command builds an internal archive, atomically advances the origin's
-`current` release symlink, restarts the unprivileged server, and verifies its
+That command packages the generated `docs-site` branch, atomically advances the
+origin's `current` deployment symlink, restarts the unprivileged server, and verifies its
 loopback health endpoint. The lower-level local installer refuses to run unless
 the deployment wrapper supplies its explicit safety flag. The origin launcher
 also removes GitHub's job-tracking marker from the long-lived server process so
@@ -98,35 +104,37 @@ in a temporary directory, and deploys that package. Local uncommitted Frontdoor
 work is neither changed nor deployed. The update uses that project's existing
 passwordless, narrowly scoped remote helpers; it does not prompt for `sudo`.
 
-## Future activation sequence
+## Versioned publication sequence
 
-When the documentation is approved for publication:
+Every validated push to `main` updates only `experimental`. When a Sagan release
+and its documentation are approved:
 
-1. review every page and record its verifier, date, and documentation version;
-2. set the documentation channel to `public` and `internal_only` to `false`;
-3. build and package with `bash deploy/docs/manage.sh package`;
-4. install an atomic release and the user-owned origin on HP1;
-5. add the Apache route and `sagan.shoulak.org` certificate name to Frontdoor;
-6. verify the origin, both direct FDR peers, and the VIP;
-7. create the public DNS record; and
-8. verify HTTPS from outside the LAN.
+1. review every page and record its verifier, date, and release documentation
+   version;
+2. manually run the Documentation workflow from the matching release ref with
+   `release_version` set to `MAJOR.MINOR.PATCH`;
+3. allow the release gate to create that immutable version, move `latest`, and
+   set `latest` as the site-root default;
+4. allow the HP1 job to install the complete versioned site atomically; and
+5. verify the root, `latest`, the numbered release, and `experimental` through
+   the origin and public route.
 
-Internal files can be installed on HP1 without system privileges. DNS,
-certificate issuance, and Frontdoor changes remain separate public-activation
-steps.
+Versioned files can be installed on HP1 without system privileges. DNS,
+certificate issuance, and Frontdoor changes remain separate hosting steps.
 
 ## Automatic deployment from GitHub Actions
 
-The `Documentation` workflow has two deliberately separate jobs:
+The `Documentation` workflow has three deliberately separate jobs:
 
 1. `validate` runs for matching pushes and pull requests on a disposable
    GitHub-hosted runner.
-2. `deploy` runs only for `main` pushes or manual dispatches, only after
-   validation succeeds, and only on a runner carrying the custom
+2. `publish-version` updates `experimental` on ordinary `main` pushes or creates
+   an explicitly requested released version on manual dispatch.
+3. `deploy` runs only after validation and publication succeed and only on a runner carrying the custom
    `sagan-docs-hp1` label.
 
-Deployments share a concurrency group and do not cancel an installation already
-in progress. The deployment job has read-only repository permissions, targets
+Deployments share concurrency groups and do not cancel an installation already
+in progress. Only the version-publishing job can update `docs-site`. The deployment job has read-only repository permissions, targets
 the `documentation` GitHub environment, and refreshes only the HP1 origin. It
 does not change Frontdoor, DNS, or certificates.
 
@@ -186,7 +194,8 @@ curl --fail http://127.0.0.1:8781/healthz
 ~/.local/bin/sagan-docs-actions-runner logs
 ```
 
-Installed releases remain under `~/.local/share/sagan-docs/releases`. If a
-rollback is needed, point `~/.local/share/sagan-docs/current` at a known-good
-release and restart the server. Do not rerun the public-route deployment for an
-origin-only problem.
+Installed site snapshots remain under `~/.local/share/sagan-docs/releases`.
+Each snapshot contains every documentation version present in `docs-site` at
+deployment time. If a rollback is needed, point
+`~/.local/share/sagan-docs/current` at a known-good snapshot and restart the
+server. Do not rerun the public-route deployment for an origin-only problem.

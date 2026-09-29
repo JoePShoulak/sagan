@@ -16,7 +16,7 @@ Current tooling is intentionally small:
 - GCC/LCOV coverage instrumentation with Codecov reporting in GitHub Actions;
 - Bash scripts for compiler tests and documentation;
 - an early VS Code syntax-highlighting extension; and
-- MkDocs for internal project documentation.
+- MkDocs and Mike for experimental and released versioned documentation.
 
 There is no package manager, formatter, debugger integration, language server,
 REPL, semantic linter, semantic analyzer, code generator, or executable Sagan

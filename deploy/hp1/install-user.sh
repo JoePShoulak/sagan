@@ -31,4 +31,4 @@ printf '@reboot %s/.local/bin/sagan-docs start %s\n' "$HOME" "$cron_marker" >>"$
 crontab "$cron_file"
 
 "$bin_dir/sagan-docs" restart
-echo "Installed internal Sagan documentation release $release_id without sudo."
+echo "Installed versioned Sagan documentation release $release_id without sudo."

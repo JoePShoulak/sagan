@@ -1,4 +1,4 @@
-"""Refuse public documentation releases until every publication gate passes."""
+"""Refuse released documentation versions until every publication gate passes."""
 
 from __future__ import annotations
 
@@ -22,10 +22,10 @@ def main() -> int:
     version = documentation.get("version")
     failures: list[str] = []
 
-    if documentation.get("internal_only") is not False:
-        failures.append("mkdocs.yml still sets extra.documentation.internal_only to true")
-    if documentation.get("channel") != "public":
-        failures.append("mkdocs.yml documentation channel is not public")
+    if documentation.get("channel") != "released":
+        failures.append("documentation channel is not released")
+    if version == "experimental":
+        failures.append("experimental documentation cannot pass a release gate")
 
     for path in sorted(DOCS.rglob("*.md")):
         text = path.read_text(encoding="utf-8")

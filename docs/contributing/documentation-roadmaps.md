@@ -34,7 +34,8 @@ compiler and confirmed for the current documentation version.
   inventories where the implementation can provide them.
 - Freeze the 1.0 examples and expected outputs used as documentation evidence.
 - Select the first public documentation version and keep the site internal
-  until the publication gate passes.
+  until the publication gate passes. This ongoing unreleased version is named
+  `experimental`.
 
 **Exit condition:** every documentation claim can point to the 1.0 source,
 tests, a design decision, or an explicitly labeled limitation.
@@ -128,7 +129,7 @@ their changes, and identify the authority for a design decision.
 - Complete accessibility, search, navigation, link, rendering, and mobile
   checks.
 - Confirm that all public pages are marked `publication-ready` for the chosen
-  documentation version and that internal-only material is excluded or clearly
+  documentation version and that experimental-only material is excluded or clearly
   labeled.
 - Have Zach review the expert topics and historical attribution identified in
   the final audit stages.
@@ -308,7 +309,7 @@ meeting notes.
 
 ## Completion definition
 
-The documentation is ready to move from internal review toward public release
+The documentation is ready to move from experimental review toward public release
 when:
 
 - every navigable public page has a recorded audit result;

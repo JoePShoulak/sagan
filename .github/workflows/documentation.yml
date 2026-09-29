@@ -11,6 +11,8 @@ on:
       - "scripts/docs.sh"
       - "scripts/docs_status.py"
       - "scripts/docs_release_check.py"
+      - "scripts/docs_versions.sh"
+      - "scripts/docs_versions_test.sh"
       - "deploy/docs/**"
       - "deploy/hp1/**"
       - "deploy/hosting/update.sh"
@@ -23,11 +25,18 @@ on:
       - "scripts/docs.sh"
       - "scripts/docs_status.py"
       - "scripts/docs_release_check.py"
+      - "scripts/docs_versions.sh"
+      - "scripts/docs_versions_test.sh"
       - "deploy/docs/**"
       - "deploy/hp1/**"
       - "deploy/hosting/update.sh"
       - ".github/workflows/documentation.yml"
   workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Published documentation version (MAJOR.MINOR.PATCH); leave blank to refresh experimental"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -46,10 +55,48 @@ jobs:
       - name: Build documentation strictly
         run: bash scripts/docs.sh check
 
+      - name: Test versioned documentation layout
+        run: bash scripts/docs_versions_test.sh
+
+  publish-version:
+    name: Publish documentation version
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: sagan-docs-versions
+      cancel-in-progress: false
+    steps:
+      - name: Check out the validated commit and generated-docs history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up documentation environment
+        run: bash scripts/docs.sh setup
+
+      - name: Publish experimental or released documentation
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          WORKFLOW_REF: ${{ github.ref }}
+        run: |
+          if [[ -n "$RELEASE_VERSION" ]]; then
+            bash scripts/docs_versions.sh deploy-release "$RELEASE_VERSION"
+          elif [[ "$WORKFLOW_REF" == "refs/heads/main" ]]; then
+            bash scripts/docs_versions.sh deploy-experimental
+          else
+            echo "Experimental documentation can only be published from main." >&2
+            exit 1
+          fi
+
   deploy:
     name: Deploy documentation to HP1
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: validate
+    if: github.event_name != 'pull_request'
+    needs:
+      - validate
+      - publish-version
     runs-on:
       - self-hosted
       - sagan-docs-hp1
@@ -63,6 +110,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           clean: true
+          fetch-depth: 0
 
       - name: Set up documentation environment
         run: bash scripts/docs.sh setup

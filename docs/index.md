@@ -40,6 +40,11 @@ astrodynamics, numerical work, and real-time simulation.
 
 ## Documentation maturity
 
-This is internal documentation version **0.1.0-internal.1**. Pages are
-work-in-progress unless their banner explicitly says they are publication-ready.
-Content being present does not mean it has completed review.
+This is the **experimental** documentation selected from the current repository.
+Pages are work-in-progress unless their banner explicitly says they are
+publication-ready. Content being present does not mean it has completed review.
+
+The version selector also exposes archived documentation for each published
+Sagan release. The site root defaults to the newest released documentation;
+choose **experimental** when working from a clone of the live repository or
+when contributing to the project.

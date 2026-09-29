@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.54.0](https://img.shields.io/badge/development-0.54.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.55.0](https://img.shields.io/badge/development-0.55.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -180,8 +180,10 @@ coverage, demonstrations, and all supported output modes.
 ## Documentation
 
 The documentation is available at **[sagan.shoulak.org](https://sagan.shoulak.org/)**.
-It is versioned independently and marks unfinished or unverified pages as work
-in progress.
+The site defaults to the newest released documentation, archives specific
+release versions, and also provides a selectable **experimental** version for
+the live repository. Unfinished or unverified pages are marked as work in
+progress.
 
 - [Getting started](docs/getting-started/index.md)
 - [Language tour](docs/tour/index.md)

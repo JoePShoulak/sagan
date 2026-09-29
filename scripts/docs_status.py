@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 from typing import Any
 
 
@@ -35,7 +36,9 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
     if not isinstance(publication_ready, bool):
         raise ValueError(f"{path}: publication_ready must be true or false")
 
-    docs_version = config.extra["documentation"]["version"]
+    documentation = config.extra["documentation"]
+    docs_version = documentation["version"]
+    channel = documentation["channel"]
     is_ready = status == "publication-ready"
     if publication_ready != is_ready:
         raise ValueError(
@@ -43,9 +46,14 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
         )
 
     if is_ready:
-        if verified_in != docs_version:
+        version_matches = verified_in == docs_version
+        targets_release = channel == "experimental" and isinstance(verified_in, str) and bool(
+            re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", verified_in)
+        )
+        if not version_matches and not targets_release:
             raise ValueError(
                 f"{path}: publication-ready pages must be verified_in {docs_version!r}"
+                " or target a semantic release from the experimental channel"
             )
         if not verified_by or not isinstance(verified_by, str):
             raise ValueError(f"{path}: publication-ready pages require verified_by")
@@ -67,7 +75,7 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
             )
         label = "Review needed" if status == "review-needed" else "Work in progress"
         notice = (
-            f'!!! warning "Internal documentation — {label}"\n'
+            f'!!! warning "Experimental documentation — {label}"\n'
             "    This page has not been confirmed as accurate or approved for publication. "
             f"Current documentation version: **{docs_version}**.\n\n"
         )

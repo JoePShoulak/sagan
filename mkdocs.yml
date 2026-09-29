@@ -36,6 +36,10 @@ theme:
 
 plugins:
   - search
+  - mike:
+      alias_type: redirect
+      canonical_version: latest
+      version_selector: true
 
 hooks:
   - scripts/docs_status.py
@@ -64,14 +68,15 @@ validation:
   anchors: warn
 
 extra:
+  version:
+    provider: mike
   status:
     work-in-progress: Work in progress
     review-needed: Review needed
     publication-ready: Publication ready
   documentation:
-    version: 0.1.0-internal.1
-    channel: internal
-    internal_only: true
+    version: !ENV [SAGAN_DOCS_VERSION, experimental]
+    channel: !ENV [SAGAN_DOCS_CHANNEL, experimental]
 
 extra_css:
   - stylesheets/brand.css
