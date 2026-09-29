@@ -28,6 +28,8 @@ compiler and confirmed for the current documentation version.
 - Tag the exact compiler revision that defines Sagan 1.0.
 - Record supported platforms, toolchain versions, CLI modes, and library
   versions.
+- Pin the compatible VS Code extension release and record its relationship to
+  the Sagan 1.0 grammar and compiler release.
 - Produce machine-readable grammar, token, diagnostic, and public-API
   inventories where the implementation can provide them.
 - Freeze the 1.0 examples and expected outputs used as documentation evidence.
@@ -68,6 +70,9 @@ question without relying on compiler source code.
 
 - Rewrite Getting started around installation, a first executable program,
   testing, building, and troubleshooting.
+- Add a first-session VS Code path covering extension installation, opening a
+  `.sagan` file, selecting or confirming the language mode, and recognizing the
+  features the extension does and does not provide.
 - Turn the language tour into a progressive sequence that never depends on a
   concept not yet introduced.
 - Add focused how-to guides for common simulation, geometry, numerical, module,
@@ -85,14 +90,22 @@ Sagan program using only the published documentation.
 - Publish the automatically available math API from its authoritative source.
 - Document physics and rendering as explicit-import first-party libraries,
   without blurring their boundary with built-in math.
-- Document the compiler CLI, build outputs, diagnostics, editor support,
-  formatter or language-server behavior, package workflow, and debugging tools.
+- Give the VS Code extension its own user guide covering Marketplace and local
+  installation, compatible Sagan versions, file association, syntax scopes,
+  bracket and comment behavior, configuration, examples, updates, known
+  limitations, troubleshooting, and uninstalling or reverting it.
+- Document how the extension is built, packaged, tested, versioned, and released,
+  including the process for keeping its grammar synchronized with the language.
+- Document the compiler CLI, build outputs, diagnostics, any formatter or
+  language-server behavior, package workflow, and debugging tools. Clearly
+  distinguish extension-provided coloring and editing conveniences from
+  compiler-backed semantic features.
 - Generate API material where possible, then add human explanations and
   examples rather than treating generated symbols as a complete reference.
 - Record platform support and observable compatibility guarantees.
 
-**Exit condition:** every supported public command, tool, and core-library API
-has discoverable reference material and a verified example.
+**Exit condition:** every supported public command, tool, extension feature, and
+core-library API has discoverable reference material and a verified example.
 
 ### Phase 5 — finish implementation and contributor documentation
 
@@ -154,8 +167,9 @@ issues or design decisions.
 
 Review Home, Getting started, installation, the first program, command-line
 usage, and editor support. Confirm that a clean user can install prerequisites,
-build Sagan, obtain the documented version, compile or run the first supported
-program, and understand what is or is not supported.
+build Sagan, obtain the documented version, install the compatible VS Code
+extension, open a `.sagan` file with the expected language mode, compile or run
+the first supported program, and understand what is or is not supported.
 
 **Approval question:** does this present the language you want a new user to
 encounter first?
@@ -165,6 +179,9 @@ encounter first?
 Review source encoding, identifiers, Unicode and emoji behavior, whitespace,
 comments, documentation comments, literals, interpolation, keywords,
 punctuation, and operators. Exercise boundary and malformed-input examples.
+For each settled lexical form, compare the compiler's behavior with the VS Code
+extension's highlighting and editing behavior; record intentional differences
+and treat accidental drift as a defect.
 
 **Approval question:** are the spellings and source-level rules stable and
 pleasant enough to guarantee for 1.0?
@@ -193,7 +210,11 @@ without exceptions, caveats, or hidden execution rules?
 
 Review modules, imports, exports, aliases, namespaces, entry points, separate
 files, compiler modes, diagnostics, generated C++, native execution, and editor
-features. Confirm what forms a program and how users understand failures.
+features. Audit every claimed extension capability, its settings, packaging,
+installation paths, upgrade behavior, compatibility declaration, and known
+limitations. Confirm that snippets or sample files use current 1.0 syntax and
+that visual highlighting is never described as parsing or semantic validation.
+Confirm what forms a program and how users understand failures.
 
 **Approval question:** is the supported build-and-run model coherent for a
 real multi-file project?
@@ -292,6 +313,8 @@ when:
 
 - every navigable public page has a recorded audit result;
 - all commands and examples pass against the pinned 1.0 release;
+- the documented VS Code extension version passes its feature checklist against
+  representative 1.0 source and is explicitly tested for grammar drift;
 - normative rules have tests and no unresolved contradictions;
 - deferred behavior is clearly outside the 1.0 contract;
 - expert-review decisions are recorded and reflected everywhere they apply;
