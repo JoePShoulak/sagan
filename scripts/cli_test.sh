@@ -195,6 +195,10 @@ expect_failure "weak field type diagnostic" 1 "Weak field 'value' requires a cla
   "$binary" --types examples/type_weak_scalar_error.sagan
 expect_failure "weak field initializer diagnostic" 1 "Weak field 'target' starts empty" \
   "$binary" --types examples/type_weak_initializer_error.sagan
+expect_failure "payload enum arity diagnostic" 1 "Enum case 'Success' expects 1 payload value" \
+  "$binary" --types examples/type_payload_enum_arity_error.sagan
+expect_failure "payload enum match diagnostic" 1 "Enum case 'Message' belongs to Signal" \
+  "$binary" --types examples/type_payload_enum_match_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

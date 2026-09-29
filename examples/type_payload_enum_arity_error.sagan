@@ -1,0 +1,8 @@
+enum Result {
+  Success(Int)
+}
+
+fun main(): Int {
+  let invalid = Success()
+  return 0
+}

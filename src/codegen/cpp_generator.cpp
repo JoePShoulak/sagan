@@ -26,6 +26,9 @@ namespace codegen
       std::size_t dimensioned_index = 0;
       std::unordered_set<std::string> user_types;
       std::unordered_set<std::string> enum_types;
+      std::unordered_map<std::string, std::pair<std::string, std::size_t>> enum_cases;
+      std::unordered_map<std::string, const parser::type_declaration *> enum_declarations;
+      std::unordered_set<std::string> payload_enums;
       std::unordered_set<std::string> class_types;
       std::unordered_map<std::string, const parser::type_declaration *> face_types;
       std::unordered_map<std::string, std::unordered_set<std::string>> weak_fields;
@@ -122,6 +125,11 @@ namespace codegen
         const bool reference = (class_types.contains(target_type) || face_types.contains(target_type)) &&
                                !(self && self->name == "self");
         return expression(*value.target) + (reference ? "->" : ".") + identifier(value.member_name);
+      }
+
+      auto enum_factory(const std::string &enum_name, const std::string &case_name) const -> std::string
+      {
+        return identifier(enum_name + "__" + case_name);
       }
 
       auto assignable(const parser::expression &value) -> std::string
@@ -280,6 +288,16 @@ namespace codegen
           if (called_name && called_name->name == "Some")
             return "std::optional<" + type_name(expression_type(*call->arguments.front()), value.range) + ">{" +
                    expression(*call->arguments.front()) + "}";
+          if (called_name && enum_cases.contains(called_name->name))
+          {
+            std::string result = enum_factory(enum_cases.at(called_name->name).first, called_name->name) + "(";
+            for (std::size_t index = 0; index < call->arguments.size(); ++index)
+            {
+              if (index != 0) result += ", ";
+              result += expression(*call->arguments[index]);
+            }
+            return result + ")";
+          }
           if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get());
               member && member->safe)
           {
@@ -323,7 +341,10 @@ namespace codegen
           }
           if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
               target && enum_types.contains(target->name))
+          {
+            if (payload_enums.contains(target->name)) return enum_factory(target->name, member->member_name) + "()";
             return identifier(target->name) + "::" + identifier(member->member_name);
+          }
           const std::string target_type = expression_type(*member->target);
           if (std::string_view{target_type}.starts_with("Vector") ||
               std::string_view{target_type}.starts_with("Coordinate"))
@@ -555,6 +576,22 @@ namespace codegen
         else if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
         {
           const std::string temporary = "sagan_match_" + std::to_string(temporary_index++);
+          const std::string matched_type = expression_type(*matched->subject);
+          std::unordered_set<std::string> covered_cases;
+          bool explicit_fallback = false;
+          for (const auto &branch : matched->cases)
+          {
+            explicit_fallback |= !branch.pattern;
+            if (!branch.pattern) continue;
+            if (const auto *call = dynamic_cast<const parser::call_expression *>(branch.pattern.get()))
+              if (const auto *callee = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
+                if (enum_cases.contains(callee->name)) covered_cases.insert(callee->name);
+            if (const auto *member = dynamic_cast<const parser::member_expression *>(branch.pattern.get()))
+              covered_cases.insert(member->member_name);
+          }
+          const auto matched_enum = enum_declarations.find(matched_type);
+          const bool exhaustive_enum = matched_enum != enum_declarations.end() &&
+              covered_cases.size() == matched_enum->second->enum_members.size();
           output << "const auto " << temporary << " = " << expression(*matched->subject) << ";\n";
           bool emitted_condition = false;
           for (const auto &branch : matched->cases)
@@ -572,9 +609,14 @@ namespace codegen
               const auto *name = dynamic_cast<const parser::identifier_expression *>(branch.pattern.get());
               const bool some_pattern = callee && callee->name == "Some" && payload;
               const bool none_pattern = name && name->name == "None";
+              const auto enum_case = callee ? enum_cases.find(callee->name) : enum_cases.end();
+              const bool enum_pattern = enum_case != enum_cases.end();
               output << (emitted_condition ? "else if" : "if") << " (";
               if (some_pattern) output << temporary << ".has_value()";
               else if (none_pattern) output << '!' << temporary << ".has_value()";
+              else if (enum_pattern)
+                output << temporary << ".tag == " << identifier(enum_case->second.first) << "::Tag::"
+                       << identifier(callee->name);
               else output << temporary << " == " << expression(*branch.pattern);
               output << ") ";
               emitted_condition = true;
@@ -589,11 +631,32 @@ namespace codegen
                 output << "\n";
                 continue;
               }
+              if (enum_pattern)
+              {
+                output << "{\n";
+                ++depth;
+                for (std::size_t index = 0; index < call->arguments.size(); ++index)
+                {
+                  const auto &binding = dynamic_cast<const parser::identifier_expression &>(*call->arguments[index]);
+                  output << indentation() << "auto " << identifier(binding.name) << " = ";
+                  if (call->arguments.size() == 1)
+                    output << "std::get<" << enum_case->second.second << ">(" << temporary << ".payload);\n";
+                  else
+                    output << "std::get<" << index << ">(std::get<" << enum_case->second.second << ">(" << temporary
+                           << ".payload));\n";
+                }
+                for (const auto &entry : branch.body->statements) statement(*entry);
+                --depth;
+                output << indentation() << "}\n";
+                continue;
+              }
             }
             else output << (emitted_condition ? "else " : "if (true) ");
             block(*branch.body);
             output << "\n";
           }
+          if (exhaustive_enum && !explicit_fallback)
+            output << indentation() << "throw std::logic_error(\"unreachable exhaustive match\");\n";
         }
         else if (const auto *hope = dynamic_cast<const parser::hope_statement *>(&value))
         {
@@ -852,6 +915,60 @@ namespace codegen
 
       auto enumeration(const parser::type_declaration &value) -> void
       {
+        const bool payload_enum = std::any_of(value.enum_members.begin(), value.enum_members.end(), [](const auto &member)
+        {
+          return !member.payload_types.empty();
+        });
+        if (payload_enum)
+        {
+          output << "struct " << identifier(value.name) << "\n{\n  enum class Tag\n  {\n";
+          for (std::size_t index = 0; index < value.enum_members.size(); ++index)
+            output << "    " << identifier(value.enum_members[index].name)
+                   << (index + 1 == value.enum_members.size() ? "\n" : ",\n");
+          output << "  };\n  using Payload = std::variant<";
+          for (std::size_t index = 0; index < value.enum_members.size(); ++index)
+          {
+            if (index != 0) output << ", ";
+            const auto &payload = value.enum_members[index].payload_types;
+            if (payload.empty()) output << "std::monostate";
+            else if (payload.size() == 1) output << type_name(payload.front(), value.enum_members[index].range);
+            else
+            {
+              output << "std::tuple<";
+              for (std::size_t payload_index = 0; payload_index < payload.size(); ++payload_index)
+              {
+                if (payload_index != 0) output << ", ";
+                output << type_name(payload[payload_index], value.enum_members[index].range);
+              }
+              output << ">";
+            }
+          }
+          output << ">;\n  Tag tag;\n  Payload payload;\n  friend bool operator==(const " << identifier(value.name)
+                 << " &, const " << identifier(value.name) << " &) = default;\n};\n\n";
+          for (std::size_t index = 0; index < value.enum_members.size(); ++index)
+          {
+            const auto &member = value.enum_members[index];
+            output << identifier(value.name) << ' ' << enum_factory(value.name, member.name) << '(';
+            for (std::size_t payload_index = 0; payload_index < member.payload_types.size(); ++payload_index)
+            {
+              if (payload_index != 0) output << ", ";
+              output << type_name(member.payload_types[payload_index], member.range) << " sagan_payload_"
+                     << payload_index;
+            }
+            output << ")\n{\n  return {" << identifier(value.name) << "::Tag::" << identifier(member.name)
+                   << ", " << identifier(value.name) << "::Payload{std::in_place_index<" << index << ">";
+            for (std::size_t payload_index = 0; payload_index < member.payload_types.size(); ++payload_index)
+              output << ", sagan_payload_" << payload_index;
+            output << "}};\n}\n\n";
+          }
+          output << "std::ostream &operator<<(std::ostream &stream, const " << identifier(value.name)
+                 << " &value)\n{\n  switch (value.tag)\n  {\n";
+          for (const auto &member : value.enum_members)
+            output << "    case " << identifier(value.name) << "::Tag::" << identifier(member.name)
+                   << ": return stream << " << escaped_string(member.name) << ";\n";
+          output << "  }\n  return stream;\n}\n\n";
+          return;
+        }
         output << "enum class " << identifier(value.name) << "\n{\n";
         ++depth;
         for (std::size_t index = 0; index < value.enum_members.size(); ++index)
@@ -878,7 +995,17 @@ namespace codegen
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
           {
             user_types.insert(type->name);
-            if (type->type_kind == parser::type_declaration::kind::enum_type) enum_types.insert(type->name);
+            if (type->type_kind == parser::type_declaration::kind::enum_type)
+            {
+              enum_types.insert(type->name);
+              enum_declarations.emplace(type->name, type);
+              for (std::size_t index = 0; index < type->enum_members.size(); ++index)
+              {
+                const auto &member = type->enum_members[index];
+                enum_cases.emplace(member.name, std::pair{type->name, index});
+                if (!member.payload_types.empty()) payload_enums.insert(type->name);
+              }
+            }
             if (type->type_kind == parser::type_declaration::kind::class_type) class_types.insert(type->name);
             if (type->type_kind == parser::type_declaration::kind::interface_type)
               face_types.emplace(type->name, type);
@@ -888,7 +1015,7 @@ namespace codegen
                     field && field->weak_member)
                   weak_fields[type->name].insert(field->name);
           }
-        output << "// Generated by Sagan.\n#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <vector>\n"
+        output << "// Generated by Sagan.\n#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <tuple>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <variant>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
                   "#include <windows.h>\n"
                   "#endif\n\n"

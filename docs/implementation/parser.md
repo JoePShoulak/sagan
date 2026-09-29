@@ -55,6 +55,7 @@ syntax trees with source-spanned diagnostics.
 - One optional leading `module` declaration per source file
 - Top-level `import` declarations with optional `from` and `as` clauses
 - Standalone top-level `export` declarations with optional aliases
+- Enum cases with zero or more typed payload declarations
 - Declaration-attached `///` and `/** ... */` documentation comments with
   retained source spans and focused placement diagnostics
 - Declaration-only program roots; executable statements are function-local

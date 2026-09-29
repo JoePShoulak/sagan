@@ -16,7 +16,7 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, payload-bearing nominal enums and exhaustive matches, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Reference, weak-edge, and absence foundations implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, value exceptions and cleanup, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
@@ -100,14 +100,15 @@ Documentation comments attach to supported declarations with retained text and
 source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
 Bare and value-bearing `yield` statements and documented enum members complete
-the current parser grammar. Payload-bearing enum cases and explicit enum values
-remain future semantic and runtime work.
+the current parser grammar. Enum cases may carry typed payloads, construct
+values, bind payload names in `match`, and establish exhaustiveness. Explicit
+numeric enum values remain future semantic and runtime work.
 
 ## Major open language questions
 
 General-purpose generics, automatic handling of all-strong reference cycles,
 general sum types,
-payload-bearing enums and explicit enum values, catchable native runtime errors,
+explicit numeric enum values, catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

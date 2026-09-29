@@ -113,6 +113,9 @@ namespace semantic
         else if (const auto *type = dynamic_cast<const parser::type_declaration *>(&value))
         {
           declare(type->name, "type", type->range);
+          if (type->type_kind == parser::type_declaration::kind::enum_type)
+            for (const auto &member : type->enum_members)
+              if (!member.payload_types.empty()) declare(member.name, "enum constructor", member.range);
         }
         else if (const auto *imported = dynamic_cast<const parser::import_declaration *>(&value))
         {
@@ -245,7 +248,12 @@ namespace semantic
           declare("self", "self", value.range);
         }
         for (const auto &member : value.members) predeclare(*member);
-        for (const auto &member : value.enum_members) declare(member.name, "enum member", member.range);
+        for (const auto &member : value.enum_members)
+        {
+          declare(member.name, "enum member", member.range);
+          for (const auto &payload : member.payload_types)
+            resolve_type(std::optional<std::string>{payload}, member.range);
+        }
         for (const auto &member : value.members) statement(*member, true);
         close_scope(parent);
       }
@@ -309,16 +317,21 @@ namespace semantic
             const auto *callee = call
                                      ? dynamic_cast<const parser::identifier_expression *>(call->callee.get())
                                      : nullptr;
-            const auto *binding = call && call->arguments.size() == 1
-                                      ? dynamic_cast<const parser::identifier_expression *>(call->arguments[0].get())
-                                      : nullptr;
-            const bool some_pattern = callee && callee->name == "Some" && binding;
-            if (branch.pattern && !some_pattern) expression(*branch.pattern);
+            const bool binding_pattern = callee && call &&
+                std::all_of(call->arguments.begin(), call->arguments.end(), [](const auto &argument)
+                {
+                  return dynamic_cast<const parser::identifier_expression *>(argument.get()) != nullptr;
+                });
+            if (branch.pattern && !binding_pattern) expression(*branch.pattern);
             const std::size_t parent = open_scope("match case");
-            if (some_pattern)
+            if (binding_pattern)
             {
-              resolve_name("Some", callee->range);
-              declare(binding->name, "match binding", binding->range);
+              resolve_name(callee->name, callee->range);
+              for (const auto &argument : call->arguments)
+              {
+                const auto &binding = dynamic_cast<const parser::identifier_expression &>(*argument);
+                declare(binding.name, "match binding", binding.range);
+              }
             }
             for (const auto &entry : branch.body->statements) statement(*entry, false);
             close_scope(parent);

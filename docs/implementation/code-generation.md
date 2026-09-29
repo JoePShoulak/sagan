@@ -90,6 +90,11 @@ that storage; reads call `lock()` and lower to `std::optional<std::shared_ptr<T>
 which is the native representation consumed by Sagan's `?.`, `??`, and optional
 matching operations.
 
+Payload-bearing enums lower to tagged structs whose payload storage uses
+`std::variant`; cases with multiple payload values use `std::tuple`. Generated
+match branches test the case tag and extract typed payload bindings by variant
+index. Payload-free enums retain the smaller native `enum class` representation.
+
 `--emit-cpp-modules` resolves a flat sibling-file module graph and links its
 selective imports and exported namespace members into one checked compilation unit. Dependency-private
 top-level names receive deterministic module-qualified identities, imported

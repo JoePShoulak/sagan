@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.47.0](https://img.shields.io/badge/development-0.47.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.48.0](https://img.shields.io/badge/development-0.48.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -27,8 +27,10 @@ enforces lossless numeric widening. It also validates type annotations,
 all-path returns, definite initialization, unreachable code, and executable
 entry points. Sagan can print semantic and type models as
 well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
-and dictionaries plus dimensioned vectors and coordinates are inferred. Simple
-nominal enums can be selected, compared, matched, interpolated, and printed.
+and dictionaries plus dimensioned vectors and coordinates are inferred. Nominal
+enums can be selected, compared, matched, interpolated, and printed. Cases may
+carry typed payloads, construct values like `Success(42)`, and bind their
+contents through exhaustive `match` branches.
 Class methods declared with a leading dot are private to their declaring class.
 General-purpose generics, automatic reference-cycle collection, the full runtime, and the
 standard library are not yet implemented. The built-in `Optional<T>` type,
@@ -123,6 +125,7 @@ make parser-demo
 bash scripts/module_demo.sh
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
+bash scripts/payload_enum_demo.sh
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh

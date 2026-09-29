@@ -1,0 +1,30 @@
+enum Result {
+  Success(Int)
+  Failure(String)
+  Coordinates(Int, Int)
+  Pending
+}
+
+fun describe(result: Result): String {
+  match result {
+    case Success(value) return "Result: ${value}"
+    case Failure(message) return "Error: ${message}"
+    case Coordinates(x, y) return "Coordinates: ${x}, ${y}"
+    case Result.Pending return "Pending"
+  }
+}
+
+fun main(): Int {
+  let success = Success(42)
+  let failure = Failure("guidance unavailable")
+  let coordinates = Coordinates(3, 4)
+  let pending = Result.Pending
+
+  print(describe(success))
+  print(describe(failure))
+  print(describe(coordinates))
+  print(describe(pending))
+
+  if describe(success) == "Result: 42" return 0
+  else return 1
+}

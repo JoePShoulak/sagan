@@ -81,7 +81,8 @@ constructor_declaration := "new" "(" typed_parameters? ")" block
 composition := ("is" | "has") identifier ("," identifier)*
 enum_declaration := "enum" identifier "{" enum_members? "}"
 enum_members := documented_enum_member ((newline+ | ",") documented_enum_member)* ","?
-documented_enum_member := documentation_comment* identifier
+documented_enum_member := documentation_comment* identifier ("(" type_list? ")")?
+type_list := type ("," type)*
 
 type_annotation := identifier ("<" type_annotation ("," type_annotation)* ">")?
 module_declaration := "module" identifier

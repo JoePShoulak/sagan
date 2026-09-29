@@ -94,6 +94,7 @@ make entry-demo
 make module-demo
 make optional-demo
 make weak-demo
+make payload-enum-demo
 make execution-demo
 make get-version
 make clean
@@ -111,6 +112,7 @@ bash scripts/entry_demo.sh
 bash scripts/module_demo.sh
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
+bash scripts/payload_enum_demo.sh
 bash scripts/execution_demo.sh
 bash scripts/docs.sh check
 ```
@@ -130,6 +132,8 @@ namespace imports, and verifies export visibility, filename, and cycle diagnosti
 optional construction, payload matching, safe access, and lazy fallback chains.
 `weak-demo` shows a live weak reference resolving to `Some`, lets its strong
 owner leave scope, then shows the expired reference resolving to `None`.
+`payload-enum-demo` constructs typed cases, binds their payloads in an
+exhaustive match, shows the tagged-variant C++ excerpts, and runs the result.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

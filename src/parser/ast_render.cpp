@@ -422,6 +422,9 @@ namespace parser
         {
           auto member_node = std::make_unique<visual_node>(
               visual_node{"Enum member\n" + member.name, "declaration"});
+          for (const auto &payload : member.payload_types)
+            member_node->children.push_back(std::make_unique<visual_node>(
+                visual_node{"Payload type\n" + payload, "type"}));
           for (const auto &comment : member.documentation)
           {
             member_node->children.push_back(std::make_unique<visual_node>(

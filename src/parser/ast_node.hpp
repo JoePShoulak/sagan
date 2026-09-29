@@ -423,9 +423,10 @@ namespace parser
     {
       std::string name;
       span range;
+      std::vector<std::string> payload_types;
       std::vector<documentation_comment> documentation;
 
-      enum_member(std::string identifier, span source_range,
+      enum_member(std::string identifier, span source_range, std::vector<std::string> payload,
                   std::vector<documentation_comment> comments);
     };
 

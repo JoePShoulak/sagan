@@ -52,6 +52,7 @@ conditional spelling.
 bodies. Semantic analysis will determine which functions are generators and
 validate their yielded types; the runtime will define suspension behavior.
 
-**Open questions:** iterable protocol semantics, match-pattern binding and
-exhaustiveness, generator typing, unreachable-code rules, entry-point
+Enum and optional patterns bind typed payload names, and covering every case is
+recognized as exhaustive. **Open questions:** iterable protocol semantics,
+broader destructuring patterns, generator typing, unreachable-code rules, entry-point
 selection, and the runtime behavior of control transfer.

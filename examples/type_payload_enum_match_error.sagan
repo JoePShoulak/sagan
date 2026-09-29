@@ -1,0 +1,16 @@
+enum Result {
+  Success(Int)
+}
+
+enum Signal {
+  Message(String)
+}
+
+fun inspect(result: Result): Int {
+  match result {
+    case Message(value) return 1
+    case else return 0
+  }
+}
+
+fun main(): Int => 0

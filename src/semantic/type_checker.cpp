@@ -52,6 +52,13 @@ namespace semantic
       std::vector<std::string> faces;
     };
 
+    struct enum_case_type
+    {
+      std::string enum_name;
+      std::vector<std::string> payload_types;
+      std::size_t index = 0;
+    };
+
     struct interface_type
     {
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
@@ -172,6 +179,7 @@ namespace semantic
       std::unordered_map<std::string, interface_type> interfaces;
       std::unordered_map<std::string, parser::span> interface_ranges;
       std::unordered_map<std::string, std::unordered_set<std::string>> enums;
+      std::unordered_map<std::string, enum_case_type> enum_cases;
       std::optional<std::string> active_class;
 
       auto open_scope() -> void
@@ -541,7 +549,21 @@ namespace semantic
       {
         if (type.type_kind != parser::type_declaration::kind::enum_type) return;
         auto &members = enums[type.name];
-        for (const auto &member : type.enum_members) members.insert(member.name);
+        for (std::size_t index = 0; index < type.enum_members.size(); ++index)
+        {
+          const auto &member = type.enum_members[index];
+          members.insert(member.name);
+          if (!member.payload_types.empty())
+          {
+            std::vector<std::string> payload_types;
+            for (const auto &payload : member.payload_types)
+              payload_types.push_back(fixed_annotation(std::optional<std::string>{payload}));
+            require(!enum_cases.contains(member.name),
+                    "Payload enum constructor '" + member.name + "' is already declared", member.range);
+            enum_cases.emplace(member.name, enum_case_type{type.name, payload_types, index});
+            add_binding(member.name, binding{"Function", callable_signature{payload_types, type.name}});
+          }
+        }
       }
 
       auto same_signature(const callable_signature &left, const callable_signature &right) const -> bool
@@ -757,6 +779,19 @@ namespace semantic
               require(arguments.size() == 1, "Some expects exactly one value", value.range);
               static_cast<void>(record(*call->callee, "Function"));
               return record(value, "Optional<" + arguments.front() + ">");
+            }
+            if (const auto enum_case = enum_cases.find(identifier->name); enum_case != enum_cases.end())
+            {
+              const auto &expected = enum_case->second.payload_types;
+              require(arguments.size() == expected.size(),
+                      "Enum case '" + identifier->name + "' expects " + std::to_string(expected.size()) +
+                          " payload value(s), but received " + std::to_string(arguments.size()),
+                      value.range);
+              for (std::size_t index = 0; index < arguments.size(); ++index)
+                require_compatible(expected[index], arguments[index], call->arguments[index]->range,
+                                   "Enum case payload");
+              static_cast<void>(record(*call->callee, "Function"));
+              return record(value, enum_case->second.enum_name);
             }
             if (objects.contains(identifier->name))
             {
@@ -1220,12 +1255,33 @@ namespace semantic
         if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
         {
           bool has_fallback = false;
+          std::optional<std::string> covered_enum;
+          std::unordered_set<std::string> covered_cases;
           for (const auto &branch : matched->cases)
           {
             has_fallback |= !branch.pattern;
             if (!block_returns(*branch.body)) return false;
+            if (!branch.pattern) continue;
+            if (const auto *call = dynamic_cast<const parser::call_expression *>(branch.pattern.get()))
+            {
+              if (const auto *callee = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
+                if (const auto found = enum_cases.find(callee->name); found != enum_cases.end())
+                {
+                  if (!covered_enum) covered_enum = found->second.enum_name;
+                  if (*covered_enum == found->second.enum_name) covered_cases.insert(callee->name);
+                }
+            }
+            else if (const auto *member = dynamic_cast<const parser::member_expression *>(branch.pattern.get()))
+            {
+              if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
+                  target && enums.contains(target->name))
+              {
+                if (!covered_enum) covered_enum = target->name;
+                if (*covered_enum == target->name) covered_cases.insert(member->member_name);
+              }
+            }
           }
-          return has_fallback;
+          return has_fallback || (covered_enum && covered_cases.size() == enums.at(*covered_enum).size());
         }
         if (const auto *hope = dynamic_cast<const parser::hope_statement *>(&value))
         {
@@ -1368,6 +1424,7 @@ namespace semantic
           bool has_fallback = false;
           bool has_some = false;
           bool has_none = false;
+          std::unordered_set<std::string> covered_enum_cases;
           for (const auto &branch : matched->cases)
           {
             scopes = before;
@@ -1381,6 +1438,7 @@ namespace semantic
                                         ? dynamic_cast<const parser::identifier_expression *>(call->arguments[0].get())
                                         : nullptr;
               const auto *name = dynamic_cast<const parser::identifier_expression *>(branch.pattern.get());
+              const auto *member_pattern = dynamic_cast<const parser::member_expression *>(branch.pattern.get());
               if (callee && callee->name == "Some" && payload)
               {
                 const auto contained = optional_element(subject);
@@ -1395,6 +1453,35 @@ namespace semantic
                 paths.push_back(scopes);
                 continue;
               }
+              if (callee)
+              {
+                if (const auto enum_case = enum_cases.find(callee->name); enum_case != enum_cases.end())
+                {
+                  require(enum_case->second.enum_name == subject,
+                          "Enum case '" + callee->name + "' belongs to " + enum_case->second.enum_name +
+                              ", but the match subject is " + subject,
+                          branch.range);
+                  require(call->arguments.size() == enum_case->second.payload_types.size(),
+                          "Enum case pattern '" + callee->name + "' expects " +
+                              std::to_string(enum_case->second.payload_types.size()) + " binding(s)",
+                          branch.range);
+                  require(covered_enum_cases.insert(callee->name).second,
+                          "Duplicate match case '" + callee->name + "'", branch.range);
+                  open_scope();
+                  for (std::size_t index = 0; index < call->arguments.size(); ++index)
+                  {
+                    const auto *binding_name = dynamic_cast<const parser::identifier_expression *>(call->arguments[index].get());
+                    require(binding_name != nullptr, "Enum case payload patterns must be binding names", branch.range);
+                    add_binding(binding_name->name, binding{enum_case->second.payload_types[index], {}});
+                    model.declarations.push_back(
+                        typed_declaration{binding_name->range, binding_name->name, enum_case->second.payload_types[index]});
+                  }
+                  block(*branch.body);
+                  close_scope();
+                  paths.push_back(scopes);
+                  continue;
+                }
+              }
               if (name && name->name == "None")
               {
                 require(optional_element(subject).has_value(),
@@ -1406,6 +1493,19 @@ namespace semantic
               {
                 const std::string pattern = expression(*branch.pattern);
                 static_cast<void>(common_type(subject, pattern, branch.range, "Match subject and pattern"));
+                if (member_pattern)
+                {
+                  const auto *enum_name = dynamic_cast<const parser::identifier_expression *>(member_pattern->target.get());
+                  if (enum_name && enums.contains(enum_name->name))
+                  {
+                    require(enum_name->name == subject,
+                            "Enum case '" + member_pattern->member_name + "' belongs to " + enum_name->name +
+                                ", but the match subject is " + subject,
+                            branch.range);
+                    require(covered_enum_cases.insert(member_pattern->member_name).second,
+                            "Duplicate match case '" + member_pattern->member_name + "'", branch.range);
+                  }
+                }
               }
             }
             else has_fallback = true;
@@ -1413,6 +1513,8 @@ namespace semantic
             paths.push_back(scopes);
           }
           has_fallback |= has_some && has_none;
+          if (const auto enum_type = enums.find(subject); enum_type != enums.end())
+            has_fallback |= covered_enum_cases.size() == enum_type->second.size();
           if (!has_fallback) paths.push_back(before);
           merge_initialization(before, paths);
         }

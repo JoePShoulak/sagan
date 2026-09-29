@@ -77,7 +77,13 @@ dispatch to the concrete class while retaining shared reference identity.
 **Provisional semantics:** broader method-overload ranking, automatic handling
 of cycles that do not contain an explicit weak edge, and borrowing.
 
+Enum cases may carry one or more typed payload values, such as
+`Success(Int)` or `Position(Float, Float)`. Payload cases act as constructors in
+the surrounding declaration namespace. Match patterns use the case name and
+bind one name per payload value; covering every case makes the match exhaustive.
+Payload-constructor names must currently be unique within that namespace.
+
 **Open questions:** inference requirements, duplicate declarations, scope,
-forward references, enum payloads and explicit values, generic
+forward references, explicit enum values, generic
 declarations, module resolution and visibility, and entry-point forms. These require semantic
 analysis or future language revisions.

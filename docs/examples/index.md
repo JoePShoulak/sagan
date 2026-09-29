@@ -112,6 +112,16 @@ scope. The second read produces `None`, and `??` supplies the visible fallback:
 make weak-demo
 ```
 
+## Payload-enum demonstration
+
+`examples/payload_enum_demo.sagan` constructs typed success and failure cases,
+binds their payloads, mixes them with a payload-free case, and executes an
+exhaustive match through the native tagged-variant representation:
+
+```bash
+make payload-enum-demo
+```
+
 ## Semantic-analysis demonstration
 
 `examples/semantic_demo.sagan` exercises program, type, function, block, and

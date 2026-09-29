@@ -1725,6 +1725,23 @@ namespace
         "fun exercise(): Bool {\n  let state: State = State.ready\n"
         "  match state {\n    case State.ready return true\n    case else return false\n  }\n}\n",
         {"state: State", "State @"});
+    passed &= expect_type_model(
+        "payload enum construction binding and exhaustive matching",
+        "enum Result {\n  Success(Int)\n  Failure(String)\n}\n"
+        "fun describe(result: Result): String {\n  match result {\n"
+        "    case Success(value) return \"ok\"\n"
+        "    case Failure(message) return message\n  }\n}\n"
+        "fun use(): Result => Success(42)\n",
+        {"value: Int64", "message: String", "Result @"});
+    passed &= expect_type_error(
+        "payload enum constructor arity",
+        "enum Result { Success(Int) }\nfun invalid(): Result => Success()\n",
+        "Enum case 'Success' expects 1 payload value");
+    passed &= expect_type_error(
+        "payload enum pattern belongs to subject enum",
+        "enum Result { Success(Int) }\nenum Signal { Message(String) }\n"
+        "fun invalid(result: Result): Int { match result { case Message(value) return 1\n case else return 0 } }\n",
+        "Enum case 'Message' belongs to Signal");
     passed &= expect_type_error("enum member must exist",
                                 "enum State {\n  ready\n}\nlet invalid = State.missing\n",
                                 "Enum 'State' has no member 'missing'");

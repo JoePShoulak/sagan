@@ -370,7 +370,21 @@ namespace parser
       if (type == type_declaration::kind::enum_type)
       {
         const token &member = expect(tokens::IDENTIFIER, "an enum member name");
-        enum_members.emplace_back(member.text, member.range, std::move(documentation));
+        std::vector<std::string> payload_types;
+        int member_end = member.range.end;
+        if (match(tokens::LPAREN))
+        {
+          if (!check(tokens::RPAREN))
+          {
+            do
+            {
+              payload_types.push_back(expect(tokens::IDENTIFIER, "a payload type").text);
+            } while (match(tokens::COMMA));
+          }
+          member_end = expect(tokens::RPAREN, "')' after enum payload types").range.end;
+        }
+        enum_members.emplace_back(member.text, span{member.range.begin, member_end},
+                                  std::move(payload_types), std::move(documentation));
         if (match(tokens::COMMA))
         {
           skip_newlines();
