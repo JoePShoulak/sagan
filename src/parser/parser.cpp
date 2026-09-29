@@ -265,11 +265,14 @@ namespace parser
                                              std::move(initializer));
   }
 
-  auto syntax_parser::parse_function_declaration(const bool body_optional, const bool allow_private) -> statement_ref
+  auto syntax_parser::parse_function_declaration(const bool body_optional, const bool allow_private,
+                                                  const bool allow_mutating) -> statement_ref
   {
     const token &keyword = previous();
     const bool private_member = allow_private && match(tokens::DOT);
-    const token &name = expect(tokens::IDENTIFIER, "a function name after 'fun'");
+    const token &name = allow_mutating && match(tokens::METHOD_IDENTIFIER)
+                            ? previous()
+                            : expect(tokens::IDENTIFIER, "a function name after 'fun'");
     expect(tokens::LPAREN, "'(' after the function name");
     std::vector<function_parameter> parameters;
     while (!check(tokens::RPAREN))
@@ -355,7 +358,7 @@ namespace parser
       else if (match(tokens::KWD_FUN))
       {
         const bool is_interface = type == type_declaration::kind::interface_type;
-        auto member = parse_function_declaration(is_interface, !is_interface);
+        auto member = parse_function_declaration(is_interface, !is_interface, true);
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }

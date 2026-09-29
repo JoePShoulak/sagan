@@ -38,6 +38,12 @@ namespace semantic
       std::string component;
     };
 
+    struct object_type
+    {
+      std::unordered_map<std::string, std::string> fields;
+      std::unordered_map<std::string, std::vector<callable_signature>> methods;
+    };
+
     auto is_unknown(const std::string_view type) -> bool
     {
       return type == unknown_type || type.find("Unknown") != std::string_view::npos;
@@ -140,6 +146,7 @@ namespace semantic
       std::vector<std::unordered_map<std::string, std::vector<binding>>> scopes{1};
       std::vector<std::string> return_types;
       std::unordered_map<const parser::expression *, callable_signature> callables;
+      std::unordered_map<std::string, object_type> objects;
 
       auto open_scope() -> void
       {
@@ -371,6 +378,20 @@ namespace semantic
         }
       }
 
+      auto collect_object_type(const parser::type_declaration &type) -> void
+      {
+        if (type.type_kind != parser::type_declaration::kind::class_type) return;
+        object_type object;
+        for (const auto &member : type.members)
+        {
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
+            object.fields.emplace(field->name, fixed_annotation(field->type_name));
+          else if (const auto *method = dynamic_cast<const parser::function_declaration *>(member.get()))
+            object.methods[method->name].push_back(signature(*method));
+        }
+        objects.emplace(type.name, std::move(object));
+      }
+
       auto expression(const parser::expression &value) -> std::string
       {
         if (const auto *literal = dynamic_cast<const parser::literal_expression *>(&value))
@@ -487,6 +508,14 @@ namespace semantic
           for (const auto &argument : call->arguments) arguments.push_back(expression(*argument));
           if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
           {
+            if (objects.contains(identifier->name))
+            {
+              require(arguments.empty(), "Default construction of '" + identifier->name +
+                                             "' does not accept arguments",
+                      value.range);
+              static_cast<void>(expression(*call->callee));
+              return record(value, identifier->name);
+            }
             const auto *matches = find(identifier->name);
             require(matches, "Undefined name '" + identifier->name + "'", identifier->range);
             std::vector<const callable_signature *> viable;
@@ -556,6 +585,23 @@ namespace semantic
                         member->member_name + "'",
                     value.range);
             return record(value, shaped->component);
+          }
+          if (const auto object = objects.find(target); object != objects.end())
+          {
+            require(!member->safe, "Safe member access is not defined for " + target + " values", value.range);
+            if (const auto field = object->second.fields.find(member->member_name);
+                field != object->second.fields.end())
+              return record(value, field->second);
+            if (const auto methods = object->second.methods.find(member->member_name);
+                methods != object->second.methods.end())
+            {
+              require(methods->second.size() == 1,
+                      "Method reference '" + member->member_name + "' is overloaded and requires a call",
+                      value.range);
+              callables[&value] = methods->second.front();
+              return record(value, "Function");
+            }
+            throw semantic_error("Type '" + target + "' has no member '" + member->member_name + "'", value.range);
           }
           return record(value, std::string(unknown_type));
         }
@@ -939,6 +985,8 @@ namespace semantic
       {
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void"}});
         for (const auto &entry : tree.statements) predeclare(*entry);
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_object_type(*type);
         for (const auto &entry : tree.statements) statement(*entry, true);
         return std::move(model);
       }

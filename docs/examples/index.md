@@ -132,7 +132,9 @@ both dimensioned values, reads and updates named components, iterates the
 vector's components, performs checked vector/scalar arithmetic and compound updates, and mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,
 executes a stored capturing lambda and an immediately invoked lambda, tests the
-result, and returns success from `main`. Its `match` cases, `for`
+result, constructs a class with defaulted fields, calls an ordinary and a
+mutating method through `self`, updates a field, and returns success from `main`.
+Its `match` cases, `for`
 loop, and final `if` branches demonstrate same-line bodies without braces.
 
 ```bash

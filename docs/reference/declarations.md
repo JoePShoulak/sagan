@@ -32,7 +32,15 @@ functions, faces, classes, and simple enums. Faces accept method signatures and
 default bodies. Classes accept `let` fields and methods. Enums currently contain
 identifier-only members separated by newlines or commas.
 
-**Provisional semantics:** overloading, privacy via a leading member dot, and
+**Implemented native class subset:** class fields require explicit types and may
+have default initializers. Calling `ClassName()` constructs an instance from
+those defaults; constructor arguments and custom constructors are not yet
+defined. `self` resolves to the current instance. Fields can be read or mutated,
+and block- or expression-bodied methods execute. A trailing `!` is allowed only
+on methods and conventionally identifies a mutating alternative; it does not by
+itself change dispatch or mutation rules.
+
+**Provisional semantics:** method overloading, privacy via a leading member dot, and
 conformance declared with interchangeable `is` or `has` composition lists.
 
 **Open questions:** inference requirements, duplicate declarations, scope,

@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string_view>
+#include <unordered_set>
 #include <utility>
 
 namespace codegen
@@ -22,6 +23,8 @@ namespace codegen
       std::size_t array_index = 0;
       std::size_t dictionary_index = 0;
       std::size_t dimensioned_index = 0;
+      std::unordered_set<std::string> user_types;
+      bool in_method = false;
 
       auto indentation() const -> std::string
       {
@@ -37,6 +40,7 @@ namespace codegen
       {
         if (name == "main") return "main";
         if (name == "print") return "sagan_print";
+        if (name == "self" && in_method) return "(*this)";
         std::ostringstream encoded;
         encoded << "sagan_" << std::hex << std::setfill('0');
         for (const unsigned char byte : name) encoded << std::setw(2) << static_cast<unsigned int>(byte);
@@ -57,6 +61,7 @@ namespace codegen
         if (name == "Int32") return "std::int32_t";
         if (name == "Int16") return "std::int16_t";
         if (name == "Int8") return "std::int8_t";
+        if (user_types.contains(name)) return identifier(name);
         for (const std::string_view family : {std::string_view{"Vector"}, std::string_view{"Coordinate"}})
         {
           if (!std::string_view{name}.starts_with(family)) continue;
@@ -239,11 +244,18 @@ namespace codegen
           return expression(*index->target) + ".at(" + expression(*index->index) + ")";
         if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
         {
-          const std::string_view component_names = "xyzw";
-          const std::size_t component = component_names.find(member->member_name);
-          if (member->safe || member->member_name.size() != 1 || component == std::string_view::npos)
-            fail("member access is not available in the initial native subset", value.range);
-          return expression(*member->target) + ".at(" + std::to_string(component) + ")";
+          if (member->safe) fail("safe member access is not available in the initial native subset", value.range);
+          const std::string target_type = expression_type(*member->target);
+          if (std::string_view{target_type}.starts_with("Vector") ||
+              std::string_view{target_type}.starts_with("Coordinate"))
+          {
+            const std::string_view component_names = "xyzw";
+            const std::size_t component = component_names.find(member->member_name);
+            if (member->member_name.size() != 1 || component == std::string_view::npos)
+              fail("dimensioned member access is invalid", value.range);
+            return expression(*member->target) + ".at(" + std::to_string(component) + ")";
+          }
+          return expression(*member->target) + "." + identifier(member->member_name);
         }
         if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
         {
@@ -511,11 +523,60 @@ namespace codegen
         output << "\n\n";
       }
 
+      auto method(const parser::function_declaration &value) -> void
+      {
+        output << indentation() << type(value.return_type, value.range) << ' ' << identifier(value.name) << '(';
+        for (std::size_t index = 0; index < value.parameters.size(); ++index)
+        {
+          if (index != 0) output << ", ";
+          output << type(value.parameters[index].type_name, value.range) << ' '
+                 << identifier(value.parameters[index].name);
+        }
+        output << ") ";
+        const bool previous_method = in_method;
+        in_method = true;
+        if (value.expression_body)
+          output << "{ return " << expression(*value.expression_body) << "; }";
+        else
+        {
+          if (!value.body) fail("method has no executable body", value.range);
+          block(*value.body);
+        }
+        in_method = previous_method;
+        output << "\n";
+      }
+
+      auto object(const parser::type_declaration &value) -> void
+      {
+        if (value.type_kind != parser::type_declaration::kind::class_type)
+          fail("only class declarations are available in the initial native object subset", value.range);
+        output << "struct " << identifier(value.name) << "\n{\n";
+        ++depth;
+        for (const auto &entry : value.members)
+        {
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
+          {
+            output << indentation() << type(field->type_name, field->range) << ' ' << identifier(field->name);
+            if (field->initializer) output << " = " << expression(*field->initializer);
+            else output << "{}";
+            output << ";\n";
+          }
+          else if (const auto *member_method = dynamic_cast<const parser::function_declaration *>(entry.get()))
+            method(*member_method);
+          else fail("class member is not available in the initial native object subset", entry->range);
+        }
+        --depth;
+        output << "};\n\n";
+      }
+
     public:
       explicit cpp_generator(const semantic::type_model &checked_types) : types(checked_types) {}
 
       auto generate(const parser::program &tree) -> std::string
       {
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
+            user_types.insert(type->name);
         output << "// Generated by Sagan.\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <iostream>\n#include <limits>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <type_traits>\n#include <unordered_map>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
                   "#include <windows.h>\n"
@@ -816,9 +877,15 @@ namespace codegen
                   "void sagan_modulo_assign(Target &target, const Value value)\n"
                   "{ target = sagan_modulo<Result>(target, value); }\n\n";
         for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) object(*type);
+        for (const auto &entry : tree.statements)
         {
           const auto *declaration = dynamic_cast<const parser::function_declaration *>(entry.get());
-          if (!declaration) fail("only functions are supported at the top level", entry->range);
+          if (!declaration)
+          {
+            if (dynamic_cast<const parser::type_declaration *>(entry.get())) continue;
+            fail("only functions and classes are supported at the top level", entry->range);
+          }
           function(*declaration);
         }
         return output.str();

@@ -47,10 +47,14 @@ lists on faces and classes. `self` parses as the current-object expression, and
 a leading dot marks a private class method in the AST. Simple enums contain
 identifier members separated by newlines or commas.
 
-The parser records these distinctions but does not yet enforce interface
-conformance, privacy, dispatch, or field and method types.
+The initial native class subset checks typed fields and methods, supports field
+defaults and zero-argument `ClassName()` construction, types `self`, and executes
+field reads, mutation, and method calls. Methods may use a trailing `!` naming
+convention to identify a mutating alternative. Faces and composition still parse
+but conformance, default-method dispatch, privacy, custom constructors, and
+reference ownership are not implemented yet.
 
 **Open questions:** structural versus explicit conformance, default-method
-conflict resolution, constructor rules, enum payloads and explicit values,
+conflict resolution, custom constructor rules, enum payloads and explicit values,
 value versus reference behavior, visibility enforcement, and whether limited
 implementation inheritance will exist.

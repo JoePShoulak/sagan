@@ -27,8 +27,8 @@ Name collection deliberately remains separate from type and control-flow
 checking. Top-level names are collected before bodies are visited, permitting
 forward and self references. Later checking establishes overload signatures,
 types, lossless conversions, definite initialization, definite returns, and
-unreachable code. Interface conformance, exception-pattern binding, and the
-general object mutation model remain future work.
+unreachable code. Interface conformance, exception-pattern binding, custom
+constructors, privacy enforcement, and reference ownership remain future work.
 
 The initial type checker infers scalar literals; validates annotations,
 initializers, assignments, Boolean conditions, conditional branches, core
@@ -53,9 +53,11 @@ dimensions and lossless component widening.
 Dimensioned `.x`, `.y`, `.z`, and `.w` members resolve to their component type
 when present. Typed expression lambdas retain parameter and result signatures
 through local bindings; stored and immediate calls validate arity and lossless
-argument compatibility. Other member access, escaping closure types, interface
-conformance, and several user-defined-type relationships currently remain
-`Unknown`. The generic model and multi-error recovery strategy also remain open.
+argument compatibility. Class metadata supplies typed field and method access,
+zero-argument default construction, and `self` typing. Unknown class members and
+constructor arguments are rejected. Escaping closure types, interface
+conformance, and several user-defined-type relationships remain open. The generic
+model and multi-error recovery strategy also remain open.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
 Non-`Void` block-bodied functions must return on every statically guaranteed

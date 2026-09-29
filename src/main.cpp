@@ -1302,6 +1302,8 @@ namespace
     passed &= expect_syntax_error("top-level function signature", "fun incomplete(value: Float): Float\n");
     passed &= expect_syntax_error("face field", "face Invalid {\n  let value: Float\n}\n");
     passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
+    passed &= expect_syntax_error("top-level mutating function name",
+                                  "fun invalid!(): Int => 0\n");
     passed &= expect_syntax_error("enum literal member", "enum Invalid {\n  1\n}\n");
     passed &= expect_syntax_error("trailing composition comma", "face Invalid is Renderable, {\n}\n");
     passed &= expect_syntax_error("unterminated type body", "class Invalid {\n  let value = 1\n");
@@ -1646,6 +1648,14 @@ namespace
         "  let immediate = (fun(value: Int): Int => value * 2)(21)\n"
         "  return answer + immediate\n}\n",
         {"add: Function", "answer: Int64", "immediate: Int64"});
+    passed &= expect_type_model(
+        "default class construction fields self and methods",
+        "class Counter {\n  let value: Int = 40\n"
+        "  fun increment!(): Int {\n    self.value += 1\n    return self.value\n  }\n"
+        "  fun current(): Int => self.value\n}\n"
+        "fun exercise(): Int {\n  let counter = Counter()\n"
+        "  let advanced = counter.increment!()\n  return counter.current() + advanced\n}\n",
+        {"counter: Counter", "advanced: Int64"});
     passed &= expect_type_error("initializer type mismatch", "let value: Bool = 1\n",
                                 "Variable initializer requires Bool, but received Int");
     passed &= expect_type_error("uninferable variable", "let pending\n",
@@ -1753,6 +1763,14 @@ namespace
                                 "  let apply = fun(value: Int): Int => value\n"
                                 "  return apply(true)\n}\n",
                                 "No matching overload for 'apply'");
+    passed &= expect_type_error("class default construction rejects arguments",
+                                "class Probe {\n  let value: Int = 0\n}\n"
+                                "fun invalid(): Int {\n  let probe = Probe(1)\n  return 0\n}\n",
+                                "Default construction of 'Probe' does not accept arguments");
+    passed &= expect_type_error("class member must exist",
+                                "class Probe {\n  let value: Int = 0\n}\n"
+                                "fun invalid(): Int {\n  let probe = Probe()\n  return probe.missing\n}\n",
+                                "Type 'Probe' has no member 'missing'");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",
