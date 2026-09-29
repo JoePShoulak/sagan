@@ -1,0 +1,5 @@
+class Node {
+  let next: Optional<Node> = None
+}
+
+fun main() {}

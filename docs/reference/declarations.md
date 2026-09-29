@@ -58,6 +58,13 @@ Assigning a normal strong value stores a weak reference; reading the field
 produces `Optional<Probe>`, so callers use matching, `?.`, or `??` to handle an
 expired target. Weak fields may also be private with `weak let .target: Probe`.
 
+Reference counting is the 1.0 ownership model; there is no tracing cycle
+collector. The type checker rejects declaration-level cycles made entirely of
+strong class fields, including class references nested in optionals or generic
+type annotations. At least one edge must use `weak let`. A face-typed field must also
+be weak because its concrete class target is selected dynamically and cannot be
+proven acyclic. The diagnostic reports the strong field path that forms a cycle.
+
 **Implemented conformance subset:** `is` and `has` are interchangeable and do
 not denote inheritance. A class composing a face must satisfy each required
 method with an exact class implementation or unambiguous default. Missing or
@@ -74,8 +81,7 @@ value converts to a face only when its declaration explicitly conforms through
 `is` or `has`, including transitive face composition. Calls through the face
 dispatch to the concrete class while retaining shared reference identity.
 
-**Provisional semantics:** broader method-overload ranking, automatic handling
-of cycles that do not contain an explicit weak edge, and borrowing.
+**Provisional semantics:** broader method-overload ranking and borrowing.
 
 Enum cases may carry one or more typed payload values, such as
 `Success(Int)` or `Position(Float, Float)`. Payload cases act as constructors in

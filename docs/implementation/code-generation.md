@@ -88,7 +88,9 @@ conversion to a declared face preserves object identity for runtime dispatch.
 Weak class fields lower to `std::weak_ptr<T>`. Strong values assign directly to
 that storage; reads call `lock()` and lower to `std::optional<std::shared_ptr<T>>`,
 which is the native representation consumed by Sagan's `?.`, `??`, and optional
-matching operations.
+matching operations. Before emission, type checking rejects all-strong class
+field cycles and strong face-typed fields, so the generated reference-counted
+object graph requires an explicit non-owning edge wherever a cycle is possible.
 
 Payload-bearing enums lower to tagged structs whose payload storage uses
 `std::variant`; cases with multiple payload values use `std::tuple`. Generated
@@ -116,8 +118,8 @@ aliases point to exported identities, and dependency declarations are emitted
 before their consumers. The module demo compiles and executes the resulting
 C++ translation.
 
-Open work includes generated-code structure, automatic handling of all-strong
-reference cycles or borrowing, escaping closures, catchable native runtime failures and richer exception patterns, debug information, compiler selection and flags,
+Open work includes generated-code structure, borrowing, escaping closures,
+richer exception patterns, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler

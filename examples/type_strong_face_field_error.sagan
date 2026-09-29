@@ -1,0 +1,9 @@
+face Observable {
+  fun observe(): Int
+}
+
+class Observer {
+  let target: Observable
+}
+
+fun main() {}

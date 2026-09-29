@@ -1,0 +1,9 @@
+class Parent {
+  let child: Child
+}
+
+class Child {
+  let parent: Parent
+}
+
+fun main() {}

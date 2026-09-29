@@ -73,6 +73,8 @@ expect_output "semantic model output" "SemanticModel" \
   "$binary" --semantic examples/semantic_demo.sagan
 expect_output "type model output" "TypeModel" \
   "$binary" --types examples/type_demo.sagan
+expect_output "weak ownership cycle type model" "TypeModel" \
+  "$binary" --types examples/type_weak_ownership_cycle.sagan
 expect_output "entry-point validation" "executable entry point is valid" \
   "$binary" --entry examples/entry_demo.sagan
 expect_output "module graph resolution" "Import(course from guidance as calculate_course)" \
@@ -227,6 +229,12 @@ expect_failure "weak field type diagnostic" 1 "Weak field 'value' requires a cla
   "$binary" --types examples/type_weak_scalar_error.sagan
 expect_failure "weak field initializer diagnostic" 1 "Weak field 'target' starts empty" \
   "$binary" --types examples/type_weak_initializer_error.sagan
+expect_failure "strong ownership cycle diagnostic" 1 "Strong ownership cycle requires an explicit weak field edge" \
+  "$binary" --types examples/type_strong_ownership_cycle_error.sagan
+expect_failure "nested strong ownership cycle diagnostic" 1 "Strong ownership cycle requires an explicit weak field edge" \
+  "$binary" --types examples/type_nested_strong_ownership_cycle_error.sagan
+expect_failure "strong face field diagnostic" 1 "cannot use dynamic face type 'Observable'; declare it with weak let" \
+  "$binary" --types examples/type_strong_face_field_error.sagan
 expect_failure "payload enum arity diagnostic" 1 "Enum case 'Success' expects 1 payload value" \
   "$binary" --types examples/type_payload_enum_arity_error.sagan
 expect_failure "payload enum match diagnostic" 1 "Enum case 'Message' belongs to Signal" \

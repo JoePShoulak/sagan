@@ -1,0 +1,9 @@
+class Parent {
+  let child: Child
+}
+
+class Child {
+  weak let parent: Parent
+}
+
+fun main() {}

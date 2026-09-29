@@ -135,6 +135,16 @@ native failure:
 make runtime-error-demo
 ```
 
+## Ownership demonstration
+
+`make ownership-demo` first runs the live/expired weak-reference example, then
+shows the compiler rejecting a two-class all-strong ownership cycle and naming
+the field path that requires a `weak let` edge:
+
+```bash
+make ownership-demo
+```
+
 ## Generic-sum demonstration
 
 `examples/generic_sum_demo.sagan` declares `Result<T, E>` and `identity<T>`.

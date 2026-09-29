@@ -612,6 +612,85 @@ namespace semantic
         objects.emplace(type.name, std::move(object));
       }
 
+      struct ownership_edge
+      {
+        std::string owner;
+        std::string field;
+        std::string target;
+        parser::span range;
+      };
+
+      auto reference_targets(const std::string &type, std::vector<std::string> &targets) const -> void
+      {
+        const auto instance = generic_instance(type);
+        if (objects.contains(instance.base) || interfaces.contains(instance.base))
+          targets.push_back(instance.base);
+        for (const auto &argument : instance.arguments) reference_targets(argument, targets);
+      }
+
+      auto validate_ownership(const parser::program &tree) const -> void
+      {
+        std::unordered_map<std::string, std::vector<ownership_edge>> graph;
+        std::vector<std::string> class_order;
+        for (const auto &entry : tree.statements)
+        {
+          const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
+          if (!type || type->type_kind != parser::type_declaration::kind::class_type) continue;
+          class_order.push_back(type->name);
+          const auto &object = objects.at(type->name);
+          for (const auto &member : type->members)
+          {
+            const auto *field = dynamic_cast<const parser::let_declaration *>(member.get());
+            if (!field || field->weak_member) continue;
+            std::vector<std::string> targets;
+            reference_targets(object.fields.at(field->name), targets);
+            for (const auto &target : targets)
+            {
+              require(!interfaces.contains(target),
+                      "Strong field '" + type->name + "." + field->name +
+                          "' cannot use dynamic face type '" + target + "'; declare it with weak let",
+                      field->range);
+              if (objects.contains(target))
+                graph[type->name].push_back(ownership_edge{type->name, field->name, target, field->range});
+            }
+          }
+        }
+
+        std::unordered_map<std::string, int> state;
+        std::vector<std::string> class_stack;
+        std::vector<ownership_edge> edge_stack;
+        const auto visit = [&](const auto &self, const std::string &name) -> void
+        {
+          state[name] = 1;
+          class_stack.push_back(name);
+          if (const auto found = graph.find(name); found != graph.end())
+            for (const auto &edge : found->second)
+            {
+              edge_stack.push_back(edge);
+              if (state[edge.target] == 0) self(self, edge.target);
+              else if (state[edge.target] == 1)
+              {
+                const auto begin = std::find(class_stack.begin(), class_stack.end(), edge.target);
+                const std::size_t first = static_cast<std::size_t>(std::distance(class_stack.begin(), begin));
+                std::string path;
+                for (std::size_t index = first; index < edge_stack.size(); ++index)
+                {
+                  if (!path.empty()) path += " -> ";
+                  path += edge_stack[index].owner + "." + edge_stack[index].field;
+                }
+                path += " -> " + edge.target;
+                throw semantic_error("Strong ownership cycle requires an explicit weak field edge: " + path,
+                                     edge.range);
+              }
+              edge_stack.pop_back();
+            }
+          class_stack.pop_back();
+          state[name] = 2;
+        };
+        for (const auto &name : class_order)
+          if (state[name] == 0) visit(visit, name);
+      }
+
       auto collect_interface_type(const parser::type_declaration &type) -> void
       {
         if (type.type_kind != parser::type_declaration::kind::interface_type) return;
@@ -2004,6 +2083,7 @@ namespace semantic
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_enum_type(*type);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_object_type(*type);
+        validate_ownership(tree);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
               type && type->type_kind == parser::type_declaration::kind::class_type)

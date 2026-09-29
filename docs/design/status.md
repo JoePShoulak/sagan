@@ -17,7 +17,7 @@ verified_by: null
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, generic call inference, generic sum construction, payload-bearing nominal enums and exhaustive matches, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
-| Runtime and memory model | **Reference, weak-edge, and absence foundations implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
+| Runtime and memory model | **Reference ownership model implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, compile-time rejection of all-strong declaration cycles and strong face fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, generic and ordinary reference-counted classes, specialized runtime faces, value exceptions and cleanup, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demos |
 | Deterministic execution | **Catchable runtime-error foundation implemented** | checked arithmetic and collection lookup failures become nominal `RuntimeError` values, with focused fixtures and a native demo |
@@ -82,9 +82,11 @@ classes with declared transitive conformance and dispatch through shared
 reference-counted objects. Optional values, payload matching, safe access, and
 lazy coalescing provide the absence model used by `weak let` class fields.
 Weak fields begin empty, accept strong class or face values on assignment, and
-read as `Optional<T>` so expired targets become `None`. Cycles with an explicit
-weak edge can therefore be reclaimed; automatic handling of all-strong cycles
-remains future work. Named functions
+read as `Optional<T>` so expired targets become `None`. The checker rejects
+all-strong declaration cycles, including nested optional/generic references,
+and requires face-typed fields to be weak because their concrete targets are
+dynamic. Every permitted ownership cycle therefore has an explicit weak edge
+and can be reclaimed without a tracing collector. Named functions
 and methods accept block or `=>` expression bodies.
 Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and
@@ -113,7 +115,6 @@ Generic classes, generic face defaults, and class-level generic methods execute
 with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with `is`. Method-specific face generics,
-automatic handling of all-strong reference cycles,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.
@@ -128,3 +129,21 @@ conversion rules, generic algorithms, runtime representation, and whether type
 separation prevents meaningful simulation errors without creating unnecessary
 friction. This review must happen before work begins on math, rendering, or
 physics libraries.
+
+The 1.0 release must also provide professional graphical installers for Windows,
+macOS, and Linux, plus platform-appropriate command-line installation. The
+installed toolchain must place `sagan` on the user's command path, support
+`sagan file.sagan`, provide normal install-location, permission, progress, and
+uninstall behavior, and register `.sagan` files for native double-click launch.
+Whether that launch opens a visible terminal or uses another execution surface
+is intentionally deferred until installer design begins. Release artifacts will
+be published through GitHub's release/package facilities; HP1 may additionally
+host or mirror installer and package data where convenient.
+
+After 1.0 is declared complete, but before the math, rendering, and physics
+libraries begin, hold a dedicated lifecycle and release-operations review. It
+must settle release cadence and channels, the events that trigger builds,
+testing, signing, publication, documentation promotion, rollback, security and
+support work, and maintenance responsibilities outside day-to-day language
+development. Full-functionality VS Code extension work is planned for the same
+transition and awaits its separate requirements.

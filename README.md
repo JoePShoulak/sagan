@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.56.0](https://img.shields.io/badge/development-0.56.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.57.0](https://img.shields.io/badge/development-0.57.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -45,8 +45,8 @@ conform to specialized generic faces such as `Readable<T>`. Generic face
 defaults and class-level generic methods execute with call-site inference or
 explicit calls such as `box.echo<String>("signal")`. Function and class type
 parameters may use face constraints such as `T is Readable<Int>`; every concrete
-type argument is checked for conformance. Method-specific generics on faces, automatic reference-cycle
-collection, the full runtime, and the standard library are not yet implemented.
+type argument is checked for conformance. Method-specific generics on faces,
+the full runtime, and the standard library are not yet implemented.
 The built-in `Optional<T>` type,
 `Some(value)`, `None`, payload matching, safe `?.` access, and lazy `??`
 fallback execute natively. An initial C++ emitter can compile the validated scalar/control-
@@ -79,8 +79,10 @@ Leading-dot fields and methods are private to their declaring class. Class and
 face values use shared reference-counted storage in the native subset. Explicit
 `weak let` class fields break ownership cycles; assignment accepts a strong
 class or face value, while reads produce `Optional<T>` and become `None` after
-the target expires. A conforming class converts to a composed face for runtime
-method dispatch.
+the target expires. Declaration-level all-strong cycles are rejected, including
+reference types nested inside optionals and generic type annotations. Face-typed fields must
+be weak because their concrete target cannot be proven acyclic. A conforming
+class converts to a composed face for runtime method dispatch.
 Classes declaring `is` or `has` a face are checked structurally for every
 required method and exact signature; neither spelling creates inheritance.
 Unambiguous face defaults are composed into the class, class methods override
@@ -137,6 +139,20 @@ Before the hypercore reaches 1.0, the design will explicitly reevaluate whether
 coordinates should remain a separate type from vectors. Math, rendering, and
 physics library work remains paused until that core semantic decision is made.
 
+The 1.0 readiness roadmap also includes professional installers for Windows,
+macOS, and Linux; interactive install-location, permissions, progress, and
+uninstall experiences; command-line installation paths; `sagan file.sagan`
+availability through normal shell setup; and native `.sagan` file associations.
+The visible-terminal versus background launch behavior for double-clicked source
+files remains a deliberate design decision for that milestone. Release artifacts
+should use GitHub Releases and package facilities, with HP1 available as a
+self-hosted distribution or mirror when useful. Immediately after 1.0 is truly
+complete—and before math, rendering, or physics library development—the project
+will hold a dedicated release-lifecycle review covering release cadence,
+channels, automation triggers, signing, publishing, support, rollback, and
+maintenance. Full VS Code extension readiness will be coordinated in the same
+transition period under separately supplied requirements.
+
 ## Build and explore
 
 Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
@@ -147,6 +163,7 @@ make parser-demo
 bash scripts/module_demo.sh
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
+make ownership-demo
 bash scripts/payload_enum_demo.sh
 bash scripts/generic_sum_demo.sh
 bash scripts/generic_class_demo.sh
