@@ -1,0 +1,11 @@
+module telemetry.flight
+
+enum Signal {
+  nominal
+  lost
+}
+
+fun offset(): Int => 2
+
+export offset
+export Signal

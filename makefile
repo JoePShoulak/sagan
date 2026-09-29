@@ -34,7 +34,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -78,6 +78,9 @@ entry-demo: $(TARGET)
 
 module-demo: $(TARGET)
 	bash scripts/module_demo.sh
+
+package-demo: $(TARGET)
+	bash scripts/package_demo.sh
 
 execution-demo: $(TARGET)
 	bash scripts/execution_demo.sh

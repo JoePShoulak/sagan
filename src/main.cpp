@@ -1323,10 +1323,10 @@ namespace
     passed &= expect_syntax_error("unterminated type body", "class Invalid {\n  let value = 1\n");
     passed &= expect_ast(
         "modules imports and exports",
-        "module orbital_demo\n"
-        "import math\n"
-        "import Vector from math\n"
-        "import Renderer from rendering as SceneRenderer\n"
+        "module orbital.demo\n"
+        "import core.math\n"
+        "import Vector from core.math\n"
+        "import Renderer from graphics.rendering as SceneRenderer\n"
         "import physics as simulation_physics\n"
         "export ExplorerShip\n"
         "export GuidanceStatus as Status\n"
@@ -1338,10 +1338,10 @@ namespace
         "  ready\n"
         "}\n",
         "Program\n"
-        "  Module(orbital_demo)\n"
-        "  Import(math)\n"
-        "  Import(Vector from math)\n"
-        "  Import(Renderer from rendering as SceneRenderer)\n"
+        "  Module(orbital.demo)\n"
+        "  Import(core.math)\n"
+        "  Import(Vector from core.math)\n"
+        "  Import(Renderer from graphics.rendering as SceneRenderer)\n"
         "  Import(physics as simulation_physics)\n"
         "  Export(ExplorerShip)\n"
         "  Export(GuidanceStatus as Status)\n"
@@ -1351,9 +1351,11 @@ namespace
         "  Enum(GuidanceStatus)\n"
         "    EnumMember(ready)\n");
     passed &= expect_syntax_error("duplicate module declaration", "module one\nmodule two\n");
+    passed &= expect_syntax_error("incomplete qualified module name", "module navigation.\n");
     passed &= expect_syntax_error("late module declaration", "import math\nmodule invalid\n");
     passed &= expect_syntax_error("import without name", "import\n");
     passed &= expect_syntax_error("import from without module", "import Vector from\n");
+    passed &= expect_syntax_error("qualified selective import name", "import nav.Vector from core.math\n");
     passed &= expect_syntax_error("import alias without name", "import math as\n");
     passed &= expect_syntax_error("export without name", "export\n");
     passed &= expect_ast(
@@ -2062,8 +2064,10 @@ auto main(const int argc, char **argv) -> int
     types,
     entry,
     modules,
+    package,
     emit_cpp,
     emit_cpp_modules,
+    emit_cpp_package,
   };
 
   output_mode mode = output_mode::tokens;
@@ -2111,6 +2115,11 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::modules;
     path = argv[2];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--package")
+  {
+    mode = output_mode::package;
+    path = argv[2];
+  }
   else if ((argc == 3 || argc == 4) && std::string(argv[1]) == "--emit-cpp")
   {
     mode = output_mode::emit_cpp;
@@ -2120,6 +2129,12 @@ auto main(const int argc, char **argv) -> int
   else if ((argc == 3 || argc == 4) && std::string(argv[1]) == "--emit-cpp-modules")
   {
     mode = output_mode::emit_cpp_modules;
+    path = argv[2];
+    if (argc == 4) output_path = argv[3];
+  }
+  else if ((argc == 3 || argc == 4) && std::string(argv[1]) == "--emit-cpp-package")
+  {
+    mode = output_mode::emit_cpp_package;
     path = argv[2];
     if (argc == 4) output_path = argv[3];
   }
@@ -2135,8 +2150,8 @@ auto main(const int argc, char **argv) -> int
   {
     std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
-                 "--entry FILE | --modules FILE | --emit-cpp FILE [OUTPUT] | "
-                 "--emit-cpp-modules FILE [OUTPUT] | FILE]\n";
+                 "--entry FILE | --modules FILE | --package PATH | --emit-cpp FILE [OUTPUT] | "
+                 "--emit-cpp-modules FILE [OUTPUT] | --emit-cpp-package PATH [OUTPUT] | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
@@ -2149,9 +2164,16 @@ auto main(const int argc, char **argv) -> int
       graph.print(std::cout);
       return 0;
     }
-    if (mode == output_mode::emit_cpp_modules)
+    if (mode == output_mode::package)
     {
-      const auto tree = modules::link(path);
+      const auto graph = modules::resolve_package(path);
+      std::cout << "Sagan " << SAGAN_VERSION << " package graph: " << path << "\n\n";
+      graph.print(std::cout);
+      return 0;
+    }
+    if (mode == output_mode::emit_cpp_modules || mode == output_mode::emit_cpp_package)
+    {
+      const auto tree = mode == output_mode::emit_cpp_package ? modules::link_package(path) : modules::link(path);
       static_cast<void>(semantic::analyze(tree));
       const auto types = semantic::check_types(tree);
       semantic::validate_entry_point(tree);

@@ -48,6 +48,7 @@ namespace parser
     auto parse_block() -> std::unique_ptr<block_statement>;
     auto parse_statement_body(const std::string &description) -> std::unique_ptr<block_statement>;
     auto parse_type_annotation(const std::string &description) -> std::string;
+    auto parse_qualified_name(const std::string &description) -> std::string;
     auto parse_expression() -> expression_ref;
     auto parse_nested_expression() -> expression_ref;
     auto parse_assignment() -> expression_ref;

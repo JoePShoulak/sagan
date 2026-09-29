@@ -91,6 +91,18 @@ make module-demo
 The demonstration proves module structure, visibility, semantic/type linking,
 whole-module namespace access, and native cross-file execution.
 
+## Package demonstration
+
+`examples/package_demo/` adds a strict `sagan.toml`, a configured entry module,
+and qualified `navigation.guidance` and `telemetry.flight` modules stored in
+matching nested directories. It proves manifest loading, deterministic source
+mapping, transitive imports, package graph inspection, linked C++ generation,
+and native execution.
+
+```bash
+make package-demo
+```
+
 ## Optional-value demonstration
 
 `examples/optional_demo.sagan` demonstrates typed `Optional<T>` values,

@@ -482,26 +482,39 @@ namespace parser
   auto syntax_parser::parse_module_declaration() -> statement_ref
   {
     const token &keyword = previous();
-    const token &name = expect(tokens::IDENTIFIER, "a module name after 'module'");
-    return std::make_unique<module_declaration>(span{keyword.range.begin, name.range.end}, name.text);
+    const std::string name = parse_qualified_name("a module name after 'module'");
+    return std::make_unique<module_declaration>(span{keyword.range.begin, previous().range.end}, name);
   }
 
   auto syntax_parser::parse_import_declaration() -> statement_ref
   {
     const token &keyword = previous();
-    const token &name = expect(tokens::IDENTIFIER, "a name after 'import'");
+    const std::string name = parse_qualified_name("a name after 'import'");
     std::optional<std::string> source;
     if (match(tokens::KWD_FROM))
     {
-      source = expect(tokens::IDENTIFIER, "a module name after 'from'").text;
+      if (name.find('.') != std::string::npos)
+        throw parse_error("A selective import must name one exported identifier before 'from'", previous().range);
+      source = parse_qualified_name("a module name after 'from'");
     }
     std::optional<std::string> alias;
     if (match(tokens::KWD_AS))
     {
       alias = expect(tokens::IDENTIFIER, "an alias after 'as'").text;
     }
-    return std::make_unique<import_declaration>(span{keyword.range.begin, previous().range.end}, name.text,
+    return std::make_unique<import_declaration>(span{keyword.range.begin, previous().range.end}, name,
                                                 std::move(source), std::move(alias));
+  }
+
+  auto syntax_parser::parse_qualified_name(const std::string &description) -> std::string
+  {
+    std::string name = expect(tokens::IDENTIFIER, description).text;
+    while (match(tokens::DOT))
+    {
+      name += '.';
+      name += expect(tokens::IDENTIFIER, "an identifier after '.' in a qualified name").text;
+    }
+    return name;
   }
 
   auto syntax_parser::parse_export_declaration() -> statement_ref

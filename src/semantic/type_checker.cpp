@@ -578,7 +578,11 @@ namespace semantic
         }
         else if (const auto *imported = dynamic_cast<const parser::import_declaration *>(&value))
         {
-          add_binding(imported->alias.value_or(imported->imported_name), binding{std::string(unknown_type), {}});
+          const std::size_t separator = imported->imported_name.rfind('.');
+          const std::string fallback = separator == std::string::npos
+                                           ? imported->imported_name
+                                           : imported->imported_name.substr(separator + 1);
+          add_binding(imported->alias.value_or(fallback), binding{std::string(unknown_type), {}});
         }
       }
 

@@ -1,0 +1,13 @@
+module main
+
+import course from navigation.guidance as calculate_course
+import telemetry.flight as flight_data
+
+fun main(): Int {
+  let answer = calculate_course(40)
+  let signal = flight_data.Signal.nominal
+  print("Package answer: ${answer}")
+  print("Package signal: ${signal}")
+  if answer == 42 and signal == flight_data.Signal.nominal return 0
+  else return 1
+}

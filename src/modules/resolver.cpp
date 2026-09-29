@@ -6,8 +6,10 @@
 #include "../parser/tokenizer.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <optional>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -67,17 +69,129 @@ namespace modules
       return names;
     }
 
+    auto trim(std::string value) -> std::string
+    {
+      while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front())) != 0) value.erase(value.begin());
+      while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0) value.pop_back();
+      return value;
+    }
+
+    auto quoted_value(const std::string &value, const std::string &key) -> std::string
+    {
+      if (value.size() < 2 || value.front() != '"' || value.back() != '"')
+        throw std::runtime_error("Package manifest value for '" + key + "' must be a quoted string");
+      return value.substr(1, value.size() - 2);
+    }
+
+    auto manifest_from_file(const std::filesystem::path &manifest_path) -> package_manifest
+    {
+      const auto absolute_manifest = std::filesystem::absolute(manifest_path).lexically_normal();
+      std::istringstream input(read_file(absolute_manifest));
+      std::unordered_map<std::string, std::string> values;
+      std::string section;
+      std::string line;
+      std::size_t line_number = 0;
+      while (std::getline(input, line))
+      {
+        ++line_number;
+        const std::size_t comment = line.find('#');
+        if (comment != std::string::npos) line.erase(comment);
+        line = trim(std::move(line));
+        if (line.empty()) continue;
+        if (line.front() == '[' && line.back() == ']')
+        {
+          section = trim(line.substr(1, line.size() - 2));
+          if (section != "package")
+            throw std::runtime_error("Unknown package manifest section '[" + section + "]'");
+          continue;
+        }
+        if (section != "package")
+          throw std::runtime_error("Package manifest values must appear under [package]");
+        const std::size_t equals = line.find('=');
+        if (equals == std::string::npos)
+          throw std::runtime_error("Invalid package manifest line " + std::to_string(line_number));
+        const std::string key = trim(line.substr(0, equals));
+        if (key != "name" && key != "version" && key != "source" && key != "entry")
+          throw std::runtime_error("Unknown package manifest key '" + key + "'");
+        if (!values.emplace(key, quoted_value(trim(line.substr(equals + 1)), key)).second)
+          throw std::runtime_error("Duplicate package manifest key '" + key + "'");
+      }
+      for (const std::string_view required : {"name", "version", "source", "entry"})
+        if (!values.contains(std::string(required)))
+          throw std::runtime_error("Package manifest is missing required key '" + std::string(required) + "'");
+      if (!std::regex_match(values.at("name"), std::regex{"[A-Za-z][A-Za-z0-9_-]*"}))
+        throw std::runtime_error("Package name must begin with a letter and contain only letters, digits, '_' or '-'");
+      if (!std::regex_match(values.at("version"), std::regex{"[0-9]+\\.[0-9]+\\.[0-9]+"}))
+        throw std::runtime_error("Package version must use MAJOR.MINOR.PATCH");
+      if (!std::regex_match(values.at("entry"), std::regex{"[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*"}))
+        throw std::runtime_error("Package entry must be a qualified module name");
+      const auto package_root = absolute_manifest.parent_path();
+      const auto source_root = std::filesystem::absolute(package_root / values.at("source")).lexically_normal();
+      const auto relative_source = source_root.lexically_relative(package_root);
+      if (relative_source.empty() || (!relative_source.empty() && *relative_source.begin() == ".."))
+        throw std::runtime_error("Package source directory must stay inside the package root");
+      if (!std::filesystem::is_directory(source_root))
+        throw std::runtime_error("Package source directory does not exist: " + source_root.string());
+      return package_manifest{values.at("name"), values.at("version"), absolute_manifest,
+                              package_root, source_root, values.at("entry")};
+    }
+
+    auto discover_manifest(std::filesystem::path path) -> std::optional<package_manifest>
+    {
+      path = std::filesystem::absolute(std::move(path)).lexically_normal().parent_path();
+      while (!path.empty())
+      {
+        const auto candidate = path / "sagan.toml";
+        if (std::filesystem::is_regular_file(candidate)) return manifest_from_file(candidate);
+        const auto parent = path.parent_path();
+        if (parent == path) break;
+        path = parent;
+      }
+      return {};
+    }
+
+    auto path_for_module(const std::filesystem::path &root, const std::string &name) -> std::filesystem::path
+    {
+      std::filesystem::path relative;
+      std::size_t begin = 0;
+      while (begin < name.size())
+      {
+        const std::size_t separator = name.find('.', begin);
+        relative /= name.substr(begin, separator == std::string::npos ? std::string::npos : separator - begin);
+        if (separator == std::string::npos) break;
+        begin = separator + 1;
+      }
+      relative += ".sagan";
+      return (root / relative).lexically_normal();
+    }
+
+    auto module_name_for_path(const std::filesystem::path &root, const std::filesystem::path &path) -> std::string
+    {
+      auto relative = std::filesystem::absolute(path).lexically_normal().lexically_relative(root);
+      if (relative.empty() || *relative.begin() == "..")
+        throw std::runtime_error("Module entry must stay inside the package source directory");
+      relative.replace_extension();
+      std::string result;
+      for (const auto &component : relative)
+      {
+        if (!result.empty()) result += '.';
+        result += component.string();
+      }
+      return result;
+    }
+
     class resolver
     {
       std::filesystem::path source_root;
       std::filesystem::path entry;
+      std::optional<package_manifest> package;
       std::unordered_map<std::string, int> states;
       std::vector<std::string> stack;
       std::vector<module_info> resolved;
 
       auto module_path(const std::string &name) const -> std::filesystem::path
       {
-        return source_root / (name + ".sagan");
+        return path_for_module(source_root, name);
       }
 
       auto visit(const std::string &name, const std::filesystem::path &path, const bool imported) -> void
@@ -100,8 +214,8 @@ namespace modules
         stack.push_back(name);
         parser::program tree = parse_file(path);
         const auto declaration = declared_name(tree);
-        if (imported && !declaration)
-          throw std::runtime_error("Imported module '" + name + "' must declare 'module " + name + "'");
+        if ((imported || package.has_value()) && !declaration)
+          throw std::runtime_error("Module '" + name + "' must declare 'module " + name + "'");
         if (declaration && *declaration != name)
           throw std::runtime_error("Module file '" + path.filename().string() + "' declares '" + *declaration +
                                    "', expected '" + name + "'");
@@ -129,7 +243,11 @@ namespace modules
           if (!imported_value) continue;
           const bool whole_module = !imported_value->source_module.has_value();
           const std::string dependency = imported_value->source_module.value_or(imported_value->imported_name);
-          const std::string binding = imported_value->alias.value_or(imported_value->imported_name);
+          const std::size_t separator = imported_value->imported_name.rfind('.');
+          const std::string default_binding = separator == std::string::npos
+                                                  ? imported_value->imported_name
+                                                  : imported_value->imported_name.substr(separator + 1);
+          const std::string binding = imported_value->alias.value_or(default_binding);
           visit(dependency, module_path(dependency), true);
           const auto dependency_info = std::find_if(resolved.begin(), resolved.end(), [&](const module_info &candidate)
           {
@@ -155,17 +273,17 @@ namespace modules
       }
 
     public:
-      explicit resolver(std::filesystem::path entry_path)
-          : source_root(std::filesystem::absolute(entry_path).parent_path()),
-            entry(std::filesystem::absolute(std::move(entry_path)).lexically_normal())
+      explicit resolver(std::filesystem::path entry_path, std::optional<package_manifest> manifest = {})
+          : source_root(manifest ? manifest->source_root : std::filesystem::absolute(entry_path).parent_path()),
+            entry(std::filesystem::absolute(std::move(entry_path)).lexically_normal()), package(std::move(manifest))
       {
       }
 
       auto run() -> module_graph
       {
-        const std::string entry_name = entry.stem().string();
+        const std::string entry_name = package ? module_name_for_path(source_root, entry) : entry.stem().string();
         visit(entry_name, entry, false);
-        return module_graph{source_root, entry, std::move(resolved)};
+        return module_graph{source_root, entry, package, std::move(resolved)};
       }
     };
 
@@ -398,11 +516,62 @@ namespace modules
         locals.pop_back();
       }
     };
+
+    auto link_graph(const module_graph &graph) -> parser::program
+    {
+      std::unordered_map<std::string, std::unordered_map<std::string, std::string>> linked_names;
+      std::unordered_map<std::string, std::unordered_map<std::string, std::string>> public_names;
+      const std::string entry_name = graph.package
+                                         ? module_name_for_path(graph.source_root, graph.entry_path)
+                                         : graph.entry_path.stem().string();
+
+      for (const auto &module : graph.modules)
+      {
+        parser::program tree = parse_file(module.path);
+        for (const auto &entry : tree.statements)
+        {
+          std::string name;
+          if (const auto *value = dynamic_cast<const parser::let_declaration *>(entry.get())) name = value->name;
+          else if (const auto *function = dynamic_cast<const parser::function_declaration *>(entry.get()))
+            name = function->name;
+          else if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) name = type->name;
+          if (!name.empty()) linked_names[module.name][name] = module.name == entry_name ? name : module.name + "__" + name;
+        }
+        for (const auto &symbol : module.exports)
+          public_names[module.name][symbol.public_name] = linked_names[module.name].at(symbol.local_name);
+      }
+
+      std::vector<parser::statement_ref> combined;
+      for (const auto &module : graph.modules)
+      {
+        parser::program tree = parse_file(module.path);
+        auto bindings = linked_names.at(module.name);
+        std::unordered_map<std::string, std::string> namespaces;
+        for (const auto &imported : module.imports)
+        {
+          if (imported.whole_module) namespaces[imported.binding_name] = imported.module_name;
+          else bindings[imported.binding_name] = public_names.at(imported.module_name).at(imported.imported_name);
+        }
+        symbol_rewriter(bindings, namespaces, public_names).rewrite(tree);
+        for (auto &entry : tree.statements)
+        {
+          if (dynamic_cast<parser::module_declaration *>(entry.get()) ||
+              dynamic_cast<parser::import_declaration *>(entry.get()) ||
+              dynamic_cast<parser::export_declaration *>(entry.get())) continue;
+          combined.push_back(std::move(entry));
+        }
+      }
+      return parser::program(std::move(combined));
+    }
   }
 
   auto module_graph::print(std::ostream &stream) const -> void
   {
-    stream << "ModuleGraph\n  SourceRoot(" << source_root.string() << ")\n  Entry(" << entry_path.string() << ")\n";
+    stream << "ModuleGraph\n";
+    if (package)
+      stream << "  Package(" << package->name << " " << package->version << ")\n"
+             << "  Manifest(" << package->manifest_path.string() << ")\n";
+    stream << "  SourceRoot(" << source_root.string() << ")\n  Entry(" << entry_path.string() << ")\n";
     for (const auto &module : modules)
     {
       stream << "  Module(" << module.name << ", " << module.path.filename().string() << ")\n";
@@ -422,52 +591,37 @@ namespace modules
   {
     if (entry_path.extension() != ".sagan")
       throw std::runtime_error("Module entry file must use the .sagan extension");
-    return resolver(entry_path).run();
+    const auto manifest = discover_manifest(entry_path);
+    return resolver(entry_path, manifest).run();
   }
 
   auto link(const std::filesystem::path &entry_path) -> parser::program
   {
-    const module_graph graph = resolve(entry_path);
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> linked_names;
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> public_names;
-    const std::string entry_name = graph.entry_path.stem().string();
+    return link_graph(resolve(entry_path));
+  }
 
-    for (const auto &module : graph.modules)
-    {
-      parser::program tree = parse_file(module.path);
-      for (const auto &entry : tree.statements)
-      {
-        std::string name;
-        if (const auto *value = dynamic_cast<const parser::let_declaration *>(entry.get())) name = value->name;
-        else if (const auto *function = dynamic_cast<const parser::function_declaration *>(entry.get()))
-          name = function->name;
-        else if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) name = type->name;
-        if (!name.empty()) linked_names[module.name][name] = module.name == entry_name ? name : module.name + "__" + name;
-      }
-      for (const auto &symbol : module.exports)
-        public_names[module.name][symbol.public_name] = linked_names[module.name].at(symbol.local_name);
-    }
+  auto load_package(const std::filesystem::path &package_path) -> package_manifest
+  {
+    const auto absolute = std::filesystem::absolute(package_path).lexically_normal();
+    const auto manifest = std::filesystem::is_directory(absolute) ? absolute / "sagan.toml" : absolute;
+    if (manifest.filename() != "sagan.toml")
+      throw std::runtime_error("Package path must name a directory or sagan.toml");
+    if (!std::filesystem::is_regular_file(manifest))
+      throw std::runtime_error("Could not find package manifest '" + manifest.string() + "'");
+    return manifest_from_file(manifest);
+  }
 
-    std::vector<parser::statement_ref> combined;
-    for (const auto &module : graph.modules)
-    {
-      parser::program tree = parse_file(module.path);
-      auto bindings = linked_names.at(module.name);
-      std::unordered_map<std::string, std::string> namespaces;
-      for (const auto &imported : module.imports)
-      {
-        if (imported.whole_module) namespaces[imported.binding_name] = imported.module_name;
-        else bindings[imported.binding_name] = public_names.at(imported.module_name).at(imported.imported_name);
-      }
-      symbol_rewriter(bindings, namespaces, public_names).rewrite(tree);
-      for (auto &entry : tree.statements)
-      {
-        if (dynamic_cast<parser::module_declaration *>(entry.get()) ||
-            dynamic_cast<parser::import_declaration *>(entry.get()) ||
-            dynamic_cast<parser::export_declaration *>(entry.get())) continue;
-        combined.push_back(std::move(entry));
-      }
-    }
-    return parser::program(std::move(combined));
+  auto resolve_package(const std::filesystem::path &package_path) -> module_graph
+  {
+    auto manifest = load_package(package_path);
+    const auto entry_path = path_for_module(manifest.source_root, manifest.entry_module);
+    if (!std::filesystem::is_regular_file(entry_path))
+      throw std::runtime_error("Package entry module does not exist: " + entry_path.string());
+    return resolver(entry_path, std::move(manifest)).run();
+  }
+
+  auto link_package(const std::filesystem::path &package_path) -> parser::program
+  {
+    return link_graph(resolve_package(package_path));
   }
 }

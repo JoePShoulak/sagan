@@ -111,12 +111,15 @@ dispatch through `self`. Class-level generic methods lower to member templates;
 method-specific generics on faces are rejected because C++ cannot provide
 virtual function templates.
 
-`--emit-cpp-modules` resolves a flat sibling-file module graph and links its
+`--emit-cpp-modules` resolves a loose or manifest-discovered module graph and links its
 selective imports and exported namespace members into one checked compilation unit. Dependency-private
 top-level names receive deterministic module-qualified identities, imported
 aliases point to exported identities, and dependency declarations are emitted
 before their consumers. The module demo compiles and executes the resulting
 C++ translation.
+`--emit-cpp-package` starts from a strict package manifest, maps qualified
+module names to nested files under its source root, and uses the same linking
+and validation pipeline. The package demo compiles and executes that result.
 
 Open work includes generated-code structure, borrowing, escaping closures,
 richer exception patterns, debug information, compiler selection and flags,

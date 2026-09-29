@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <iosfwd>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -9,6 +10,16 @@
 
 namespace modules
 {
+  struct package_manifest
+  {
+    std::string name;
+    std::string version;
+    std::filesystem::path manifest_path;
+    std::filesystem::path package_root;
+    std::filesystem::path source_root;
+    std::string entry_module;
+  };
+
   struct export_symbol
   {
     std::string local_name;
@@ -35,6 +46,7 @@ namespace modules
   {
     std::filesystem::path source_root;
     std::filesystem::path entry_path;
+    std::optional<package_manifest> package;
     std::vector<module_info> modules;
 
     auto print(std::ostream &stream) const -> void;
@@ -42,4 +54,7 @@ namespace modules
 
   auto resolve(const std::filesystem::path &entry_path) -> module_graph;
   auto link(const std::filesystem::path &entry_path) -> parser::program;
+  auto load_package(const std::filesystem::path &package_path) -> package_manifest;
+  auto resolve_package(const std::filesystem::path &package_path) -> module_graph;
+  auto link_package(const std::filesystem::path &package_path) -> parser::program;
 }

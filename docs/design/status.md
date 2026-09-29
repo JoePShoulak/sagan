@@ -21,7 +21,7 @@ verified_by: null
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, generic and ordinary reference-counted classes, specialized runtime faces, value exceptions and cleanup, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demos |
 | Deterministic execution | **Catchable runtime-error foundation implemented** | checked arithmetic and collection lookup failures become nominal `RuntimeError` values, with focused fixtures and a native demo |
-| Module resolution | **Executable imports implemented** | flat sibling-file mapping, declaration/export validation, selective and whole-module namespace access, isolated linked symbols, aliases, transitive ordering, cycle diagnostics, native module demo |
+| Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
 
 ## Tokenizer verification
 
@@ -92,12 +92,13 @@ Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and
 function-type annotations remain future runtime and type-system work.
 Module declarations, import sources and aliases, and standalone exports are
-parsed and rendered. The initial loader resolves sibling files transitively,
+parsed and rendered. The loader resolves loose sibling files or manifest-backed packages transitively,
 validates module names and public exports, preserves aliases, and rejects
 cycles. Selective imports and exported namespace members are isolated, linked,
 semantically analyzed, type-checked, and emitted together for native
-cross-module calls. Mutable module initialization and broader package behavior
-remain future work.
+cross-module calls. Qualified names map to nested files beneath the manifest
+source root. Mutable module initialization, external dependencies, constraints,
+lockfiles, registries, and distribution remain future work.
 Documentation comments attach to supported declarations with retained text and
 source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
@@ -114,8 +115,8 @@ arguments, and top-level generic functions execute with call-site inference.
 Generic classes, generic face defaults, and class-level generic methods execute
 with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
-face conformance with `is`. Method-specific face generics,
-module packages, and the concrete math, physics, and rendering APIs
+face conformance with `is`. Method-specific face generics, external package
+dependencies and distribution, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.
 

@@ -1,0 +1,7 @@
+module navigation.guidance
+
+import offset from telemetry.flight
+
+fun calculate(value: Int): Int => value + offset()
+
+export calculate as course

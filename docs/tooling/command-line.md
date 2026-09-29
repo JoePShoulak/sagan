@@ -22,9 +22,11 @@ bin/sagan --semantic path/to/source.sagan
 bin/sagan --types path/to/source.sagan
 bin/sagan --entry path/to/source.sagan
 bin/sagan --modules path/to/main.sagan
+bin/sagan --package path/to/package
 bin/sagan --emit-cpp path/to/source.sagan
 bin/sagan --emit-cpp path/to/source.sagan build/program.cpp
 bin/sagan --emit-cpp-modules path/to/main.sagan build/program.cpp
+bin/sagan --emit-cpp-package path/to/package build/program.cpp
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -41,13 +43,17 @@ or duplicate names, but it does not type-check or execute the program.
 declaration and expression types.
 `--entry` performs name and type checks, then validates the executable `main`
 contract. It does not generate or run a program.
-`--modules` recursively resolves sibling `<module>.sagan` files from the entry
-file's directory, validates module declarations and exports, rejects dependency
-cycles, and prints the dependency-ordered graph.
+`--modules` resolves an entry file's graph. It uses loose sibling mapping when
+there is no manifest, or discovers the nearest `sagan.toml` and maps qualified
+module names to nested files beneath its source root.
+`--package` accepts a package directory or `sagan.toml`, validates its strict
+manifest, resolves the configured entry, and prints the dependency-ordered graph.
 `--emit-cpp-modules` links selective imports and exported members accessed
 through whole-module namespaces into one isolated compilation unit, performs
 semantic, type, and entry-point validation, then prints or writes the generated
 C++.
+`--emit-cpp-package` performs the same linked checks and generation starting
+from the package manifest's configured entry module.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
@@ -70,6 +76,8 @@ bin/sagan --entry examples/entry_demo.sagan
 bin/sagan --modules examples/module_demo/main.sagan
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/module_demo.cpp
+bin/sagan --package examples/package_demo
+bin/sagan --emit-cpp-package examples/package_demo build/package_demo.cpp
 ```
 
 Successful AST output confirms only lexical and syntactic validity. Successful
@@ -92,6 +100,7 @@ make semantic-demo
 make type-demo
 make entry-demo
 make module-demo
+make package-demo
 make optional-demo
 make weak-demo
 make payload-enum-demo
@@ -112,6 +121,7 @@ bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
 bash scripts/module_demo.sh
+bash scripts/package_demo.sh
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 bash scripts/payload_enum_demo.sh
@@ -132,6 +142,8 @@ entry point and focused control-flow failures. The test target exercises
 semantic/type/entry/code-generation success plus focused failures.
 `module-demo` prints a three-module dependency graph, executes selective and
 namespace imports, and verifies export visibility, filename, and cycle diagnostics.
+`package-demo` prints a strict manifest and nested source tree, resolves dotted
+modules, emits C++, compiles it, and runs the resulting native program.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 `weak-demo` shows a live weak reference resolving to `Some`, lets its strong

@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.57.0](https://img.shields.io/badge/development-0.57.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.58.0](https://img.shields.io/badge/development-0.58.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -95,13 +95,13 @@ propagate outward, and `finally` cleanup runs during normal completion,
 propagation, handled exceptions, and early returns. Native failures can be
 selected with cases such as `RuntimeError.integer_overflow` and
 `RuntimeError.index_out_of_bounds`.
-The module pipeline loads flat sibling `.sagan` files recursively from the
-entry file's directory, validates filename declarations and public exports,
-applies import/export aliases, isolates dependency-private symbols, orders
-dependencies, and rejects cycles. Selective imports and exported members of
-whole-module namespace imports participate in semantic and type checking and
-can be compiled together into a native executable; private members remain
-inaccessible across module boundaries.
+The module pipeline supports loose sibling modules and manifest-backed
+packages. A strict `sagan.toml` selects the package name, semantic version,
+source root, and entry module. Qualified names such as `navigation.guidance`
+map deterministically to nested source files. Resolution validates declarations
+and public exports, applies aliases, isolates private symbols, orders
+dependencies, and rejects cycles. Selective imports and whole-module namespaces
+participate in semantic/type checking and native execution.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text
@@ -161,6 +161,7 @@ Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
 bash scripts/test.sh
 make parser-demo
 bash scripts/module_demo.sh
+make package-demo
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 make ownership-demo
@@ -190,6 +191,8 @@ bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
 bin/sagan --modules examples/module_demo/main.sagan
 bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/modules.cpp
+bin/sagan --package examples/package_demo
+bin/sagan --emit-cpp-package examples/package_demo build/package.cpp
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 bin/sagan --version
 ```
