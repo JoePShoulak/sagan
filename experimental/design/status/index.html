@@ -3320,9 +3320,9 @@
 <td>math is automatic; physics and rendering are explicit first-party imports</td>
 </tr>
 <tr>
-<td>C++ code generation</td>
+<td>C++ code generation and execution</td>
 <td><strong>Initial executable subset implemented</strong></td>
-<td><code>--emit-cpp</code>, generic and ordinary reference-counted classes, specialized runtime faces, value exceptions and cleanup, dynamic dispatch, private fields/methods, <code>new(...)</code> constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demos</td>
+<td>direct <code>sagan file.sagan</code>, <code>--run-package</code>, temporary native builds, exit propagation, <code>--emit-cpp</code>, reference-counted classes/faces, exceptions, lambdas, checked arithmetic, collections, dimensions, control flow, demos</td>
 </tr>
 <tr>
 <td>Deterministic execution</td>
@@ -3343,7 +3343,8 @@ focused error cases, and randomized byte-input robustness. Interpretation of
 newlines inside ambiguous <code>&lt;...&gt;</code> and <code>{...}</code> constructs belongs to the parser
 and is not unfinished tokenizer behavior.</p>
 <h2 id="what-can-run-today">What can run today</h2>
-<p>The <code>bin/sagan</code> front-end can print tokens, parse the current grammar, emit text,
+<p>The <code>bin/sagan</code> compiler can directly compile and run supported source files or
+manifest-backed packages. It can also print tokens, parse the current grammar, emit text,
 DOT, SVG, or interactive HTML ASTs, and print the initial semantic model. The
 HTML renderer supports zooming and panning. Parser and semantic demonstrations
 provide broad successful source files plus focused malformed examples. The

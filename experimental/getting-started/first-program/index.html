@@ -3096,11 +3096,12 @@ exception vocabulary, and an emoji identifier.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>all
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>make<span class="w"> </span>demo
 </span></code></pre></div>
-<p>To inspect another file:</p>
+<p>To run another executable file:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bin/sagan<span class="w"> </span>path/to/program.sagan
 </span></code></pre></div>
-<p>The output is a stream such as token name, half-open source span, original token
-text, and decoded value where applicable.</p>
+<p>To inspect its token stream without executing it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>path/to/program.sagan
+</span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Tokenizer example, not executable Sagan</p>
 <p>This particular demo is a broad lexical fixture. The repository also has a
@@ -3110,15 +3111,15 @@ alone does not prove that a construct is in that executable subset; use the
 execution demo below for runnable coverage.</p>
 </div>
 <p>Inspect the parser demonstration as a text tree or interactive HTML tree:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bin/sagan<span class="w"> </span>--ast<span class="w"> </span>examples/parser_demo.sagan
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>bash<span class="w"> </span>scripts/ast_demo.sh<span class="w"> </span>--no-open
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bin/sagan<span class="w"> </span>--ast<span class="w"> </span>examples/parser_demo.sagan
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>bash<span class="w"> </span>scripts/ast_demo.sh<span class="w"> </span>--no-open
 </span></code></pre></div>
 <p>To print, compile, and run the current executable showcase—including value
 exceptions, propagation, and guaranteed cleanup—run:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>execution-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make<span class="w"> </span>execution-demo
 </span></code></pre></div>
 <p>To see a deliberate lexical failure:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bin/sagan<span class="w"> </span>examples/tokenizer_error.sagan
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>examples/tokenizer_error.sagan
 </span></code></pre></div>
 <p>That file contains <code>1e</code>, which fails because scientific notation requires
 exponent digits.</p>

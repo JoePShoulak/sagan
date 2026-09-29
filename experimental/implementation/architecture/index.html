@@ -3227,6 +3227,8 @@
 <li><code>src/codegen/cpp_generator.*</code>: C++ emission for the initial executable
   subset, including portable identifier encoding, built-in output, and typed
   array/dictionary/index/iteration lowering driven by the checked type model.</li>
+<li><code>src/driver/native_runner.*</code>: temporary native builds, compiler invocation,
+  executable launch, cleanup, and exit-code propagation.</li>
 <li>span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.</li>
 <li><code>src/version.hpp</code> plus generated <code>obj/version.cpp</code>: build identity.</li>
@@ -3234,22 +3236,22 @@
   coverage collection and Codecov upload.</li>
 </ul>
 <h2 id="current-data-flow">Current data flow</h2>
-<p>The CLI reads a file, tokenizes it, and either prints the token stream or passes
-it to the parser. AST modes print or render the resulting tree; semantic and
+<p>The CLI reads a file and either prints its token stream explicitly or passes it
+to the parser. AST modes print or render the resulting tree; semantic and
 type modes perform name resolution and optionally initial type checking. The
-C++ mode validates an executable entry point and emits the supported subset.
+C++ modes validate an executable entry point and emit the supported subset.
+Direct source and package-run modes invoke the native compiler and program.
 Lexical, syntax, and semantic failures are reported with source locations.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>UTF-8 source -&gt; tokenizer -&gt; parser -&gt; AST -&gt; name analysis -&gt; type checking -&gt; C++ emission
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                                  |              |               |              |
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                                  +-&gt; renderers   +-&gt; model       +-&gt; model      +-&gt; native demo
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                                  +-&gt; renderers   +-&gt; model       +-&gt; model      +-&gt; native runner
 </span></code></pre></div>
 <p>Codecov measures the front-end, semantic pass, and CLI suite. Coverage includes
 lifecycle and malformed-input paths, Unicode and emoji edges, parser and
 semantic errors, renderer output, CLI behavior, and defensive invariants.</p>
 <h2 id="planned-components">Planned components</h2>
-<p>Generic annotations, member/object typing, broader lowering, runtime support,
-standard/core libraries, and native-toolchain invocation by the compiler itself
-are not implemented.</p>
+<p>Broader lowering, runtime support, stable compiler/toolchain configuration,
+installation, and the standard/core libraries are not complete.</p>
 
 
 
