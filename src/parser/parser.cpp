@@ -276,11 +276,15 @@ namespace parser
                             ? previous()
                             : expect(tokens::IDENTIFIER, "a function name after 'fun'");
     std::vector<std::string> type_parameters;
+    std::vector<std::optional<std::string>> type_constraints;
     if (match(tokens::LANGLE))
     {
       do
       {
         type_parameters.push_back(expect(tokens::IDENTIFIER, "a generic type parameter").text);
+        if (match(tokens::KWD_IS))
+          type_constraints.emplace_back(parse_type_annotation("a face constraint after 'is'"));
+        else type_constraints.emplace_back();
       } while (match(tokens::COMMA));
       expect(tokens::RANGLE, "'>' after generic type parameters");
     }
@@ -325,6 +329,7 @@ namespace parser
     const int end = body ? body->range.end : expression_body ? expression_body->range.end : previous().range.end;
     return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text, private_member, false,
                                                   std::move(type_parameters),
+                                                  std::move(type_constraints),
                                                   std::move(parameters), std::move(return_type),
                                                   std::move(body), std::move(expression_body));
   }
@@ -346,6 +351,7 @@ namespace parser
     auto body = parse_block();
     return std::make_unique<function_declaration>(span{keyword.range.begin, body->range.end}, "new", false, true,
                                                   std::vector<std::string>{},
+                                                  std::vector<std::optional<std::string>>{},
                                                   std::move(parameters), std::optional<std::string>{"Void"},
                                                   std::move(body), nullptr);
   }
@@ -355,11 +361,15 @@ namespace parser
     const token &keyword = previous();
     const token &name = expect(tokens::IDENTIFIER, "a type name after '" + keyword.text + "'");
     std::vector<std::string> type_parameters;
+    std::vector<std::optional<std::string>> type_constraints;
     if (match(tokens::LANGLE))
     {
       do
       {
         type_parameters.push_back(expect(tokens::IDENTIFIER, "a generic type parameter").text);
+        if (match(tokens::KWD_IS))
+          type_constraints.emplace_back(parse_type_annotation("a face constraint after 'is'"));
+        else type_constraints.emplace_back();
       } while (match(tokens::COMMA));
       expect(tokens::RANGLE, "'>' after generic type parameters");
     }
@@ -455,6 +465,7 @@ namespace parser
     const token &close = expect(tokens::RBRACE, "'}' after the type body");
     return std::make_unique<type_declaration>(span{keyword.range.begin, close.range.end}, type, name.text,
                                               std::move(type_parameters),
+                                              std::move(type_constraints),
                                               std::move(composition_keyword), std::move(interfaces),
                                               std::move(members), std::move(enum_members));
   }
@@ -957,8 +968,35 @@ namespace parser
                             error_range);
         }
         const token member = previous();
-        value = std::make_unique<member_expression>(span{value->range.begin, member.range.end}, std::move(value),
-                                                    member.text, safe);
+        std::string member_name = member.text;
+        int member_end = member.range.end;
+        if (check(tokens::LANGLE))
+        {
+          std::size_t scan = current;
+          int depth = 0;
+          do
+          {
+            if (input[scan].id == tokens::LANGLE) ++depth;
+            else if (input[scan].id == tokens::RANGLE) --depth;
+            ++scan;
+          } while (scan < input.size() && depth > 0);
+          if (depth == 0 && scan < input.size() && input[scan].id == tokens::LPAREN)
+          {
+            advance();
+            member_name += '<';
+            bool first = true;
+            do
+            {
+              if (!first) member_name += ", ";
+              member_name += parse_type_annotation("an explicit method type argument");
+              first = false;
+            } while (match(tokens::COMMA));
+            member_end = expect(tokens::RANGLE, "'>' after explicit method type arguments").range.end;
+            member_name += '>';
+          }
+        }
+        value = std::make_unique<member_expression>(span{value->range.begin, member_end}, std::move(value),
+                                                    std::move(member_name), safe);
         continue;
       }
       if (match(tokens::PLUS_PLUS) || match(tokens::MINUS_MINUS))
@@ -1013,7 +1051,8 @@ namespace parser
           else if (input[scan].id == tokens::RANGLE) --depth;
           ++scan;
         } while (scan < input.size() && depth > 0);
-        if (depth == 0 && scan < input.size() && input[scan].id == tokens::DOT)
+        if (depth == 0 && scan < input.size() &&
+            (input[scan].id == tokens::DOT || input[scan].id == tokens::LPAREN))
         {
           advance();
           name += '<';
@@ -1021,10 +1060,10 @@ namespace parser
           do
           {
             if (!first) name += ", ";
-            name += parse_type_annotation("a qualified generic type argument");
+            name += parse_type_annotation("an explicit generic type argument");
             first = false;
           } while (match(tokens::COMMA));
-          end = expect(tokens::RANGLE, "'>' after qualified generic type arguments").range.end;
+          end = expect(tokens::RANGLE, "'>' after explicit generic type arguments").range.end;
           name += '>';
         }
       }

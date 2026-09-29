@@ -93,8 +93,10 @@ Top-level functions may declare type parameters after their name:
 `fun identity<T>(value: T): T => value`. Calls infer each type argument from
 the corresponding argument type, including type parameters nested inside a
 generic annotation. Every declared type parameter must be inferable from the
-call; explicit function type arguments, constraints, and generic methods remain
-future work.
+call unless it is supplied explicitly, as in `identity<String>("signal")`.
+A parameter may require structural face conformance with
+`fun preserve<T is Readable<Int8>>(value: T): T => value`; inferred and explicit
+arguments are both checked against the specialized face.
 
 Classes and faces may also declare type parameters. Constructor calls infer a
 generic class specialization from constructor arguments, so `Box(42)` produces
@@ -104,12 +106,14 @@ substitute the specialization consistently. Composition accepts specialized
 faces, as in `class Box<T> is Readable<T>`, and conversions preserve invariant
 type arguments. A generic face may provide ordinary default methods that use
 its type parameters and dispatch through `self`. Class methods may introduce
-their own inferred parameters, such as `fun echo<U>(value: U): U`. A face
+their own inferred parameters, such as `fun echo<U>(value: U): U`, and callers
+may instead write `box.echo<String>("signal")`. Constructors likewise accept
+explicit specialization with `Box<Int8>(42)`. Generic class parameters may use
+the same `is Face` constraint syntax and are checked when constructed. A face
 method cannot introduce method-specific parameters because virtual generic
-methods are intentionally unsupported. Constraints and explicit constructor or
-method type arguments remain future work.
+methods are intentionally unsupported.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
-forward references, explicit enum values, constrained and member generics,
+forward references, explicit enum values, variance and face method generics,
 module resolution and visibility, and entry-point forms. These require semantic
 analysis or future language revisions.

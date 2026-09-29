@@ -567,6 +567,7 @@ namespace parser
                                              const bool is_private,
                                              const bool is_constructor,
                                              std::vector<std::string> generic_parameters,
+                                             std::vector<std::optional<std::string>> generic_constraints,
                                              std::vector<function_parameter> declared_parameters,
                                              std::optional<std::string> result_type,
                                              std::unique_ptr<block_statement> function_body,
@@ -574,6 +575,7 @@ namespace parser
       : statement(source_range), name(std::move(identifier)), private_member(is_private),
         constructor_member(is_constructor),
         type_parameters(std::move(generic_parameters)),
+        type_constraints(std::move(generic_constraints)),
         parameters(std::move(declared_parameters)),
         return_type(std::move(result_type)), body(std::move(function_body)),
         expression_body(std::move(function_expression_body))
@@ -592,6 +594,7 @@ namespace parser
       {
         if (index != 0) stream << ", ";
         stream << type_parameters[index];
+        if (type_constraints[index]) stream << " is " << *type_constraints[index];
       }
       stream << '>';
     }
@@ -630,12 +633,14 @@ namespace parser
 
   type_declaration::type_declaration(const span source_range, const kind declared_kind,
                                      std::string identifier, std::vector<std::string> generic_parameters,
+                                     std::vector<std::optional<std::string>> generic_constraints,
                                      std::optional<std::string> composition,
                                      std::vector<std::string> interfaces,
                                      std::vector<statement_ref> declared_members,
                                      std::vector<enum_member> declared_enum_members)
       : statement(source_range), type_kind(declared_kind), name(std::move(identifier)),
         type_parameters(std::move(generic_parameters)),
+        type_constraints(std::move(generic_constraints)),
         composition_keyword(std::move(composition)), composed_interfaces(std::move(interfaces)),
         members(std::move(declared_members)), enum_members(std::move(declared_enum_members))
   {
@@ -663,10 +668,12 @@ namespace parser
       }
     }
     stream << ")\n";
-    for (const auto &parameter : type_parameters)
+    for (std::size_t index = 0; index < type_parameters.size(); ++index)
     {
       write_indent(stream, indent + 2);
-      stream << "TypeParameter(" << parameter << ")\n";
+      stream << "TypeParameter(" << type_parameters[index];
+      if (type_constraints[index]) stream << " is " << *type_constraints[index];
+      stream << ")\n";
     }
     print_documentation(stream, indent + 2);
     for (const auto &member : members)

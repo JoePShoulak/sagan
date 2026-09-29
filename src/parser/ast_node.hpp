@@ -391,6 +391,7 @@ namespace parser
     bool private_member;
     bool constructor_member;
     std::vector<std::string> type_parameters;
+    std::vector<std::optional<std::string>> type_constraints;
     std::vector<function_parameter> parameters;
     std::optional<std::string> return_type;
     std::unique_ptr<block_statement> body;
@@ -400,6 +401,7 @@ namespace parser
                          bool is_private,
                          bool is_constructor,
                          std::vector<std::string> generic_parameters,
+                         std::vector<std::optional<std::string>> generic_constraints,
                          std::vector<function_parameter> declared_parameters,
                          std::optional<std::string> result_type,
                          std::unique_ptr<block_statement> function_body,
@@ -419,6 +421,7 @@ namespace parser
     kind type_kind;
     std::string name;
     std::vector<std::string> type_parameters;
+    std::vector<std::optional<std::string>> type_constraints;
     std::optional<std::string> composition_keyword;
     std::vector<std::string> composed_interfaces;
     std::vector<statement_ref> members;
@@ -437,6 +440,7 @@ namespace parser
 
     type_declaration(span source_range, kind declared_kind, std::string identifier,
                      std::vector<std::string> generic_parameters,
+                     std::vector<std::optional<std::string>> generic_constraints,
                      std::optional<std::string> composition,
                      std::vector<std::string> interfaces,
                      std::vector<statement_ref> declared_members,

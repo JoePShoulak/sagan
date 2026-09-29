@@ -21,4 +21,4 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/generic_class_demo.cpp -o 
 echo
 build/generic_class_demo
 echo
-echo "Generic class/face demo passed: Readable<T> supplied a virtual default, echo<U> inferred independently, and typed mutation preserved T."
+echo "Generic demo passed: explicit constructor/function/method arguments and a specialized face constraint executed natively."

@@ -20,15 +20,19 @@ class Box<T> is Readable<T> {
   fun echo<U>(other: U): U => other
 }
 
+fun preserve<T is Readable<Int8>>(value: T): T => value
+
 fun main(): Int {
-  let number = Box(42)
+  let number = Box<Int8>(42)
   let message: Box<String> = Box("guidance online")
   let readable: Readable<Int8> = number
 
   print("Number box through Readable<Int8>: ${readable.get()}")
   print(readable.describe())
   print("Message box: ${message.get()}")
-  print("Generic method: ${number.echo("echo online")}")
+  print("Explicit generic method: ${number.echo<String>("echo online")}")
+  let preserved = preserve<Box<Int8>>(number)
+  print("Constrained generic function: ${preserved.describe()}")
   print("Updated number: ${number.replace!(43)}")
 
   if number.get() == 43 return 0

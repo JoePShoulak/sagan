@@ -99,7 +99,8 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$work_dir/generic-class.cpp" -o
 generic_class_output="$($work_dir/generic-class)"
 grep -Fq "Number box through Readable<Int8>: 42" <<<"$generic_class_output"
 grep -Fq "Readable value: 42" <<<"$generic_class_output"
-grep -Fq "Generic method: echo online" <<<"$generic_class_output"
+grep -Fq "Explicit generic method: echo online" <<<"$generic_class_output"
+grep -Fq "Constrained generic function: Readable value: 42" <<<"$generic_class_output"
 grep -Fq "Updated number: 43" <<<"$generic_class_output"
 grep -Fq "int main()" "$work_dir/generated.cpp"
 grep -Fq "enum class sagan_4c61756e6368537461747573" "$work_dir/generated.cpp"
@@ -239,6 +240,8 @@ expect_failure "generic method inference diagnostic" 1 "Cannot infer every gener
   "$binary" --types examples/type_generic_method_inference_error.sagan
 expect_failure "generic face method syntax diagnostic" 1 "Generic face methods are not supported" \
   "$binary" --ast examples/generic_face_method_error.sagan
+expect_failure "generic face constraint diagnostic" 1 "does not satisfy face constraint Readable<Int8>" \
+  "$binary" --types examples/type_generic_constraint_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

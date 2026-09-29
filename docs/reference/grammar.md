@@ -80,13 +80,15 @@ class_member := "weak"? "let" "."? identifier (":" type)? ("=" expression)?
 constructor_declaration := "new" "(" typed_parameters? ")" block
 composition := ("is" | "has") type_annotation ("," type_annotation)*
 enum_declaration := "enum" identifier generic_parameters? "{" enum_members? "}"
-generic_parameters := "<" identifier ("," identifier)* ">"
+generic_parameters := "<" generic_parameter ("," generic_parameter)* ">"
+generic_parameter := identifier ("is" type_annotation)?
 enum_members := documented_enum_member ((newline+ | ",") documented_enum_member)* ","?
 documented_enum_member := documentation_comment* identifier ("(" type_list? ")")?
 type_list := type ("," type)*
 
 type_annotation := identifier ("<" type_annotation ("," type_annotation)* ">")?
 qualified_enum_case := type_annotation "." identifier
+explicit_generic_call := identifier "<" type_list ">" "(" arguments? ")"
 module_declaration := "module" identifier
 import_declaration := "import" identifier ("from" identifier)? ("as" identifier)?
 export_declaration := "export" identifier ("as" identifier)?

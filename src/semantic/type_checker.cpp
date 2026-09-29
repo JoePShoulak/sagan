@@ -25,6 +25,7 @@ namespace semantic
       std::vector<std::string> parameters;
       std::string result;
       std::vector<std::string> type_parameters;
+      std::vector<std::optional<std::string>> type_constraints;
     };
 
     struct binding
@@ -44,6 +45,7 @@ namespace semantic
     struct object_type
     {
       std::vector<std::string> type_parameters;
+      std::vector<std::optional<std::string>> type_constraints;
       std::unordered_map<std::string, std::string> fields;
       std::unordered_set<std::string> private_fields;
       std::unordered_set<std::string> weak_fields;
@@ -135,6 +137,7 @@ namespace semantic
     struct interface_type
     {
       std::vector<std::string> type_parameters;
+      std::vector<std::optional<std::string>> type_constraints;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
       std::unordered_map<std::string, std::vector<callable_signature>> defaults;
       std::vector<std::string> faces;
@@ -477,6 +480,23 @@ namespace semantic
                 std::string(context) + " requires " + expected + ", but received " + actual, range);
       }
 
+      auto require_constraints(const std::vector<std::string> &parameters,
+                               const std::vector<std::optional<std::string>> &constraints,
+                               const std::vector<std::string> &arguments,
+                               const parser::span range) const -> void
+      {
+        for (std::size_t index = 0; index < constraints.size(); ++index)
+        {
+          if (!constraints[index]) continue;
+          const std::string constraint = substitute_type(*constraints[index], parameters, arguments);
+          require(interfaces.contains(generic_instance(constraint).base),
+                  "Generic constraint '" + constraint + "' is not a face", range);
+          require(compatible(constraint, arguments[index]),
+                  "Type argument " + arguments[index] + " does not satisfy face constraint " + constraint,
+                  range);
+        }
+      }
+
       auto annotation(const std::optional<std::string> &name) const -> std::string
       {
         if (!name) return std::string(unknown_type);
@@ -519,6 +539,7 @@ namespace semantic
         for (const auto &parameter : function.parameters) result.parameters.push_back(fixed_annotation(parameter.type_name));
         result.result = fixed_annotation(function.return_type);
         result.type_parameters = function.type_parameters;
+        result.type_constraints = function.type_constraints;
         return result;
       }
 
@@ -549,6 +570,7 @@ namespace semantic
         if (type.type_kind != parser::type_declaration::kind::class_type) return;
         object_type object;
         object.type_parameters = type.type_parameters;
+        object.type_constraints = type.type_constraints;
         object.faces = type.composed_interfaces;
         for (const auto &member : type.members)
         {
@@ -578,6 +600,7 @@ namespace semantic
         if (type.type_kind != parser::type_declaration::kind::interface_type) return;
         interface_type interface;
         interface.type_parameters = type.type_parameters;
+        interface.type_constraints = type.type_constraints;
         interface.faces = type.composed_interfaces;
         for (const auto &member : type.members)
         {
@@ -611,6 +634,7 @@ namespace semantic
         const interface_type direct = interfaces.at(name);
         interface_type resolved;
         resolved.type_parameters = direct.type_parameters;
+        resolved.type_constraints = direct.type_constraints;
         resolved.faces = direct.faces;
         for (const auto &parent_name : direct.faces)
         {
@@ -679,7 +703,7 @@ namespace semantic
                     "Payload enum constructor '" + member.name + "' is already declared", member.range);
             enum_cases.emplace(member.name, enum_case_type{type.name, type.type_parameters, payload_types, index});
             if (type.type_parameters.empty())
-              add_binding(member.name, binding{"Function", callable_signature{payload_types, type.name, {}}});
+              add_binding(member.name, binding{"Function", callable_signature{payload_types, type.name, {}, {}}});
             else add_binding(member.name, binding{"GenericFunction", {}});
           }
         }
@@ -688,7 +712,7 @@ namespace semantic
       auto same_signature(const callable_signature &left, const callable_signature &right) const -> bool
       {
         return left.parameters == right.parameters && left.result == right.result &&
-               left.type_parameters == right.type_parameters;
+               left.type_parameters == right.type_parameters && left.type_constraints == right.type_constraints;
       }
 
       auto validate_composition(const std::string &class_name, object_type &object,
@@ -994,7 +1018,17 @@ namespace semantic
             {
               const auto &object = objects.at(constructed.base);
               std::vector<std::string> type_arguments(object.type_parameters.size(), std::string(unknown_type));
-              if (expected_expression)
+              if (!constructed.arguments.empty())
+              {
+                require(constructed.arguments.size() == object.type_parameters.size(),
+                        "Generic class '" + constructed.base + "' expects " +
+                            std::to_string(object.type_parameters.size()) + " type argument(s), but received " +
+                            std::to_string(constructed.arguments.size()), identifier->range);
+                type_arguments.clear();
+                for (const auto &argument : constructed.arguments)
+                  type_arguments.push_back(fixed_annotation(std::optional<std::string>{argument}));
+              }
+              else if (expected_expression)
               {
                 const auto contextual = generic_instance(*expected_expression);
                 if (contextual.base == constructed.base && contextual.arguments.size() == type_arguments.size())
@@ -1042,7 +1076,8 @@ namespace semantic
                       "Cannot infer every generic argument for class '" + constructed.base +
                           "'; provide an expected type",
                       value.range);
-              static_cast<void>(expression(*call->callee));
+              require_constraints(object.type_parameters, object.type_constraints, type_arguments, value.range);
+              static_cast<void>(record(*call->callee, "Type"));
               std::string result = constructed.base;
               if (!type_arguments.empty())
               {
@@ -1056,8 +1091,9 @@ namespace semantic
               }
               return record(value, result);
             }
-            const auto *matches = find(identifier->name);
-            require(matches, "Undefined name '" + identifier->name + "'", identifier->range);
+            const auto requested = generic_instance(identifier->name);
+            const auto *matches = find(requested.base);
+            require(matches, "Undefined name '" + requested.base + "'", identifier->range);
             std::vector<callable_signature> viable;
             for (const auto &candidate : *matches)
             {
@@ -1065,21 +1101,34 @@ namespace semantic
               callable_signature instantiated = *candidate.callable;
               if (!instantiated.type_parameters.empty())
               {
-                std::vector<std::string> inferred(instantiated.type_parameters.size(), std::string(unknown_type));
+                std::vector<std::string> inferred;
                 bool inferred_all = true;
-                for (std::size_t index = 0; index < arguments.size(); ++index)
-                  inferred_all &= infer_type_arguments(instantiated.parameters[index], arguments[index],
-                                                       instantiated.type_parameters, inferred);
+                if (!requested.arguments.empty())
+                {
+                  if (requested.arguments.size() != instantiated.type_parameters.size()) continue;
+                  for (const auto &argument : requested.arguments)
+                    inferred.push_back(fixed_annotation(std::optional<std::string>{argument}));
+                }
+                else
+                {
+                  inferred.assign(instantiated.type_parameters.size(), std::string(unknown_type));
+                  for (std::size_t index = 0; index < arguments.size(); ++index)
+                    inferred_all &= infer_type_arguments(instantiated.parameters[index], arguments[index],
+                                                         instantiated.type_parameters, inferred);
+                }
                 inferred_all &= std::none_of(inferred.begin(), inferred.end(), [](const auto &type)
                 {
                   return is_unknown(type);
                 });
                 if (!inferred_all) continue;
+                require_constraints(instantiated.type_parameters, instantiated.type_constraints, inferred,
+                                    value.range);
                 for (auto &parameter : instantiated.parameters)
                   parameter = substitute_type(parameter, instantiated.type_parameters, inferred);
                 instantiated.result = substitute_type(instantiated.result, instantiated.type_parameters, inferred);
                 instantiated.type_parameters.clear();
               }
+              else if (!requested.arguments.empty()) continue;
               bool matches_arguments = true;
               for (std::size_t index = 0; index < arguments.size(); ++index)
               {
@@ -1087,9 +1136,9 @@ namespace semantic
               }
               if (matches_arguments) viable.push_back(std::move(instantiated));
             }
-            require(!viable.empty(), "No matching overload for '" + identifier->name + "'", value.range);
-            require(viable.size() == 1, "Ambiguous overload for '" + identifier->name + "'", value.range);
-            static_cast<void>(expression(*call->callee));
+            require(!viable.empty(), "No matching overload for '" + requested.base + "'", value.range);
+            require(viable.size() == 1, "Ambiguous overload for '" + requested.base + "'", value.range);
+            static_cast<void>(record(*call->callee, "Function"));
             return record(value, viable.front().result);
           }
           static_cast<void>(expression(*call->callee));
@@ -1102,16 +1151,31 @@ namespace semantic
                   value.range);
           if (!instantiated.type_parameters.empty())
           {
-            std::vector<std::string> inferred(instantiated.type_parameters.size(), std::string(unknown_type));
+            std::vector<std::string> inferred;
             bool inferred_all = true;
-            for (std::size_t index = 0; index < arguments.size(); ++index)
-              inferred_all &= infer_type_arguments(instantiated.parameters[index], arguments[index],
-                                                   instantiated.type_parameters, inferred);
+            const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get());
+            const auto requested = member ? generic_instance(member->member_name) : generic_type{};
+            if (!requested.arguments.empty())
+            {
+              require(requested.arguments.size() == instantiated.type_parameters.size(),
+                      "Generic method '" + requested.base + "' expects " +
+                          std::to_string(instantiated.type_parameters.size()) + " type argument(s)", value.range);
+              for (const auto &argument : requested.arguments)
+                inferred.push_back(fixed_annotation(std::optional<std::string>{argument}));
+            }
+            else
+            {
+              inferred.assign(instantiated.type_parameters.size(), std::string(unknown_type));
+              for (std::size_t index = 0; index < arguments.size(); ++index)
+                inferred_all &= infer_type_arguments(instantiated.parameters[index], arguments[index],
+                                                     instantiated.type_parameters, inferred);
+            }
             inferred_all &= std::none_of(inferred.begin(), inferred.end(), [](const auto &type)
             {
               return is_unknown(type);
             });
             require(inferred_all, "Cannot infer every generic argument for called method", value.range);
+            require_constraints(instantiated.type_parameters, instantiated.type_constraints, inferred, value.range);
             for (auto &parameter : instantiated.parameters)
               parameter = substitute_type(parameter, instantiated.type_parameters, inferred);
             instantiated.result = substitute_type(instantiated.result, instantiated.type_parameters, inferred);
@@ -1194,7 +1258,8 @@ namespace semantic
               const bool optional_result = member->safe || object->second.weak_fields.contains(member->member_name);
               return record(value, optional_result ? "Optional<" + field_type + ">" : field_type);
             }
-            if (const auto methods = object->second.methods.find(member->member_name);
+            const auto requested_member = generic_instance(member->member_name);
+            if (const auto methods = object->second.methods.find(requested_member.base);
                 methods != object->second.methods.end())
             {
               require(!object->second.private_methods.contains(member->member_name) ||
@@ -1219,7 +1284,8 @@ namespace semantic
           const auto instantiated_interface = generic_instance(accessed_target);
           if (const auto interface = interfaces.find(instantiated_interface.base); interface != interfaces.end())
           {
-            const auto methods = interface->second.methods.find(member->member_name);
+            const auto requested_member = generic_instance(member->member_name);
+            const auto methods = interface->second.methods.find(requested_member.base);
             require(methods != interface->second.methods.end(),
                     "Face '" + target + "' has no method '" + member->member_name + "'", value.range);
             require(methods->second.size() == 1,
@@ -1881,7 +1947,7 @@ namespace semantic
     public:
       auto run(const parser::program &tree) -> type_model
       {
-        add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}}});
+        add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}, {}}});
         add_binding("None", binding{"None", {}});
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)

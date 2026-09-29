@@ -154,7 +154,8 @@ namespace codegen
         const auto *self = dynamic_cast<const parser::identifier_expression *>(value.target.get());
         const bool reference = (class_types.contains(target_base) || face_types.contains(target_base)) &&
                                !(self && self->name == "self");
-        return expression(*value.target) + (reference ? "->" : ".") + identifier(value.member_name);
+        return expression(*value.target) + (reference ? "->" : ".") +
+               generic_identifier(value.member_name, value.range);
       }
 
       auto enum_factory(const std::string &enum_name, const std::string &case_name) const -> std::string
@@ -183,6 +184,21 @@ namespace codegen
           }
         }
         return result;
+      }
+
+      auto generic_identifier(const std::string &name, const parser::span range) const -> std::string
+      {
+        const std::size_t open = name.find('<');
+        std::string result = identifier(open == std::string::npos ? name : name.substr(0, open));
+        const auto arguments = generic_arguments(name);
+        if (arguments.empty()) return result;
+        result += '<';
+        for (std::size_t index = 0; index < arguments.size(); ++index)
+        {
+          if (index != 0) result += ", ";
+          result += type_name(arguments[index], range);
+        }
+        return result + '>';
       }
 
       auto concrete_user_type(const std::string &type, const parser::span range) const -> std::string
@@ -272,7 +288,10 @@ namespace codegen
       auto expression(const parser::expression &value) -> std::string
       {
         if (const auto *name = dynamic_cast<const parser::identifier_expression *>(&value))
-          return name->name == "None" ? "std::nullopt" : identifier(name->name);
+        {
+          if (name->name == "None") return "std::nullopt";
+          return generic_identifier(name->name, value.range);
+        }
         if (const auto *literal = dynamic_cast<const parser::literal_expression *>(&value))
         {
           std::string spelling = literal->spelling;
@@ -428,7 +447,7 @@ namespace codegen
                                  "; if (!" + temporary + ") return std::optional<" +
                                  type_name(element, value.range) + ">{std::nullopt}; return std::optional<" +
                                  type_name(element, value.range) + ">{(*" + temporary + ")->" +
-                                 identifier(member->member_name) + "(";
+                                 generic_identifier(member->member_name, member->range) + "(";
             for (std::size_t index = 0; index < call->arguments.size(); ++index)
             {
               if (index != 0) result += ", ";

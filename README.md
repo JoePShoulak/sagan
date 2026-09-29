@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.52.0](https://img.shields.io/badge/development-0.52.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.53.0](https://img.shields.io/badge/development-0.53.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -33,13 +33,16 @@ carry typed payloads, construct values like `Success(42)`, and bind their
 contents through exhaustive `match` branches.
 Class methods declared with a leading dot are private to their declaring class.
 Top-level generic functions such as `identity<T>(value: T): T` infer type
-arguments from their calls and execute natively. Generic sum enums support both
+arguments from their calls and execute natively, or accept explicit arguments
+such as `identity<String>("signal")`. Generic sum enums support both
 contextual construction and explicit qualification such as
 `Result<Int, String>.Failure("problem")`. Generic classes infer their type
-arguments from constructors, preserve them through fields and methods, and may
+arguments from constructors—or accept `Box<Int>(42)` explicitly—preserve them through fields and methods, and may
 conform to specialized generic faces such as `Readable<T>`. Generic face
-defaults and class-level generic methods execute with call-site inference.
-Method-specific generics on faces, constraints, automatic reference-cycle
+defaults and class-level generic methods execute with call-site inference or
+explicit calls such as `box.echo<String>("signal")`. Function and class type
+parameters may use face constraints such as `T is Readable<Int>`; every concrete
+type argument is checked for conformance. Method-specific generics on faces, automatic reference-cycle
 collection, the full runtime, and the standard library are not yet implemented.
 The built-in `Optional<T>` type,
 `Some(value)`, `None`, payload matching, safe `?.` access, and lazy `??`

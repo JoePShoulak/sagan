@@ -1,0 +1,13 @@
+face Readable<T> {
+  fun get(): T
+}
+
+class Box<T> is Readable<T> {
+  let value: T
+  new(value: T) { self.value = value }
+  fun get(): T => self.value
+}
+
+fun preserve<T is Readable<Int8>>(value: T): T => value
+
+let invalid = preserve(Box("wrong specialization"))

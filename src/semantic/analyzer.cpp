@@ -116,6 +116,33 @@ namespace semantic
         }
       }
 
+      auto resolve_explicit_generic(const std::string &name, const parser::span range,
+                                    const bool resolve_base = true) -> void
+      {
+        const std::size_t open = name.find('<');
+        if (open == std::string::npos)
+        {
+          resolve_name(name, range);
+          return;
+        }
+        if (resolve_base) resolve_name(name.substr(0, open), range);
+        const std::string arguments = name.substr(open + 1, name.size() - open - 2);
+        std::size_t begin = 0;
+        int depth = 0;
+        for (std::size_t index = 0; index <= arguments.size(); ++index)
+        {
+          if (index < arguments.size() && arguments[index] == '<') ++depth;
+          else if (index < arguments.size() && arguments[index] == '>') --depth;
+          if (index == arguments.size() || (arguments[index] == ',' && depth == 0))
+          {
+            std::string argument = arguments.substr(begin, index - begin);
+            while (!argument.empty() && argument.front() == ' ') argument.erase(argument.begin());
+            resolve_type(std::optional<std::string>{argument}, range);
+            begin = index + 1;
+          }
+        }
+      }
+
       auto predeclare(const parser::statement &value) -> void
       {
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
@@ -173,7 +200,12 @@ namespace semantic
         }
         else if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
         {
-          expression(*call->callee);
+          if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
+            resolve_explicit_generic(identifier->name, identifier->range);
+          else expression(*call->callee);
+          if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get()))
+            if (member->member_name.find('<') != std::string::npos)
+              resolve_explicit_generic(member->member_name, member->range, false);
           for (const auto &argument : call->arguments) expression(*argument);
         }
         else if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
@@ -244,6 +276,7 @@ namespace semantic
         const std::size_t parent = open_scope("function " + value.name);
         for (const auto &parameter : value.type_parameters)
           declare(parameter, "type parameter", value.range);
+        for (const auto &constraint : value.type_constraints) resolve_type(constraint, value.range);
         for (const auto &parameter : value.parameters)
         {
           resolve_type(parameter.type_name, value.range);
@@ -260,6 +293,7 @@ namespace semantic
         const std::size_t parent = open_scope("type " + value.name);
         for (const auto &parameter : value.type_parameters)
           declare(parameter, "type parameter", value.range);
+        for (const auto &constraint : value.type_constraints) resolve_type(constraint, value.range);
         for (const auto &interface_name : value.composed_interfaces)
         {
           resolve_type(std::optional<std::string>{interface_name}, value.range);
