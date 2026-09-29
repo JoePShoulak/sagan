@@ -362,7 +362,8 @@ namespace parser
       }
       if (const auto *function = dynamic_cast<const function_declaration *>(&value))
       {
-        std::string label = "Function\n" + std::string(function->private_member ? "." : "") + function->name;
+        std::string label = std::string(function->constructor_member ? "Constructor\n" : "Function\n") +
+                            std::string(function->private_member ? "." : "") + function->name;
         if (function->return_type)
         {
           label += ": " + *function->return_type;

@@ -36,9 +36,14 @@ support same-enum equality, `match` cases, interpolation, and printing by member
 name.
 
 **Implemented native class subset:** class fields require explicit types and may
-have default initializers. Calling `ClassName()` constructs an instance from
-those defaults; constructor arguments and custom constructors are not yet
-defined. `self` resolves to the current instance. Fields can be read or mutated,
+have default initializers. A class may declare overloaded `new(...)` constructors;
+calling `ClassName(arguments...)` selects exactly one compatible constructor.
+Every field without a declaration-site default must be assigned on every
+constructor path. With no declared constructor, `ClassName()` is available only
+when every field has a default. `new` has no source-level return type and cannot
+use `return`, while
+`init` remains an ordinary identifier for possible separate lifecycle APIs.
+`self` resolves to the current instance. Fields can be read or mutated,
 and block- or expression-bodied methods execute. A trailing `!` is allowed only
 on methods and conventionally identifies a mutating alternative; it does not by
 itself change dispatch or mutation rules. A leading dot makes a method private
@@ -61,6 +66,6 @@ the composing face and ultimately into its classes. Cycles are rejected.
 values, and runtime dispatch.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
-forward references, constructors, enum payloads and explicit values, generic
+forward references, enum payloads and explicit values, generic
 declarations, module resolution and visibility, and entry-point forms. These require semantic
 analysis or future language revisions.

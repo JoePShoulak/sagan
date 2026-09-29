@@ -529,9 +529,14 @@ namespace codegen
         output << "\n\n";
       }
 
-      auto method(const parser::function_declaration &value) -> void
+      auto method(const parser::function_declaration &value, const std::string_view class_name = {}) -> void
       {
-        output << indentation() << type(value.return_type, value.range) << ' ' << identifier(value.name) << '(';
+        output << indentation();
+        if (value.constructor_member)
+          output << identifier(std::string(class_name));
+        else
+          output << type(value.return_type, value.range) << ' ' << identifier(value.name);
+        output << '(';
         for (std::size_t index = 0; index < value.parameters.size(); ++index)
         {
           if (index != 0) output << ", ";
@@ -612,6 +617,16 @@ namespace codegen
           }
           else if (const auto *member_method = dynamic_cast<const parser::function_declaration *>(entry.get()))
           {
+            if (member_method->constructor_member)
+            {
+              if (private_access)
+              {
+                output << "public:\n";
+                private_access = false;
+              }
+              method(*member_method, value.name);
+              continue;
+            }
             emitted_methods.insert(method_signature(*member_method));
             if (private_access != member_method->private_member)
             {

@@ -386,6 +386,7 @@ namespace parser
   {
     std::string name;
     bool private_member;
+    bool constructor_member;
     std::vector<function_parameter> parameters;
     std::optional<std::string> return_type;
     std::unique_ptr<block_statement> body;
@@ -393,6 +394,7 @@ namespace parser
 
     function_declaration(span source_range, std::string identifier,
                          bool is_private,
+                         bool is_constructor,
                          std::vector<function_parameter> declared_parameters,
                          std::optional<std::string> result_type,
                          std::unique_ptr<block_statement> function_body,

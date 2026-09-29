@@ -43,6 +43,8 @@ namespace semantic
     struct object_type
     {
       std::unordered_map<std::string, std::string> fields;
+      std::unordered_set<std::string> defaulted_fields;
+      std::vector<callable_signature> constructors;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
       std::unordered_set<std::string> private_methods;
       std::vector<std::string> faces;
@@ -401,9 +403,17 @@ namespace semantic
         for (const auto &member : type.members)
         {
           if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
+          {
             object.fields.emplace(field->name, fixed_annotation(field->type_name));
+            if (field->initializer) object.defaulted_fields.insert(field->name);
+          }
           else if (const auto *method = dynamic_cast<const parser::function_declaration *>(member.get()))
           {
+            if (method->constructor_member)
+            {
+              object.constructors.push_back(signature(*method));
+              continue;
+            }
             object.methods[method->name].push_back(signature(*method));
             if (method->private_member) object.private_methods.insert(method->name);
           }
@@ -684,9 +694,30 @@ namespace semantic
           {
             if (objects.contains(identifier->name))
             {
-              require(arguments.empty(), "Default construction of '" + identifier->name +
-                                             "' does not accept arguments",
-                      value.range);
+              const auto &object = objects.at(identifier->name);
+              if (object.constructors.empty())
+              {
+                require(arguments.empty(), "Default construction of '" + identifier->name +
+                                               "' does not accept arguments", value.range);
+                require(object.defaulted_fields.size() == object.fields.size(),
+                        "Class '" + identifier->name +
+                            "' requires a constructor because not every field has a default",
+                        value.range);
+              }
+              else
+              {
+                std::vector<const callable_signature *> viable;
+                for (const auto &candidate : object.constructors)
+                {
+                  if (candidate.parameters.size() != arguments.size()) continue;
+                  bool matches = true;
+                  for (std::size_t index = 0; index < arguments.size(); ++index)
+                    matches &= compatible(candidate.parameters[index], arguments[index]);
+                  if (matches) viable.push_back(&candidate);
+                }
+                require(!viable.empty(), "No matching constructor for '" + identifier->name + "'", value.range);
+                require(viable.size() == 1, "Ambiguous constructor for '" + identifier->name + "'", value.range);
+              }
               static_cast<void>(expression(*call->callee));
               return record(value, identifier->name);
             }
@@ -982,6 +1013,70 @@ namespace semantic
         close_scope();
       }
 
+      auto constructor_assigned_fields(const parser::statement &value,
+                                       std::unordered_set<std::string> assigned,
+                                       const object_type &object) const
+          -> std::unordered_set<std::string>
+      {
+        require(dynamic_cast<const parser::return_statement *>(&value) == nullptr,
+                "Constructor cannot return", value.range);
+        if (const auto *assignment = dynamic_cast<const parser::assignment_statement *>(&value))
+        {
+          if (assignment->operation == "=")
+          {
+            const auto *member = dynamic_cast<const parser::member_expression *>(assignment->target.get());
+            const auto *target = member
+                                     ? dynamic_cast<const parser::identifier_expression *>(member->target.get())
+                                     : nullptr;
+            if (member && target && target->name == "self" && object.fields.contains(member->member_name))
+              assigned.insert(member->member_name);
+          }
+          return assigned;
+        }
+        if (const auto *block_value = dynamic_cast<const parser::block_statement *>(&value))
+        {
+          for (const auto &entry : block_value->statements)
+            assigned = constructor_assigned_fields(*entry, std::move(assigned), object);
+          return assigned;
+        }
+        if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
+        {
+          auto when_true = constructor_assigned_fields(*conditional->then_branch, assigned, object);
+          auto when_false = assigned;
+          if (conditional->else_branch)
+            when_false = constructor_assigned_fields(*conditional->else_branch, assigned, object);
+          std::erase_if(when_true, [&](const std::string &name) { return !when_false.contains(name); });
+          return when_true;
+        }
+        if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
+        {
+          bool fallback = false;
+          std::optional<std::unordered_set<std::string>> intersection;
+          for (const auto &branch : matched->cases)
+          {
+            fallback |= !branch.pattern;
+            auto branch_fields = constructor_assigned_fields(*branch.body, assigned, object);
+            if (!intersection) intersection = std::move(branch_fields);
+            else std::erase_if(*intersection, [&](const std::string &name) { return !branch_fields.contains(name); });
+          }
+          return fallback && intersection ? *intersection : assigned;
+        }
+        return assigned;
+      }
+
+      auto validate_constructor(const parser::function_declaration &value,
+                                const object_type &object) const -> void
+      {
+        require(value.body != nullptr, "Constructor requires a block body", value.range);
+        auto assigned = constructor_assigned_fields(*value.body, object.defaulted_fields, object);
+        for (const auto &[field, unused] : object.fields)
+        {
+          static_cast<void>(unused);
+          require(assigned.contains(field),
+                  "Constructor may leave field '" + field + "' uninitialized", value.range);
+        }
+      }
+
       auto statement_returns(const parser::statement &value) const -> bool
       {
         if (dynamic_cast<const parser::return_statement *>(&value)) return true;
@@ -1187,7 +1282,13 @@ namespace semantic
             add_binding("self", binding{type->name, {}});
           }
           for (const auto &member : type->members) predeclare(*member);
-          for (const auto &member : type->members) statement(*member, true);
+          for (const auto &member : type->members)
+          {
+            if (const auto *function_member = dynamic_cast<const parser::function_declaration *>(member.get());
+                function_member && function_member->constructor_member)
+              validate_constructor(*function_member, objects.at(type->name));
+            statement(*member, true);
+          }
           close_scope();
           active_class = previous_class;
         }

@@ -563,11 +563,13 @@ namespace parser
 
   function_declaration::function_declaration(const span source_range, std::string identifier,
                                              const bool is_private,
+                                             const bool is_constructor,
                                              std::vector<function_parameter> declared_parameters,
                                              std::optional<std::string> result_type,
                                              std::unique_ptr<block_statement> function_body,
                                              expression_ref function_expression_body)
       : statement(source_range), name(std::move(identifier)), private_member(is_private),
+        constructor_member(is_constructor),
         parameters(std::move(declared_parameters)),
         return_type(std::move(result_type)), body(std::move(function_body)),
         expression_body(std::move(function_expression_body))
@@ -577,7 +579,8 @@ namespace parser
   auto function_declaration::print(std::ostream &stream, const int indent) const -> void
   {
     write_indent(stream, indent);
-    stream << "Function(" << (private_member ? "." : "") << name;
+    stream << (constructor_member ? "Constructor(" : "Function(")
+           << (private_member ? "." : "") << name;
     if (return_type)
     {
       stream << ": " << *return_type;

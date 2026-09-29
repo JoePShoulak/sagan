@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.38.0](https://img.shields.io/badge/development-0.38.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.39.0](https://img.shields.io/badge/development-0.39.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -52,7 +52,8 @@ Vectors and coordinates expose dimension-checked `.x`, `.y`, `.z`, and `.w`
 components for reading and mutation when that component exists.
 Typed expression lambdas can be stored, invoked immediately or through a local
 variable, and capture surrounding local state in the executable subset.
-Classes support typed fields with defaults, zero-argument construction, `self`,
+Classes support typed fields, overloaded `new(...)` constructors, default
+zero-argument construction when every field has a default, `self`,
 field mutation, ordinary methods, and `!`-suffixed mutating methods.
 Classes declaring `is` or `has` a face are checked structurally for every
 required method and exact signature; neither spelling creates inheritance.

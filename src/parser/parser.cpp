@@ -310,9 +310,29 @@ namespace parser
       expect(tokens::LBRACE, "'{' to begin the function body");
     }
     const int end = body ? body->range.end : expression_body ? expression_body->range.end : previous().range.end;
-    return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text, private_member,
+    return std::make_unique<function_declaration>(span{keyword.range.begin, end}, name.text, private_member, false,
                                                   std::move(parameters), std::move(return_type),
                                                   std::move(body), std::move(expression_body));
+  }
+
+  auto syntax_parser::parse_constructor_declaration() -> statement_ref
+  {
+    const token &keyword = previous();
+    expect(tokens::LPAREN, "'(' after 'new'");
+    std::vector<function_parameter> parameters;
+    while (!check(tokens::RPAREN))
+    {
+      const token &parameter_name = expect(tokens::IDENTIFIER, "a constructor parameter name");
+      expect(tokens::COLON, "':' after a constructor parameter name");
+      const token &parameter_type = expect(tokens::IDENTIFIER, "a constructor parameter type after ':'");
+      parameters.emplace_back(parameter_name.text, parameter_type.text);
+      if (!match(tokens::COMMA) || check(tokens::RPAREN)) break;
+    }
+    expect(tokens::RPAREN, "')' after the constructor parameters");
+    auto body = parse_block();
+    return std::make_unique<function_declaration>(span{keyword.range.begin, body->range.end}, "new", false, true,
+                                                  std::move(parameters), std::optional<std::string>{"Void"},
+                                                  std::move(body), nullptr);
   }
 
   auto syntax_parser::parse_type_declaration(const type_declaration::kind type) -> statement_ref
@@ -359,6 +379,12 @@ namespace parser
       {
         const bool is_interface = type == type_declaration::kind::interface_type;
         auto member = parse_function_declaration(is_interface, !is_interface, true);
+        member->documentation = std::move(documentation);
+        members.push_back(std::move(member));
+      }
+      else if (type == type_declaration::kind::class_type && match(tokens::KWD_NEW))
+      {
+        auto member = parse_constructor_declaration();
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }

@@ -30,6 +30,7 @@ namespace parser
     auto parse_let_declaration() -> statement_ref;
     auto parse_function_declaration(bool body_optional = false, bool allow_private = false,
                                     bool allow_mutating = false) -> statement_ref;
+    auto parse_constructor_declaration() -> statement_ref;
     auto parse_type_declaration(type_declaration::kind type) -> statement_ref;
     auto parse_module_declaration() -> statement_ref;
     auto parse_import_declaration() -> statement_ref;

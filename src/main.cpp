@@ -550,9 +550,9 @@ namespace
 
     passed &= expect_ids(
         "complete keyword vocabulary",
-        "let fun class face enum if else match case for in while until break continue return yield "
+        "let fun new class face enum if else match case for in while until break continue return yield "
         "import from as module export hope unless finally scream and or not self is has true false inf nan\n",
-        {tokens::KWD_LET, tokens::KWD_FUN, tokens::KWD_CLASS, tokens::KWD_FACE, tokens::KWD_ENUM,
+        {tokens::KWD_LET, tokens::KWD_FUN, tokens::KWD_NEW, tokens::KWD_CLASS, tokens::KWD_FACE, tokens::KWD_ENUM,
          tokens::KWD_IF, tokens::KWD_ELSE, tokens::KWD_MATCH, tokens::KWD_CASE, tokens::KWD_FOR,
          tokens::KWD_IN, tokens::KWD_WHILE, tokens::KWD_UNTIL, tokens::KWD_BREAK, tokens::KWD_CONTINUE,
          tokens::KWD_RETURN, tokens::KWD_YIELD, tokens::KWD_IMPORT, tokens::KWD_FROM, tokens::KWD_AS,
@@ -1302,6 +1302,19 @@ namespace
     passed &= expect_syntax_error("top-level function signature", "fun incomplete(value: Float): Float\n");
     passed &= expect_syntax_error("face field", "face Invalid {\n  let value: Float\n}\n");
     passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
+    passed &= expect_ast(
+        "class constructor declaration",
+        "class Probe {\n  let value: Int\n  new(start: Int) {\n    self.value = start\n  }\n}\n",
+        "Program\n"
+        "  Class(Probe)\n"
+        "    Let(value: Int)\n"
+        "    Constructor(new: Void)\n"
+        "      Parameter(start: Int)\n"
+        "      Block\n"
+        "        Assignment(=)\n"
+        "          Member(value)\n"
+        "            Identifier(self)\n"
+        "          Identifier(start)\n");
     passed &= expect_syntax_error("top-level mutating function name",
                                   "fun invalid!(): Int => 0\n");
     passed &= expect_syntax_error("enum literal member", "enum Invalid {\n  1\n}\n");
@@ -1657,6 +1670,35 @@ namespace
         "fun exercise(): Int {\n  let counter = Counter()\n"
         "  let advanced = counter.increment!()\n  return counter.current() + advanced\n}\n",
         {"counter: Counter", "advanced: Int64"});
+    passed &= expect_type_model(
+        "typed class constructor",
+        "class Counter {\n  let value: Int\n  new(start: Int) {\n    self.value = start\n  }\n}\n"
+        "fun valid(): Int {\n  let counter = Counter(42)\n  return counter.value\n}\n",
+        {"counter: Counter", "Int64 @"});
+    passed &= expect_type_error(
+        "constructor must initialize every field",
+        "class Counter {\n  let value: Int\n  new(start: Int) {\n  }\n}\n",
+        "Constructor may leave field 'value' uninitialized");
+    passed &= expect_type_error(
+        "constructor argument mismatch",
+        "class Counter {\n  let value: Int\n  new(start: Int) {\n    self.value = start\n  }\n}\n"
+        "let invalid = Counter(true)\n",
+        "No matching constructor for 'Counter'");
+    passed &= expect_type_model(
+        "overloaded constructors",
+        "class Probe {\n  let value: Int = 0\n"
+        "  new(value: Int) {\n    self.value = value\n  }\n"
+        "  new(enabled: Bool) {\n    if enabled self.value = 1\n    else self.value = 0\n  }\n}\n"
+        "let numeric = Probe(42)\nlet logical = Probe(true)\n",
+        {"numeric: Probe", "logical: Probe"});
+    passed &= expect_type_error(
+        "constructor cannot return",
+        "class Probe {\n  let value: Int\n  new() {\n    return\n  }\n}\n",
+        "Constructor cannot return");
+    passed &= expect_type_error(
+        "missing constructor for required field",
+        "class Counter {\n  let value: Int\n}\nlet invalid = Counter()\n",
+        "requires a constructor because not every field has a default");
     passed &= expect_type_model(
         "nominal enum members equality and matching",
         "enum State {\n  waiting\n  ready\n}\n"

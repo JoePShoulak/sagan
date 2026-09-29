@@ -157,6 +157,12 @@
     "declarations": {
       "patterns": [
         {
+          "match": "\\b(new)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "keyword.declaration.constructor.sagan" }
+          }
+        },
+        {
           "match": "\\b(fun)(\\s+)(\\.?)(?:\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*!?)",
           "captures": {
             "1": { "name": "keyword.declaration.function.sagan" },
@@ -260,7 +266,7 @@
         { "name": "keyword.operator.logical.sagan", "match": "\\b(?:and|or|not)\\b" },
         { "name": "keyword.operator.type.sagan", "match": "\\b(?:is|has)\\b" },
         { "name": "variable.language.self.sagan", "match": "\\bself\\b" },
-        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|fun|class|face|enum|module)\\b" }
+        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|fun|new|class|face|enum|module)\\b" }
       ]
     },
     "method-identifiers": {

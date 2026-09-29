@@ -75,6 +75,7 @@ async function main() {
   const expectedScopes = {
     let: "keyword.declaration.variable.sagan",
     fun: "keyword.declaration.function.sagan",
+    new: "keyword.declaration.constructor.sagan",
     class: "keyword.declaration.type.sagan",
     face: "keyword.declaration.type.sagan",
     enum: "keyword.declaration.type.enum.sagan",

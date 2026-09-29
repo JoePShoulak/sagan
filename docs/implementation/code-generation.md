@@ -22,7 +22,7 @@ prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned vector and coordinate values, their spreads, indexing, named components, iteration,
 printing and interpolation,
 typed expression lambdas with local lexical captures and immediate or stored calls,
-classes with typed defaulted fields, zero-argument construction, `self`, and
+classes with typed fields, default or overloaded `new(...)` construction, `self`, and
 public/private methods,
 statically composed face default methods with explicit conflict resolution,
 nominal enums with named output, equality, and match cases,
@@ -83,7 +83,7 @@ dispatch, and runtime face objects are not lowered yet. Transitive defaults are
 flattened into the concrete class before native compilation.
 
 Open work includes generated-code structure, runtime interfaces, memory
-management, custom constructors, interface dispatch, escaping closures, exception lowering, debug information, compiler selection and flags,
+management, interface dispatch, escaping closures, exception lowering, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler
