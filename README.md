@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.36.0](https://img.shields.io/badge/development-0.36.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.37.0](https://img.shields.io/badge/development-0.37.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -28,7 +28,7 @@ all-path returns, definite initialization, unreachable code, and executable
 entry points. Sagan can print semantic and type models as
 well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
 and dictionaries plus dimensioned vectors and coordinates are inferred. Simple
-nominal enums can be selected, compared, matched, interpolated, and printed. Generic
+nominal enums can be selected, compared, matched, interpolated, and printed.
 Class methods declared with a leading dot are private to their declaring class.
 Generic annotations, interface-typed values, the full reference runtime, and the
 standard library are not yet implemented. An initial C++ emitter can compile the validated scalar/control-
@@ -56,6 +56,8 @@ Classes support typed fields with defaults, zero-argument construction, `self`,
 field mutation, ordinary methods, and `!`-suffixed mutating methods.
 Classes declaring `is` or `has` a face are checked structurally for every
 required method and exact signature; neither spelling creates inheritance.
+Unambiguous face defaults are composed into the class, class methods override
+them, and conflicting defaults require an explicit class override.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text

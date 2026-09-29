@@ -1818,6 +1818,24 @@ namespace
         "private method cannot satisfy face",
         "face Readable {\n  fun read(): Int\n}\nclass Vault is Readable {\n  fun .read(): Int => 42\n}\n",
         "cannot satisfy face 'Readable' with private method 'read'");
+    passed &= expect_type_model(
+        "face default method calls abstract requirement",
+        "face Countable {\n  fun current(): Int\n  fun next(): Int => self.current() + 1\n}\n"
+        "class Counter is Countable {\n  fun current(): Int => 41\n}\n"
+        "fun valid(): Int {\n  let counter = Counter()\n  return counter.next()\n}\n",
+        {"counter: Counter", "Int64 @"});
+    passed &= expect_type_model(
+        "class method overrides face default",
+        "face Named {\n  fun name(): String => \"default\"\n}\n"
+        "class Probe is Named {\n  fun name(): String => \"probe\"\n}\n"
+        "fun valid(): String {\n  let probe = Probe()\n  return probe.name()\n}\n",
+        {"probe: Probe", "String @"});
+    passed &= expect_type_error(
+        "conflicting face defaults require override",
+        "face Left {\n  fun value(): Int => 1\n}\n"
+        "face Right {\n  fun value(): Int => 2\n}\n"
+        "class Invalid is Left, Right {\n}\n",
+        "inherits conflicting defaults for method 'value'; provide an explicit override");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",

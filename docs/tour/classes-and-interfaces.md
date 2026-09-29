@@ -57,10 +57,13 @@ are rejected. Default-method dispatch, custom constructors, reference ownership,
 enum values are not implemented yet. Signature-only faces participate in semantic
 checking: a class using either `is` or `has` must implement every required method
 with the exact signature. This is structural conformance attached to an explicit
-declaration, not superclass inheritance. Face-typed values,
-dynamic dispatch, and default-method composition are later slices.
+declaration, not superclass inheritance. Unambiguous default methods are
+composed into the class and may call other face requirements through `self`.
+An exact class method overrides a default; competing defaults require an
+explicit override. Face-typed values, dynamic dispatch, and transitive face
+composition are later slices.
 
-**Open questions:** default-method conflict resolution, custom constructor rules,
+**Open questions:** transitive face composition, custom constructor rules,
 enum payloads and explicit values,
 value versus reference behavior, private fields, and whether limited
 implementation inheritance will exist.

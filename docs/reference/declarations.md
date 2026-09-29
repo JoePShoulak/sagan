@@ -46,12 +46,17 @@ to its declaring class; it remains callable from other methods of that class
 but cannot be accessed externally or used to satisfy a face requirement.
 
 **Implemented conformance subset:** `is` and `has` are interchangeable and do
-not denote inheritance. A class composing a signature-only face must implement
-each required method with an exact parameter and result signature. Missing or
+not denote inheritance. A class composing a face must satisfy each required
+method with an exact class implementation or unambiguous default. Missing or
 incompatible methods are compile-time errors.
 
+**Implemented face defaults:** an unambiguous default is inherited, an exact
+class method overrides it, and competing defaults with the same signature
+require an explicit class override. Defaults may call other requirements from
+their own face through `self`.
+
 **Provisional semantics:** method overloading, private fields, interface-typed
-values, default-method composition and conflict resolution.
+values, and transitive face composition.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, constructors, enum payloads and explicit values, generic

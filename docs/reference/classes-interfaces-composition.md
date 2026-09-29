@@ -28,6 +28,12 @@ to its declaring class. Methods of that class may call it through `self` or
 another instance of the same class. Outside access is rejected, and a private
 method cannot satisfy a face requirement. Fields do not yet have private syntax.
 
-**Open questions:** default-method conflict resolution, object construction,
-storage layout, dispatch, value/reference behavior, and whether limited
+**Implemented default-method subset:** an unambiguous default is composed into
+the class and may call other requirements from the same face through `self`.
+An exact-signature class method overrides the default. If multiple directly
+composed faces provide the same default signature, the class must provide an
+explicit override. This is static composition; it does not create a superclass.
+
+**Open questions:** transitive face composition, object construction, storage
+layout, dynamic dispatch, value/reference behavior, and whether limited
 implementation inheritance will exist.

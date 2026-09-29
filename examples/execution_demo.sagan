@@ -3,6 +3,7 @@ fun 🚀(value: Int): Int => value + 2
 face Countable {
   fun increment!(): Int
   fun current(): Int
+  fun next(): Int => self.current() + 1
 }
 
 enum LaunchStatus {
@@ -70,6 +71,7 @@ fun main(): Int {
   let immediate_answer = (fun(value: Int): Int => value * 2)(21)
   let launch_counter = LaunchCounter()
   let counted_launch = launch_counter.increment!()
+  let next_launch = launch_counter.next()
   let launch_status = LaunchStatus.ready
   launch_counter.value += 1
 
@@ -98,6 +100,7 @@ fun main(): Int {
   print("Immediate lambda result: ${immediate_answer}")
   print("Class method result: ${counted_launch}")
   print("Class field result: ${launch_counter.current()}")
+  print("Face default result: ${next_launch}")
   print("Enum status: ${launch_status}")
   match launch_status {
     case LaunchStatus.ready print("Enum match selected ready")
@@ -121,6 +124,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 and transformed_answer == 42 and immediate_answer == 42 and counted_launch == 41 and launch_counter.current() == 42 and launch_status == LaunchStatus.ready and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
+  if answer == 42 and transformed_answer == 42 and immediate_answer == 42 and counted_launch == 41 and next_launch == 42 and launch_counter.current() == 42 and launch_status == LaunchStatus.ready and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
   else return 1
 }

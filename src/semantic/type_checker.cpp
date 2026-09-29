@@ -51,7 +51,7 @@ namespace semantic
     struct interface_type
     {
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
-      bool has_default_methods = false;
+      std::unordered_map<std::string, std::vector<callable_signature>> defaults;
     };
 
     auto is_unknown(const std::string_view type) -> bool
@@ -418,7 +418,8 @@ namespace semantic
           const auto *method = dynamic_cast<const parser::function_declaration *>(member.get());
           if (!method) continue;
           interface.methods[method->name].push_back(signature(*method));
-          interface.has_default_methods |= method->body != nullptr || method->expression_body != nullptr;
+          if (method->body || method->expression_body)
+            interface.defaults[method->name].push_back(signature(*method));
         }
         interfaces.emplace(type.name, std::move(interface));
       }
@@ -435,39 +436,71 @@ namespace semantic
         return left.parameters == right.parameters && left.result == right.result;
       }
 
-      auto validate_composition(const std::string &class_name, const object_type &object,
-                                const parser::span range) const -> void
+      auto validate_composition(const std::string &class_name, object_type &object,
+                                const parser::span range) -> void
       {
+        std::unordered_map<std::string, std::vector<callable_signature>> inherited_defaults;
         for (const auto &face_name : object.faces)
         {
           const auto face = interfaces.find(face_name);
           require(face != interfaces.end(),
                   "Class '" + class_name + "' composes unknown face '" + face_name + "'", range);
-          require(!face->second.has_default_methods,
-                  "Face '" + face_name + "' has default methods, which are not executable yet", range);
           for (const auto &[method_name, required_signatures] : face->second.methods)
           {
             const auto provided = object.methods.find(method_name);
-            require(provided != object.methods.end(),
-                    "Class '" + class_name + "' does not implement required method '" + method_name +
-                        "' from face '" + face_name + "'",
-                    range);
-            require(!object.private_methods.contains(method_name),
-                    "Class '" + class_name + "' cannot satisfy face '" + face_name +
-                        "' with private method '" + method_name + "'",
-                    range);
             for (const auto &required : required_signatures)
             {
-              const bool found = std::any_of(provided->second.begin(), provided->second.end(),
-                                             [&](const callable_signature &candidate)
+              const bool provided_match = provided != object.methods.end() &&
+                  std::any_of(provided->second.begin(), provided->second.end(),
+                              [&](const callable_signature &candidate)
               {
                 return same_signature(required, candidate);
               });
-              require(found,
-                      "Class '" + class_name + "' has an incompatible signature for method '" + method_name +
-                          "' required by face '" + face_name + "'",
+              const auto defaults = face->second.defaults.find(method_name);
+              const bool has_default = defaults != face->second.defaults.end() &&
+                  std::any_of(defaults->second.begin(), defaults->second.end(),
+                              [&](const callable_signature &candidate)
+              {
+                return same_signature(required, candidate);
+              });
+              if (provided_match)
+              {
+                require(!object.private_methods.contains(method_name),
+                        "Class '" + class_name + "' cannot satisfy face '" + face_name +
+                            "' with private method '" + method_name + "'",
+                        range);
+              }
+              require(provided_match || has_default,
+                      provided == object.methods.end()
+                          ? "Class '" + class_name + "' does not implement required method '" + method_name +
+                                "' from face '" + face_name + "'"
+                          : "Class '" + class_name + "' has an incompatible signature for method '" +
+                                method_name + "' required by face '" + face_name + "'",
                       range);
+              if (has_default && !provided_match)
+                inherited_defaults[method_name].push_back(required);
             }
+          }
+        }
+        for (const auto &[method_name, defaults] : inherited_defaults)
+        {
+          for (std::size_t index = 0; index < defaults.size(); ++index)
+          {
+            const std::size_t matches = static_cast<std::size_t>(std::count_if(
+                defaults.begin(), defaults.end(), [&](const callable_signature &candidate)
+            {
+              return same_signature(defaults[index], candidate);
+            }));
+            require(matches == 1,
+                    "Class '" + class_name + "' inherits conflicting defaults for method '" + method_name +
+                        "'; provide an explicit override",
+                    range);
+            auto &methods = object.methods[method_name];
+            if (std::none_of(methods.begin(), methods.end(), [&](const callable_signature &candidate)
+                {
+                  return same_signature(defaults[index], candidate);
+                }))
+              methods.push_back(defaults[index]);
           }
         }
       }
@@ -701,6 +734,18 @@ namespace semantic
               return record(value, "Function");
             }
             throw semantic_error("Type '" + target + "' has no member '" + member->member_name + "'", value.range);
+          }
+          if (const auto interface = interfaces.find(target); interface != interfaces.end())
+          {
+            require(!member->safe, "Safe member access is not defined for face '" + target + "'", value.range);
+            const auto methods = interface->second.methods.find(member->member_name);
+            require(methods != interface->second.methods.end(),
+                    "Face '" + target + "' has no method '" + member->member_name + "'", value.range);
+            require(methods->second.size() == 1,
+                    "Face method reference '" + member->member_name + "' is overloaded and requires a call",
+                    value.range);
+            callables[&value] = methods->second.front();
+            return record(value, "Function");
           }
           return record(value, std::string(unknown_type));
         }
@@ -1077,7 +1122,8 @@ namespace semantic
           const auto previous_class = active_class;
           if (type->type_kind == parser::type_declaration::kind::class_type) active_class = type->name;
           open_scope();
-          if (type->type_kind == parser::type_declaration::kind::class_type)
+          if (type->type_kind == parser::type_declaration::kind::class_type ||
+              type->type_kind == parser::type_declaration::kind::interface_type)
           {
             add_binding("self", binding{type->name, {}});
           }

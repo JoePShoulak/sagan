@@ -16,7 +16,7 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, class fields and `self`, structural face conformance, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, class fields and `self`, structural face conformance and defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, default-constructed classes with public/private methods, local captured/immediate lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
@@ -69,11 +69,13 @@ propagation remain semantic/runtime work. Successful source plus focused
 expression, collection, control-flow, matching, exception, and
 unterminated-block errors are demonstrated. Classes now execute with typed
 defaulted fields, zero-argument construction, `self`, field access/mutation, and
-ordinary or `!`-suffixed methods. `is` and `has` composition now require a class
-to provide every signature-only face method with an exact signature. Simple
+ordinary or `!`-suffixed methods. `is` and `has` composition require every face
+signature to have an exact class implementation or an unambiguous default. Simple
 nominal enums now execute with `Type.member` selection, equality, matching,
-interpolation, and readable printing. Interface-typed values,
-default-method composition/conflicts, custom constructors, and reference ownership remain future
+interpolation, and readable printing. Face defaults execute, may call other face
+requirements through `self`, and require an explicit class override when two
+composed faces provide the same signature. Interface-typed values, transitive
+face composition, custom constructors, and reference ownership remain future
 work. Named functions and methods accept block or `=>` expression bodies.
 Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and
@@ -91,7 +93,7 @@ remain future semantic and runtime work.
 ## Major open language questions
 
 Generic annotations, value/reference behavior, reference-count cycles,
-interface-typed values, interface defaults and conflict resolution, generics and possible sum types,
+interface-typed values, transitive face composition, generics and possible sum types,
 custom constructors, payload-bearing enums and explicit enum values, exception propagation, module
 resolution and packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import

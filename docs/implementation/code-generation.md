@@ -24,6 +24,7 @@ printing and interpolation,
 typed expression lambdas with local lexical captures and immediate or stored calls,
 classes with typed defaulted fields, zero-argument construction, `self`, and
 public/private methods,
+statically composed face default methods with explicit conflict resolution,
 nominal enums with named output, equality, and match cases,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
@@ -74,11 +75,11 @@ families provide `.x`, `.y`, `.z`, and `.w` component access where their
 dimension permits it; components are assignable because variables are mutable
 by default.
 
-Signature-only faces are erased before code generation in the currently
-implemented, statically composed subset. Semantic analysis first verifies that
-each composing class provides every required method with an exact matching
-signature, then only the concrete class is emitted. Interface-typed values,
-dynamic face dispatch, and executable default face methods are not lowered yet.
+Faces are erased before code generation in the currently implemented,
+statically composed subset. Semantic analysis first verifies every required
+signature and resolves defaults, then the backend copies inherited default
+method bodies into the concrete class. Interface-typed values, dynamic face
+dispatch, and transitive face composition are not lowered yet.
 
 Open work includes generated-code structure, runtime interfaces, memory
 management, custom constructors, interface dispatch, escaping closures, exception lowering, debug information, compiler selection and flags,

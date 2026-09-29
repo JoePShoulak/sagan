@@ -232,7 +232,8 @@ namespace semantic
           resolve_name(interface_name, value.range);
         }
         const std::size_t parent = open_scope("type " + value.name);
-        if (value.type_kind == parser::type_declaration::kind::class_type)
+        if (value.type_kind == parser::type_declaration::kind::class_type ||
+            value.type_kind == parser::type_declaration::kind::interface_type)
         {
           declare("self", "self", value.range);
         }

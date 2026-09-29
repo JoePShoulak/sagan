@@ -60,9 +60,13 @@ zero-argument default construction, and `self` typing. Leading-dot private
 methods are callable only while checking another method of their declaring
 class, and private methods cannot satisfy public face requirements. Unknown
 class members and constructor arguments are rejected. Escaping closure types, interface
-values remain open, but a class declaring `is` or `has` a signature-only face
-must provide every required method with an exact parameter/result signature.
+values remain open, but a class declaring `is` or `has` a face must satisfy
+every required method with an exact class implementation or face default.
 Both composition words have identical meaning and do not create inheritance.
+An unambiguous face default satisfies its own requirement and becomes a class
+method. A class method with the exact signature overrides it. Multiple composed
+defaults with the same signature require an explicit class override. Within a
+default body, `self` may call other methods declared by that face.
 The generic model and multi-error recovery strategy also remain open.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
