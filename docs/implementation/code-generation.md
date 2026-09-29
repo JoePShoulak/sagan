@@ -22,7 +22,8 @@ prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned vector and coordinate values, their spreads, indexing, named components, iteration,
 printing and interpolation,
 typed expression lambdas with local lexical captures and immediate or stored calls,
-classes with typed defaulted fields, zero-argument construction, `self`, and methods,
+classes with typed defaulted fields, zero-argument construction, `self`, and
+public/private methods,
 nominal enums with named output, equality, and match cases,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and

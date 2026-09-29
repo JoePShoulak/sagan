@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.35.0](https://img.shields.io/badge/development-0.35.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.36.0](https://img.shields.io/badge/development-0.36.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -29,7 +29,8 @@ entry points. Sagan can print semantic and type models as
 well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
 and dictionaries plus dimensioned vectors and coordinates are inferred. Simple
 nominal enums can be selected, compared, matched, interpolated, and printed. Generic
-annotations, interface-typed values, the full reference runtime, and the
+Class methods declared with a leading dot are private to their declaring class.
+Generic annotations, interface-typed values, the full reference runtime, and the
 standard library are not yet implemented. An initial C++ emitter can compile the validated scalar/control-
 flow subset into a native executable, including visible output through the
 built-in `print(value)` function. The executable subset also supports typed

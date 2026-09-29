@@ -134,7 +134,8 @@ vector's components, performs checked vector/scalar arithmetic and compound upda
 executes a stored capturing lambda and an immediately invoked lambda, tests the
 result, selects, prints, compares, and matches a nominal enum value, constructs
 a class with defaulted fields, calls an ordinary and a mutating method through
-`self`, updates a field, and returns success from `main`.
+`self`, routes a public method through a private helper, updates a field, and
+returns success from `main`.
 That class explicitly composes a signature-only face, so the same demo also
 exercises compile-time interface conformance without runtime inheritance.
 Its `match` cases, `for`

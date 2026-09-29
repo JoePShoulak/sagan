@@ -23,7 +23,11 @@ contain signature-only methods or block-bodied defaults. Classes contain `let`
 fields and block-bodied methods. `self` is an expression, and a leading dot on
 a class method is retained as private-member syntax in the AST.
 
-**Open questions:** explicit versus structural conformance, default-method
-conflict resolution, object construction, storage layout, dispatch,
-value/reference behavior, visibility enforcement, and whether limited
+**Implemented visibility subset:** a leading dot makes a class method private
+to its declaring class. Methods of that class may call it through `self` or
+another instance of the same class. Outside access is rejected, and a private
+method cannot satisfy a face requirement. Fields do not yet have private syntax.
+
+**Open questions:** default-method conflict resolution, object construction,
+storage layout, dispatch, value/reference behavior, and whether limited
 implementation inheritance will exist.

@@ -44,6 +44,7 @@ namespace semantic
     {
       std::unordered_map<std::string, std::string> fields;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
+      std::unordered_set<std::string> private_methods;
       std::vector<std::string> faces;
     };
 
@@ -158,6 +159,7 @@ namespace semantic
       std::unordered_map<std::string, object_type> objects;
       std::unordered_map<std::string, interface_type> interfaces;
       std::unordered_map<std::string, std::unordered_set<std::string>> enums;
+      std::optional<std::string> active_class;
 
       auto open_scope() -> void
       {
@@ -399,7 +401,10 @@ namespace semantic
           if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
             object.fields.emplace(field->name, fixed_annotation(field->type_name));
           else if (const auto *method = dynamic_cast<const parser::function_declaration *>(member.get()))
+          {
             object.methods[method->name].push_back(signature(*method));
+            if (method->private_member) object.private_methods.insert(method->name);
+          }
         }
         objects.emplace(type.name, std::move(object));
       }
@@ -446,6 +451,10 @@ namespace semantic
             require(provided != object.methods.end(),
                     "Class '" + class_name + "' does not implement required method '" + method_name +
                         "' from face '" + face_name + "'",
+                    range);
+            require(!object.private_methods.contains(method_name),
+                    "Class '" + class_name + "' cannot satisfy face '" + face_name +
+                        "' with private method '" + method_name + "'",
                     range);
             for (const auto &required : required_signatures)
             {
@@ -680,6 +689,11 @@ namespace semantic
             if (const auto methods = object->second.methods.find(member->member_name);
                 methods != object->second.methods.end())
             {
+              require(!object->second.private_methods.contains(member->member_name) ||
+                          (active_class && *active_class == target),
+                      "Private method '" + member->member_name + "' of class '" + target +
+                          "' is not accessible here",
+                      value.range);
               require(methods->second.size() == 1,
                       "Method reference '" + member->member_name + "' is overloaded and requires a call",
                       value.range);
@@ -1060,6 +1074,8 @@ namespace semantic
         }
         else if (const auto *type = dynamic_cast<const parser::type_declaration *>(&value))
         {
+          const auto previous_class = active_class;
+          if (type->type_kind == parser::type_declaration::kind::class_type) active_class = type->name;
           open_scope();
           if (type->type_kind == parser::type_declaration::kind::class_type)
           {
@@ -1068,6 +1084,7 @@ namespace semantic
           for (const auto &member : type->members) predeclare(*member);
           for (const auto &member : type->members) statement(*member, true);
           close_scope();
+          active_class = previous_class;
         }
       }
 

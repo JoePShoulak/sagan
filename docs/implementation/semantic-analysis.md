@@ -27,8 +27,8 @@ Name collection deliberately remains separate from type and control-flow
 checking. Top-level names are collected before bodies are visited, permitting
 forward and self references. Later checking establishes overload signatures,
 types, lossless conversions, definite initialization, definite returns, and
-unreachable code. Interface conformance, exception-pattern binding, custom
-constructors, privacy enforcement, and reference ownership remain future work.
+unreachable code. Interface-typed values, exception-pattern binding, custom
+constructors, private fields, and reference ownership remain future work.
 
 The initial type checker infers scalar literals; validates annotations,
 initializers, assignments, Boolean conditions, conditional branches, core
@@ -56,8 +56,10 @@ through local bindings; stored and immediate calls validate arity and lossless
 argument compatibility. Simple enum members resolve through `Type.member` to
 their nominal enum type; equality and `match` require matching enum types, and
 unknown members are rejected. Class metadata supplies typed field and method access,
-zero-argument default construction, and `self` typing. Unknown class members and
-constructor arguments are rejected. Escaping closure types, interface
+zero-argument default construction, and `self` typing. Leading-dot private
+methods are callable only while checking another method of their declaring
+class, and private methods cannot satisfy public face requirements. Unknown
+class members and constructor arguments are rejected. Escaping closure types, interface
 values remain open, but a class declaring `is` or `has` a signature-only face
 must provide every required method with an exact parameter/result signature.
 Both composition words have identical meaning and do not create inheritance.

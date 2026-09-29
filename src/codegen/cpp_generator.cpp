@@ -554,19 +554,32 @@ namespace codegen
       {
         if (value.type_kind != parser::type_declaration::kind::class_type)
           fail("only class declarations are available in the initial native object subset", value.range);
-        output << "struct " << identifier(value.name) << "\n{\n";
+        output << "struct " << identifier(value.name) << "\n{\npublic:\n";
         ++depth;
+        bool private_access = false;
         for (const auto &entry : value.members)
         {
           if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
           {
+            if (private_access)
+            {
+              output << "public:\n";
+              private_access = false;
+            }
             output << indentation() << type(field->type_name, field->range) << ' ' << identifier(field->name);
             if (field->initializer) output << " = " << expression(*field->initializer);
             else output << "{}";
             output << ";\n";
           }
           else if (const auto *member_method = dynamic_cast<const parser::function_declaration *>(entry.get()))
+          {
+            if (private_access != member_method->private_member)
+            {
+              private_access = member_method->private_member;
+              output << (private_access ? "private:\n" : "public:\n");
+            }
             method(*member_method);
+          }
           else fail("class member is not available in the initial native object subset", entry->range);
         }
         --depth;

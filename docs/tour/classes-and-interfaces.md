@@ -51,15 +51,16 @@ identifier members separated by newlines or commas. Their nominal values use
 The initial native class subset checks typed fields and methods, supports field
 defaults and zero-argument `ClassName()` construction, types `self`, and executes
 field reads, mutation, and method calls. Methods may use a trailing `!` naming
-convention to identify a mutating alternative. Default-method dispatch, privacy,
-custom constructors, reference ownership, payload-bearing enums, and explicit
+convention to identify a mutating alternative. Leading-dot methods are private
+to their declaring class and may be called by its other methods; outside calls
+are rejected. Default-method dispatch, custom constructors, reference ownership, payload-bearing enums, and explicit
 enum values are not implemented yet. Signature-only faces participate in semantic
 checking: a class using either `is` or `has` must implement every required method
 with the exact signature. This is structural conformance attached to an explicit
 declaration, not superclass inheritance. Face-typed values,
 dynamic dispatch, and default-method composition are later slices.
 
-**Open questions:** structural versus explicit conformance, default-method
-conflict resolution, custom constructor rules, enum payloads and explicit values,
-value versus reference behavior, visibility enforcement, and whether limited
+**Open questions:** default-method conflict resolution, custom constructor rules,
+enum payloads and explicit values,
+value versus reference behavior, private fields, and whether limited
 implementation inheritance will exist.

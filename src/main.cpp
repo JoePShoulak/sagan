@@ -1804,6 +1804,20 @@ namespace
     passed &= expect_type_error("class composition requires a face",
                                 "class Probe is Missing {\n}\n",
                                 "Undefined name 'Missing'");
+    passed &= expect_type_model(
+        "private method access inside declaring class",
+        "class Vault {\n  fun .secret(): Int => 42\n  fun reveal(): Int => self.secret()\n}\n"
+        "fun valid(): Int {\n  let vault = Vault()\n  return vault.reveal()\n}\n",
+        {"vault: Vault", "Int64 @"});
+    passed &= expect_type_error(
+        "private method access outside declaring class",
+        "class Vault {\n  fun .secret(): Int => 42\n}\n"
+        "fun invalid(): Int {\n  let vault = Vault()\n  return vault.secret()\n}\n",
+        "Private method 'secret' of class 'Vault' is not accessible here");
+    passed &= expect_type_error(
+        "private method cannot satisfy face",
+        "face Readable {\n  fun read(): Int\n}\nclass Vault is Readable {\n  fun .read(): Int => 42\n}\n",
+        "cannot satisfy face 'Readable' with private method 'read'");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",

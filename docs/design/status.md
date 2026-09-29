@@ -19,7 +19,7 @@ verified_by: null
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, class fields and `self`, structural face conformance, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, default-constructed classes with fields and methods, local captured/immediate lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, default-constructed classes with public/private methods, local captured/immediate lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
 
 ## Tokenizer verification
@@ -73,8 +73,7 @@ ordinary or `!`-suffixed methods. `is` and `has` composition now require a class
 to provide every signature-only face method with an exact signature. Simple
 nominal enums now execute with `Type.member` selection, equality, matching,
 interpolation, and readable printing. Interface-typed values,
-default-method composition/conflicts, private
-access enforcement, custom constructors, and reference ownership remain future
+default-method composition/conflicts, custom constructors, and reference ownership remain future
 work. Named functions and methods accept block or `=>` expression bodies.
 Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and

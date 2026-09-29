@@ -19,7 +19,9 @@ class LaunchCounter is Countable {
     return self.value
   }
 
-  fun current(): Int => self.value
+  fun .read_value(): Int => self.value
+
+  fun current(): Int => self.read_value()
 }
 
 fun main(): Int {
