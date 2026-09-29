@@ -59,3 +59,7 @@ metadata. When the site documentation version changes, previously ready pages mu
 and confirmed for the new version before they can remain publication-ready.
 
 Use `review-needed` when a draft is substantial enough for review but is not yet confirmed.
+
+The [documentation roadmaps](documentation-roadmaps.md) define the post-1.0
+expansion plan and the ordered behavior-confirmation audit used to move pages
+from internal drafts to publication-ready documentation.

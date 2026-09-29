@@ -35,6 +35,8 @@ astrodynamics, numerical work, and real-time simulation.
   design, provisional design, planned work, and open questions.
 - [Implementation](implementation/index.md) describes the compiler roadmap and
   current source layout.
+- [Documentation roadmaps](contributing/documentation-roadmaps.md) define the
+  post-1.0 expansion and ordered language-confirmation process.
 
 ## Documentation maturity
 
