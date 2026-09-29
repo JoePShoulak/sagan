@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.55.0](https://img.shields.io/badge/development-0.55.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.56.0](https://img.shields.io/badge/development-0.56.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -61,7 +61,9 @@ Expression-pattern `match` statements execute with ordered cases and a fallback.
 Control-flow bodies may use braces or a single statement on the same line.
 Prefix and postfix numeric increment and decrement expressions also execute.
 Integer arithmetic is checked: overflow, division by zero, and modulo by zero
-raise runtime errors instead of inheriting undefined native behavior.
+raise catchable `RuntimeError` values instead of inheriting undefined native
+behavior. Collection bounds and missing dictionary keys use the same nominal
+error model.
 Dimensioned vectors and coordinates execute as distinct runtime values with
 spread construction, indexing, iteration, printing, and interpolation.
 Vectors additionally support checked addition, subtraction, negation, scalar
@@ -88,7 +90,9 @@ flow through the chain, while cyclic composition is rejected.
 Value-bearing `scream` exceptions execute in the native subset. `unless`
 handlers test exact type-and-value matches in source order, unmatched values
 propagate outward, and `finally` cleanup runs during normal completion,
-propagation, handled exceptions, and early returns.
+propagation, handled exceptions, and early returns. Native failures can be
+selected with cases such as `RuntimeError.integer_overflow` and
+`RuntimeError.index_out_of_bounds`.
 The module pipeline loads flat sibling `.sagan` files recursively from the
 entry file's directory, validates filename declarations and public exports,
 applies import/export aliases, isolates dependency-private symbols, orders

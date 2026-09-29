@@ -46,7 +46,9 @@ type when necessary; compound assignment rejects a result that cannot be stored
 losslessly in its target vector.
 
 **Implemented for the native numeric subset:** integer arithmetic overflow
-raises a runtime exception. Typed collections and interfaces continue to have
+raises the nominal `RuntimeError.integer_overflow` exception. Other native
+numeric domain failures and collection lookup failures use the corresponding
+`RuntimeError` case. Typed collections and interfaces continue to have
 provisional semantics outside the implemented subset.
 
 Generic enum annotations and inferred top-level generic functions are

@@ -1987,6 +1987,10 @@ namespace semantic
       {
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}, {}}});
         add_binding("None", binding{"None", {}});
+        add_binding("RuntimeError", binding{"Type", {}});
+        enums["RuntimeError"] = {"integer_overflow", "division_by_zero", "modulo_by_zero",
+                                  "undefined_exponentiation", "negative_integer_exponent",
+                                  "index_out_of_bounds", "missing_key"};
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);

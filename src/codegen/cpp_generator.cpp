@@ -65,6 +65,7 @@ namespace codegen
         if (name == "Void") return "void";
         if (name == "Bool") return "bool";
         if (name == "String") return "std::string";
+        if (name == "RuntimeError") return "sagan_runtime_error";
         if (name == "Float" || name == "Float64") return "double";
         if (name == "Float32") return "float";
         if (name == "Int" || name == "Int64") return "std::int64_t";
@@ -479,9 +480,17 @@ namespace codegen
           return result + ")";
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
-          return expression(*index->target) + ".at(" + expression(*index->index) + ")";
+        {
+          const std::string target_type = expression_type(*index->target);
+          const std::string helper = std::string_view{target_type}.starts_with("Dictionary<")
+                                         ? "sagan_dictionary_at" : "sagan_index";
+          return helper + "(" + expression(*index->target) + ", " + expression(*index->index) + ")";
+        }
         if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
         {
+          if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
+              target && target->name == "RuntimeError")
+            return "sagan_runtime_error::" + member->member_name;
           if (member->safe)
           {
             const std::string temporary = "sagan_optional_" + std::to_string(temporary_index++);
@@ -1267,14 +1276,30 @@ namespace codegen
                   "  SetConsoleOutputCP(CP_UTF8);\n"
                   "#endif\n"
                   "}\n\n"
-                  "struct sagan_exception final\n"
+                  "enum class sagan_runtime_error : std::int64_t\n"
+                  "{\n"
+                  "  integer_overflow,\n"
+                  "  division_by_zero,\n"
+                  "  modulo_by_zero,\n"
+                  "  undefined_exponentiation,\n"
+                  "  negative_integer_exponent,\n"
+                  "  index_out_of_bounds,\n"
+                  "  missing_key\n"
+                  "};\n\n"
+                  "struct sagan_exception final : std::exception\n"
                   "{\n"
                   "  std::any value;\n"
                   "  std::type_index type;\n"
+                  "  std::string message;\n"
+                  "  sagan_exception(std::any thrown, const std::type_index thrown_type, std::string text)\n"
+                  "      : value(std::move(thrown)), type(thrown_type), message(std::move(text)) {}\n"
+                  "  const char *what() const noexcept override { return message.c_str(); }\n"
                   "};\n\n"
                   "template <typename T>\n"
                   "[[noreturn]] void sagan_scream(T value)\n"
-                  "{ throw sagan_exception{std::move(value), std::type_index(typeid(T))}; }\n\n"
+                  "{ throw sagan_exception{std::move(value), std::type_index(typeid(T)), \"Uncaught Sagan exception\"}; }\n\n"
+                  "[[noreturn]] void sagan_runtime_failure(const sagan_runtime_error error, std::string message)\n"
+                  "{ throw sagan_exception{error, std::type_index(typeid(sagan_runtime_error)), std::move(message)}; }\n\n"
                   "template <typename T>\n"
                   "bool sagan_exception_matches(const sagan_exception &error, const T &pattern)\n"
                   "{\n"
@@ -1310,6 +1335,7 @@ namespace codegen
                   "  auto end() { return components.end(); }\n"
                   "  auto begin() const { return components.begin(); }\n"
                   "  auto end() const { return components.end(); }\n"
+                  "  constexpr std::size_t size() const { return Size; }\n"
                   "  bool operator==(const sagan_vector &) const = default;\n"
                   "};\n\n"
                   "template <typename T, std::size_t Size>\n"
@@ -1322,8 +1348,27 @@ namespace codegen
                   "  auto end() { return components.end(); }\n"
                   "  auto begin() const { return components.begin(); }\n"
                   "  auto end() const { return components.end(); }\n"
+                  "  constexpr std::size_t size() const { return Size; }\n"
                   "  bool operator==(const sagan_coordinate &) const = default;\n"
                   "};\n\n"
+                  "template <typename Collection, typename Index>\n"
+                  "decltype(auto) sagan_index(Collection &&collection, const Index index)\n"
+                  "{\n"
+                  "  if constexpr (std::is_signed_v<Index>)\n"
+                  "    if (index < 0) sagan_runtime_failure(sagan_runtime_error::index_out_of_bounds, \"Sagan index out of bounds\");\n"
+                  "  const auto converted = static_cast<std::size_t>(index);\n"
+                  "  if (converted >= collection.size())\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::index_out_of_bounds, \"Sagan index out of bounds\");\n"
+                  "  return collection.at(converted);\n"
+                  "}\n\n"
+                  "template <typename Dictionary, typename Key>\n"
+                  "decltype(auto) sagan_dictionary_at(Dictionary &&dictionary, const Key &key)\n"
+                  "{\n"
+                  "  const auto found = dictionary.find(key);\n"
+                  "  if (found == dictionary.end())\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::missing_key, \"Sagan dictionary key does not exist\");\n"
+                  "  return (found->second);\n"
+                  "}\n\n"
                   "template <typename T> struct sagan_vector_traits;\n"
                   "template <typename Component, std::size_t Size>\n"
                   "struct sagan_vector_traits<sagan_vector<Component, Size>>\n"
@@ -1402,7 +1447,7 @@ namespace codegen
                   "    constexpr Result minimum = std::numeric_limits<Result>::min();\n"
                   "    constexpr Result maximum = std::numeric_limits<Result>::max();\n"
                   "    if ((right > 0 && left > maximum - right) || (right < 0 && left < minimum - right))\n"
-                  "      throw std::overflow_error(\"Sagan integer addition overflow\");\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer addition overflow\");\n"
                   "  }\n"
                   "  return static_cast<Result>(left + right);\n"
                   "  }\n"
@@ -1428,7 +1473,7 @@ namespace codegen
                   "    constexpr Result minimum = std::numeric_limits<Result>::min();\n"
                   "    constexpr Result maximum = std::numeric_limits<Result>::max();\n"
                   "    if ((right > 0 && left < minimum + right) || (right < 0 && left > maximum + right))\n"
-                  "      throw std::overflow_error(\"Sagan integer subtraction overflow\");\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer subtraction overflow\");\n"
                   "  }\n"
                   "  return static_cast<Result>(left - right);\n"
                   "  }\n"
@@ -1461,7 +1506,7 @@ namespace codegen
                   "               : (left < 0 ? (right > 0 ? left < minimum / right\n"
                   "                                      : right < maximum / left)\n"
                   "                           : false);\n"
-                  "  if (overflow) throw std::overflow_error(\"Sagan integer multiplication overflow\");\n"
+                  "  if (overflow) sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer multiplication overflow\");\n"
                   "  return static_cast<Result>(left * right);\n"
                   "  }\n"
                   "}\n\n"
@@ -1469,8 +1514,8 @@ namespace codegen
                   "Result sagan_power_multiply(const Result left, const Result right)\n"
                   "{\n"
                   "  try { return sagan_multiply<Result>(left, right); }\n"
-                  "  catch (const std::overflow_error &)\n"
-                  "  { throw std::overflow_error(\"Sagan integer exponentiation overflow\"); }\n"
+                  "  catch (const sagan_exception &)\n"
+                  "  { sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer exponentiation overflow\"); }\n"
                   "}\n\n"
                   "template <typename Result, typename Left, typename Right>\n"
                   "Result sagan_divide(const Left left_value, const Right right_value)\n"
@@ -1488,10 +1533,10 @@ namespace codegen
                   "  {\n"
                   "  const Result left = static_cast<Result>(left_value);\n"
                   "  const Result right = static_cast<Result>(right_value);\n"
-                  "  if (right == Result{0}) throw std::domain_error(\"Sagan division by zero\");\n"
+                  "  if (right == Result{0}) sagan_runtime_failure(sagan_runtime_error::division_by_zero, \"Sagan division by zero\");\n"
                   "  if constexpr (std::is_integral_v<Result>)\n"
                   "    if (left == std::numeric_limits<Result>::min() && right == Result{-1})\n"
-                  "      throw std::overflow_error(\"Sagan integer division overflow\");\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer division overflow\");\n"
                   "  return static_cast<Result>(left / right);\n"
                   "  }\n"
                   "}\n\n"
@@ -1500,7 +1545,7 @@ namespace codegen
                   "{\n"
                   "  const Result left = static_cast<Result>(left_value);\n"
                   "  const Result right = static_cast<Result>(right_value);\n"
-                  "  if (right == Result{0}) throw std::domain_error(\"Sagan modulo by zero\");\n"
+                  "  if (right == Result{0}) sagan_runtime_failure(sagan_runtime_error::modulo_by_zero, \"Sagan modulo by zero\");\n"
                   "  if constexpr (std::is_integral_v<Result>)\n"
                   "  {\n"
                   "    if (left == std::numeric_limits<Result>::min() && right == Result{-1}) return Result{0};\n"
@@ -1525,7 +1570,7 @@ namespace codegen
                   "  const Result value = static_cast<Result>(value_input);\n"
                   "  if constexpr (std::is_integral_v<Result>)\n"
                   "    if (value == std::numeric_limits<Result>::min())\n"
-                  "      throw std::overflow_error(\"Sagan integer negation overflow\");\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer negation overflow\");\n"
                   "  return static_cast<Result>(-value);\n"
                   "  }\n"
                   "}\n\n"
@@ -1549,11 +1594,11 @@ namespace codegen
                   "  const Result base = static_cast<Result>(base_value);\n"
                   "  const Result exponent = static_cast<Result>(exponent_value);\n"
                   "  if (base == Result{0} && exponent == Result{0})\n"
-                  "    throw std::domain_error(\"Sagan exponentiation does not define 0 ^ 0\");\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::undefined_exponentiation, \"Sagan exponentiation does not define 0 ^ 0\");\n"
                   "  if constexpr (std::is_integral_v<Result>)\n"
                   "  {\n"
                   "    if (exponent < Result{0})\n"
-                  "      throw std::domain_error(\"Sagan integer exponentiation requires a non-negative exponent\");\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::negative_integer_exponent, \"Sagan integer exponentiation requires a non-negative exponent\");\n"
                   "    using Unsigned = std::make_unsigned_t<Result>;\n"
                   "    Unsigned remaining = static_cast<Unsigned>(exponent);\n"
                   "    Result factor = base;\n"

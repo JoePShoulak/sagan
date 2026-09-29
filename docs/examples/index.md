@@ -124,6 +124,17 @@ the generated C++ representation before running it:
 make payload-enum-demo
 ```
 
+## Catchable runtime-error demonstration
+
+`examples/runtime_error_demo.sagan` catches checked integer overflow, division
+by zero, an invalid array index, and a missing dictionary key through built-in
+nominal `RuntimeError` cases. It also proves that `finally` cleanup runs on a
+native failure:
+
+```bash
+make runtime-error-demo
+```
+
 ## Generic-sum demonstration
 
 `examples/generic_sum_demo.sagan` declares `Result<T, E>` and `identity<T>`.

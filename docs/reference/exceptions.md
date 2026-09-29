@@ -47,9 +47,19 @@ body cannot `return`, `scream`, or use `break`/`continue` to control a loop
 outside that cleanup body. Loops wholly inside the cleanup body may use their
 own `break` and `continue` statements.
 
-The initial backend catches only values raised by `scream`. Native runtime
-failures currently used for checked arithmetic and collection bounds are not
-yet converted into Sagan values and therefore cannot be selected by `unless`.
-Binding/destructuring handlers, declared exception effects, cleanup that itself
-fails while another exception is unwinding, and a stable uncaught-exception
-report remain future work.
+The built-in nominal `RuntimeError` enum converts native failures into ordinary
+Sagan exception values. Its current cases are `integer_overflow`,
+`division_by_zero`, `modulo_by_zero`, `undefined_exponentiation`,
+`negative_integer_exponent`, `index_out_of_bounds`, and `missing_key`.
+
+```sagan
+hope print(values[values_count])
+unless RuntimeError.index_out_of_bounds print("No such value")
+```
+
+The same exact type-and-value matching rules apply, so native failures propagate
+through nested `hope` statements and always run `finally` cleanup. Uncaught
+native failures retain a readable diagnostic. Binding/destructuring handlers,
+declared exception effects, cleanup that itself fails while another exception
+is unwinding, and a fully specified process-level uncaught-exception format
+remain future work.

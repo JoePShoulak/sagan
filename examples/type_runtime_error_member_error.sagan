@@ -1,0 +1,4 @@
+fun main() {
+  hope print(1 / 0)
+  unless RuntimeError.not_a_runtime_error print("impossible")
+}

@@ -1,0 +1,36 @@
+fun main(): Int {
+  let caught = 0
+  let cleaned = 0
+
+  hope {
+    let maximum: Int8 = 127
+    maximum += 1
+  } unless RuntimeError.integer_overflow {
+    print("Caught integer overflow")
+    caught += 1
+  } finally cleaned += 1
+
+  hope print(10 / 0)
+  unless RuntimeError.division_by_zero {
+    print("Caught division by zero")
+    caught += 1
+  }
+
+  let countdown = [3, 2, 1]
+  hope print(countdown[3])
+  unless RuntimeError.index_out_of_bounds {
+    print("Caught array index out of bounds")
+    caught += 1
+  }
+
+  let phases = {"countdown": 3}
+  hope print(phases["liftoff"])
+  unless RuntimeError.missing_key {
+    print("Caught missing dictionary key")
+    caught += 1
+  }
+
+  print("Caught: ${caught}; cleanup: ${cleaned}")
+  if caught == 4 and cleaned == 1 return 0
+  else return 1
+}

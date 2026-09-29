@@ -20,7 +20,7 @@ verified_by: null
 | Runtime and memory model | **Reference, weak-edge, and absence foundations implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, generic and ordinary reference-counted classes, specialized runtime faces, value exceptions and cleanup, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demos |
-| Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
+| Deterministic execution | **Catchable runtime-error foundation implemented** | checked arithmetic and collection lookup failures become nominal `RuntimeError` values, with focused fixtures and a native demo |
 | Module resolution | **Executable imports implemented** | flat sibling-file mapping, declaration/export validation, selective and whole-module namespace access, isolated linked symbols, aliases, transitive ordering, cycle diagnostics, native module demo |
 
 ## Tokenizer verification
@@ -114,7 +114,6 @@ with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with `is`. Method-specific face generics,
 automatic handling of all-strong reference cycles,
-catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

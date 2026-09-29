@@ -35,7 +35,8 @@ The native executable subset checks signed integer addition, subtraction,
 multiplication, division, remainder, unary negation, increment, and decrement.
 Overflow raises a runtime error. Division and remainder by zero raise runtime
 errors for integer and floating-point operands. Compound assignments use the
-same checks. Floating-point remainder follows `fmod` semantics.
+same checks. Floating-point remainder follows `fmod` semantics. These failures
+are catchable as the appropriate built-in `RuntimeError` case.
 
 **Implemented native semantics:** anonymous lambdas use
 `fun(parameters) => expression`, with optional parameter and return annotations.
@@ -129,6 +130,9 @@ syntax errors. `(value)` remains a grouped expression.
 **Implemented native semantics:** vectors and coordinates retain distinct,
 fixed-size runtime types. Both support construction, same-family spreading,
 zero-based indexing, iteration, equality, printing, and string interpolation.
+Invalid array, vector, or coordinate indices raise
+`RuntimeError.index_out_of_bounds`; absent dictionary keys raise
+`RuntimeError.missing_key`.
 Vectors of equal dimension support `+`, `-`, unary `+`/`-`, equality, scalar
 `*` in either operand order, and vector/scalar `/`; the matching compound forms
 are also supported. `.x`, `.y`, `.z`, and `.w` read or mutate components when
