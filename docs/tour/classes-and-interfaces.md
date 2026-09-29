@@ -52,7 +52,11 @@ defaults and zero-argument `ClassName()` construction, types `self`, and execute
 field reads, mutation, and method calls. Methods may use a trailing `!` naming
 convention to identify a mutating alternative. Faces and composition still parse
 but conformance, default-method dispatch, privacy, custom constructors, and
-reference ownership are not implemented yet.
+reference ownership are not implemented yet. Signature-only faces do participate
+in semantic checking: a class using either `is` or `has` must implement every
+required method with the exact signature. This is structural conformance attached
+to an explicit declaration, not superclass inheritance. Face-typed values,
+dynamic dispatch, and default-method composition are later slices.
 
 **Open questions:** structural versus explicit conformance, default-method
 conflict resolution, custom constructor rules, enum payloads and explicit values,

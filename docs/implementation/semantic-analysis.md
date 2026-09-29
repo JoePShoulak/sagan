@@ -56,8 +56,10 @@ through local bindings; stored and immediate calls validate arity and lossless
 argument compatibility. Class metadata supplies typed field and method access,
 zero-argument default construction, and `self` typing. Unknown class members and
 constructor arguments are rejected. Escaping closure types, interface
-conformance, and several user-defined-type relationships remain open. The generic
-model and multi-error recovery strategy also remain open.
+values remain open, but a class declaring `is` or `has` a signature-only face
+must provide every required method with an exact parameter/result signature.
+Both composition words have identical meaning and do not create inheritance.
+The generic model and multi-error recovery strategy also remain open.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
 Non-`Void` block-bodied functions must return on every statically guaranteed

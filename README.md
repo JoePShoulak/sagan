@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.33.0](https://img.shields.io/badge/development-0.33.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.34.0](https://img.shields.io/badge/development-0.34.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -52,6 +52,8 @@ Typed expression lambdas can be stored, invoked immediately or through a local
 variable, and capture surrounding local state in the executable subset.
 Classes support typed fields with defaults, zero-argument construction, `self`,
 field mutation, ordinary methods, and `!`-suffixed mutating methods.
+Classes declaring `is` or `has` a face are checked structurally for every
+required method and exact signature; neither spelling creates inheritance.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text

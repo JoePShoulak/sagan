@@ -877,7 +877,14 @@ namespace codegen
                   "void sagan_modulo_assign(Target &target, const Value value)\n"
                   "{ target = sagan_modulo<Result>(target, value); }\n\n";
         for (const auto &entry : tree.statements)
-          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) object(*type);
+        {
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
+          {
+            if (type->type_kind == parser::type_declaration::kind::class_type) object(*type);
+            else if (type->type_kind == parser::type_declaration::kind::enum_type)
+              fail("enums are not available in the initial native subset", type->range);
+          }
+        }
         for (const auto &entry : tree.statements)
         {
           const auto *declaration = dynamic_cast<const parser::function_declaration *>(entry.get());

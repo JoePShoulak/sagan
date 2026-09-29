@@ -1,6 +1,11 @@
 fun 🚀(value: Int): Int => value + 2
 
-class LaunchCounter {
+face Countable {
+  fun increment!(): Int
+  fun current(): Int
+}
+
+class LaunchCounter is Countable {
   let value: Int = 40
 
   fun increment!(): Int {

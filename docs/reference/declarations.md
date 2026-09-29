@@ -40,8 +40,13 @@ and block- or expression-bodied methods execute. A trailing `!` is allowed only
 on methods and conventionally identifies a mutating alternative; it does not by
 itself change dispatch or mutation rules.
 
-**Provisional semantics:** method overloading, privacy via a leading member dot, and
-conformance declared with interchangeable `is` or `has` composition lists.
+**Implemented conformance subset:** `is` and `has` are interchangeable and do
+not denote inheritance. A class composing a signature-only face must implement
+each required method with an exact parameter and result signature. Missing or
+incompatible methods are compile-time errors.
+
+**Provisional semantics:** method overloading, privacy via a leading member dot,
+interface-typed values, default-method composition and conflict resolution.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, constructors, enum payloads and explicit values, generic

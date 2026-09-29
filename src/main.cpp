@@ -1650,7 +1650,8 @@ namespace
         {"add: Function", "answer: Int64", "immediate: Int64"});
     passed &= expect_type_model(
         "default class construction fields self and methods",
-        "class Counter {\n  let value: Int = 40\n"
+        "face Countable {\n  fun increment!(): Int\n  fun current(): Int\n}\n"
+        "class Counter is Countable {\n  let value: Int = 40\n"
         "  fun increment!(): Int {\n    self.value += 1\n    return self.value\n  }\n"
         "  fun current(): Int => self.value\n}\n"
         "fun exercise(): Int {\n  let counter = Counter()\n"
@@ -1771,6 +1772,18 @@ namespace
                                 "class Probe {\n  let value: Int = 0\n}\n"
                                 "fun invalid(): Int {\n  let probe = Probe()\n  return probe.missing\n}\n",
                                 "Type 'Probe' has no member 'missing'");
+    passed &= expect_type_error("class must satisfy composed face",
+                                "face Named {\n  fun name(): String\n}\n"
+                                "class Probe is Named {\n  let value: Int = 0\n}\n",
+                                "does not implement required method 'name'");
+    passed &= expect_type_error("class method signature must satisfy face",
+                                "face Measured {\n  fun measure(value: Int): Int\n}\n"
+                                "class Probe has Measured {\n"
+                                "  fun measure(value: Bool): Int => 0\n}\n",
+                                "has an incompatible signature for method 'measure'");
+    passed &= expect_type_error("class composition requires a face",
+                                "class Probe is Missing {\n}\n",
+                                "Undefined name 'Missing'");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",

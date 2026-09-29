@@ -72,6 +72,12 @@ families provide `.x`, `.y`, `.z`, and `.w` component access where their
 dimension permits it; components are assignable because variables are mutable
 by default.
 
+Signature-only faces are erased before code generation in the currently
+implemented, statically composed subset. Semantic analysis first verifies that
+each composing class provides every required method with an exact matching
+signature, then only the concrete class is emitted. Interface-typed values,
+dynamic face dispatch, and executable default face methods are not lowered yet.
+
 Open work includes generated-code structure, runtime interfaces, memory
 management, custom constructors, interface dispatch, escaping closures, exception lowering, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression

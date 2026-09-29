@@ -99,4 +99,4 @@ expect_runtime_error examples/execution_vector_overflow_error.sagan \
 expect_runtime_error examples/execution_vector_division_zero_error.sagan \
   "Sagan division by zero"
 
-echo "Execution demo passed: Sagan executed default-constructed classes, fields, self, methods, captured and immediate lambdas, named vector/coordinate components, checked arithmetic, collections, control flow, and Unicode output."
+echo "Execution demo passed: Sagan verified face composition and executed default-constructed classes, fields, self, methods, lambdas, dimensioned values, checked arithmetic, collections, control flow, and Unicode output."

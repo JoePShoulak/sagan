@@ -2,6 +2,7 @@
 
 #include "semantic_error.hpp"
 
+#include <algorithm>
 #include <charconv>
 #include <cstdint>
 #include <limits>
@@ -42,6 +43,13 @@ namespace semantic
     {
       std::unordered_map<std::string, std::string> fields;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
+      std::vector<std::string> faces;
+    };
+
+    struct interface_type
+    {
+      std::unordered_map<std::string, std::vector<callable_signature>> methods;
+      bool has_default_methods = false;
     };
 
     auto is_unknown(const std::string_view type) -> bool
@@ -147,6 +155,7 @@ namespace semantic
       std::vector<std::string> return_types;
       std::unordered_map<const parser::expression *, callable_signature> callables;
       std::unordered_map<std::string, object_type> objects;
+      std::unordered_map<std::string, interface_type> interfaces;
 
       auto open_scope() -> void
       {
@@ -382,6 +391,7 @@ namespace semantic
       {
         if (type.type_kind != parser::type_declaration::kind::class_type) return;
         object_type object;
+        object.faces = type.composed_interfaces;
         for (const auto &member : type.members)
         {
           if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
@@ -390,6 +400,58 @@ namespace semantic
             object.methods[method->name].push_back(signature(*method));
         }
         objects.emplace(type.name, std::move(object));
+      }
+
+      auto collect_interface_type(const parser::type_declaration &type) -> void
+      {
+        if (type.type_kind != parser::type_declaration::kind::interface_type) return;
+        interface_type interface;
+        for (const auto &member : type.members)
+        {
+          const auto *method = dynamic_cast<const parser::function_declaration *>(member.get());
+          if (!method) continue;
+          interface.methods[method->name].push_back(signature(*method));
+          interface.has_default_methods |= method->body != nullptr || method->expression_body != nullptr;
+        }
+        interfaces.emplace(type.name, std::move(interface));
+      }
+
+      auto same_signature(const callable_signature &left, const callable_signature &right) const -> bool
+      {
+        return left.parameters == right.parameters && left.result == right.result;
+      }
+
+      auto validate_composition(const std::string &class_name, const object_type &object,
+                                const parser::span range) const -> void
+      {
+        for (const auto &face_name : object.faces)
+        {
+          const auto face = interfaces.find(face_name);
+          require(face != interfaces.end(),
+                  "Class '" + class_name + "' composes unknown face '" + face_name + "'", range);
+          require(!face->second.has_default_methods,
+                  "Face '" + face_name + "' has default methods, which are not executable yet", range);
+          for (const auto &[method_name, required_signatures] : face->second.methods)
+          {
+            const auto provided = object.methods.find(method_name);
+            require(provided != object.methods.end(),
+                    "Class '" + class_name + "' does not implement required method '" + method_name +
+                        "' from face '" + face_name + "'",
+                    range);
+            for (const auto &required : required_signatures)
+            {
+              const bool found = std::any_of(provided->second.begin(), provided->second.end(),
+                                             [&](const callable_signature &candidate)
+              {
+                return same_signature(required, candidate);
+              });
+              require(found,
+                      "Class '" + class_name + "' has an incompatible signature for method '" + method_name +
+                          "' required by face '" + face_name + "'",
+                      range);
+            }
+          }
+        }
       }
 
       auto expression(const parser::expression &value) -> std::string
@@ -986,7 +1048,13 @@ namespace semantic
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void"}});
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);
+        for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_object_type(*type);
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
+              type && type->type_kind == parser::type_declaration::kind::class_type)
+            validate_composition(type->name, objects.at(type->name), type->range);
         for (const auto &entry : tree.statements) statement(*entry, true);
         return std::move(model);
       }
