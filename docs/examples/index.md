@@ -103,6 +103,17 @@ and native execution.
 make package-demo
 ```
 
+## Direct execution demonstration
+
+`examples/run_demo.sagan` is a compact executable with an emoji-named function.
+The demo passes that file directly to `sagan`, then runs the manifest-backed
+package through `--run-package`, proving native compilation, execution, cleanup,
+Unicode output, and exit-code handling without an external compiler command.
+
+```bash
+make run-demo
+```
+
 ## Optional-value demonstration
 
 `examples/optional_demo.sagan` demonstrates typed `Optional<T>` values,
@@ -287,7 +298,7 @@ let malformed_number = 1e
 ```
 
 ```bash
-bin/sagan examples/tokenizer_error.sagan
+bin/sagan --tokens examples/tokenizer_error.sagan
 ```
 
 The tokenizer rejects it because the exponent has no digits.

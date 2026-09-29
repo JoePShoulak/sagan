@@ -48,7 +48,7 @@ the front end:
 
 ```bash
 make demo
-bin/sagan examples/tokenizer_error.sagan
+bin/sagan --tokens examples/tokenizer_error.sagan
 make parser-demo
 bash scripts/parser_demo.sh
 bash scripts/ast_demo.sh --no-open

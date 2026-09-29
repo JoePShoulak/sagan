@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.58.0](https://img.shields.io/badge/development-0.58.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.59.0](https://img.shields.io/badge/development-0.59.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -162,6 +162,7 @@ bash scripts/test.sh
 make parser-demo
 bash scripts/module_demo.sh
 make package-demo
+make run-demo
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 make ownership-demo
@@ -181,7 +182,8 @@ bash scripts/docs.sh check
 Useful compiler commands include:
 
 ```bash
-bin/sagan examples/parser_demo.sagan
+bin/sagan examples/run_demo.sagan
+bin/sagan --tokens examples/tokenizer_demo.sagan
 bin/sagan --ast examples/parser_demo.sagan
 bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
@@ -193,6 +195,7 @@ bin/sagan --modules examples/module_demo/main.sagan
 bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/modules.cpp
 bin/sagan --package examples/package_demo
 bin/sagan --emit-cpp-package examples/package_demo build/package.cpp
+bin/sagan --run-package examples/package_demo
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 bin/sagan --version
 ```

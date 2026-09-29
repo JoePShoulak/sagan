@@ -12,6 +12,7 @@ verified_by: null
 
 ```bash
 bin/sagan path/to/source.sagan
+bin/sagan --tokens path/to/source.sagan
 bin/sagan --self-test
 bin/sagan --version
 bin/sagan --ast path/to/source.sagan
@@ -27,11 +28,14 @@ bin/sagan --emit-cpp path/to/source.sagan
 bin/sagan --emit-cpp path/to/source.sagan build/program.cpp
 bin/sagan --emit-cpp-modules path/to/main.sagan build/program.cpp
 bin/sagan --emit-cpp-package path/to/package build/program.cpp
+bin/sagan --run-package path/to/package
 ```
 
 With no valid source path, the program reports command usage or a file error.
-With a source path and no mode flag, it prints the token stream; it does not
-parse or execute the file. `--ast` prints a readable parsed tree. `--ast-dot`
+With a source path and no mode flag, Sagan performs the implemented front-end
+checks, emits temporary C++, invokes the native compiler, runs the program, and
+returns its exit code. `--tokens` prints the token stream without parsing or
+executing. `--ast` prints a readable parsed tree. `--ast-dot`
 prints Graphviz DOT without requiring Graphviz itself. SVG and HTML modes write
 their final argument; HTML includes both the original input and an embedded
 visual tree.
@@ -54,6 +58,8 @@ semantic, type, and entry-point validation, then prints or writes the generated
 C++.
 `--emit-cpp-package` performs the same linked checks and generation starting
 from the package manifest's configured entry module.
+`--run-package` performs those package checks, compiles temporary C++, runs the
+configured entry, and returns its exit code.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
@@ -65,7 +71,8 @@ large syntax trees.
 For the repository demonstrations, the concrete forms are:
 
 ```bash
-bin/sagan examples/tokenizer_demo.sagan
+bin/sagan examples/run_demo.sagan
+bin/sagan --tokens examples/tokenizer_demo.sagan
 bin/sagan --ast examples/parser_demo.sagan
 bin/sagan --ast-dot examples/parser_demo.sagan
 bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
@@ -78,6 +85,7 @@ bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/module_demo.cpp
 bin/sagan --package examples/package_demo
 bin/sagan --emit-cpp-package examples/package_demo build/package_demo.cpp
+bin/sagan --run-package examples/package_demo
 ```
 
 Successful AST output confirms only lexical and syntactic validity. Successful
@@ -101,6 +109,7 @@ make type-demo
 make entry-demo
 make module-demo
 make package-demo
+make run-demo
 make optional-demo
 make weak-demo
 make payload-enum-demo
@@ -122,6 +131,7 @@ bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
 bash scripts/module_demo.sh
 bash scripts/package_demo.sh
+bash scripts/run_demo.sh
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 bash scripts/payload_enum_demo.sh
@@ -144,6 +154,8 @@ semantic/type/entry/code-generation success plus focused failures.
 namespace imports, and verifies export visibility, filename, and cycle diagnostics.
 `package-demo` prints a strict manifest and nested source tree, resolves dotted
 modules, emits C++, compiles it, and runs the resulting native program.
+`run-demo` proves that the compiler driver directly runs a source file and a
+manifest-backed package without an external build script.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 `weak-demo` shows a live weak reference resolving to `Some`, lets its strong

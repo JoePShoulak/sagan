@@ -17,7 +17,7 @@ comments.
 Run the deliberate error example:
 
 ```bash
-bin/sagan examples/tokenizer_error.sagan
+bin/sagan --tokens examples/tokenizer_error.sagan
 ```
 
 The diagnostic identifies the invalid source region for `1e`.

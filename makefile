@@ -10,6 +10,7 @@ SAGAN_VERSION := $(shell bash scripts/version.sh current 2>/dev/null || echo 0.0
 SOURCES := \
 	src/main.cpp \
 	src/codegen/cpp_generator.cpp \
+	src/driver/native_runner.cpp \
 	src/modules/resolver.cpp \
 	src/parser/ast_render.cpp \
 	src/parser/ast_node.cpp \
@@ -34,7 +35,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -81,6 +82,9 @@ module-demo: $(TARGET)
 
 package-demo: $(TARGET)
 	bash scripts/package_demo.sh
+
+run-demo: $(TARGET)
+	bash scripts/run_demo.sh
 
 execution-demo: $(TARGET)
 	bash scripts/execution_demo.sh

@@ -19,7 +19,7 @@ verified_by: null
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, generic call inference, generic sum construction, payload-bearing nominal enums and exhaustive matches, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Reference ownership model implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, compile-time rejection of all-strong declaration cycles and strong face fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, generic and ordinary reference-counted classes, specialized runtime faces, value exceptions and cleanup, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demos |
+| C++ code generation and execution | **Initial executable subset implemented** | direct `sagan file.sagan`, `--run-package`, temporary native builds, exit propagation, `--emit-cpp`, reference-counted classes/faces, exceptions, lambdas, checked arithmetic, collections, dimensions, control flow, demos |
 | Deterministic execution | **Catchable runtime-error foundation implemented** | checked arithmetic and collection lookup failures become nominal `RuntimeError` values, with focused fixtures and a native demo |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
 
@@ -33,7 +33,8 @@ and is not unfinished tokenizer behavior.
 
 ## What can run today
 
-The `bin/sagan` front-end can print tokens, parse the current grammar, emit text,
+The `bin/sagan` compiler can directly compile and run supported source files or
+manifest-backed packages. It can also print tokens, parse the current grammar, emit text,
 DOT, SVG, or interactive HTML ASTs, and print the initial semantic model. The
 HTML renderer supports zooming and panning. Parser and semantic demonstrations
 provide broad successful source files plus focused malformed examples. The

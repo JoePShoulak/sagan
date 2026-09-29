@@ -1,4 +1,5 @@
 #include "codegen/cpp_generator.hpp"
+#include "driver/native_runner.hpp"
 #include "parser/lex.hpp"
 #include "parser/ast_render.hpp"
 #include "parser/parse_error.hpp"
@@ -12,6 +13,7 @@
 #include "semantic/type_checker.hpp"
 #include "version.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <filesystem>
 #include <iomanip>
@@ -2056,6 +2058,7 @@ auto main(const int argc, char **argv) -> int
   enum class output_mode
   {
     tokens,
+    run,
     ast_text,
     ast_dot,
     ast_svg,
@@ -2068,6 +2071,7 @@ auto main(const int argc, char **argv) -> int
     emit_cpp,
     emit_cpp_modules,
     emit_cpp_package,
+    run_package,
   };
 
   output_mode mode = output_mode::tokens;
@@ -2076,6 +2080,11 @@ auto main(const int argc, char **argv) -> int
   if (argc == 3 && std::string(argv[1]) == "--ast")
   {
     mode = output_mode::ast_text;
+    path = argv[2];
+  }
+  else if (argc == 3 && std::string(argv[1]) == "--tokens")
+  {
+    mode = output_mode::tokens;
     path = argv[2];
   }
   else if (argc == 3 && std::string(argv[1]) == "--ast-dot")
@@ -2138,8 +2147,14 @@ auto main(const int argc, char **argv) -> int
     path = argv[2];
     if (argc == 4) output_path = argv[3];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--run-package")
+  {
+    mode = output_mode::run_package;
+    path = argv[2];
+  }
   else if (argc == 2)
   {
+    mode = output_mode::run;
     path = argv[1];
   }
   else if (argc == 1)
@@ -2148,10 +2163,11 @@ auto main(const int argc, char **argv) -> int
   }
   else
   {
-    std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
+    std::cerr << "usage: sagan [--version | --self-test | --tokens FILE | --ast FILE | --ast-dot FILE | "
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
                  "--entry FILE | --modules FILE | --package PATH | --emit-cpp FILE [OUTPUT] | "
-                 "--emit-cpp-modules FILE [OUTPUT] | --emit-cpp-package PATH [OUTPUT] | FILE]\n";
+                 "--emit-cpp-modules FILE [OUTPUT] | --emit-cpp-package PATH [OUTPUT] | "
+                 "--run-package PATH | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
@@ -2171,13 +2187,15 @@ auto main(const int argc, char **argv) -> int
       graph.print(std::cout);
       return 0;
     }
-    if (mode == output_mode::emit_cpp_modules || mode == output_mode::emit_cpp_package)
+    if (mode == output_mode::emit_cpp_modules || mode == output_mode::emit_cpp_package ||
+        mode == output_mode::run_package)
     {
-      const auto tree = mode == output_mode::emit_cpp_package ? modules::link_package(path) : modules::link(path);
+      const auto tree = mode == output_mode::emit_cpp_modules ? modules::link(path) : modules::link_package(path);
       static_cast<void>(semantic::analyze(tree));
       const auto types = semantic::check_types(tree);
       semantic::validate_entry_point(tree);
       const std::string generated = codegen::generate_cpp(tree, types);
+      if (mode == output_mode::run_package) return driver::compile_and_run(generated);
       if (output_path.empty()) std::cout << generated;
       else
       {
@@ -2225,6 +2243,25 @@ auto main(const int argc, char **argv) -> int
           write_file(output_path, generated);
           std::cout << "Wrote generated C++ to " << output_path << '\n';
         }
+      }
+      else if (mode == output_mode::run)
+      {
+        const bool has_imports = std::any_of(tree.statements.begin(), tree.statements.end(), [](const auto &entry)
+        {
+          return dynamic_cast<const parser::import_declaration *>(entry.get()) != nullptr;
+        });
+        if (has_imports)
+        {
+          const auto linked = modules::link(path);
+          static_cast<void>(semantic::analyze(linked));
+          const auto types = semantic::check_types(linked);
+          semantic::validate_entry_point(linked);
+          return driver::compile_and_run(codegen::generate_cpp(linked, types));
+        }
+        static_cast<void>(semantic::analyze(tree));
+        const auto types = semantic::check_types(tree);
+        semantic::validate_entry_point(tree);
+        return driver::compile_and_run(codegen::generate_cpp(tree, types));
       }
       else if (mode == output_mode::ast_text)
       {
@@ -2274,7 +2311,14 @@ auto main(const int argc, char **argv) -> int
   }
   catch (const semantic::semantic_error &error)
   {
-    print_error(read_file(path), error, "semantic");
+    try
+    {
+      print_error(read_file(path), error, "semantic");
+    }
+    catch (const std::exception &)
+    {
+      std::cerr << "semantic error: " << error.what() << '\n';
+    }
     return 1;
   }
   catch (const std::exception &error)

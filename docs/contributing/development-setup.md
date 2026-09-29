@@ -25,7 +25,7 @@ Useful commands:
 ```bash
 make demo
 make get-version
-bin/sagan examples/tokenizer_error.sagan
+bin/sagan --tokens examples/tokenizer_error.sagan
 ```
 
 For documentation:

@@ -27,6 +27,8 @@ verified_by: null
 - `src/codegen/cpp_generator.*`: C++ emission for the initial executable
   subset, including portable identifier encoding, built-in output, and typed
   array/dictionary/index/iteration lowering driven by the checked type model.
+- `src/driver/native_runner.*`: temporary native builds, compiler invocation,
+  executable launch, cleanup, and exit-code propagation.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
@@ -35,16 +37,17 @@ verified_by: null
 
 ## Current data flow
 
-The CLI reads a file, tokenizes it, and either prints the token stream or passes
-it to the parser. AST modes print or render the resulting tree; semantic and
+The CLI reads a file and either prints its token stream explicitly or passes it
+to the parser. AST modes print or render the resulting tree; semantic and
 type modes perform name resolution and optionally initial type checking. The
-C++ mode validates an executable entry point and emits the supported subset.
+C++ modes validate an executable entry point and emit the supported subset.
+Direct source and package-run modes invoke the native compiler and program.
 Lexical, syntax, and semantic failures are reported with source locations.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> C++ emission
                                   |              |               |              |
-                                  +-> renderers   +-> model       +-> model      +-> native demo
+                                  +-> renderers   +-> model       +-> model      +-> native runner
 ```
 
 Codecov measures the front-end, semantic pass, and CLI suite. Coverage includes
@@ -53,6 +56,5 @@ semantic errors, renderer output, CLI behavior, and defensive invariants.
 
 ## Planned components
 
-Generic annotations, member/object typing, broader lowering, runtime support,
-standard/core libraries, and native-toolchain invocation by the compiler itself
-are not implemented.
+Broader lowering, runtime support, stable compiler/toolchain configuration,
+installation, and the standard/core libraries are not complete.

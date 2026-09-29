@@ -8,23 +8,27 @@ verified_by: null
 ---
 
 # Compiler
-The current `sagan` executable is a front-end inspection driver. It can print a
-token stream or parse source into a source-spanned AST rendered as text, DOT,
+The current `sagan` executable is both a native execution driver and a front-end
+inspection tool. A source path compiles and runs the program; `--tokens` prints
+a token stream, while parser flags render its source-spanned AST as text, DOT,
 SVG, or interactive HTML.
 It can also analyze lexical scopes and print symbols and resolved references.
 The `--types` mode prints the implemented scalar/function type model.
 The `--entry` mode validates whether a fully checked unit has a legal executable
 entry point.
-The `--emit-cpp` mode emits C++ for the initial executable subset.
+The `--emit-cpp` mode emits C++ for the executable subset, and `--run-package`
+runs the entry selected by a package manifest.
 
 ```bash
 make all
-bin/sagan examples/tokenizer_demo.sagan
+bin/sagan examples/run_demo.sagan
+bin/sagan --tokens examples/tokenizer_demo.sagan
 ```
 
-With only a source path, it prints token name, source span, source text, and
-decoded values where relevant. AST flags parse the same source and render the
-tree. Lexical and syntax errors produce focused, source-located diagnostics.
+With only a source path, it validates, generates temporary C++, invokes the
+native compiler, runs the program, and returns its exit code. Token and AST
+flags inspect the source without executing it. Lexical and syntax errors produce
+focused, source-located diagnostics.
 
 ```bash
 bin/sagan --ast examples/parser_demo.sagan
@@ -35,6 +39,7 @@ bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
+bin/sagan --run-package examples/package_demo
 ```
 
 The HTML output is self-contained and supports button or mouse-wheel zoom and
@@ -50,7 +55,5 @@ the second prints the Git-derived development build identity. The complete
 `bash scripts/test.sh` command also runs the separate CLI integration suite.
 
 !!! warning
-    The type mode does not yet resolve generic annotations or every user-defined
-    relationship. C++ generation is limited
-    to the documented initial subset, and `sagan` does not yet invoke the native
-    compiler itself; the execution demo script performs that step.
+    C++ generation and direct execution are limited to the documented native
+    subset. Compiler discovery and configuration are still deliberately small.

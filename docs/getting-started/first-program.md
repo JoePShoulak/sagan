@@ -19,14 +19,17 @@ make all
 make demo
 ```
 
-To inspect another file:
+To run another executable file:
 
 ```bash
 bin/sagan path/to/program.sagan
 ```
 
-The output is a stream such as token name, half-open source span, original token
-text, and decoded value where applicable.
+To inspect its token stream without executing it:
+
+```bash
+bin/sagan --tokens path/to/program.sagan
+```
 
 !!! warning "Tokenizer example, not executable Sagan"
     This particular demo is a broad lexical fixture. The repository also has a
@@ -52,7 +55,7 @@ make execution-demo
 To see a deliberate lexical failure:
 
 ```bash
-bin/sagan examples/tokenizer_error.sagan
+bin/sagan --tokens examples/tokenizer_error.sagan
 ```
 
 That file contains `1e`, which fails because scientific notation requires

@@ -126,4 +126,5 @@ richer exception patterns, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler
-invocation remains in the demo script rather than the `sagan` executable.
+invocation is available through direct source execution and `--run-package`;
+toolchain discovery and configuration remain intentionally minimal.
