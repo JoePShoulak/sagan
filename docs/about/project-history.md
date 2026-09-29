@@ -26,7 +26,8 @@ Development currently proceeds through five broad stages:
 3. parser and syntax tree — complete for the current syntax specification;
 4. semantic analysis — executable-subset type and control-flow validation implemented; and
 5. C++ code generation — initial native subset implemented, including
-   reference-counted face dispatch.
+   reference-counted face dispatch and value exception propagation with
+   guaranteed cleanup.
 
 See the [implementation overview](../implementation/index.md) for the present
 boundary between working code and intended architecture. Among the ideas

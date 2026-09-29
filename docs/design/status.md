@@ -19,7 +19,7 @@ verified_by: null
 | Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Reference foundation implemented** | shared reference-counted class/face values and dynamic face dispatch; cycles and weak references remain open |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, value exceptions and cleanup, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
 
 ## Tokenizer verification
@@ -63,9 +63,10 @@ unlabeled `break` and `continue`, and bare or value-bearing `return` statements
 are implemented and rendered in every AST format. Braced or same-line
 single-statement `match`/`case`
 supports expression-shaped patterns plus a unique final `case else`; pattern
-meaning and exhaustiveness remain semantic work. The parser demo includes
-`hope`/`unless`/`finally` and value-bearing `scream`; exception matching and
-propagation remain semantic/runtime work. Successful source plus focused
+meaning and exhaustiveness remain semantic work. The parser and execution demos include
+`hope`/`unless`/`finally` and value-bearing `scream`. Exact type-and-value
+handlers execute in source order, unmatched values propagate, and cleanup runs
+across normal completion, exception paths, and early returns. Successful source plus focused
 expression, collection, control-flow, matching, exception, and
 unterminated-block errors are demonstrated. Classes now execute with typed
 typed fields, checked `new(...)` constructors, default construction, `self`, private field access/mutation, and
@@ -96,7 +97,7 @@ remain future semantic and runtime work.
 
 Generic annotations, reference-count cycles and weak references,
 generics and possible sum types,
-payload-bearing enums and explicit enum values, exception propagation, module
+payload-bearing enums and explicit enum values, catchable native runtime errors, module
 resolution and packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

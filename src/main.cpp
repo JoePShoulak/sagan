@@ -1619,6 +1619,25 @@ namespace
         "    case else {\n      return \"other\"\n    }\n  }\n}\n",
         {"flag: Bool", "value: Int64"});
     passed &= expect_type_model(
+        "definite return and non-returning scream through hope",
+        "fun guarded(flag: Bool): Int {\n"
+        "  hope {\n    if flag return 42\n    else scream \"abort\"\n  }\n"
+        "  unless \"abort\" return 0\n"
+        "  finally print(\"finished\")\n}\n",
+        {"flag: Bool", "String @", "Int8 @"});
+    passed &= expect_type_error(
+        "hope handler can still reach function end",
+        "fun incomplete(): Int {\n  hope return 1\n  unless 1 print(\"handled\")\n}\n",
+        "may reach the end without returning Int64");
+    passed &= expect_type_error(
+        "finally cannot return",
+        "fun invalid(): Int {\n  hope return 1\n  finally return 2\n}\n",
+        "Finally cleanup cannot return");
+    passed &= expect_type_error(
+        "finally cannot scream",
+        "fun invalid(): Int {\n  hope return 1\n  finally scream 2\n}\n",
+        "Finally cleanup cannot scream");
+    passed &= expect_type_model(
         "homogeneous array inference indexing and iteration",
         "fun first(values) {\n  for value in values {\n    yield value\n  }\n  return values[0]\n}\n"
         "let small = [1, 2]\nlet mixed_width = [1, 200]\n"

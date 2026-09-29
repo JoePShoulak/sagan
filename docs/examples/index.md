@@ -52,7 +52,9 @@ Its control-flow section adds nested blocks, declarations, ordinary assignment,
 expression statements, an `if`/`else if`/`else` chain, all three loop forms,
 `break`, `continue`, both return forms, and `match`/`case` with a fallback inside
 a typed, block-bodied function. It also demonstrates multiple `unless` handlers,
-`scream`, and `finally` cleanup around a protected `hope` block.
+`scream`, and `finally` cleanup around a protected `hope` block. The native
+execution demo additionally proves exact value matching, outward propagation,
+and cleanup before an early return.
 The top of the fixture demonstrates composed faces, signatures and default
 methods, a class with fields, public and private methods, `self`, and a simple
 enum. It also contains a multiline expression-bodied function and an anonymous

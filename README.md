@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.40.0](https://img.shields.io/badge/development-0.40.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.41.0](https://img.shields.io/badge/development-0.41.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -64,6 +64,10 @@ Unambiguous face defaults are composed into the class, class methods override
 them, and conflicting defaults require an explicit class override.
 Faces may compose other faces transitively; inherited requirements and defaults
 flow through the chain, while cyclic composition is rejected.
+Value-bearing `scream` exceptions execute in the native subset. `unless`
+handlers test exact type-and-value matches in source order, unmatched values
+propagate outward, and `finally` cleanup runs during normal completion,
+propagation, handled exceptions, and early returns.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text

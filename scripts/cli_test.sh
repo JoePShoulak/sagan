@@ -117,8 +117,11 @@ grep -Fq "(*this).sagan_76616c7565" "$work_dir/generated.cpp"
 grep -Fq "sagan_696e6372656d656e7421()" "$work_dir/generated.cpp"
 grep -Fq ".at(2)" "$work_dir/generated.cpp"
 grep -Fq ".at(1)" "$work_dir/generated.cpp"
-grep -Fq "const auto sagan_match_0" "$work_dir/generated.cpp"
+grep -Fq "const auto sagan_match_" "$work_dir/generated.cpp"
 grep -Fq "else {" "$work_dir/generated.cpp"
+grep -Fq "sagan_scream<std::string>" "$work_dir/generated.cpp"
+grep -Fq "sagan_exception_matches<std::string>" "$work_dir/generated.cpp"
+grep -Fq "sagan_make_finally" "$work_dir/generated.cpp"
 
 expect_output "SVG AST file" "Wrote SVG AST" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/parser.svg"

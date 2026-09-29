@@ -30,15 +30,23 @@ text, and decoded value where applicable.
 
 !!! warning "Tokenizer example, not executable Sagan"
     This particular demo is a broad lexical fixture. The repository also has a
-    complete parser for the current syntax specification, but no semantic
-    analyzer, code generator, or runtime; successful tokenization or parsing
-    therefore does not make Sagan source executable.
+    complete parser for the current syntax specification and an expanding
+    semantically checked native subset. Successful tokenization or parsing
+    alone does not prove that a construct is in that executable subset; use the
+    execution demo below for runnable coverage.
 
 Inspect the parser demonstration as a text tree or interactive HTML tree:
 
 ```bash
 bin/sagan --ast examples/parser_demo.sagan
 bash scripts/ast_demo.sh --no-open
+```
+
+To print, compile, and run the current executable showcase—including value
+exceptions, propagation, and guaranteed cleanup—run:
+
+```bash
+make execution-demo
 ```
 
 To see a deliberate lexical failure:

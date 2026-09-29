@@ -121,6 +121,8 @@ behavior.
 The parser currently stops after the first syntax error. Multi-error recovery
 is a future diagnostic enhancement, not an omitted grammar production.
 
-Implemented parser demos are accepted parser input but are not yet executable.
+Parser examples may include APIs outside the executable subset. Exception
+statements themselves execute with exact type-and-value handler matching,
+outward propagation, and guaranteed `finally` cleanup.
 The initial semantic pass can validate scopes and names; type analysis and code
 generation remain future stages.

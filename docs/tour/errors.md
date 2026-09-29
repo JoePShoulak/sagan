@@ -17,24 +17,28 @@ Sagan uses distinctive exception keywords:
 
 ```sagan
 hope {
-  update()
-} unless error {
-  scream error
+  scream "engine offline"
+} unless "engine offline" {
+  print("Using the backup engine")
 } finally {
-  cleanup()
+  print("Attempt complete")
 }
 ```
 
-**Implemented in the parser:** `hope` has a protected block followed by one or
-more expression-shaped `unless` handlers and an optional final `finally` block.
+`hope` has a protected block followed by one or more expression-shaped `unless`
+handlers and an optional final `finally` block.
 A `finally`-only `hope` is also valid. At least one handler or cleanup clause is
-required, and `scream` requires an expression. Each clause follows the preceding
-`}` without an intervening logical newline.
+required, and `scream` requires an expression. Each clause may use braces or a
+same-line statement.
 
-The AST records handler patterns without assigning them binding or matching
-semantics. The examples parse but are not yet executable because semantic
-analysis, exception lowering, and a runtime do not exist.
+In the executable subset, the first handler with the same checked type and
+equal value catches the exception. Nonmatching values continue outward to an
+enclosing `hope`. `finally` always runs, including during propagation and before
+an early return leaves the protected region.
 
-**Open questions:** exception types, matching, handler binding, propagation,
-stack unwinding, cleanup ordering, interaction with return and reference
-counting, and whether all failures use exceptions.
+Cleanup cannot itself `return` or `scream`, and it cannot break or continue an
+enclosing loop. This keeps cleanup deterministic while another exception may
+already be unwinding.
+
+Handlers do not bind the thrown value yet, and native runtime failures such as
+checked arithmetic errors are not currently catchable as Sagan values.

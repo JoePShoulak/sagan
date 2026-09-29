@@ -32,6 +32,11 @@ class LaunchCounter is Countable {
   fun current(): Int => self.read_value()
 }
 
+fun finish_early(): Int {
+  hope return 42
+  finally print("Finally ran before an early return")
+}
+
 fun main(): Int {
   let answer = 🚀(40)
   let countdown_start = [3]
@@ -82,6 +87,20 @@ fun main(): Int {
   let countable: Countable = launch_counter
   let dispatched_launch = countable.increment!()
   let launch_status = LaunchStatus.ready
+  let guarded_answer = finish_early()
+  let exception_state = 0
+
+  hope {
+    hope scream "launch abort"
+    unless "different failure" exception_state = -1
+    finally {
+      exception_state += 2
+      print("Inner finally ran before propagation")
+    }
+  } unless "launch abort" {
+    exception_state += 40
+    print("Outer unless caught the propagated value")
+  }
 
   print("The answer from 🚀 is:")
   print(answer)
@@ -111,6 +130,8 @@ fun main(): Int {
   print("Face default result: ${next_launch}")
   print("Face dispatch result: ${dispatched_launch}")
   print("Enum status: ${launch_status}")
+  print("Exception state: ${exception_state}")
+  print("Guarded return: ${guarded_answer}")
   match launch_status {
     case LaunchStatus.ready print("Enum match selected ready")
     case else print("Enum match selected fallback")
@@ -133,6 +154,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 and transformed_answer == 42 and immediate_answer == 42 and counted_launch == 41 and next_launch == 42 and dispatched_launch == 42 and launch_counter.current() == 42 and launch_status == LaunchStatus.ready and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
+  if answer == 42 and transformed_answer == 42 and immediate_answer == 42 and counted_launch == 41 and next_launch == 42 and dispatched_launch == 42 and launch_counter.current() == 42 and launch_status == LaunchStatus.ready and exception_state == 42 and guarded_answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
   else return 1
 }

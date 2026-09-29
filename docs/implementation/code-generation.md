@@ -29,7 +29,10 @@ face default methods with explicit conflict resolution,
 nominal enums with named output, equality, and match cases,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
-returns. Homogeneous array literals preserve the element width inferred by the
+returns. Value-bearing `scream` exceptions, ordered exact type-and-value
+`unless` handlers, outward propagation, and `finally` cleanup also lower to the
+native runtime. Cleanup runs when control leaves the protected region normally,
+through an exception, or by early return. Homogeneous array literals preserve the element width inferred by the
 type checker, array indexing is bounds-checked, and `for … in` iterates values
 by local copy. Array spreads evaluate each operand once and append its elements
 in source order. The built-in `print(value)`
@@ -83,7 +86,7 @@ method bodies. Class construction uses shared reference-counted storage, and
 conversion to a declared face preserves object identity for runtime dispatch.
 
 Open work includes generated-code structure, reference cycles, weak references
-or borrowing, escaping closures, exception lowering, debug information, compiler selection and flags,
+or borrowing, escaping closures, catchable native runtime failures and richer exception patterns, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler

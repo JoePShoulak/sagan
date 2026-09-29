@@ -1105,9 +1105,42 @@ namespace semantic
         }
       }
 
+      auto validate_cleanup_control(const parser::statement &value, const int local_loop_depth = 0) const -> void
+      {
+        require(dynamic_cast<const parser::return_statement *>(&value) == nullptr,
+                "Finally cleanup cannot return", value.range);
+        require(dynamic_cast<const parser::scream_statement *>(&value) == nullptr,
+                "Finally cleanup cannot scream", value.range);
+        if (dynamic_cast<const parser::loop_control_statement *>(&value))
+          require(local_loop_depth > 0, "Finally cleanup cannot control an enclosing loop", value.range);
+        if (const auto *block_value = dynamic_cast<const parser::block_statement *>(&value))
+          for (const auto &entry : block_value->statements)
+            validate_cleanup_control(*entry, local_loop_depth);
+        else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
+        {
+          validate_cleanup_control(*conditional->then_branch, local_loop_depth);
+          if (conditional->else_branch) validate_cleanup_control(*conditional->else_branch, local_loop_depth);
+        }
+        else if (const auto *loop = dynamic_cast<const parser::condition_loop_statement *>(&value))
+          validate_cleanup_control(*loop->body, local_loop_depth + 1);
+        else if (const auto *loop = dynamic_cast<const parser::for_statement *>(&value))
+          validate_cleanup_control(*loop->body, local_loop_depth + 1);
+        else if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
+          for (const auto &branch : matched->cases)
+            validate_cleanup_control(*branch.body, local_loop_depth);
+        else if (const auto *hope = dynamic_cast<const parser::hope_statement *>(&value))
+        {
+          validate_cleanup_control(*hope->protected_body, local_loop_depth);
+          for (const auto &handler : hope->handlers)
+            validate_cleanup_control(*handler.body, local_loop_depth);
+          if (hope->cleanup) validate_cleanup_control(*hope->cleanup, local_loop_depth);
+        }
+      }
+
       auto statement_returns(const parser::statement &value) const -> bool
       {
         if (dynamic_cast<const parser::return_statement *>(&value)) return true;
+        if (dynamic_cast<const parser::scream_statement *>(&value)) return true;
         if (const auto *block_value = dynamic_cast<const parser::block_statement *>(&value))
         {
           return block_returns(*block_value);
@@ -1126,6 +1159,14 @@ namespace semantic
             if (!block_returns(*branch.body)) return false;
           }
           return has_fallback;
+        }
+        if (const auto *hope = dynamic_cast<const parser::hope_statement *>(&value))
+        {
+          if (!block_returns(*hope->protected_body)) return false;
+          return std::all_of(hope->handlers.begin(), hope->handlers.end(), [&](const auto &handler)
+          {
+            return block_returns(*handler.body);
+          });
         }
         return false;
       }
@@ -1284,7 +1325,11 @@ namespace semantic
             block(*handler.body);
           }
           scopes = before;
-          if (hope->cleanup) block(*hope->cleanup);
+          if (hope->cleanup)
+          {
+            validate_cleanup_control(*hope->cleanup);
+            block(*hope->cleanup);
+          }
           else scopes = before;
         }
         else if (const auto *scream = dynamic_cast<const parser::scream_statement *>(&value))
