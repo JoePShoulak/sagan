@@ -185,6 +185,14 @@
           }
         },
         {
+          "match": "\\b(let)(\\s+)(\\.)(?:\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.variable.sagan" },
+            "3": { "name": "punctuation.accessor.private.sagan" },
+            "4": { "name": "variable.other.definition.sagan" }
+          }
+        },
+        {
           "match": "\\b(let)(\\s+)([A-Z][A-Z0-9_]*)\\b",
           "captures": {
             "1": { "name": "keyword.declaration.variable.sagan" },

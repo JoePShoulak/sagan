@@ -8,13 +8,14 @@ verified_by: null
 ---
 
 # C++ backend
-**Status: planned; not implemented.**
+**Status: initial executable subset implemented.**
 
-The first complete compiler is intended to emit C++ and use a C++ compiler to
-produce a native executable. Windows, Linux, and macOS are initial target
-platforms.
+`bin/sagan --emit-cpp` emits C++ for the checked executable subset, and
+`scripts/execution_demo.sh` compiles and runs it. The backend includes checked
+numeric helpers, collections, dimensioned values, reference-counted classes,
+native face interfaces, and runtime face dispatch. Windows is exercised by the
+local demo and Linux by CI; broader platform guarantees remain future work.
 
-No ABI, generated-code layout, compiler invocation protocol, runtime boundary,
-foreign-function interface, optimization strategy, or deterministic compiler
-configuration has been selected. The repository's C++ sources implement the
-compiler prototype itself; they are not generated from Sagan.
+No stable ABI, foreign-function interface, optimization strategy, or complete
+deterministic compiler configuration has been selected. Native compiler
+invocation remains in the demo script rather than the compiler executable.

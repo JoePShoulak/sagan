@@ -50,7 +50,7 @@ the second prints the Git-derived development build identity. The complete
 `bash scripts/test.sh` command also runs the separate CLI integration suite.
 
 !!! warning
-    The type mode does not yet resolve members, generic annotations, interface
-    conformance, or every user-defined relationship. C++ generation is limited
+    The type mode does not yet resolve generic annotations or every user-defined
+    relationship. C++ generation is limited
     to the documented initial subset, and `sagan` does not yet invoke the native
     compiler itself; the execution demo script performs that step.

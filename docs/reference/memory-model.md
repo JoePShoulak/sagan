@@ -8,14 +8,17 @@ verified_by: null
 ---
 
 # Memory model
-Reference counting is the intended memory-management model.
+Reference counting is the implemented foundation of the native object model.
+Class instances use shared reference-counted storage. Assigning a class value or
+converting it to a face value preserves the same underlying object, so mutation
+through one reference is visible through the others. Face calls dispatch to the
+concrete class implementation.
 
-That statement is **provisional design**, not implemented runtime behavior.
-There is no Sagan runtime, object representation, ownership model, or generated
-code yet.
+This is an initial executable subset, not a complete ownership model. The C++
+backend currently supplies the retain/release behavior; Sagan does not yet
+expose borrowing, weak references, or explicit lifetime operations.
 
-**Open questions:** which values are references, retain/release insertion,
-borrowing or weak references, cycle detection or collection, destruction order,
+**Open questions:** borrowing or weak references, cycle detection or collection, destruction order,
 thread interaction, foreign ownership, value semantics, and observable lifetime
 behavior.
 

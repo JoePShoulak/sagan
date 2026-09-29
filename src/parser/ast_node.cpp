@@ -312,8 +312,10 @@ namespace parser
   }
 
   let_declaration::let_declaration(const span source_range, std::string identifier,
-                                   std::optional<std::string> annotation, expression_ref initial_value)
-      : statement(source_range), name(std::move(identifier)), type_name(std::move(annotation)),
+                                   const bool is_private, std::optional<std::string> annotation,
+                                   expression_ref initial_value)
+      : statement(source_range), name(std::move(identifier)), private_member(is_private),
+        type_name(std::move(annotation)),
         initializer(std::move(initial_value))
   {
   }
@@ -321,7 +323,7 @@ namespace parser
   auto let_declaration::print(std::ostream &stream, const int indent) const -> void
   {
     write_indent(stream, indent);
-    stream << "Let(" << name;
+    stream << "Let(" << (private_member ? "." : "") << name;
     if (type_name)
     {
       stream << ": " << *type_name;

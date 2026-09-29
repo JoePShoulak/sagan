@@ -43,6 +43,7 @@ namespace semantic
     struct object_type
     {
       std::unordered_map<std::string, std::string> fields;
+      std::unordered_set<std::string> private_fields;
       std::unordered_set<std::string> defaulted_fields;
       std::vector<callable_signature> constructors;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
@@ -237,6 +238,25 @@ namespace semantic
       auto compatible(const std::string_view expected, const std::string_view actual) const -> bool
       {
         if (is_unknown(expected) || is_unknown(actual) || expected == actual) return true;
+        if (interfaces.contains(std::string(expected)))
+        {
+          const auto object = objects.find(std::string(actual));
+          if (object != objects.end())
+          {
+            std::vector<std::string> pending = object->second.faces;
+            std::unordered_set<std::string> visited;
+            while (!pending.empty())
+            {
+              std::string face = std::move(pending.back());
+              pending.pop_back();
+              if (face == expected) return true;
+              if (!visited.insert(face).second) continue;
+              const auto inherited = interfaces.find(face);
+              if (inherited != interfaces.end())
+                pending.insert(pending.end(), inherited->second.faces.begin(), inherited->second.faces.end());
+            }
+          }
+        }
         const int expected_width = integer_width(expected);
         const int actual_width = integer_width(actual);
         if (expected_width == 0 && actual_width >= 0) return true;
@@ -405,6 +425,7 @@ namespace semantic
           if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
           {
             object.fields.emplace(field->name, fixed_annotation(field->type_name));
+            if (field->private_member) object.private_fields.insert(field->name);
             if (field->initializer) object.defaulted_fields.insert(field->name);
           }
           else if (const auto *method = dynamic_cast<const parser::function_declaration *>(member.get()))
@@ -808,7 +829,14 @@ namespace semantic
             require(!member->safe, "Safe member access is not defined for " + target + " values", value.range);
             if (const auto field = object->second.fields.find(member->member_name);
                 field != object->second.fields.end())
+            {
+              require(!object->second.private_fields.contains(member->member_name) ||
+                          (active_class && *active_class == target),
+                      "Private field '" + member->member_name + "' of class '" + target +
+                          "' is not accessible here",
+                      value.range);
               return record(value, field->second);
+            }
             if (const auto methods = object->second.methods.find(member->member_name);
                 methods != object->second.methods.end())
             {

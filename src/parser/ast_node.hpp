@@ -228,10 +228,12 @@ namespace parser
   struct let_declaration final : statement
   {
     std::string name;
+    bool private_member;
     std::optional<std::string> type_name;
     expression_ref initializer;
 
-    let_declaration(span source_range, std::string identifier, std::optional<std::string> annotation,
+    let_declaration(span source_range, std::string identifier, bool is_private,
+                    std::optional<std::string> annotation,
                     expression_ref initial_value);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };

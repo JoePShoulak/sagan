@@ -244,9 +244,10 @@ namespace parser
     return parse_expression_statement();
   }
 
-  auto syntax_parser::parse_let_declaration() -> statement_ref
+  auto syntax_parser::parse_let_declaration(const bool allow_private) -> statement_ref
   {
     const token &keyword = previous();
+    const bool private_member = allow_private && match(tokens::DOT);
     const token &name = expect(tokens::IDENTIFIER, "an identifier after 'let'");
     std::optional<std::string> type_name;
     if (match(tokens::COLON))
@@ -261,7 +262,8 @@ namespace parser
     }
 
     const int end = initializer ? initializer->range.end : (type_name ? previous().range.end : name.range.end);
-    return std::make_unique<let_declaration>(span{keyword.range.begin, end}, name.text, std::move(type_name),
+    return std::make_unique<let_declaration>(span{keyword.range.begin, end}, name.text, private_member,
+                                             std::move(type_name),
                                              std::move(initializer));
   }
 
@@ -390,7 +392,7 @@ namespace parser
       }
       else if (type == type_declaration::kind::class_type && match(tokens::KWD_LET))
       {
-        auto member = parse_let_declaration();
+        auto member = parse_let_declaration(true);
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }

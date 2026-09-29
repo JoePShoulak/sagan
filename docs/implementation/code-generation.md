@@ -23,8 +23,9 @@ dimensioned vector and coordinate values, their spreads, indexing, named compone
 printing and interpolation,
 typed expression lambdas with local lexical captures and immediate or stored calls,
 classes with typed fields, default or overloaded `new(...)` construction, `self`, and
-public/private methods,
-statically composed face default methods with explicit conflict resolution,
+public/private fields and methods,
+reference-counted class and face values, dynamic face dispatch, and composed
+face default methods with explicit conflict resolution,
 nominal enums with named output, equality, and match cases,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
@@ -75,15 +76,14 @@ families provide `.x`, `.y`, `.z`, and `.w` component access where their
 dimension permits it; components are assignable because variables are mutable
 by default.
 
-Faces are erased before code generation in the currently implemented,
-statically composed subset. Semantic analysis first verifies every required
-signature and resolves defaults, then the backend copies inherited default
-method bodies into the concrete class. Interface-typed values, dynamic face
-dispatch, and runtime face objects are not lowered yet. Transitive defaults are
-flattened into the concrete class before native compilation.
+Faces lower to native abstract interfaces with virtual methods. Semantic
+analysis first verifies every required signature and resolves defaults, then the
+backend emits conforming classes and flattens applicable transitive default
+method bodies. Class construction uses shared reference-counted storage, and
+conversion to a declared face preserves object identity for runtime dispatch.
 
-Open work includes generated-code structure, runtime interfaces, memory
-management, interface dispatch, escaping closures, exception lowering, debug information, compiler selection and flags,
+Open work includes generated-code structure, reference cycles, weak references
+or borrowing, escaping closures, exception lowering, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler

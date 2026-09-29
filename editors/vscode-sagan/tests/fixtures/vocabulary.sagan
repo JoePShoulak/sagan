@@ -4,7 +4,8 @@ export Thing as PublicThing
 
 let value = true
 fun named(parameter: Float): Float => parameter
-class Example has First, Second { new() {} }
+class Example has First, Second { let .hidden = 1
+new() {} }
 face Contract is Parent {}
 enum State { ready, waiting }
 

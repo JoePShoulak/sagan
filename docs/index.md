@@ -18,9 +18,10 @@ astrodynamics, numerical work, and real-time simulation.
 
 !!! info "Current implementation"
     The repository contains a complete **tokenizer and parser** for the current
-    specifications plus name resolution and initial scalar/function type
-    checking. It can emit syntax trees, a semantic model, and a type model. It
-    does not yet contain collection/member typing, a runtime, or C++ generation.
+    specifications, an executable-subset semantic/type checker, and an initial
+    C++ backend. It executes collections, classes, private state, constructors,
+    reference-counted face values, dynamic dispatch, and the documented control-flow
+    and numeric subset through the native demo.
 
 ## Where to begin
 

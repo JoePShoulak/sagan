@@ -27,8 +27,8 @@ Name collection deliberately remains separate from type and control-flow
 checking. Top-level names are collected before bodies are visited, permitting
 forward and self references. Later checking establishes overload signatures,
 types, lossless conversions, definite initialization, definite returns, and
-unreachable code. Interface-typed values, exception-pattern binding, private
-fields, and reference ownership remain future work.
+unreachable code. Exception-pattern binding, reference cycles, weak references,
+and borrowing remain future work.
 
 The initial type checker infers scalar literals; validates annotations,
 initializers, assignments, Boolean conditions, conditional branches, core
@@ -59,10 +59,13 @@ unknown members are rejected. Class metadata supplies typed field and method acc
 checked overload selection for `new(...)` constructors, default construction
 when every field has a default, and `self` typing. Leading-dot private
 methods are callable only while checking another method of their declaring
-class, and private methods cannot satisfy public face requirements. Unknown
+class, and private methods cannot satisfy public face requirements. Leading-dot
+fields use the same declaring-class access boundary. Unknown
 class members and unmatched constructor calls are rejected. Every field without
 a declaration-site default must be assigned on every constructor path.
-Escaping closure types and interface values remain open, but a class declaring `is` or `has` a face must satisfy
+Face annotations accept a class value only when that class declares transitive
+`is` or `has` conformance; calls through the face use its checked method set.
+Escaping closure types remain open, but a class declaring `is` or `has` a face must satisfy
 every required method with an exact class implementation or face default.
 Both composition words have identical meaning and do not create inheritance.
 An unambiguous face default satisfies its own requirement and becomes a class

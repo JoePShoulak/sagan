@@ -49,6 +49,8 @@ on methods and conventionally identifies a mutating alternative; it does not by
 itself change dispatch or mutation rules. A leading dot makes a method private
 to its declaring class; it remains callable from other methods of that class
 but cannot be accessed externally or used to satisfy a face requirement.
+A leading dot on a field, as in `let .value: Int`, likewise restricts access to
+constructors and methods of the declaring class.
 
 **Implemented conformance subset:** `is` and `has` are interchangeable and do
 not denote inheritance. A class composing a face must satisfy each required
@@ -61,9 +63,13 @@ require an explicit class override. Defaults may call other requirements from
 their own face through `self`.
 Face composition is transitive: inherited requirements and defaults flow into
 the composing face and ultimately into its classes. Cycles are rejected.
+Face names may be used as value, parameter, and return annotations. A class
+value converts to a face only when its declaration explicitly conforms through
+`is` or `has`, including transitive face composition. Calls through the face
+dispatch to the concrete class while retaining shared reference identity.
 
-**Provisional semantics:** method overloading, private fields, interface-typed
-values, and runtime dispatch.
+**Provisional semantics:** broader method-overload ranking, reference cycles,
+weak references, and borrowing.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, enum payloads and explicit values, generic

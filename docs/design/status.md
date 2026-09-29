@@ -16,10 +16,10 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, class constructors, fields and `self`, transitive structural face conformance and defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
-| Runtime and memory model | **Provisional/planned** | design intent only |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls, nominal enums, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
+| Runtime and memory model | **Reference foundation implemented** | shared reference-counted class/face values and dynamic face dispatch; cycles and weak references remain open |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, classes with `new(...)` constructors and public/private methods, local captured/immediate lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
 
 ## Tokenizer verification
@@ -68,16 +68,17 @@ meaning and exhaustiveness remain semantic work. The parser demo includes
 propagation remain semantic/runtime work. Successful source plus focused
 expression, collection, control-flow, matching, exception, and
 unterminated-block errors are demonstrated. Classes now execute with typed
-typed fields, checked `new(...)` constructors, default construction, `self`, field access/mutation, and
+typed fields, checked `new(...)` constructors, default construction, `self`, private field access/mutation, and
 ordinary or `!`-suffixed methods. `is` and `has` composition require every face
 signature to have an exact class implementation or an unambiguous default. Simple
 nominal enums now execute with `Type.member` selection, equality, matching,
 interpolation, and readable printing. Face defaults execute, may call other face
 requirements through `self`, and require an explicit class override when two
 composed faces provide the same signature. Face requirements and defaults flow
-through composed faces, and cycles are rejected. Interface-typed values,
-reference ownership remains future
-work. Named functions and methods accept block or `=>` expression bodies.
+through composed faces, and cycles are rejected. Face-typed values accept only
+classes with declared transitive conformance and dispatch through shared
+reference-counted objects. Reference cycles remain future work. Named functions
+and methods accept block or `=>` expression bodies.
 Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and
 function-type annotations remain future runtime and type-system work.
@@ -93,8 +94,8 @@ remain future semantic and runtime work.
 
 ## Major open language questions
 
-Generic annotations, value/reference behavior, reference-count cycles,
-interface-typed values, generics and possible sum types,
+Generic annotations, reference-count cycles and weak references,
+generics and possible sum types,
 payload-bearing enums and explicit enum values, exception propagation, module
 resolution and packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import

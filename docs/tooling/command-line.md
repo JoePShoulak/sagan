@@ -63,8 +63,8 @@ bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 
 Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
-Type output confirms the documented scalar/function and literal-collection
-subset, but does not yet establish member types or generic annotations.
+Type output confirms the documented scalar/function, collection, class, member,
+constructor, and face-dispatch subset, but does not yet establish generic annotations.
 Generated C++ supports only the initial executable subset documented under
 [code generation](../implementation/code-generation.md).
 

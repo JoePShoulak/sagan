@@ -26,7 +26,9 @@ namespace codegen
       std::size_t dimensioned_index = 0;
       std::unordered_set<std::string> user_types;
       std::unordered_set<std::string> enum_types;
+      std::unordered_set<std::string> class_types;
       std::unordered_map<std::string, const parser::type_declaration *> face_types;
+      std::unordered_set<std::string> emitted_faces;
       bool in_method = false;
 
       auto indentation() const -> std::string
@@ -64,6 +66,8 @@ namespace codegen
         if (name == "Int32") return "std::int32_t";
         if (name == "Int16") return "std::int16_t";
         if (name == "Int8") return "std::int8_t";
+        if (class_types.contains(name) || face_types.contains(name))
+          return "std::shared_ptr<" + identifier(name) + ">";
         if (user_types.contains(name)) return identifier(name);
         for (const std::string_view family : {std::string_view{"Vector"}, std::string_view{"Coordinate"}})
         {
@@ -235,7 +239,10 @@ namespace codegen
           return "(" + expression(*assignment->target) + " = " + expression(*assignment->value) + ")";
         if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
         {
+          const auto *called_name = dynamic_cast<const parser::identifier_expression *>(call->callee.get());
           std::string result = expression(*call->callee) + "(";
+          if (called_name && class_types.contains(called_name->name))
+            result = "std::make_shared<" + identifier(called_name->name) + ">(";
           for (std::size_t index = 0; index < call->arguments.size(); ++index)
           {
             if (index != 0) result += ", ";
@@ -261,7 +268,10 @@ namespace codegen
               fail("dimensioned member access is invalid", value.range);
             return expression(*member->target) + ".at(" + std::to_string(component) + ")";
           }
-          return expression(*member->target) + "." + identifier(member->member_name);
+          const auto *self = dynamic_cast<const parser::identifier_expression *>(member->target.get());
+          const bool reference = (class_types.contains(target_type) || face_types.contains(target_type)) &&
+                                 !(self && self->name == "self");
+          return expression(*member->target) + (reference ? "->" : ".") + identifier(member->member_name);
         }
         if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
         {
@@ -406,7 +416,11 @@ namespace codegen
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
           if (declaration->initializer)
-            output << "auto " << identifier(declaration->name) << " = " << expression(*declaration->initializer);
+          {
+            if (declaration->type_name) output << type(declaration->type_name, declaration->range) << ' ';
+            else output << "auto ";
+            output << identifier(declaration->name) << " = " << expression(*declaration->initializer);
+          }
           else
             output << type(declaration->type_name, declaration->range) << ' ' << identifier(declaration->name);
           output << ";\n";
@@ -529,9 +543,11 @@ namespace codegen
         output << "\n\n";
       }
 
-      auto method(const parser::function_declaration &value, const std::string_view class_name = {}) -> void
+      auto method(const parser::function_declaration &value, const std::string_view class_name = {},
+                  const bool virtual_method = false) -> void
       {
         output << indentation();
+        if (virtual_method) output << "virtual ";
         if (value.constructor_member)
           output << identifier(std::string(class_name));
         else
@@ -550,7 +566,16 @@ namespace codegen
           output << "{ return " << expression(*value.expression_body) << "; }";
         else
         {
-          if (!value.body) fail("method has no executable body", value.range);
+          if (!value.body)
+          {
+            if (virtual_method)
+            {
+              output << "= 0;\n";
+              in_method = previous_method;
+              return;
+            }
+            fail("method has no executable body", value.range);
+          }
           block(*value.body);
         }
         in_method = previous_method;
@@ -597,7 +622,17 @@ namespace codegen
       {
         if (value.type_kind != parser::type_declaration::kind::class_type)
           fail("only class declarations are available in the initial native object subset", value.range);
-        output << "struct " << identifier(value.name) << "\n{\npublic:\n";
+        output << "struct " << identifier(value.name);
+        if (!value.composed_interfaces.empty())
+        {
+          output << " : ";
+          for (std::size_t index = 0; index < value.composed_interfaces.size(); ++index)
+          {
+            if (index != 0) output << ", ";
+            output << "public virtual " << identifier(value.composed_interfaces[index]);
+          }
+        }
+        output << "\n{\npublic:\n";
         ++depth;
         bool private_access = false;
         std::unordered_set<std::string> emitted_methods;
@@ -605,10 +640,10 @@ namespace codegen
         {
           if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
           {
-            if (private_access)
+            if (private_access != field->private_member)
             {
-              output << "public:\n";
-              private_access = false;
+              private_access = field->private_member;
+              output << (private_access ? "private:\n" : "public:\n");
             }
             output << indentation() << type(field->type_name, field->range) << ' ' << identifier(field->name);
             if (field->initializer) output << " = " << expression(*field->initializer);
@@ -650,6 +685,36 @@ namespace codegen
         output << "};\n\n";
       }
 
+      auto interface(const parser::type_declaration &value) -> void
+      {
+        if (!emitted_faces.insert(value.name).second) return;
+        for (const auto &parent : value.composed_interfaces)
+        {
+          const auto found = face_types.find(parent);
+          if (found != face_types.end()) interface(*found->second);
+        }
+        output << "struct " << identifier(value.name);
+        if (!value.composed_interfaces.empty())
+        {
+          output << " : ";
+          for (std::size_t index = 0; index < value.composed_interfaces.size(); ++index)
+          {
+            if (index != 0) output << ", ";
+            output << "public virtual " << identifier(value.composed_interfaces[index]);
+          }
+        }
+        output << "\n{\n  virtual ~" << identifier(value.name) << "() = default;\n";
+        ++depth;
+        for (const auto &entry : value.members)
+        {
+          const auto *face_method = dynamic_cast<const parser::function_declaration *>(entry.get());
+          if (!face_method) fail("face member is not a method", entry->range);
+          method(*face_method, {}, true);
+        }
+        --depth;
+        output << "};\n\n";
+      }
+
       auto enumeration(const parser::type_declaration &value) -> void
       {
         output << "enum class " << identifier(value.name) << "\n{\n";
@@ -679,10 +744,11 @@ namespace codegen
           {
             user_types.insert(type->name);
             if (type->type_kind == parser::type_declaration::kind::enum_type) enum_types.insert(type->name);
+            if (type->type_kind == parser::type_declaration::kind::class_type) class_types.insert(type->name);
             if (type->type_kind == parser::type_declaration::kind::interface_type)
               face_types.emplace(type->name, type);
           }
-        output << "// Generated by Sagan.\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <iostream>\n#include <limits>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <type_traits>\n#include <unordered_map>\n#include <vector>\n"
+        output << "// Generated by Sagan.\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <type_traits>\n#include <unordered_map>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
                   "#include <windows.h>\n"
                   "#endif\n\n"
@@ -983,8 +1049,17 @@ namespace codegen
                   "{ target = sagan_modulo<Result>(target, value); }\n\n";
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
+              type && type->type_kind != parser::type_declaration::kind::enum_type)
+            output << "struct " << identifier(type->name) << ";\n";
+        output << '\n';
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
               type && type->type_kind == parser::type_declaration::kind::enum_type)
             enumeration(*type);
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
+              type && type->type_kind == parser::type_declaration::kind::interface_type)
+            interface(*type);
         for (const auto &entry : tree.statements)
         {
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))

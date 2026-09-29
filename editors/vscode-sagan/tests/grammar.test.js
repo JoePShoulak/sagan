@@ -74,6 +74,7 @@ async function main() {
   const vocabulary = tokenize(grammar, readFixture("vocabulary.sagan"));
   const expectedScopes = {
     let: "keyword.declaration.variable.sagan",
+    hidden: "variable.other.definition.sagan",
     fun: "keyword.declaration.function.sagan",
     new: "keyword.declaration.constructor.sagan",
     class: "keyword.declaration.type.sagan",

@@ -334,7 +334,7 @@ namespace
     {
       std::vector<parser::statement_ref> statements;
       statements.push_back(std::make_unique<parser::let_declaration>(
-          parser::span{0, 1}, "value", std::nullopt,
+          parser::span{0, 1}, "value", false, std::nullopt,
           std::make_unique<unsupported_expression>(parser::span{0, 1})));
       static_cast<void>(parser::render_ast_dot(parser::program(std::move(statements))));
     }
@@ -1304,10 +1304,10 @@ namespace
     passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
     passed &= expect_ast(
         "class constructor declaration",
-        "class Probe {\n  let value: Int\n  new(start: Int) {\n    self.value = start\n  }\n}\n",
+        "class Probe {\n  let .value: Int\n  new(start: Int) {\n    self.value = start\n  }\n}\n",
         "Program\n"
         "  Class(Probe)\n"
-        "    Let(value: Int)\n"
+        "    Let(.value: Int)\n"
         "    Constructor(new: Void)\n"
         "      Parameter(start: Int)\n"
         "      Block\n"
@@ -1860,6 +1860,33 @@ namespace
         "private method cannot satisfy face",
         "face Readable {\n  fun read(): Int\n}\nclass Vault is Readable {\n  fun .read(): Int => 42\n}\n",
         "cannot satisfy face 'Readable' with private method 'read'");
+    passed &= expect_type_model(
+        "private field access inside declaring class",
+        "class Vault {\n  let .secret: Int = 42\n  fun reveal(): Int => self.secret\n}\n"
+        "fun valid(): Int {\n  let vault = Vault()\n  return vault.reveal()\n}\n",
+        {"vault: Vault", "Int64 @"});
+    passed &= expect_type_error(
+        "private field access outside declaring class",
+        "class Vault {\n  let .secret: Int = 42\n}\n"
+        "fun invalid(): Int {\n  let vault = Vault()\n  return vault.secret\n}\n",
+        "Private field 'secret' of class 'Vault' is not accessible here");
+    passed &= expect_type_model(
+        "face typed values and transitive conformance",
+        "face Readable {\n  fun current(): Int\n}\n"
+        "face Countable is Readable {\n  fun increment!(): Int\n}\n"
+        "class Counter is Countable {\n  let .value: Int = 41\n"
+        "  fun current(): Int => self.value\n"
+        "  fun increment!(): Int {\n    self.value += 1\n    return self.value\n  }\n}\n"
+        "fun read(value: Readable): Int => value.current()\n"
+        "fun valid(): Int {\n  let counter = Counter()\n  let readable: Readable = counter\n"
+        "  return read(readable)\n}\n",
+        {"counter: Counter", "readable: Readable", "Int64 @"});
+    passed &= expect_type_error(
+        "face value requires declared conformance",
+        "face Readable {\n  fun current(): Int\n}\n"
+        "class Accidental {\n  fun current(): Int => 42\n}\n"
+        "let invalid: Readable = Accidental()\n",
+        "Variable initializer requires Readable, but received Accidental");
     passed &= expect_type_model(
         "face default method calls abstract requirement",
         "face Countable {\n  fun current(): Int\n  fun next(): Int => self.current() + 1\n}\n"
