@@ -33,7 +33,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo execution-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo execution-demo optional-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -80,6 +80,9 @@ module-demo: $(TARGET)
 
 execution-demo: $(TARGET)
 	bash scripts/execution_demo.sh
+
+optional-demo: $(TARGET)
+	bash scripts/optional_demo.sh
 
 ast-demo: $(TARGET)
 	@mkdir -p build

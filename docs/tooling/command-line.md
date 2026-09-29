@@ -92,6 +92,7 @@ make semantic-demo
 make type-demo
 make entry-demo
 make module-demo
+make optional-demo
 make execution-demo
 make get-version
 make clean
@@ -107,6 +108,7 @@ bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
 bash scripts/module_demo.sh
+bash scripts/optional_demo.sh
 bash scripts/execution_demo.sh
 bash scripts/docs.sh check
 ```
@@ -122,6 +124,8 @@ entry point and focused control-flow failures. The test target exercises
 semantic/type/entry/code-generation success plus focused failures.
 `module-demo` prints a three-module dependency graph, executes selective and
 namespace imports, and verifies export visibility, filename, and cycle diagnostics.
+`optional-demo` prints its Sagan source and generated C++, then executes typed
+optional construction and lazy fallback chains.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

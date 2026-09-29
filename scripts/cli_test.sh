@@ -183,6 +183,10 @@ expect_failure "linked module type diagnostic" 1 "No matching overload for 'guid
   "$binary" --emit-cpp-modules examples/module_type_error/main.sagan
 expect_failure "module namespace visibility diagnostic" 1 "Module 'support' does not export 'private_value'" \
   "$binary" --emit-cpp-modules examples/module_namespace_error/main.sagan
+expect_failure "optional coalescing type diagnostic" 1 "Left operand of ?? must be Optional" \
+  "$binary" --types examples/type_optional_coalesce_error.sagan
+expect_failure "Some arity diagnostic" 1 "Some expects exactly one value" \
+  "$binary" --types examples/type_some_arity_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

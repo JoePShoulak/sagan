@@ -121,7 +121,7 @@ preserved so the parser can interpret them with grammar context.
 ```text
 ( ) [ ] { } < > , : . ? ;
 + - * / % ^ = !
-... ?. := => == != <= >= ++ --
+... ?. ?? := => == != <= >= ++ --
 += -= *= /= %= ^=
 ```
 

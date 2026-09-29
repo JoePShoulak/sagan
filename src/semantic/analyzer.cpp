@@ -80,16 +80,23 @@ namespace semantic
       {
         if (name)
         {
-          const auto declaration = find(*name);
+          const std::size_t open = name->find('<');
+          const std::string base = open == std::string::npos ? *name : name->substr(0, open);
+          const auto declaration = find(base);
           if (!declaration)
           {
-            throw semantic_error("Undefined type '" + *name + "'", range);
+            throw semantic_error("Undefined type '" + base + "'", range);
           }
           if (declaration->kind != "type" && declaration->kind != "builtin type" && declaration->kind != "import")
           {
-            throw semantic_error("'" + *name + "' does not name a type", range);
+            throw semantic_error("'" + base + "' does not name a type", range);
           }
-          model.resolutions.push_back(resolution{*name, range, declaration->declaration});
+          model.resolutions.push_back(resolution{base, range, declaration->declaration});
+          if (open != std::string::npos)
+          {
+            if (!name->ends_with('>')) throw semantic_error("Malformed type annotation '" + *name + "'", range);
+            resolve_type(std::optional<std::string>{name->substr(open + 1, name->size() - open - 2)}, range);
+          }
         }
       }
 
@@ -334,12 +341,14 @@ namespace semantic
         model.scopes.push_back(scope{0, no_parent, "program", {}});
         names.emplace_back();
         for (const std::string_view builtin : {"Bool", "Coordinate", "Float", "Float32", "Float64", "Frame",
-                                               "Int", "Int8", "Int16", "Int32", "Int64", "String", "Vector",
-                                               "Void"})
+                                               "Int", "Int8", "Int16", "Int32", "Int64", "Optional", "String",
+                                               "Vector", "Void"})
         {
           declare(std::string(builtin), "builtin type", parser::span{0, 0});
         }
         declare("print", "function", parser::span{0, 0});
+        declare("Some", "function", parser::span{0, 0});
+        declare("None", "builtin value", parser::span{0, 0});
       }
 
       auto run(const parser::program &tree) -> semantic_model

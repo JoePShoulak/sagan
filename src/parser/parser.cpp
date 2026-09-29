@@ -252,7 +252,7 @@ namespace parser
     std::optional<std::string> type_name;
     if (match(tokens::COLON))
     {
-      type_name = expect(tokens::IDENTIFIER, "a type name after ':'").text;
+      type_name = parse_type_annotation("a type name after ':'");
     }
 
     expression_ref initializer;
@@ -283,7 +283,7 @@ namespace parser
       std::optional<std::string> parameter_type;
       if (match(tokens::COLON))
       {
-        parameter_type = expect(tokens::IDENTIFIER, "a parameter type after ':'").text;
+        parameter_type = parse_type_annotation("a parameter type after ':'");
       }
       parameters.emplace_back(parameter_name.text, std::move(parameter_type));
       if (!match(tokens::COMMA) || check(tokens::RPAREN))
@@ -295,7 +295,7 @@ namespace parser
     std::optional<std::string> return_type;
     if (match(tokens::COLON))
     {
-      return_type = expect(tokens::IDENTIFIER, "a return type after ':'").text;
+      return_type = parse_type_annotation("a return type after ':'");
     }
     std::unique_ptr<block_statement> body;
     expression_ref expression_body;
@@ -326,8 +326,8 @@ namespace parser
     {
       const token &parameter_name = expect(tokens::IDENTIFIER, "a constructor parameter name");
       expect(tokens::COLON, "':' after a constructor parameter name");
-      const token &parameter_type = expect(tokens::IDENTIFIER, "a constructor parameter type after ':'");
-      parameters.emplace_back(parameter_name.text, parameter_type.text);
+      parameters.emplace_back(parameter_name.text,
+                              parse_type_annotation("a constructor parameter type after ':'"));
       if (!match(tokens::COMMA) || check(tokens::RPAREN)) break;
     }
     expect(tokens::RPAREN, "')' after the constructor parameters");
@@ -691,6 +691,20 @@ namespace parser
     return parse_assignment();
   }
 
+  auto syntax_parser::parse_type_annotation(const std::string &description) -> std::string
+  {
+    std::string result = expect(tokens::IDENTIFIER, description).text;
+    if (!match(tokens::LANGLE)) return result;
+    result += '<';
+    do
+    {
+      if (result.back() != '<') result += ", ";
+      result += parse_type_annotation("a type argument");
+    } while (match(tokens::COMMA));
+    expect(tokens::RANGLE, "'>' after type arguments");
+    return result + '>';
+  }
+
   auto syntax_parser::parse_nested_expression() -> expression_ref
   {
     const std::size_t surrounding_vector_depth = vector_literal_depth;
@@ -714,7 +728,7 @@ namespace parser
 
   auto syntax_parser::parse_conditional() -> expression_ref
   {
-    auto condition = parse_or();
+    auto condition = parse_coalesce();
     if (!match(tokens::QUESTION))
     {
       return condition;
@@ -725,6 +739,16 @@ namespace parser
     const span range{condition->range.begin, when_false->range.end};
     return std::make_unique<conditional_expression>(range, std::move(condition), std::move(when_true),
                                                      std::move(when_false));
+  }
+
+  auto syntax_parser::parse_coalesce() -> expression_ref
+  {
+    auto left = parse_or();
+    if (!match(tokens::COALESCE)) return left;
+    const token operation = previous();
+    auto right = parse_coalesce();
+    return std::make_unique<binary_expression>(span{left->range.begin, right->range.end}, std::move(left),
+                                               operation.text, std::move(right));
   }
 
   auto syntax_parser::parse_or() -> expression_ref
@@ -982,7 +1006,7 @@ namespace parser
       std::optional<std::string> type_name;
       if (match(tokens::COLON))
       {
-        type_name = expect(tokens::IDENTIFIER, "a lambda parameter type after ':'").text;
+        type_name = parse_type_annotation("a lambda parameter type after ':'");
       }
       parameters.emplace_back(name.text, std::move(type_name));
       if (!match(tokens::COMMA) || check(tokens::RPAREN))

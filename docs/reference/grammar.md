@@ -65,6 +65,7 @@ hope_statement := "hope" statement_body
 scream_statement := "scream" expression
 assignment_statement := expression ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=") expression
 expression_statement := expression
+coalesce_expression := logical_or_expression ("??" coalesce_expression)?
 function_declaration := "fun" identifier "(" parameters? ")" (":" type)? function_body
 function_body := block | "=>" expression
 lambda := "fun" "(" parameters? ")" (":" type)? "=>" expression
@@ -80,6 +81,8 @@ composition := ("is" | "has") identifier ("," identifier)*
 enum_declaration := "enum" identifier "{" enum_members? "}"
 enum_members := documented_enum_member ((newline+ | ",") documented_enum_member)* ","?
 documented_enum_member := documentation_comment* identifier
+
+type_annotation := identifier ("<" type_annotation ("," type_annotation)* ">")?
 module_declaration := "module" identifier
 import_declaration := "import" identifier ("from" identifier)? ("as" identifier)?
 export_declaration := "export" identifier ("as" identifier)?

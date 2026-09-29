@@ -91,6 +91,17 @@ make module-demo
 The demonstration proves module structure, visibility, semantic/type linking,
 whole-module namespace access, and native cross-file execution.
 
+## Optional-value demonstration
+
+`examples/optional_demo.sagan` demonstrates typed `Optional<T>` values,
+`Some(value)`, `None`, lazy `??` fallback, and right-associative fallback
+chains. The script shows the source and generated C++, compiles it, and runs the
+native result:
+
+```bash
+make optional-demo
+```
+
 ## Semantic-analysis demonstration
 
 `examples/semantic_demo.sagan` exercises program, type, function, block, and

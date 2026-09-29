@@ -47,10 +47,12 @@ namespace parser
     auto parse_scream_statement() -> statement_ref;
     auto parse_block() -> std::unique_ptr<block_statement>;
     auto parse_statement_body(const std::string &description) -> std::unique_ptr<block_statement>;
+    auto parse_type_annotation(const std::string &description) -> std::string;
     auto parse_expression() -> expression_ref;
     auto parse_nested_expression() -> expression_ref;
     auto parse_assignment() -> expression_ref;
     auto parse_conditional() -> expression_ref;
+    auto parse_coalesce() -> expression_ref;
     auto parse_or() -> expression_ref;
     auto parse_and() -> expression_ref;
     auto parse_equality() -> expression_ref;

@@ -117,6 +117,13 @@ namespace semantic
       return std::string(type.substr(prefix.size(), type.size() - prefix.size() - 1));
     }
 
+    auto optional_element(const std::string_view type) -> std::optional<std::string>
+    {
+      constexpr std::string_view prefix = "Optional<";
+      if (!type.starts_with(prefix) || !type.ends_with('>')) return {};
+      return std::string(type.substr(prefix.size(), type.size() - prefix.size() - 1));
+    }
+
     auto dictionary_types(const std::string_view type) -> std::optional<std::pair<std::string, std::string>>
     {
       constexpr std::string_view prefix = "Dictionary<";
@@ -238,6 +245,12 @@ namespace semantic
       auto compatible(const std::string_view expected, const std::string_view actual) const -> bool
       {
         if (is_unknown(expected) || is_unknown(actual) || expected == actual) return true;
+        if (const auto expected_value = optional_element(expected))
+        {
+          if (actual == "None") return true;
+          const auto actual_value = optional_element(actual);
+          return actual_value && compatible(*expected_value, *actual_value);
+        }
         if (interfaces.contains(std::string(expected)))
         {
           const auto object = objects.find(std::string(actual));
@@ -374,7 +387,15 @@ namespace semantic
 
       auto annotation(const std::optional<std::string> &name) const -> std::string
       {
-        return name.value_or(std::string(unknown_type));
+        if (!name) return std::string(unknown_type);
+        if (const auto contained = optional_element(*name))
+        {
+          std::string inner = *contained;
+          if (inner == "Int") inner = "Int64";
+          else if (inner == "Float") inner = "Float64";
+          return "Optional<" + inner + ">";
+        }
+        return *name;
       }
 
       auto fixed_annotation(const std::optional<std::string> &name) const -> std::string
@@ -382,6 +403,8 @@ namespace semantic
         if (!name) return std::string(unknown_type);
         if (*name == "Int") return "Int64";
         if (*name == "Float") return "Float64";
+        if (const auto contained = optional_element(*name))
+          return "Optional<" + fixed_annotation(std::optional<std::string>{*contained}) + ">";
         return *name;
       }
 
@@ -617,6 +640,7 @@ namespace semantic
         }
         if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(&value))
         {
+          if (identifier->name == "None") return record(value, "None");
           const auto *matches = find(identifier->name);
           require(matches && !matches->empty(), "Undefined name '" + identifier->name + "'", value.range);
           require(matches->front().initialized, "Variable '" + identifier->name + "' is used before initialization",
@@ -668,6 +692,19 @@ namespace semantic
         {
           const std::string left = expression(*binary->left);
           const std::string right = expression(*binary->right);
+          if (binary->operator_text == "??")
+          {
+            const auto contained = optional_element(left);
+            require(contained.has_value(), "Left operand of ?? must be Optional, but received " + left,
+                    binary->left->range);
+            if (const auto fallback = optional_element(right))
+            {
+              static_cast<void>(common_type(*contained, *fallback, value.range, "Optional fallback values"));
+              return record(value, left);
+            }
+            require_compatible(*contained, right, binary->right->range, "Optional fallback");
+            return record(value, *contained);
+          }
           if (binary->operator_text == "and" || binary->operator_text == "or")
           {
             require_compatible("Bool", left, binary->left->range, "Logical operator");
@@ -713,6 +750,12 @@ namespace semantic
           for (const auto &argument : call->arguments) arguments.push_back(expression(*argument));
           if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
           {
+            if (identifier->name == "Some")
+            {
+              require(arguments.size() == 1, "Some expects exactly one value", value.range);
+              static_cast<void>(record(*call->callee, "Function"));
+              return record(value, "Optional<" + arguments.front() + ">");
+            }
             if (objects.contains(identifier->name))
             {
               const auto &object = objects.at(identifier->name);
@@ -1371,6 +1414,7 @@ namespace semantic
       auto run(const parser::program &tree) -> type_model
       {
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void"}});
+        add_binding("None", binding{"None", {}});
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);

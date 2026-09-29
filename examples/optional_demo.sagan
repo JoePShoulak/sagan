@@ -1,0 +1,16 @@
+fun choose(value: Optional<Int>): Int => value ?? 42
+
+fun main(): Int {
+  let known: Optional<Int> = Some(7)
+  let missing: Optional<Int> = None
+  let direct = known ?? 0
+  let fallback = missing ?? 42
+  let chained = missing ?? known ?? 0
+
+  print("Known optional: ${direct}")
+  print("Missing optional fallback: ${fallback}")
+  print("Chained optional fallback: ${chained}")
+
+  if direct == 7 and fallback == 42 and chained == 7 and choose(None) == 42 return 0
+  else return 1
+}

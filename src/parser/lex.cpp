@@ -560,6 +560,7 @@ namespace
     static constexpr operator_entry operators[] = {
         {"...", tokens::SPREAD},
         {"?.", tokens::SAFE_DOT},
+        {"??", tokens::COALESCE},
         {":=", tokens::ASSIGN_VALUE},
         {"=>", tokens::FAT_ARROW},
         {"==", tokens::EQUAL_EQUAL},

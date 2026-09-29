@@ -49,6 +49,23 @@ parameters remain valid parser/type-model input but are not native-emittable.
 and the semantic rules for spread outside array and dictionary literals, safe access, dictionary-key
 hashability, and assignment expressions.
 
+## Optional values and fallback
+
+`Optional<T>` is the first implemented parameterized built-in type. `Some(value)`
+constructs a present optional and `None` constructs an absent value when an
+expected optional type supplies `T`. The right-associative `??` operator unwraps
+its left operand when present and otherwise evaluates its right operand lazily:
+
+```sagan
+let configured: Optional<Int> = None
+let result = configured ?? 42
+let chained = configured ?? cached ?? calculate_default()
+```
+
+`Optional<T> ?? T` produces `T`; `Optional<T> ?? Optional<T>` produces
+`Optional<T>`. Optional chaining with `?.`, payload matching, and weak fields
+remain the next pieces of this feature family.
+
 **Settled dictionary-spread behavior:** dictionary entries are applied from
 left to right. When an explicit entry or later spread repeats an existing key,
 the later value replaces the earlier value. Each spread operand is evaluated

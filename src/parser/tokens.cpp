@@ -43,6 +43,7 @@ namespace tokens
         "BANG",
         "SPREAD",
         "SAFE_DOT",
+        "COALESCE",
         "ASSIGN_VALUE",
         "FAT_ARROW",
         "EQUAL_EQUAL",

@@ -18,7 +18,11 @@ This is an initial executable subset, not a complete ownership model. The C++
 backend currently supplies the retain/release behavior; Sagan does not yet
 expose borrowing, weak references, or explicit lifetime operations.
 
-**Open questions:** borrowing or weak references, cycle detection or collection, destruction order,
+The safe absence foundation for weak references is now executable:
+`Optional<T>`, `Some(value)`, `None`, and lazy `??` fallback. Weak fields will
+use this model so reading an expired reference cannot produce a dangling value.
+
+**Open questions:** weak-field syntax and lowering, borrowing, cycle detection or collection, destruction order,
 thread interaction, foreign ownership, value semantics, and observable lifetime
 behavior.
 
