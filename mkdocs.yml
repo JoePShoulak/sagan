@@ -64,6 +64,10 @@ validation:
   anchors: warn
 
 extra:
+  status:
+    work-in-progress: Work in progress
+    review-needed: Review needed
+    publication-ready: Publication ready
   documentation:
     version: 0.1.0-internal.1
     channel: internal
