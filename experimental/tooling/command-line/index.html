@@ -3198,9 +3198,11 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>bin/sagan<span class="w"> </span>--types<span class="w"> </span>path/to/source.sagan
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>bin/sagan<span class="w"> </span>--entry<span class="w"> </span>path/to/source.sagan
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>bin/sagan<span class="w"> </span>--modules<span class="w"> </span>path/to/main.sagan
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>path/to/source.sagan
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>path/to/source.sagan<span class="w"> </span>build/program.cpp
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>bin/sagan<span class="w"> </span>--emit-cpp-modules<span class="w"> </span>path/to/main.sagan<span class="w"> </span>build/program.cpp
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>bin/sagan<span class="w"> </span>--package<span class="w"> </span>path/to/package
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>path/to/source.sagan
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>path/to/source.sagan<span class="w"> </span>build/program.cpp
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>bin/sagan<span class="w"> </span>--emit-cpp-modules<span class="w"> </span>path/to/main.sagan<span class="w"> </span>build/program.cpp
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>path/to/package<span class="w"> </span>build/program.cpp
 </span></code></pre></div>
 <p>With no valid source path, the program reports command usage or a file error.
 With a source path and no mode flag, it prints the token stream; it does not
@@ -3215,13 +3217,17 @@ or duplicate names, but it does not type-check or execute the program.
 declaration and expression types.
 <code>--entry</code> performs name and type checks, then validates the executable <code>main</code>
 contract. It does not generate or run a program.
-<code>--modules</code> recursively resolves sibling <code>&lt;module&gt;.sagan</code> files from the entry
-file's directory, validates module declarations and exports, rejects dependency
-cycles, and prints the dependency-ordered graph.
+<code>--modules</code> resolves an entry file's graph. It uses loose sibling mapping when
+there is no manifest, or discovers the nearest <code>sagan.toml</code> and maps qualified
+module names to nested files beneath its source root.
+<code>--package</code> accepts a package directory or <code>sagan.toml</code>, validates its strict
+manifest, resolves the configured entry, and prints the dependency-ordered graph.
 <code>--emit-cpp-modules</code> links selective imports and exported members accessed
 through whole-module namespaces into one isolated compilation unit, performs
 semantic, type, and entry-point validation, then prints or writes the generated
 C++.
+<code>--emit-cpp-package</code> performs the same linked checks and generation starting
+from the package manifest's configured entry module.
 <code>--emit-cpp</code> performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.</p>
@@ -3240,6 +3246,8 @@ large syntax trees.</p>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>bin/sagan<span class="w"> </span>--modules<span class="w"> </span>examples/module_demo/main.sagan
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>examples/execution_demo.sagan<span class="w"> </span>build/execution_demo.cpp
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>bin/sagan<span class="w"> </span>--emit-cpp-modules<span class="w"> </span>examples/module_demo/main.sagan<span class="w"> </span>build/module_demo.cpp
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>bin/sagan<span class="w"> </span>--package<span class="w"> </span>examples/package_demo
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>examples/package_demo<span class="w"> </span>build/package_demo.cpp
 </span></code></pre></div>
 <p>Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
@@ -3258,14 +3266,15 @@ Generated C++ supports only the initial executable subset documented under
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>make<span class="w"> </span>type-demo
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>make<span class="w"> </span>entry-demo
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>make<span class="w"> </span>module-demo
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>make<span class="w"> </span>optional-demo
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>make<span class="w"> </span>weak-demo
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>make<span class="w"> </span>payload-enum-demo
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>make<span class="w"> </span>generic-sum-demo
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>make<span class="w"> </span>generic-class-demo
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>make<span class="w"> </span>execution-demo
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>make<span class="w"> </span>get-version
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>make<span class="w"> </span>clean
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>make<span class="w"> </span>package-demo
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>make<span class="w"> </span>optional-demo
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>make<span class="w"> </span>weak-demo
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>make<span class="w"> </span>payload-enum-demo
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>make<span class="w"> </span>generic-sum-demo
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>make<span class="w"> </span>generic-class-demo
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>make<span class="w"> </span>execution-demo
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>make<span class="w"> </span>get-version
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>make<span class="w"> </span>clean
 </span></code></pre></div>
 <p>The wrapper scripts used for the complete local checks are:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>scripts/test.sh
@@ -3275,13 +3284,14 @@ Generated C++ supports only the initial executable subset documented under
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>bash<span class="w"> </span>scripts/type_demo.sh
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>bash<span class="w"> </span>scripts/entry_demo.sh
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>bash<span class="w"> </span>scripts/module_demo.sh
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>bash<span class="w"> </span>scripts/optional_demo.sh
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>bash<span class="w"> </span>scripts/weak_demo.sh
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>bash<span class="w"> </span>scripts/payload_enum_demo.sh
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>bash<span class="w"> </span>scripts/generic_sum_demo.sh
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>bash<span class="w"> </span>scripts/generic_class_demo.sh
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>bash<span class="w"> </span>scripts/execution_demo.sh
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>bash<span class="w"> </span>scripts/package_demo.sh
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>bash<span class="w"> </span>scripts/optional_demo.sh
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>bash<span class="w"> </span>scripts/weak_demo.sh
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>bash<span class="w"> </span>scripts/payload_enum_demo.sh
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>bash<span class="w"> </span>scripts/generic_sum_demo.sh
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>bash<span class="w"> </span>scripts/generic_class_demo.sh
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>bash<span class="w"> </span>scripts/execution_demo.sh
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
 </span></code></pre></div>
 <p><code>all</code> builds <code>bin/sagan</code>; <code>test</code> runs self-tests; <code>coverage</code> performs a clean
 instrumented build and produces LCOV output when <code>lcov</code> is installed; <code>demo</code> tokenizes the
@@ -3294,6 +3304,8 @@ entry point and focused control-flow failures. The test target exercises
 semantic/type/entry/code-generation success plus focused failures.
 <code>module-demo</code> prints a three-module dependency graph, executes selective and
 namespace imports, and verifies export visibility, filename, and cycle diagnostics.
+<code>package-demo</code> prints a strict manifest and nested source tree, resolves dotted
+modules, emits C++, compiles it, and runs the resulting native program.
 <code>optional-demo</code> prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 <code>weak-demo</code> shows a live weak reference resolving to <code>Some</code>, lets its strong

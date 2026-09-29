@@ -27,7 +27,7 @@
     
     
       
-        <title>Modules - Sagan Documentation</title>
+        <title>Modules and packages - Sagan Documentation</title>
       
     
     
@@ -86,7 +86,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#modules" class="md-skip">
+        <a href="#modules-and-packages" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Modules
+              Modules and packages
             
           </span>
         </div>
@@ -1446,10 +1446,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#initial-resolver-contract" class="md-nav__link">
+  <a href="#packages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Initial resolver contract
+        Packages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linking-and-visibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linking and visibility
       
     </span>
   </a>
@@ -3132,10 +3143,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#initial-resolver-contract" class="md-nav__link">
+  <a href="#packages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Initial resolver contract
+        Packages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linking-and-visibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linking and visibility
       
     </span>
   </a>
@@ -3163,58 +3185,65 @@
 <p class="admonition-title">Experimental documentation — Work in progress</p>
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
-<h1 id="modules">Modules</h1>
-<p>The tokenizer reserves <code>module</code>, <code>export</code>, <code>import</code>, <code>from</code>, and <code>as</code>, and the
-parser implements the following declaration forms:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>module orbital_demo
+<h1 id="modules-and-packages">Modules and packages</h1>
+<p>Sagan source files declare their qualified module name and may selectively
+import an exported symbol or bind a whole module as a namespace:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>module navigation.guidance
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>import math
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>import Vector from math
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>import Renderer from rendering as SceneRenderer
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>import physics as simulation_physics
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>import offset from telemetry.flight
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>import telemetry.flight as telemetry
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>fun calculate(value: Int): Int =&gt; value + offset()
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>export ExplorerShip
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>export GuidanceStatus as Status
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>export calculate as course
 </span></code></pre></div>
-<p>A source file may contain at most one <code>module</code> declaration. It is optional, but
-must precede every other declaration. Imports and exports are top-level
-declarations. <code>export</code> names a declaration separately instead of modifying the
-declaration itself.</p>
-<h2 id="initial-resolver-contract">Initial resolver contract</h2>
-<p>The module resolver is implemented for a deliberately small, deterministic
-layout. The directory containing the entry file is the source root, and each
-imported module name maps to a sibling <code>&lt;name&gt;.sagan</code> file. Imported files must
-declare the same module name as their filename:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>simulation/main.sagan       -&gt; module main
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>simulation/guidance.sagan   -&gt; module guidance
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>simulation/telemetry.sagan  -&gt; module telemetry
+<p>A file may contain at most one <code>module</code> declaration. It is optional only for a
+loose entry file; package and imported files require it. It must precede every other
+declaration. Imports and exports are top-level declarations. <code>export local as
+public</code> publishes a top-level variable, function, or type under a public name;
+unexported declarations remain private to the module.</p>
+<h2 id="packages">Packages</h2>
+<p>A package is a directory containing a strict <code>sagan.toml</code> manifest:</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[package]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mission-control"</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"0.1.0"</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"src"</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"main"</span>
 </span></code></pre></div>
-<p><code>import value from guidance</code> selects a public export named <code>value</code> from
-<code>guidance.sagan</code>. <code>as</code> changes the local binding name. <code>export local as public</code>
-publishes a local top-level variable, function, or type under <code>public</code>.
-Selecting a private or missing name is an error.</p>
-<p>Selective and whole-module imports are linked into a single checked compilation unit. Each
-dependency's top-level declarations receive a deterministic module-qualified
-identity before name and type analysis, preventing private declarations in
-different modules from colliding. Imported aliases resolve to those linked
-identities. The C++ backend then emits dependency declarations before their
-consumers, allowing cross-module functions and types to execute natively.</p>
-<p><code>import guidance</code> loads the whole module and binds the <code>guidance</code> namespace;
-<code>import guidance as flight</code> binds it as <code>flight</code> instead. Exported functions
-and types are accessed through that namespace, such as <code>flight.course()</code> or
-<code>flight.Status.nominal</code>. Attempting to access a private or missing member is an
-error. Dependencies are resolved transitively in dependency order, and cycles
-are rejected with the complete cycle path.</p>
-<p>Inspect the resolved graph with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bin/sagan<span class="w"> </span>--modules<span class="w"> </span>examples/module_demo/main.sagan
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>bin/sagan<span class="w"> </span>--emit-cpp-modules<span class="w"> </span>examples/module_demo/main.sagan<span class="w"> </span>build/modules.cpp
+<p>All four quoted-string fields are required. The package version uses
+<code>MAJOR.MINOR.PATCH</code>. <code>source</code> must name an existing directory contained by the
+package root. <code>entry</code> is a qualified module name and maps to a source path by
+replacing dots with directory separators and adding <code>.sagan</code>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>main                  -&gt; src/main.sagan
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>navigation.guidance   -&gt; src/navigation/guidance.sagan
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>telemetry.flight      -&gt; src/telemetry/flight.sagan
 </span></code></pre></div>
-<p><strong>Settled design:</strong> math is automatically available. Physics and rendering are
-first-party core libraries that require explicit imports.</p>
-<p><strong>Open work:</strong> mutable module-level initialization, hierarchical package layout,
-additional search paths, distribution, and the final module names and import
-granularity of physics and rendering. The flat filename mapping is the settled
-initial behavior, not yet a complete package system.</p>
+<p>Every declared module name must agree with this source-root-relative path.
+Imports use the same deterministic mapping and cannot search outside the
+package source root. Unknown manifest sections or keys, duplicate keys,
+malformed values, invalid package names or versions, missing source roots, and
+missing entries are errors.</p>
+<p>Inspect or compile a package with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bin/sagan<span class="w"> </span>--package<span class="w"> </span>examples/package_demo
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>examples/package_demo<span class="w"> </span>build/package.cpp
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>make<span class="w"> </span>package-demo
+</span></code></pre></div>
+<p>Both commands accept either the package directory or its <code>sagan.toml</code> path.
+When <code>--modules</code> is given a source file inside a package, Sagan discovers its
+nearest ancestor manifest and applies the package source-root rules. Projects
+without a manifest retain the original loose-module behavior: the entry file's
+directory is the source root, and simple imports map to sibling <code>.sagan</code> files.</p>
+<h2 id="linking-and-visibility">Linking and visibility</h2>
+<p>Selective and whole-module imports link into one checked compilation unit.
+Dependency declarations receive deterministic module-qualified identities,
+aliases resolve to those identities, and dependencies are emitted before their
+consumers. Namespace access exposes only exported members. Missing/private
+exports and dependency cycles are rejected, including a complete cycle path.</p>
+<p>Math will be automatically available. Physics and rendering are first-party
+core libraries that require explicit imports.</p>
+<p>Mutable module-level initialization, external dependencies, package registries,
+version constraints, lockfiles, distribution, and the final import granularity
+of physics and rendering remain future work.</p>
 
 
 

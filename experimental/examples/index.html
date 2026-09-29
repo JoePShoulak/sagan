@@ -2612,6 +2612,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#package-demonstration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package demonstration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#optional-value-demonstration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3317,6 +3328,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#package-demonstration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package demonstration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#optional-value-demonstration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3534,18 +3556,26 @@ cycle, visibility, missing-export, and filename/declaration diagnostics.</p>
 </span></code></pre></div>
 <p>The demonstration proves module structure, visibility, semantic/type linking,
 whole-module namespace access, and native cross-file execution.</p>
+<h2 id="package-demonstration">Package demonstration</h2>
+<p><code>examples/package_demo/</code> adds a strict <code>sagan.toml</code>, a configured entry module,
+and qualified <code>navigation.guidance</code> and <code>telemetry.flight</code> modules stored in
+matching nested directories. It proves manifest loading, deterministic source
+mapping, transitive imports, package graph inspection, linked C++ generation,
+and native execution.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>package-demo
+</span></code></pre></div>
 <h2 id="optional-value-demonstration">Optional-value demonstration</h2>
 <p><code>examples/optional_demo.sagan</code> demonstrates typed <code>Optional&lt;T&gt;</code> values,
 <code>Some(value)</code>, <code>None</code>, payload-binding matches, safe field and method access,
 lazy <code>??</code> fallback, and right-associative fallback chains. The script shows the
 source and generated C++, compiles it, and runs the native result:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>optional-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make<span class="w"> </span>optional-demo
 </span></code></pre></div>
 <h2 id="weak-reference-demonstration">Weak-reference demonstration</h2>
 <p><code>examples/weak_demo.sagan</code> stores a class value in a <code>weak let</code> field, reads it
 while the strong owner is alive, then reads it again after that owner leaves
 scope. The second read produces <code>None</code>, and <code>??</code> supplies the visible fallback:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make<span class="w"> </span>weak-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>make<span class="w"> </span>weak-demo
 </span></code></pre></div>
 <h2 id="payload-enum-demonstration">Payload-enum demonstration</h2>
 <p><code>examples/payload_enum_demo.sagan</code> constructs typed success and failure cases,
@@ -3553,27 +3583,27 @@ assigns explicit signed 64-bit tags, demonstrates implicit tag continuation,
 binds payloads, mixes them with a payload-free case, and executes an exhaustive
 match through the native tagged-variant representation. The demo also displays
 the generated C++ representation before running it:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>make<span class="w"> </span>payload-enum-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>make<span class="w"> </span>payload-enum-demo
 </span></code></pre></div>
 <h2 id="catchable-runtime-error-demonstration">Catchable runtime-error demonstration</h2>
 <p><code>examples/runtime_error_demo.sagan</code> catches checked integer overflow, division
 by zero, an invalid array index, and a missing dictionary key through built-in
 nominal <code>RuntimeError</code> cases. It also proves that <code>finally</code> cleanup runs on a
 native failure:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>make<span class="w"> </span>runtime-error-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>runtime-error-demo
 </span></code></pre></div>
 <h2 id="ownership-demonstration">Ownership demonstration</h2>
 <p><code>make ownership-demo</code> first runs the live/expired weak-reference example, then
 shows the compiler rejecting a two-class all-strong ownership cycle and naming
 the field path that requires a <code>weak let</code> edge:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>ownership-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>ownership-demo
 </span></code></pre></div>
 <h2 id="generic-sum-demonstration">Generic-sum demonstration</h2>
 <p><code>examples/generic_sum_demo.sagan</code> declares <code>Result&lt;T, E&gt;</code> and <code>identity&lt;T&gt;</code>.
 It demonstrates call-site function inference, contextual success construction,
 explicit <code>Result&lt;Int, String&gt;.Failure(...)</code> qualification, exhaustive payload
 binding, and native execution:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>generic-sum-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>generic-sum-demo
 </span></code></pre></div>
 <h2 id="generic-class-and-face-demonstration">Generic class and face demonstration</h2>
 <p><code>examples/generic_class_demo.sagan</code> declares <code>Box&lt;T&gt;</code> and the requirement-only
@@ -3583,13 +3613,13 @@ checks fields and methods after substituting <code>T</code>, converts <code>Box&
 specializes <code>Box&lt;Int8&gt;</code>, <code>echo&lt;String&gt;</code>, and a function constrained by
 <code>T is Readable&lt;Int8&gt;</code>, mutates the boxed value, and executes the generated
 native program:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>generic-class-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>make<span class="w"> </span>generic-class-demo
 </span></code></pre></div>
 <h2 id="semantic-analysis-demonstration">Semantic-analysis demonstration</h2>
 <p><code>examples/semantic_demo.sagan</code> exercises program, type, function, block, and
 branch scopes; built-in and user-defined type names; parameters; local and
 top-level variables; functions; composition; <code>self</code>; and resolved references.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>bash<span class="w"> </span>scripts/semantic_demo.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>bash<span class="w"> </span>scripts/semantic_demo.sh
 </span></code></pre></div>
 <p>The script prints the input's scope/symbol/resolution model, then confirms that
 <code>examples/semantic_undefined_error.sagan</code> and
@@ -3601,7 +3631,7 @@ source.</p>
 selection, annotations, lossless numeric widening, calls, overloads,
 conditions, returns, homogeneous arrays and dictionaries, indexing, and
 dimensioned vector and coordinate literals.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>bash<span class="w"> </span>scripts/type_demo.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>bash<span class="w"> </span>scripts/type_demo.sh
 </span></code></pre></div>
 <p>The script prints a successful <code>TypeModel</code>, then confirms focused failures for
 an incorrect return type, an uninferable variable, heterogeneous collections,
@@ -3611,7 +3641,7 @@ still marks deferred member and user-defined-type semantics.</p>
 <p><code>examples/entry_demo.sagan</code> is the first source fixture shaped like an
 executable program. It has a parameterless <code>main(): Int</code>, local arithmetic,
 conditional control flow, and guaranteed returns.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>bash<span class="w"> </span>scripts/entry_demo.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>bash<span class="w"> </span>scripts/entry_demo.sh
 </span></code></pre></div>
 <p>The script confirms the valid entry point and demonstrates missing-entry,
 uninitialized-read, and unreachable-statement diagnostics. It still does not
@@ -3637,7 +3667,7 @@ same demo exercises transitive compile-time conformance and an inherited default
 that calls another face requirement through <code>self</code>, without runtime inheritance.
 Its <code>match</code> cases, <code>for</code>
 loop, and final <code>if</code> branches demonstrate same-line bodies without braces.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>bash<span class="w"> </span>scripts/execution_demo.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>bash<span class="w"> </span>scripts/execution_demo.sh
 </span></code></pre></div>
 <p>The script prints the Sagan input, emits and prints C++, compiles it with
 <code>g++</code>, runs the native program, displays the program's own <code>print</code> output, and
@@ -3662,9 +3692,9 @@ missing compound-assignment value, and a documentation comment before an
 executable statement.</p>
 <h2 id="intentional-lexical-error">Intentional lexical error</h2>
 <p><code>examples/tokenizer_error.sagan</code> contains:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>let malformed_number = 1e
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>let malformed_number = 1e
 </span></code></pre></div>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>bin/sagan<span class="w"> </span>examples/tokenizer_error.sagan
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>bin/sagan<span class="w"> </span>examples/tokenizer_error.sagan
 </span></code></pre></div>
 <p>The tokenizer rejects it because the exponent has no digits.</p>
 <p>When adding examples, say whether they are tokenizer fixtures, intended syntax,
