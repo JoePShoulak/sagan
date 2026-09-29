@@ -1,5 +1,6 @@
 module telemetry
 
-let offset: Int = 2
+fun helper(): Int => 2
+fun offset(): Int => helper()
 
 export offset

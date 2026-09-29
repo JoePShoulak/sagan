@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "../parser/ast_node.hpp"
+
 namespace modules
 {
   struct export_symbol
@@ -39,4 +41,5 @@ namespace modules
   };
 
   auto resolve(const std::filesystem::path &entry_path) -> module_graph;
+  auto link(const std::filesystem::path &entry_path) -> parser::program;
 }

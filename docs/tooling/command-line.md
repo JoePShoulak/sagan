@@ -24,6 +24,7 @@ bin/sagan --entry path/to/source.sagan
 bin/sagan --modules path/to/main.sagan
 bin/sagan --emit-cpp path/to/source.sagan
 bin/sagan --emit-cpp path/to/source.sagan build/program.cpp
+bin/sagan --emit-cpp-modules path/to/main.sagan build/program.cpp
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -44,6 +45,9 @@ contract. It does not generate or run a program.
 file's directory, validates module declarations and exports, rejects dependency
 cycles, and prints the dependency-ordered graph. It does not yet link imported
 declarations into semantic analysis or generated code.
+`--emit-cpp-modules` links selective imports into one isolated compilation
+unit, performs semantic, type, and entry-point validation, then prints or writes
+the generated C++. Whole-module namespace access is not executable yet.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
@@ -65,6 +69,7 @@ bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
 bin/sagan --modules examples/module_demo/main.sagan
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
+bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/module_demo.cpp
 ```
 
 Successful AST output confirms only lexical and syntactic validity. Successful

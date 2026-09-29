@@ -2,6 +2,7 @@ module guidance
 
 import offset from telemetry
 
-fun calculate(value: Int): Int => value + offset
+fun helper(value: Int): Int => value
+fun calculate(value: Int): Int => helper(value) + offset()
 
 export calculate as course

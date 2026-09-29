@@ -2027,6 +2027,7 @@ auto main(const int argc, char **argv) -> int
     entry,
     modules,
     emit_cpp,
+    emit_cpp_modules,
   };
 
   output_mode mode = output_mode::tokens;
@@ -2080,6 +2081,12 @@ auto main(const int argc, char **argv) -> int
     path = argv[2];
     if (argc == 4) output_path = argv[3];
   }
+  else if ((argc == 3 || argc == 4) && std::string(argv[1]) == "--emit-cpp-modules")
+  {
+    mode = output_mode::emit_cpp_modules;
+    path = argv[2];
+    if (argc == 4) output_path = argv[3];
+  }
   else if (argc == 2)
   {
     path = argv[1];
@@ -2092,7 +2099,8 @@ auto main(const int argc, char **argv) -> int
   {
     std::cerr << "usage: sagan [--version | --self-test | --ast FILE | --ast-dot FILE | "
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
-                 "--entry FILE | --modules FILE | --emit-cpp FILE [OUTPUT] | FILE]\n";
+                 "--entry FILE | --modules FILE | --emit-cpp FILE [OUTPUT] | "
+                 "--emit-cpp-modules FILE [OUTPUT] | FILE]\n";
     return 2;
   }
   const bool ast_mode = mode != output_mode::tokens;
@@ -2103,6 +2111,21 @@ auto main(const int argc, char **argv) -> int
       const auto graph = modules::resolve(path);
       std::cout << "Sagan " << SAGAN_VERSION << " module graph: " << path << "\n\n";
       graph.print(std::cout);
+      return 0;
+    }
+    if (mode == output_mode::emit_cpp_modules)
+    {
+      const auto tree = modules::link(path);
+      static_cast<void>(semantic::analyze(tree));
+      const auto types = semantic::check_types(tree);
+      semantic::validate_entry_point(tree);
+      const std::string generated = codegen::generate_cpp(tree, types);
+      if (output_path.empty()) std::cout << generated;
+      else
+      {
+        write_file(output_path, generated);
+        std::cout << "Wrote linked generated C++ to " << output_path << '\n';
+      }
       return 0;
     }
     const std::string source = read_file(path);

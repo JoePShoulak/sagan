@@ -168,6 +168,211 @@ namespace modules
         return module_graph{source_root, entry, std::move(resolved)};
       }
     };
+
+    class symbol_rewriter
+    {
+      const std::unordered_map<std::string, std::string> &bindings;
+      std::vector<std::unordered_set<std::string>> locals;
+
+      auto annotation(std::optional<std::string> &name) const -> void
+      {
+        if (!name) return;
+        if (const auto found = bindings.find(*name); found != bindings.end()) *name = found->second;
+      }
+
+      auto is_local(const std::string &name) const -> bool
+      {
+        return std::any_of(locals.rbegin(), locals.rend(), [&](const auto &scope) { return scope.contains(name); });
+      }
+
+      auto expression(parser::expression &value) -> void
+      {
+        if (auto *identifier = dynamic_cast<parser::identifier_expression *>(&value))
+        {
+          if (!is_local(identifier->name))
+            if (const auto found = bindings.find(identifier->name); found != bindings.end())
+              identifier->name = found->second;
+        }
+        else if (auto *group = dynamic_cast<parser::grouping_expression *>(&value)) expression(*group->value);
+        else if (auto *unary = dynamic_cast<parser::unary_expression *>(&value)) expression(*unary->operand);
+        else if (auto *binary = dynamic_cast<parser::binary_expression *>(&value))
+        {
+          expression(*binary->left);
+          expression(*binary->right);
+        }
+        else if (auto *conditional = dynamic_cast<parser::conditional_expression *>(&value))
+        {
+          expression(*conditional->condition);
+          expression(*conditional->when_true);
+          expression(*conditional->when_false);
+        }
+        else if (auto *assignment = dynamic_cast<parser::assignment_expression *>(&value))
+        {
+          expression(*assignment->target);
+          expression(*assignment->value);
+        }
+        else if (auto *call = dynamic_cast<parser::call_expression *>(&value))
+        {
+          expression(*call->callee);
+          for (auto &argument : call->arguments) expression(*argument);
+        }
+        else if (auto *index = dynamic_cast<parser::index_expression *>(&value))
+        {
+          expression(*index->target);
+          expression(*index->index);
+        }
+        else if (auto *member = dynamic_cast<parser::member_expression *>(&value)) expression(*member->target);
+        else if (auto *string = dynamic_cast<parser::string_expression *>(&value))
+        {
+          for (auto &part : string->parts)
+            if (part.interpolation) expression(*part.interpolation);
+        }
+        else if (auto *spread = dynamic_cast<parser::spread_expression *>(&value)) expression(*spread->value);
+        else if (auto *collection = dynamic_cast<parser::collection_expression *>(&value))
+        {
+          for (auto &element : collection->elements) expression(*element);
+        }
+        else if (auto *dictionary = dynamic_cast<parser::dictionary_expression *>(&value))
+        {
+          for (auto &entry : dictionary->entries)
+          {
+            if (entry.key) expression(*entry.key);
+            expression(*entry.value);
+          }
+        }
+        else if (auto *lambda = dynamic_cast<parser::lambda_expression *>(&value))
+        {
+          annotation(lambda->return_type);
+          locals.emplace_back();
+          for (auto &parameter : lambda->parameters)
+          {
+            annotation(parameter.type_name);
+            locals.back().insert(parameter.name);
+          }
+          expression(*lambda->body);
+          locals.pop_back();
+        }
+      }
+
+      auto block(parser::block_statement &value) -> void
+      {
+        locals.emplace_back();
+        for (auto &entry : value.statements) statement(*entry, false, false);
+        locals.pop_back();
+      }
+
+      auto function(parser::function_declaration &value, const bool top_level) -> void
+      {
+        if (top_level)
+          if (const auto found = bindings.find(value.name); found != bindings.end()) value.name = found->second;
+        annotation(value.return_type);
+        locals.emplace_back();
+        for (auto &parameter : value.parameters)
+        {
+          annotation(parameter.type_name);
+          locals.back().insert(parameter.name);
+        }
+        if (value.body) block(*value.body);
+        if (value.expression_body) expression(*value.expression_body);
+        locals.pop_back();
+      }
+
+      auto statement(parser::statement &value, const bool top_level, const bool member) -> void
+      {
+        if (auto *declaration = dynamic_cast<parser::let_declaration *>(&value))
+        {
+          annotation(declaration->type_name);
+          if (declaration->initializer) expression(*declaration->initializer);
+          if (top_level)
+          {
+            if (const auto found = bindings.find(declaration->name); found != bindings.end())
+              declaration->name = found->second;
+          }
+          else if (!member) locals.back().insert(declaration->name);
+        }
+        else if (auto *expression_value = dynamic_cast<parser::expression_statement *>(&value))
+          expression(*expression_value->value);
+        else if (auto *assignment = dynamic_cast<parser::assignment_statement *>(&value))
+        {
+          expression(*assignment->target);
+          expression(*assignment->value);
+        }
+        else if (auto *nested = dynamic_cast<parser::block_statement *>(&value)) block(*nested);
+        else if (auto *conditional = dynamic_cast<parser::if_statement *>(&value))
+        {
+          expression(*conditional->condition);
+          block(*conditional->then_branch);
+          if (conditional->else_branch) statement(*conditional->else_branch, false, false);
+        }
+        else if (auto *loop = dynamic_cast<parser::condition_loop_statement *>(&value))
+        {
+          expression(*loop->condition);
+          block(*loop->body);
+        }
+        else if (auto *loop = dynamic_cast<parser::for_statement *>(&value))
+        {
+          expression(*loop->iterable);
+          locals.emplace_back();
+          locals.back().insert(loop->binding);
+          block(*loop->body);
+          locals.pop_back();
+        }
+        else if (auto *returned = dynamic_cast<parser::return_statement *>(&value))
+        {
+          if (returned->value) expression(*returned->value);
+        }
+        else if (auto *yielded = dynamic_cast<parser::yield_statement *>(&value))
+        {
+          if (yielded->value) expression(*yielded->value);
+        }
+        else if (auto *matched = dynamic_cast<parser::match_statement *>(&value))
+        {
+          expression(*matched->subject);
+          for (auto &branch : matched->cases)
+          {
+            if (branch.pattern) expression(*branch.pattern);
+            block(*branch.body);
+          }
+        }
+        else if (auto *hope = dynamic_cast<parser::hope_statement *>(&value))
+        {
+          block(*hope->protected_body);
+          for (auto &handler : hope->handlers)
+          {
+            expression(*handler.pattern);
+            block(*handler.body);
+          }
+          if (hope->cleanup) block(*hope->cleanup);
+        }
+        else if (auto *scream = dynamic_cast<parser::scream_statement *>(&value)) expression(*scream->value);
+        else if (auto *function_value = dynamic_cast<parser::function_declaration *>(&value))
+          function(*function_value, top_level);
+        else if (auto *type = dynamic_cast<parser::type_declaration *>(&value))
+        {
+          if (top_level)
+            if (const auto found = bindings.find(type->name); found != bindings.end()) type->name = found->second;
+          for (auto &face : type->composed_interfaces)
+            if (const auto found = bindings.find(face); found != bindings.end()) face = found->second;
+          locals.emplace_back();
+          locals.back().insert("self");
+          for (auto &entry : type->members) statement(*entry, false, true);
+          locals.pop_back();
+        }
+      }
+
+    public:
+      explicit symbol_rewriter(const std::unordered_map<std::string, std::string> &module_bindings)
+          : bindings(module_bindings)
+      {
+      }
+
+      auto rewrite(parser::program &tree) -> void
+      {
+        locals.emplace_back();
+        for (auto &entry : tree.statements) statement(*entry, true, false);
+        locals.pop_back();
+      }
+    };
   }
 
   auto module_graph::print(std::ostream &stream) const -> void
@@ -193,5 +398,50 @@ namespace modules
     if (entry_path.extension() != ".sagan")
       throw std::runtime_error("Module entry file must use the .sagan extension");
     return resolver(entry_path).run();
+  }
+
+  auto link(const std::filesystem::path &entry_path) -> parser::program
+  {
+    const module_graph graph = resolve(entry_path);
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> linked_names;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> public_names;
+    const std::string entry_name = graph.entry_path.stem().string();
+
+    for (const auto &module : graph.modules)
+    {
+      parser::program tree = parse_file(module.path);
+      for (const auto &entry : tree.statements)
+      {
+        std::string name;
+        if (const auto *value = dynamic_cast<const parser::let_declaration *>(entry.get())) name = value->name;
+        else if (const auto *function = dynamic_cast<const parser::function_declaration *>(entry.get()))
+          name = function->name;
+        else if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) name = type->name;
+        if (!name.empty()) linked_names[module.name][name] = module.name == entry_name ? name : module.name + "__" + name;
+      }
+      for (const auto &symbol : module.exports)
+        public_names[module.name][symbol.public_name] = linked_names[module.name].at(symbol.local_name);
+    }
+
+    std::vector<parser::statement_ref> combined;
+    for (const auto &module : graph.modules)
+    {
+      parser::program tree = parse_file(module.path);
+      auto bindings = linked_names.at(module.name);
+      for (const auto &imported : module.imports)
+      {
+        if (imported.whole_module) continue;
+        bindings[imported.binding_name] = public_names.at(imported.module_name).at(imported.imported_name);
+      }
+      symbol_rewriter(bindings).rewrite(tree);
+      for (auto &entry : tree.statements)
+      {
+        if (dynamic_cast<parser::module_declaration *>(entry.get()) ||
+            dynamic_cast<parser::import_declaration *>(entry.get()) ||
+            dynamic_cast<parser::export_declaration *>(entry.get())) continue;
+        combined.push_back(std::move(entry));
+      }
+    }
+    return parser::program(std::move(combined));
   }
 }

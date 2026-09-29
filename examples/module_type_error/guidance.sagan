@@ -1,0 +1,5 @@
+module guidance
+
+fun calculate(value: Int): Int => value + 2
+
+export calculate as course

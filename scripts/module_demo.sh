@@ -19,6 +19,20 @@ echo "Resolved graph:"
 echo "---------------"
 bin/sagan --modules examples/module_demo/main.sagan
 
+echo
+echo "Linked native execution:"
+echo "------------------------"
+mkdir -p build/tmp
+bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/module_demo.cpp
+native_output="build/module_demo"
+if [[ "${OS:-}" == "Windows_NT" ]]; then
+  native_output="build/module_demo.exe"
+fi
+repo_tmp_native="$(cygpath -w "$repo_root/build/tmp")"
+TMPDIR="$repo_tmp_native" TMP="$repo_tmp_native" TEMP="$repo_tmp_native" \
+  g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/module_demo.cpp -o "$native_output"
+"$native_output"
+
 expect_failure() {
   local source="$1"
   local expected="$2"
@@ -43,4 +57,15 @@ expect_failure examples/module_declaration_error/main.sagan "must declare 'modul
 expect_failure examples/module_undefined_export_error/main.sagan "exports undefined declaration 'missing'"
 expect_failure examples/module_duplicate_export_error/main.sagan "exports duplicate public name 'value'"
 
-echo "Module demo passed: sibling resolution, transitive dependencies, exports, aliases, and cycle diagnostics are working."
+set +e
+type_output="$(bin/sagan --emit-cpp-modules examples/module_type_error/main.sagan 2>&1)"
+type_status=$?
+set -e
+if [[ "$type_status" -eq 0 || "$type_output" != *"No matching overload for 'guidance__calculate'"* ]]; then
+  echo "Expected cross-module type diagnostic." >&2
+  echo "$type_output" >&2
+  exit 1
+fi
+echo "Confirmed linked type error: imported function rejects String"
+
+echo "Module demo passed: sibling resolution, transitive dependencies, exports, aliases, semantic/type linking, native execution, and cycle diagnostics are working."

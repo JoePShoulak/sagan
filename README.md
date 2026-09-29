@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.42.0](https://img.shields.io/badge/development-0.42.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.43.0](https://img.shields.io/badge/development-0.43.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -68,10 +68,11 @@ Value-bearing `scream` exceptions execute in the native subset. `unless`
 handlers test exact type-and-value matches in source order, unmatched values
 propagate outward, and `finally` cleanup runs during normal completion,
 propagation, handled exceptions, and early returns.
-The module resolver now loads flat sibling `.sagan` files recursively from the
+The module pipeline loads flat sibling `.sagan` files recursively from the
 entry file's directory, validates filename declarations and public exports,
-applies import/export aliases, orders dependencies, and rejects cycles. Native
-cross-module calls are the next module milestone.
+applies import/export aliases, isolates dependency-private symbols, orders
+dependencies, and rejects cycles. Selective imports participate in semantic and
+type checking and can be compiled together into a native executable.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text
@@ -135,6 +136,7 @@ bin/sagan --semantic examples/semantic_demo.sagan
 bin/sagan --types examples/type_demo.sagan
 bin/sagan --entry examples/entry_demo.sagan
 bin/sagan --modules examples/module_demo/main.sagan
+bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/modules.cpp
 bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
 bin/sagan --version
 ```

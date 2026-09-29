@@ -85,6 +85,13 @@ backend emits conforming classes and flattens applicable transitive default
 method bodies. Class construction uses shared reference-counted storage, and
 conversion to a declared face preserves object identity for runtime dispatch.
 
+`--emit-cpp-modules` resolves a flat sibling-file module graph and links its
+selective imports into one checked compilation unit. Dependency-private
+top-level names receive deterministic module-qualified identities, imported
+aliases point to exported identities, and dependency declarations are emitted
+before their consumers. The module demo compiles and executes the resulting
+C++ translation.
+
 Open work includes generated-code structure, reference cycles, weak references
 or borrowing, escaping closures, catchable native runtime failures and richer exception patterns, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression

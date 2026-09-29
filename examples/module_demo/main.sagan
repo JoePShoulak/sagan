@@ -3,4 +3,9 @@ module main
 import course from guidance as calculate_course
 import telemetry as flight_data
 
-fun main(): Int => calculate_course(40)
+fun main(): Int {
+  let answer = calculate_course(40)
+  print("Cross-module answer: ${answer}")
+  if answer == 42 return 0
+  else return 1
+}
