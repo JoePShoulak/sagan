@@ -7,7 +7,11 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 binary="./bin/sagan"
 mkdir -p build build/tmp
-repo_tmp_native="$(cygpath -w "$repo_root/build/tmp")"
+if command -v cygpath >/dev/null 2>&1; then
+  repo_tmp_native="$(cygpath -w "$repo_root/build/tmp")"
+else
+  repo_tmp_native="$repo_root/build/tmp"
+fi
 export TMPDIR="$repo_tmp_native" TMP="$repo_tmp_native" TEMP="$repo_tmp_native"
 work_dir="$(mktemp -d build/cli-test.XXXXXXXXXX)"
 
