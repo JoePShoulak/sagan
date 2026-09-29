@@ -112,3 +112,14 @@ explicit numeric enum values, catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.
+
+## Required pre-1.0 design checkpoints
+
+Before declaring the hypercore language stable, reevaluate whether coordinates
+should remain a distinct type from vectors. The decision must explicitly cover
+their mathematical meaning, valid arithmetic (`coordinate - coordinate`,
+`coordinate + vector`, and invalid `coordinate + coordinate`), component access,
+conversion rules, generic algorithms, runtime representation, and whether type
+separation prevents meaningful simulation errors without creating unnecessary
+friction. This review must happen before work begins on math, rendering, or
+physics libraries.

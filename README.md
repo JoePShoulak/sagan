@@ -115,6 +115,10 @@ The [design philosophy](docs/design/philosophy.md),
 [language reference](docs/reference/index.md) distinguish settled direction
 from provisional and unresolved behavior.
 
+Before the hypercore reaches 1.0, the design will explicitly reevaluate whether
+coordinates should remain a separate type from vectors. Math, rendering, and
+physics library work remains paused until that core semantic decision is made.
+
 ## Build and explore
 
 Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
