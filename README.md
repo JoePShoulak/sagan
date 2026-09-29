@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.53.0](https://img.shields.io/badge/development-0.53.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.54.0](https://img.shields.io/badge/development-0.54.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -30,7 +30,10 @@ well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
 and dictionaries plus dimensioned vectors and coordinates are inferred. Nominal
 enums can be selected, compared, matched, interpolated, and printed. Cases may
 carry typed payloads, construct values like `Success(42)`, and bind their
-contents through exhaustive `match` branches.
+contents through exhaustive `match` branches. Every case also has a unique
+signed 64-bit numeric tag. Tags begin at zero and increment implicitly, while
+`Case = 200` sets an explicit tag and resets the continuation sequence; payload
+cases use the same syntax.
 Class methods declared with a leading dot are private to their declaring class.
 Top-level generic functions such as `identity<T>(value: T): T` infer type
 arguments from their calls and execute natively, or accept explicit arguments

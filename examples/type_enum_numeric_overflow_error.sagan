@@ -1,0 +1,4 @@
+enum MissionCode {
+  Final = 9_223_372_036_854_775_807
+  Overflow
+}

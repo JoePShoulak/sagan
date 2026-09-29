@@ -224,6 +224,12 @@ expect_failure "payload enum arity diagnostic" 1 "Enum case 'Success' expects 1 
   "$binary" --types examples/type_payload_enum_arity_error.sagan
 expect_failure "payload enum match diagnostic" 1 "Enum case 'Message' belongs to Signal" \
   "$binary" --types examples/type_payload_enum_match_error.sagan
+expect_failure "duplicate enum numeric value diagnostic" 1 "cannot share numeric value 201" \
+  "$binary" --types examples/type_enum_duplicate_numeric_error.sagan
+expect_failure "implicit enum numeric overflow diagnostic" 1 "would overflow Int64" \
+  "$binary" --types examples/type_enum_numeric_overflow_error.sagan
+expect_failure "explicit enum numeric range diagnostic" 1 "outside the supported Int64 range" \
+  "$binary" --types examples/type_enum_numeric_range_error.sagan
 expect_failure "generic sum context diagnostic" 1 "Cannot infer every generic argument" \
   "$binary" --types examples/type_generic_sum_context_error.sagan
 expect_failure "generic function inference diagnostic" 1 "No matching overload for 'missing'" \

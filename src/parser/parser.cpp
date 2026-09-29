@@ -403,6 +403,7 @@ namespace parser
       {
         const token &member = expect(tokens::IDENTIFIER, "an enum member name");
         std::vector<std::string> payload_types;
+        std::optional<std::string> numeric_value;
         int member_end = member.range.end;
         if (match(tokens::LPAREN))
         {
@@ -415,8 +416,16 @@ namespace parser
           }
           member_end = expect(tokens::RPAREN, "')' after enum payload types").range.end;
         }
+        if (match(tokens::EQUAL))
+        {
+          const bool negative = match(tokens::MINUS);
+          const token &number = expect(tokens::INTEGER, "an integer after '=' in an enum case");
+          numeric_value = std::string(negative ? "-" : "") + number.text;
+          member_end = number.range.end;
+        }
         enum_members.emplace_back(member.text, span{member.range.begin, member_end},
-                                  std::move(payload_types), std::move(documentation));
+                                  std::move(payload_types), std::move(numeric_value),
+                                  std::move(documentation));
         if (match(tokens::COMMA))
         {
           skip_newlines();

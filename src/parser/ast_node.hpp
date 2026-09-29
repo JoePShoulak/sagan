@@ -430,9 +430,11 @@ namespace parser
       std::string name;
       span range;
       std::vector<std::string> payload_types;
+      std::optional<std::string> numeric_value;
       std::vector<documentation_comment> documentation;
 
       enum_member(std::string identifier, span source_range, std::vector<std::string> payload,
+                  std::optional<std::string> explicit_numeric_value,
                   std::vector<documentation_comment> comments);
     };
 

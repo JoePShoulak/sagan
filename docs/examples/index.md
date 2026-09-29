@@ -115,8 +115,10 @@ make weak-demo
 ## Payload-enum demonstration
 
 `examples/payload_enum_demo.sagan` constructs typed success and failure cases,
-binds their payloads, mixes them with a payload-free case, and executes an
-exhaustive match through the native tagged-variant representation:
+assigns explicit signed 64-bit tags, demonstrates implicit tag continuation,
+binds payloads, mixes them with a payload-free case, and executes an exhaustive
+match through the native tagged-variant representation. The demo also displays
+the generated C++ representation before running it:
 
 ```bash
 make payload-enum-demo

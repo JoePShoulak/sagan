@@ -1,8 +1,8 @@
 enum Result {
-  Success(Int)
-  Failure(String)
+  Success(Int) = 200
+  Failure(String) = 500
   Coordinates(Int, Int)
-  Pending
+  Pending = -1
 }
 
 fun describe(result: Result): String {

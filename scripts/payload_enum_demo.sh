@@ -18,7 +18,7 @@ bin/sagan --emit-cpp examples/payload_enum_demo.sagan build/payload_enum_demo.cp
 echo
 echo "Generated tagged-variant excerpts:"
 echo "----------------------------------"
-grep -E 'struct sagan_526573756c74|std::variant|std::get|enum class Tag' build/payload_enum_demo.cpp
+grep -E 'struct sagan_526573756c74|std::variant|std::get|enum class Tag| = 200| = 500| = -1' build/payload_enum_demo.cpp
 
 g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/payload_enum_demo.cpp -o build/payload_enum_demo
 
@@ -28,4 +28,4 @@ exit_code=$?
 
 echo
 echo "Native process exit code: $exit_code"
-echo "Payload-enum demo passed: typed cases constructed, bound payloads, and matched exhaustively."
+echo "Payload-enum demo passed: explicit Int64 tags, implicit continuation, typed payloads, and exhaustive matching executed natively."

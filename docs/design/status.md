@@ -101,8 +101,9 @@ source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
 Bare and value-bearing `yield` statements and documented enum members complete
 the current parser grammar. Enum cases may carry typed payloads, construct
-values, bind payload names in `match`, and establish exhaustiveness. Explicit
-numeric enum values remain future semantic and runtime work.
+values, bind payload names in `match`, and establish exhaustiveness. Every case
+has a unique signed 64-bit tag, with zero-based implicit sequencing and explicit
+assignments that reset the following sequence.
 
 ## Major open language questions
 
@@ -113,7 +114,7 @@ with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with `is`. Method-specific face generics,
 automatic handling of all-strong reference cycles,
-explicit numeric enum values, catchable native runtime errors,
+catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

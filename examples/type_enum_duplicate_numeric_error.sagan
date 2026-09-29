@@ -1,0 +1,5 @@
+enum MissionCode {
+  Nominal = 200
+  Warning
+  Abort = 201
+}

@@ -84,6 +84,7 @@ generic_parameters := "<" generic_parameter ("," generic_parameter)* ">"
 generic_parameter := identifier ("is" type_annotation)?
 enum_members := documented_enum_member ((newline+ | ",") documented_enum_member)* ","?
 documented_enum_member := documentation_comment* identifier ("(" type_list? ")")?
+                          ("=" "-"? integer)?
 type_list := type ("," type)*
 
 type_annotation := identifier ("<" type_annotation ("," type_annotation)* ">")?

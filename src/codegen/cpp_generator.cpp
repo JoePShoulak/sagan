@@ -163,6 +163,14 @@ namespace codegen
         return identifier(enum_name + "__" + case_name);
       }
 
+      auto enum_numeric_suffix(const parser::type_declaration::enum_member &member) const -> std::string
+      {
+        if (!member.numeric_value) return {};
+        std::string value = *member.numeric_value;
+        value.erase(std::remove(value.begin(), value.end(), '_'), value.end());
+        return " = " + value;
+      }
+
       auto generic_arguments(const std::string &type) const -> std::vector<std::string>
       {
         const std::size_t open = type.find('<');
@@ -1129,9 +1137,10 @@ namespace codegen
       {
         if (!value.type_parameters.empty())
         {
-          output << "struct " << identifier(value.name) << "\n{\n  enum class Tag\n  {\n";
+          output << "struct " << identifier(value.name) << "\n{\n  enum class Tag : std::int64_t\n  {\n";
           for (std::size_t index = 0; index < value.enum_members.size(); ++index)
             output << "    " << identifier(value.enum_members[index].name)
+                   << enum_numeric_suffix(value.enum_members[index])
                    << (index + 1 == value.enum_members.size() ? "\n" : ",\n");
           output << "  };\n  Tag tag;\n  std::vector<std::any> payload;\n};\n\n";
           output << "std::ostream &operator<<(std::ostream &stream, const " << identifier(value.name)
@@ -1148,9 +1157,10 @@ namespace codegen
         });
         if (payload_enum)
         {
-          output << "struct " << identifier(value.name) << "\n{\n  enum class Tag\n  {\n";
+          output << "struct " << identifier(value.name) << "\n{\n  enum class Tag : std::int64_t\n  {\n";
           for (std::size_t index = 0; index < value.enum_members.size(); ++index)
             output << "    " << identifier(value.enum_members[index].name)
+                   << enum_numeric_suffix(value.enum_members[index])
                    << (index + 1 == value.enum_members.size() ? "\n" : ",\n");
           output << "  };\n  using Payload = std::variant<";
           for (std::size_t index = 0; index < value.enum_members.size(); ++index)
@@ -1196,11 +1206,12 @@ namespace codegen
           output << "  }\n  return stream;\n}\n\n";
           return;
         }
-        output << "enum class " << identifier(value.name) << "\n{\n";
+        output << "enum class " << identifier(value.name) << " : std::int64_t\n{\n";
         ++depth;
         for (std::size_t index = 0; index < value.enum_members.size(); ++index)
         {
           output << indentation() << identifier(value.enum_members[index].name);
+          output << enum_numeric_suffix(value.enum_members[index]);
           output << (index + 1 == value.enum_members.size() ? "\n" : ",\n");
         }
         --depth;

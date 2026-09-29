@@ -648,8 +648,10 @@ namespace parser
 
   type_declaration::enum_member::enum_member(std::string identifier, const span source_range,
                                              std::vector<std::string> payload,
+                                             std::optional<std::string> explicit_numeric_value,
                                              std::vector<documentation_comment> comments)
       : name(std::move(identifier)), range(source_range), payload_types(std::move(payload)),
+        numeric_value(std::move(explicit_numeric_value)),
         documentation(std::move(comments))
   {
   }
@@ -685,6 +687,7 @@ namespace parser
       write_indent(stream, indent + 2);
       stream << "EnumMember(" << member.name;
       for (const auto &payload : member.payload_types) stream << ", " << payload;
+      if (member.numeric_value) stream << " = " << *member.numeric_value;
       stream << ")\n";
       for (const auto &comment : member.documentation)
       {

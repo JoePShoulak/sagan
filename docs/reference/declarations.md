@@ -83,6 +83,15 @@ the surrounding declaration namespace. Match patterns use the case name and
 bind one name per payload value; covering every case makes the match exhaustive.
 Payload-constructor names must currently be unique within that namespace.
 
+Every enum case has a unique signed 64-bit numeric tag. The first implicit tag
+is zero, and each later implicit tag is one greater than the preceding case.
+An explicit assignment such as `Success(Int) = 200` sets that case's tag and
+resets the sequence used by following implicit cases. Numeric separators are
+accepted. Duplicate tags, values outside the signed 64-bit range, and an
+implicit increment beyond that range are compile-time errors. These tags are
+stable representation metadata; enum equality and matching remain nominal, and
+enum values do not implicitly participate in integer arithmetic.
+
 Enums may declare type parameters: `enum Result<T, E>`. An expected type such
 as `let result: Result<Int, String> = Failure("problem")` supplies generic
 arguments that the selected case cannot infer. Explicit qualification such as
@@ -114,6 +123,6 @@ method cannot introduce method-specific parameters because virtual generic
 methods are intentionally unsupported.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
-forward references, explicit enum values, variance and face method generics,
+forward references, variance and face method generics,
 module resolution and visibility, and entry-point forms. These require semantic
 analysis or future language revisions.

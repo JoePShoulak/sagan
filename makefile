@@ -1,6 +1,6 @@
 APPNAME := sagan
 CXX ?= g++
-CXXFLAGS ?= -std=c++23 -Wall -Wextra -Wpedantic -Werror -DUNI_ALGO_STATIC_DATA -Ithird_party/uni-algo/include
+CXXFLAGS ?= -std=c++23 -Wall -Wextra -Wpedantic -Werror -MMD -MP -DUNI_ALGO_STATIC_DATA -Ithird_party/uni-algo/include
 LDFLAGS ?=
 
 # Development versions retain Schematic's Git-derived identity while using
@@ -24,6 +24,7 @@ SOURCES := \
 
 OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 OBJECTS += obj/version.o
+DEPENDENCIES := $(OBJECTS:.o=.d)
 TARGET := bin/$(APPNAME)
 BUILD_TMP := build/tmp
 ifeq ($(OS),Windows_NT)
@@ -108,3 +109,5 @@ FORCE:
 
 clean:
 	rm -rf obj bin
+
+-include $(DEPENDENCIES)

@@ -134,6 +134,23 @@ namespace semantic
       return true;
     }
 
+    auto enum_numeric_value(const std::string &spelling, const parser::span range) -> std::int64_t
+    {
+      const bool negative = spelling.starts_with('-');
+      std::string digits = negative ? spelling.substr(1) : spelling;
+      digits.erase(std::remove(digits.begin(), digits.end(), '_'), digits.end());
+      std::uint64_t magnitude = 0;
+      const auto parsed = std::from_chars(digits.data(), digits.data() + digits.size(), magnitude);
+      const std::uint64_t negative_limit = std::uint64_t{1} << 63U;
+      if (parsed.ec != std::errc{} || parsed.ptr != digits.data() + digits.size() ||
+          (!negative && magnitude > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) ||
+          (negative && magnitude > negative_limit))
+        throw semantic_error("Enum numeric value is outside the supported Int64 range", range);
+      if (!negative) return static_cast<std::int64_t>(magnitude);
+      if (magnitude == negative_limit) return std::numeric_limits<std::int64_t>::min();
+      return -static_cast<std::int64_t>(magnitude);
+    }
+
     struct interface_type
     {
       std::vector<std::string> type_parameters;
@@ -690,9 +707,30 @@ namespace semantic
         if (type.type_kind != parser::type_declaration::kind::enum_type) return;
         generic_enums[type.name] = type.type_parameters;
         auto &members = enums[type.name];
+        std::unordered_map<std::int64_t, std::string> numeric_values;
+        std::int64_t previous_value = 0;
+        bool has_previous_value = false;
         for (std::size_t index = 0; index < type.enum_members.size(); ++index)
         {
           const auto &member = type.enum_members[index];
+          std::int64_t numeric_value = 0;
+          if (member.numeric_value) numeric_value = enum_numeric_value(*member.numeric_value, member.range);
+          else if (!has_previous_value) numeric_value = 0;
+          else
+          {
+            require(previous_value != std::numeric_limits<std::int64_t>::max(),
+                    "Implicit enum numeric value after '" + type.enum_members[index - 1].name +
+                        "' would overflow Int64",
+                    member.range);
+            numeric_value = previous_value + 1;
+          }
+          if (const auto duplicate = numeric_values.find(numeric_value); duplicate != numeric_values.end())
+            throw semantic_error("Enum cases '" + duplicate->second + "' and '" + member.name +
+                                     "' cannot share numeric value " + std::to_string(numeric_value),
+                                 member.range);
+          numeric_values.emplace(numeric_value, member.name);
+          previous_value = numeric_value;
+          has_previous_value = true;
           members.insert(member.name);
           if (!member.payload_types.empty())
           {
