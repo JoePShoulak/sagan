@@ -84,8 +84,8 @@ match possible_result {
 }
 ```
 
-General payload enums and weak fields remain the next pieces of this feature
-family.
+General payload enums remain future work. Weak class fields use this optional
+model when read, including through safe access and coalescing chains.
 
 **Settled dictionary-spread behavior:** dictionary entries are applied from
 left to right. When an explicit entry or later spread repeats an existing key,

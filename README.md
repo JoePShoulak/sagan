@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.46.0](https://img.shields.io/badge/development-0.46.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.47.0](https://img.shields.io/badge/development-0.47.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -30,7 +30,7 @@ well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
 and dictionaries plus dimensioned vectors and coordinates are inferred. Simple
 nominal enums can be selected, compared, matched, interpolated, and printed.
 Class methods declared with a leading dot are private to their declaring class.
-General-purpose generics, reference-cycle handling, the full runtime, and the
+General-purpose generics, automatic reference-cycle collection, the full runtime, and the
 standard library are not yet implemented. The built-in `Optional<T>` type,
 `Some(value)`, `None`, payload matching, safe `?.` access, and lazy `??`
 fallback execute natively. An initial C++ emitter can compile the validated scalar/control-
@@ -58,8 +58,11 @@ Classes support typed fields, overloaded `new(...)` constructors, default
 zero-argument construction when every field has a default, `self`,
 field mutation, ordinary methods, and `!`-suffixed mutating methods.
 Leading-dot fields and methods are private to their declaring class. Class and
-face values use shared reference-counted storage in the native subset, and a
-conforming class converts to a composed face for runtime method dispatch.
+face values use shared reference-counted storage in the native subset. Explicit
+`weak let` class fields break ownership cycles; assignment accepts a strong
+class or face value, while reads produce `Optional<T>` and become `None` after
+the target expires. A conforming class converts to a composed face for runtime
+method dispatch.
 Classes declaring `is` or `has` a face are checked structurally for every
 required method and exact signature; neither spelling creates inheritance.
 Unambiguous face defaults are composed into the class, class methods override
@@ -119,6 +122,7 @@ bash scripts/test.sh
 make parser-demo
 bash scripts/module_demo.sh
 bash scripts/optional_demo.sh
+bash scripts/weak_demo.sh
 bash scripts/semantic_demo.sh
 bash scripts/type_demo.sh
 bash scripts/entry_demo.sh

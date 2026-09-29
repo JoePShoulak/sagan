@@ -214,7 +214,8 @@ namespace parser
     {
       if (const auto *declaration = dynamic_cast<const let_declaration *>(&value))
       {
-        std::string label = "Let\n" + std::string(declaration->private_member ? "." : "") + declaration->name;
+        std::string label = "Let\n" + std::string(declaration->weak_member ? "weak " : "") +
+                            std::string(declaration->private_member ? "." : "") + declaration->name;
         if (declaration->type_name)
         {
           label += ": " + *declaration->type_name;

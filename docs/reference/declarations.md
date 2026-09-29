@@ -52,6 +52,12 @@ but cannot be accessed externally or used to satisfy a face requirement.
 A leading dot on a field, as in `let .value: Int`, likewise restricts access to
 constructors and methods of the declaring class.
 
+`weak let target: Probe` declares a non-owning class field. Weak fields require
+an explicit class or face type, begin empty, and cannot declare an initializer.
+Assigning a normal strong value stores a weak reference; reading the field
+produces `Optional<Probe>`, so callers use matching, `?.`, or `??` to handle an
+expired target. Weak fields may also be private with `weak let .target: Probe`.
+
 **Implemented conformance subset:** `is` and `has` are interchangeable and do
 not denote inheritance. A class composing a face must satisfy each required
 method with an exact class implementation or unambiguous default. Missing or
@@ -68,8 +74,8 @@ value converts to a face only when its declaration explicitly conforms through
 `is` or `has`, including transitive face composition. Calls through the face
 dispatch to the concrete class while retaining shared reference identity.
 
-**Provisional semantics:** broader method-overload ranking, reference cycles,
-weak references, and borrowing.
+**Provisional semantics:** broader method-overload ranking, automatic handling
+of cycles that do not contain an explicit weak edge, and borrowing.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, enum payloads and explicit values, generic

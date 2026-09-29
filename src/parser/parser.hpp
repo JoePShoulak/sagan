@@ -27,7 +27,7 @@ namespace parser
     auto match_after_newlines(int token_id) -> bool;
     auto parse_documentation_comments() -> std::vector<documentation_comment>;
     auto parse_statement() -> statement_ref;
-    auto parse_let_declaration(bool allow_private = false) -> statement_ref;
+    auto parse_let_declaration(bool allow_private = false, bool weak_member = false) -> statement_ref;
     auto parse_function_declaration(bool body_optional = false, bool allow_private = false,
                                     bool allow_mutating = false) -> statement_ref;
     auto parse_constructor_declaration() -> statement_ref;

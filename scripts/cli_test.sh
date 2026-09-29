@@ -191,6 +191,10 @@ expect_failure "safe access requires Optional diagnostic" 1 "Safe member access 
   "$binary" --types examples/type_safe_access_error.sagan
 expect_failure "optional pattern subject diagnostic" 1 "Some pattern requires an Optional subject" \
   "$binary" --types examples/type_optional_pattern_error.sagan
+expect_failure "weak field type diagnostic" 1 "Weak field 'value' requires a class or face type" \
+  "$binary" --types examples/type_weak_scalar_error.sagan
+expect_failure "weak field initializer diagnostic" 1 "Weak field 'target' starts empty" \
+  "$binary" --types examples/type_weak_initializer_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

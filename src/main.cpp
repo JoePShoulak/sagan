@@ -335,7 +335,7 @@ namespace
     {
       std::vector<parser::statement_ref> statements;
       statements.push_back(std::make_unique<parser::let_declaration>(
-          parser::span{0, 1}, "value", false, std::nullopt,
+          parser::span{0, 1}, "value", false, false, std::nullopt,
           std::make_unique<unsupported_expression>(parser::span{0, 1})));
       static_cast<void>(parser::render_ast_dot(parser::program(std::move(statements))));
     }
@@ -551,9 +551,9 @@ namespace
 
     passed &= expect_ids(
         "complete keyword vocabulary",
-        "let fun new class face enum if else match case for in while until break continue return yield "
+        "let weak fun new class face enum if else match case for in while until break continue return yield "
         "import from as module export hope unless finally scream and or not self is has true false inf nan\n",
-        {tokens::KWD_LET, tokens::KWD_FUN, tokens::KWD_NEW, tokens::KWD_CLASS, tokens::KWD_FACE, tokens::KWD_ENUM,
+        {tokens::KWD_LET, tokens::KWD_WEAK, tokens::KWD_FUN, tokens::KWD_NEW, tokens::KWD_CLASS, tokens::KWD_FACE, tokens::KWD_ENUM,
          tokens::KWD_IF, tokens::KWD_ELSE, tokens::KWD_MATCH, tokens::KWD_CASE, tokens::KWD_FOR,
          tokens::KWD_IN, tokens::KWD_WHILE, tokens::KWD_UNTIL, tokens::KWD_BREAK, tokens::KWD_CONTINUE,
          tokens::KWD_RETURN, tokens::KWD_YIELD, tokens::KWD_IMPORT, tokens::KWD_FROM, tokens::KWD_AS,
@@ -1890,6 +1890,25 @@ namespace
         "class Vault {\n  let .secret: Int = 42\n}\n"
         "fun invalid(): Int {\n  let vault = Vault()\n  return vault.secret\n}\n",
         "Private field 'secret' of class 'Vault' is not accessible here");
+    passed &= expect_type_model(
+        "weak field assignment and optional read",
+        "class Probe {}\nclass Observer {\n  weak let target: Probe\n"
+        "  fun watch!(value: Probe): Void { self.target = value }\n}\n"
+        "fun inspect(observer: Observer): Optional<Probe> => observer.target\n",
+        {"target: Probe", "Optional<Probe> @"});
+    passed &= expect_type_error(
+        "weak field requires reference type",
+        "class Invalid {\n  weak let value: Int\n}\n",
+        "Weak field 'value' requires a class or face type");
+    passed &= expect_type_error(
+        "weak field rejects initializer",
+        "class Probe {}\nclass Invalid {\n  weak let target: Probe = Probe()\n}\n",
+        "Weak field 'target' starts empty");
+    passed &= expect_type_error(
+        "private weak field assignment outside declaring class",
+        "class Probe {}\nclass Observer {\n  weak let .target: Probe\n}\n"
+        "fun invalid(observer: Observer, probe: Probe): Void { observer.target = probe }\n",
+        "Private field 'target' of class 'Observer' is not accessible here");
     passed &= expect_type_model(
         "face typed values and transitive conformance",
         "face Readable {\n  fun current(): Int\n}\n"

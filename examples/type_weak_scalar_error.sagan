@@ -1,0 +1,5 @@
+class Invalid {
+  weak let value: Int
+}
+
+fun main(): Int => 0

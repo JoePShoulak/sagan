@@ -27,7 +27,9 @@ Name collection deliberately remains separate from type and control-flow
 checking. Top-level names are collected before bodies are visited, permitting
 forward and self references. Later checking establishes overload signatures,
 types, lossless conversions, definite initialization, definite returns, and
-unreachable code. Exception-pattern binding, reference cycles, weak references,
+unreachable code. Weak fields are restricted to explicitly annotated class or
+face types, reject declaration initializers, accept strong values on assignment,
+and type reads as `Optional<T>`. Exception-pattern binding, automatic cycle handling,
 and borrowing remain future work.
 
 The initial type checker infers scalar literals; validates annotations,

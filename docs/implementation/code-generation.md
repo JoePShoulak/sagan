@@ -85,6 +85,10 @@ analysis first verifies every required signature and resolves defaults, then the
 backend emits conforming classes and flattens applicable transitive default
 method bodies. Class construction uses shared reference-counted storage, and
 conversion to a declared face preserves object identity for runtime dispatch.
+Weak class fields lower to `std::weak_ptr<T>`. Strong values assign directly to
+that storage; reads call `lock()` and lower to `std::optional<std::shared_ptr<T>>`,
+which is the native representation consumed by Sagan's `?.`, `??`, and optional
+matching operations.
 
 `--emit-cpp-modules` resolves a flat sibling-file module graph and links its
 selective imports and exported namespace members into one checked compilation unit. Dependency-private
@@ -93,8 +97,8 @@ aliases point to exported identities, and dependency declarations are emitted
 before their consumers. The module demo compiles and executes the resulting
 C++ translation.
 
-Open work includes generated-code structure, reference cycles, weak references
-or borrowing, escaping closures, catchable native runtime failures and richer exception patterns, debug information, compiler selection and flags,
+Open work includes generated-code structure, automatic handling of all-strong
+reference cycles or borrowing, escaping closures, catchable native runtime failures and richer exception patterns, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler

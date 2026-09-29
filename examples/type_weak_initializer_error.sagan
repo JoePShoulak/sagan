@@ -1,0 +1,7 @@
+class Probe {}
+
+class Invalid {
+  weak let target: Probe = Probe()
+}
+
+fun main(): Int => 0

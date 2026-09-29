@@ -28,6 +28,7 @@ namespace codegen
       std::unordered_set<std::string> enum_types;
       std::unordered_set<std::string> class_types;
       std::unordered_map<std::string, const parser::type_declaration *> face_types;
+      std::unordered_map<std::string, std::unordered_set<std::string>> weak_fields;
       std::unordered_set<std::string> emitted_faces;
       bool in_method = false;
 
@@ -105,6 +106,30 @@ namespace codegen
         }
         fail("missing checked type for expression", value.range);
         return {};
+      }
+
+      auto weak_member(const parser::member_expression &value) const -> bool
+      {
+        const std::string target = expression_type(*value.target);
+        const auto fields = weak_fields.find(target);
+        return fields != weak_fields.end() && fields->second.contains(value.member_name);
+      }
+
+      auto raw_member(const parser::member_expression &value) -> std::string
+      {
+        const std::string target_type = expression_type(*value.target);
+        const auto *self = dynamic_cast<const parser::identifier_expression *>(value.target.get());
+        const bool reference = (class_types.contains(target_type) || face_types.contains(target_type)) &&
+                               !(self && self->name == "self");
+        return expression(*value.target) + (reference ? "->" : ".") + identifier(value.member_name);
+      }
+
+      auto assignable(const parser::expression &value) -> std::string
+      {
+        if (const auto *member = dynamic_cast<const parser::member_expression *>(&value);
+            member && weak_member(*member))
+          return raw_member(*member);
+        return expression(value);
       }
 
       auto dictionary_components(const std::string_view checked,
@@ -248,7 +273,7 @@ namespace codegen
           return "(" + expression(*conditional->condition) + " ? " + expression(*conditional->when_true) +
                  " : " + expression(*conditional->when_false) + ")";
         if (const auto *assignment = dynamic_cast<const parser::assignment_expression *>(&value))
-          return "(" + expression(*assignment->target) + " = " + expression(*assignment->value) + ")";
+          return "(" + assignable(*assignment->target) + " = " + expression(*assignment->value) + ")";
         if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
         {
           const auto *called_name = dynamic_cast<const parser::identifier_expression *>(call->callee.get());
@@ -309,10 +334,8 @@ namespace codegen
               fail("dimensioned member access is invalid", value.range);
             return expression(*member->target) + ".at(" + std::to_string(component) + ")";
           }
-          const auto *self = dynamic_cast<const parser::identifier_expression *>(member->target.get());
-          const bool reference = (class_types.contains(target_type) || face_types.contains(target_type)) &&
-                                 !(self && self->name == "self");
-          return expression(*member->target) + (reference ? "->" : ".") + identifier(member->member_name);
+          if (weak_member(*member)) return "sagan_lock_weak(" + raw_member(*member) + ")";
+          return raw_member(*member);
         }
         if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
         {
@@ -484,7 +507,7 @@ namespace codegen
                    << expression(*assignment->target) << ", " << expression(*assignment->value) << ");\n";
           }
           else
-            output << expression(*assignment->target) << ' ' << assignment->operation << ' '
+            output << assignable(*assignment->target) << ' ' << assignment->operation << ' '
                    << expression(*assignment->value) << ";\n";
         }
         else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
@@ -753,7 +776,11 @@ namespace codegen
               private_access = field->private_member;
               output << (private_access ? "private:\n" : "public:\n");
             }
-            output << indentation() << type(field->type_name, field->range) << ' ' << identifier(field->name);
+            output << indentation();
+            if (field->weak_member)
+              output << "std::weak_ptr<" << identifier(*field->type_name) << "> ";
+            else output << type(field->type_name, field->range) << ' ';
+            output << identifier(field->name);
             if (field->initializer) output << " = " << expression(*field->initializer);
             else output << "{}";
             output << ";\n";
@@ -855,6 +882,11 @@ namespace codegen
             if (type->type_kind == parser::type_declaration::kind::class_type) class_types.insert(type->name);
             if (type->type_kind == parser::type_declaration::kind::interface_type)
               face_types.emplace(type->name, type);
+            if (type->type_kind == parser::type_declaration::kind::class_type)
+              for (const auto &member : type->members)
+                if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get());
+                    field && field->weak_member)
+                  weak_fields[type->name].insert(field->name);
           }
         output << "// Generated by Sagan.\n#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
@@ -893,6 +925,13 @@ namespace codegen
                   "template <typename Callable>\n"
                   "auto sagan_make_finally(Callable action)\n"
                   "{ return sagan_finally_guard<Callable>(std::move(action)); }\n\n"
+                  "template <typename T>\n"
+                  "std::optional<std::shared_ptr<T>> sagan_lock_weak(const std::weak_ptr<T> &value)\n"
+                  "{\n"
+                  "  auto locked = value.lock();\n"
+                  "  if (!locked) return std::nullopt;\n"
+                  "  return locked;\n"
+                  "}\n\n"
                   "template <typename T, std::size_t Size>\n"
                   "struct sagan_vector\n"
                   "{\n"

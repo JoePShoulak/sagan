@@ -75,6 +75,10 @@ convert only to a face named by its declared transitive composition; matching
 method shapes without declared conformance are insufficient. Leading-dot fields
 and methods are accessible only from within their declaring class.
 
-**Open questions:** enum payloads and explicit values, reference cycles, weak
-references or borrowing, and whether limited
+Weak class fields use `weak let`, start empty, accept a strong class or face
+value, and return `Optional<T>` when read. Use them to break ownership cycles;
+expired targets read as `None`.
+
+**Open questions:** enum payloads and explicit values, automatic handling of
+all-strong reference cycles or borrowing, and whether limited
 implementation inheritance will exist.

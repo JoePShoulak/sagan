@@ -44,6 +44,7 @@ namespace semantic
     {
       std::unordered_map<std::string, std::string> fields;
       std::unordered_set<std::string> private_fields;
+      std::unordered_set<std::string> weak_fields;
       std::unordered_set<std::string> defaulted_fields;
       std::vector<callable_signature> constructors;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
@@ -449,7 +450,8 @@ namespace semantic
           {
             object.fields.emplace(field->name, fixed_annotation(field->type_name));
             if (field->private_member) object.private_fields.insert(field->name);
-            if (field->initializer) object.defaulted_fields.insert(field->name);
+            if (field->weak_member) object.weak_fields.insert(field->name);
+            if (field->initializer || field->weak_member) object.defaulted_fields.insert(field->name);
           }
           else if (const auto *method = dynamic_cast<const parser::function_declaration *>(member.get()))
           {
@@ -881,7 +883,8 @@ namespace semantic
                       "Private field '" + member->member_name + "' of class '" + accessed_target +
                           "' is not accessible here",
                       value.range);
-              return record(value, member->safe ? "Optional<" + field->second + ">" : field->second);
+              const bool optional_result = member->safe || object->second.weak_fields.contains(member->member_name);
+              return record(value, optional_result ? "Optional<" + field->second + ">" : field->second);
             }
             if (const auto methods = object->second.methods.find(member->member_name);
                 methods != object->second.methods.end())
@@ -1042,6 +1045,21 @@ namespace semantic
           if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
               target && enums.contains(target->name))
             throw semantic_error("Enum members are not assignable", value.range);
+          const std::string target_type = expression(*member->target);
+          if (const auto object = objects.find(target_type); object != objects.end())
+          {
+            const auto field = object->second.fields.find(member->member_name);
+            if (field != object->second.fields.end() && object->second.weak_fields.contains(member->member_name))
+            {
+              require(!member->safe, "Safe-access results are not assignable", value.range);
+              require(!object->second.private_fields.contains(member->member_name) ||
+                          (active_class && *active_class == target_type),
+                      "Private field '" + member->member_name + "' of class '" + target_type +
+                          "' is not accessible here",
+                      value.range);
+              return field->second;
+            }
+          }
           return expression(value);
         }
         if (dynamic_cast<const parser::index_expression *>(&value))
@@ -1469,6 +1487,25 @@ namespace semantic
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_enum_type(*type);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_object_type(*type);
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
+              type && type->type_kind == parser::type_declaration::kind::class_type)
+          {
+            const auto &object = objects.at(type->name);
+            for (const auto &member : type->members)
+              if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get());
+                  field && field->weak_member)
+              {
+                require(field->type_name.has_value(), "Weak field '" + field->name + "' requires a type annotation",
+                        field->range);
+                require(!field->initializer, "Weak field '" + field->name + "' starts empty and cannot declare an initializer",
+                        field->range);
+                const std::string field_type = object.fields.at(field->name);
+                require(objects.contains(field_type) || interfaces.contains(field_type),
+                        "Weak field '" + field->name + "' requires a class or face type, but received " + field_type,
+                        field->range);
+              }
+          }
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
               type && type->type_kind == parser::type_declaration::kind::class_type)

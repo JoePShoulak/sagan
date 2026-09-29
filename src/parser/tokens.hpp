@@ -61,6 +61,7 @@ namespace tokens
     CARET_EQUAL,
 
     KWD_LET,
+    KWD_WEAK,
     KWD_FUN,
     KWD_NEW,
     KWD_CLASS,

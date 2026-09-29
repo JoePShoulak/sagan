@@ -13,6 +13,7 @@ verified_by: null
 `bin/sagan --emit-cpp` emits C++ for the checked executable subset, and
 `scripts/execution_demo.sh` compiles and runs it. The backend includes checked
 numeric helpers, collections, dimensioned values, reference-counted classes,
+weak class fields with optional reads,
 native face interfaces, and runtime face dispatch. Windows is exercised by the
 local demo and Linux by CI; broader platform guarantees remain future work.
 

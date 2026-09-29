@@ -78,7 +78,7 @@ delimiter contexts are preserved for the parser to interpret.
 ## Keywords
 
 ```text
-let fun new class face enum
+let weak fun new class face enum
 if else match case for in while until break continue return yield
 import from as module export
 hope unless finally scream

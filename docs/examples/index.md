@@ -102,6 +102,16 @@ source and generated C++, compiles it, and runs the native result:
 make optional-demo
 ```
 
+## Weak-reference demonstration
+
+`examples/weak_demo.sagan` stores a class value in a `weak let` field, reads it
+while the strong owner is alive, then reads it again after that owner leaves
+scope. The second read produces `None`, and `??` supplies the visible fallback:
+
+```bash
+make weak-demo
+```
+
 ## Semantic-analysis demonstration
 
 `examples/semantic_demo.sagan` exercises program, type, function, block, and

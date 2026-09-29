@@ -74,7 +74,7 @@ method_signature := "fun" identifier "(" parameters? ")" (":" type)?
 face_declaration := "face" identifier composition? "{" face_member* "}"
 face_member := method_signature function_body?
 class_declaration := "class" identifier composition? "{" class_member* "}"
-class_member := "let" "."? identifier (":" type)? ("=" expression)?
+class_member := "weak"? "let" "."? identifier (":" type)? ("=" expression)?
               | constructor_declaration
               | "fun" "."? identifier "(" parameters? ")" (":" type)? function_body
 constructor_declaration := "new" "(" typed_parameters? ")" block

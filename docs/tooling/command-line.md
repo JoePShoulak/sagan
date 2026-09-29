@@ -93,6 +93,7 @@ make type-demo
 make entry-demo
 make module-demo
 make optional-demo
+make weak-demo
 make execution-demo
 make get-version
 make clean
@@ -109,6 +110,7 @@ bash scripts/type_demo.sh
 bash scripts/entry_demo.sh
 bash scripts/module_demo.sh
 bash scripts/optional_demo.sh
+bash scripts/weak_demo.sh
 bash scripts/execution_demo.sh
 bash scripts/docs.sh check
 ```
@@ -126,6 +128,8 @@ semantic/type/entry/code-generation success plus focused failures.
 namespace imports, and verifies export visibility, filename, and cycle diagnostics.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
+`weak-demo` shows a live weak reference resolving to `Some`, lets its strong
+owner leave scope, then shows the expired reference resolving to `None`.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 
