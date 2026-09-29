@@ -54,9 +54,11 @@ incompatible methods are compile-time errors.
 class method overrides it, and competing defaults with the same signature
 require an explicit class override. Defaults may call other requirements from
 their own face through `self`.
+Face composition is transitive: inherited requirements and defaults flow into
+the composing face and ultimately into its classes. Cycles are rejected.
 
 **Provisional semantics:** method overloading, private fields, interface-typed
-values, and transitive face composition.
+values, and runtime dispatch.
 
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, constructors, enum payloads and explicit values, generic

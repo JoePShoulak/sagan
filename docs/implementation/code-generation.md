@@ -79,7 +79,8 @@ Faces are erased before code generation in the currently implemented,
 statically composed subset. Semantic analysis first verifies every required
 signature and resolves defaults, then the backend copies inherited default
 method bodies into the concrete class. Interface-typed values, dynamic face
-dispatch, and transitive face composition are not lowered yet.
+dispatch, and runtime face objects are not lowered yet. Transitive defaults are
+flattened into the concrete class before native compilation.
 
 Open work includes generated-code structure, runtime interfaces, memory
 management, custom constructors, interface dispatch, escaping closures, exception lowering, debug information, compiler selection and flags,

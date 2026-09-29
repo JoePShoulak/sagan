@@ -1836,6 +1836,17 @@ namespace
         "face Right {\n  fun value(): Int => 2\n}\n"
         "class Invalid is Left, Right {\n}\n",
         "inherits conflicting defaults for method 'value'; provide an explicit override");
+    passed &= expect_type_model(
+        "transitive face requirements and defaults",
+        "face Readable {\n  fun current(): Int\n}\n"
+        "face Countable is Readable {\n  fun next(): Int => self.current() + 1\n}\n"
+        "class Counter is Countable {\n  fun current(): Int => 41\n}\n"
+        "fun valid(): Int {\n  let counter = Counter()\n  return counter.next()\n}\n",
+        {"counter: Counter", "Int64 @"});
+    passed &= expect_type_error(
+        "cyclic face composition",
+        "face Left is Right {\n}\nface Right is Left {\n}\n",
+        "Cyclic face composition involving");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",

@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.37.0](https://img.shields.io/badge/development-0.37.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.38.0](https://img.shields.io/badge/development-0.38.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -58,6 +58,8 @@ Classes declaring `is` or `has` a face are checked structurally for every
 required method and exact signature; neither spelling creates inheritance.
 Unambiguous face defaults are composed into the class, class methods override
 them, and conflicting defaults require an explicit class override.
+Faces may compose other faces transitively; inherited requirements and defaults
+flow through the chain, while cyclic composition is rejected.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text

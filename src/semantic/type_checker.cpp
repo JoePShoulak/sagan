@@ -52,6 +52,7 @@ namespace semantic
     {
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
       std::unordered_map<std::string, std::vector<callable_signature>> defaults;
+      std::vector<std::string> faces;
     };
 
     auto is_unknown(const std::string_view type) -> bool
@@ -158,6 +159,7 @@ namespace semantic
       std::unordered_map<const parser::expression *, callable_signature> callables;
       std::unordered_map<std::string, object_type> objects;
       std::unordered_map<std::string, interface_type> interfaces;
+      std::unordered_map<std::string, parser::span> interface_ranges;
       std::unordered_map<std::string, std::unordered_set<std::string>> enums;
       std::optional<std::string> active_class;
 
@@ -413,6 +415,7 @@ namespace semantic
       {
         if (type.type_kind != parser::type_declaration::kind::interface_type) return;
         interface_type interface;
+        interface.faces = type.composed_interfaces;
         for (const auto &member : type.members)
         {
           const auto *method = dynamic_cast<const parser::function_declaration *>(member.get());
@@ -422,6 +425,60 @@ namespace semantic
             interface.defaults[method->name].push_back(signature(*method));
         }
         interfaces.emplace(type.name, std::move(interface));
+        interface_ranges.emplace(type.name, type.range);
+      }
+
+      auto add_signature(std::vector<callable_signature> &signatures,
+                         const callable_signature &candidate) const -> void
+      {
+        if (std::none_of(signatures.begin(), signatures.end(), [&](const callable_signature &existing)
+            {
+              return same_signature(existing, candidate);
+            }))
+          signatures.push_back(candidate);
+      }
+
+      auto resolve_interface(const std::string &name,
+                             std::unordered_map<std::string, int> &states) -> void
+      {
+        if (states[name] == 2) return;
+        require(states[name] != 1, "Cyclic face composition involving '" + name + "'",
+                interface_ranges.at(name));
+        states[name] = 1;
+        const interface_type direct = interfaces.at(name);
+        interface_type resolved;
+        resolved.faces = direct.faces;
+        for (const auto &parent_name : direct.faces)
+        {
+          require(interfaces.contains(parent_name),
+                  "Face '" + name + "' composes unknown face '" + parent_name + "'",
+                  interface_ranges.at(name));
+          resolve_interface(parent_name, states);
+          const auto &parent = interfaces.at(parent_name);
+          for (const auto &[method_name, signatures] : parent.methods)
+            for (const auto &candidate : signatures) add_signature(resolved.methods[method_name], candidate);
+          for (const auto &[method_name, defaults] : parent.defaults)
+            resolved.defaults[method_name].insert(resolved.defaults[method_name].end(),
+                                                  defaults.begin(), defaults.end());
+        }
+        for (const auto &[method_name, signatures] : direct.methods)
+        {
+          for (const auto &candidate : signatures)
+          {
+            add_signature(resolved.methods[method_name], candidate);
+            auto &defaults = resolved.defaults[method_name];
+            std::erase_if(defaults, [&](const callable_signature &existing)
+            {
+              return same_signature(existing, candidate);
+            });
+            const auto own_defaults = direct.defaults.find(method_name);
+            if (own_defaults != direct.defaults.end())
+              for (const auto &own_default : own_defaults->second)
+                if (same_signature(own_default, candidate)) defaults.push_back(own_default);
+          }
+        }
+        interfaces[name] = std::move(resolved);
+        states[name] = 2;
       }
 
       auto collect_enum_type(const parser::type_declaration &type) -> void
@@ -457,12 +514,13 @@ namespace semantic
                 return same_signature(required, candidate);
               });
               const auto defaults = face->second.defaults.find(method_name);
-              const bool has_default = defaults != face->second.defaults.end() &&
-                  std::any_of(defaults->second.begin(), defaults->second.end(),
-                              [&](const callable_signature &candidate)
+              const std::size_t default_count = defaults == face->second.defaults.end() ? 0U :
+                  static_cast<std::size_t>(std::count_if(defaults->second.begin(), defaults->second.end(),
+                                                         [&](const callable_signature &candidate)
               {
                 return same_signature(required, candidate);
-              });
+              }));
+              const bool has_default = default_count != 0;
               if (provided_match)
               {
                 require(!object.private_methods.contains(method_name),
@@ -477,8 +535,9 @@ namespace semantic
                           : "Class '" + class_name + "' has an incompatible signature for method '" +
                                 method_name + "' required by face '" + face_name + "'",
                       range);
-              if (has_default && !provided_match)
-                inherited_defaults[method_name].push_back(required);
+              if (!provided_match)
+                for (std::size_t index = 0; index < default_count; ++index)
+                  inherited_defaults[method_name].push_back(required);
             }
           }
         }
@@ -1141,6 +1200,12 @@ namespace semantic
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);
+        std::unordered_map<std::string, int> interface_states;
+        for (const auto &[name, unused] : interfaces)
+        {
+          static_cast<void>(unused);
+          resolve_interface(name, interface_states);
+        }
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_enum_type(*type);
         for (const auto &entry : tree.statements)

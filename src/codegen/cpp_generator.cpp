@@ -560,6 +560,34 @@ namespace codegen
         return result + "):" + value.return_type.value_or("Unknown");
       }
 
+      auto face_defaults(const std::string &name,
+                         std::unordered_set<std::string> &visiting) const
+          -> std::vector<const parser::function_declaration *>
+      {
+        if (!visiting.insert(name).second) return {};
+        const auto found = face_types.find(name);
+        if (found == face_types.end()) return {};
+        std::vector<const parser::function_declaration *> result;
+        for (const auto &parent : found->second->composed_interfaces)
+        {
+          auto inherited = face_defaults(parent, visiting);
+          result.insert(result.end(), inherited.begin(), inherited.end());
+        }
+        for (const auto &entry : found->second->members)
+        {
+          const auto *method_value = dynamic_cast<const parser::function_declaration *>(entry.get());
+          if (!method_value) continue;
+          const std::string signature_value = method_signature(*method_value);
+          std::erase_if(result, [&](const parser::function_declaration *existing)
+          {
+            return method_signature(*existing) == signature_value;
+          });
+          if (method_value->body || method_value->expression_body) result.push_back(method_value);
+        }
+        visiting.erase(name);
+        return result;
+      }
+
       auto object(const parser::type_declaration &value) -> void
       {
         if (value.type_kind != parser::type_declaration::kind::class_type)
@@ -597,12 +625,9 @@ namespace codegen
         if (private_access) output << "public:\n";
         for (const auto &face_name : value.composed_interfaces)
         {
-          const auto face = face_types.find(face_name);
-          if (face == face_types.end()) continue;
-          for (const auto &entry : face->second->members)
+          std::unordered_set<std::string> visiting;
+          for (const auto *default_method : face_defaults(face_name, visiting))
           {
-            const auto *default_method = dynamic_cast<const parser::function_declaration *>(entry.get());
-            if (!default_method || (!default_method->body && !default_method->expression_body)) continue;
             if (emitted_methods.insert(method_signature(*default_method)).second) method(*default_method);
           }
         }

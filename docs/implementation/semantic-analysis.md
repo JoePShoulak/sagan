@@ -67,6 +67,8 @@ An unambiguous face default satisfies its own requirement and becomes a class
 method. A class method with the exact signature overrides it. Multiple composed
 defaults with the same signature require an explicit class override. Within a
 default body, `self` may call other methods declared by that face.
+Faces may compose other faces. Their requirements and defaults are resolved
+transitively before classes are validated, and composition cycles are rejected.
 The generic model and multi-error recovery strategy also remain open.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.

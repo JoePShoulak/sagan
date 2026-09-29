@@ -1,8 +1,11 @@
 fun 🚀(value: Int): Int => value + 2
 
-face Countable {
-  fun increment!(): Int
+face Readable {
   fun current(): Int
+}
+
+face Countable is Readable {
+  fun increment!(): Int
   fun next(): Int => self.current() + 1
 }
 

@@ -136,9 +136,9 @@ result, selects, prints, compares, and matches a nominal enum value, constructs
 a class with defaulted fields, calls an ordinary and a mutating method through
 `self`, routes a public method through a private helper, updates a field, and
 returns success from `main`.
-That class explicitly composes a face, so the same demo also exercises
-compile-time interface conformance and an inherited default that calls another
-face requirement through `self`, without runtime inheritance.
+That class explicitly composes a face which itself composes another face, so the
+same demo exercises transitive compile-time conformance and an inherited default
+that calls another face requirement through `self`, without runtime inheritance.
 Its `match` cases, `for`
 loop, and final `if` branches demonstrate same-line bodies without braces.
 

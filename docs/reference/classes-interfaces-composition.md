@@ -34,6 +34,11 @@ An exact-signature class method overrides the default. If multiple directly
 composed faces provide the same default signature, the class must provide an
 explicit override. This is static composition; it does not create a superclass.
 
-**Open questions:** transitive face composition, object construction, storage
-layout, dynamic dispatch, value/reference behavior, and whether limited
+Faces may compose other faces using the same `is` or `has` spelling. Required
+signatures and defaults flow transitively to the final class. A face declaration
+may replace an inherited default with its own exact-signature declaration or
+default. Cyclic face composition is invalid.
+
+**Open questions:** object construction, storage layout, dynamic dispatch,
+value/reference behavior, and whether limited
 implementation inheritance will exist.

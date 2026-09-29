@@ -53,17 +53,18 @@ defaults and zero-argument `ClassName()` construction, types `self`, and execute
 field reads, mutation, and method calls. Methods may use a trailing `!` naming
 convention to identify a mutating alternative. Leading-dot methods are private
 to their declaring class and may be called by its other methods; outside calls
-are rejected. Default-method dispatch, custom constructors, reference ownership, payload-bearing enums, and explicit
-enum values are not implemented yet. Signature-only faces participate in semantic
-checking: a class using either `is` or `has` must implement every required method
-with the exact signature. This is structural conformance attached to an explicit
+are rejected. Dynamic face dispatch, custom constructors, reference ownership,
+payload-bearing enums, and explicit enum values are not implemented yet. Faces
+participate in semantic checking: a class using either `is` or `has` must satisfy
+every required method with an exact class implementation or default. This is
+structural conformance attached to an explicit
 declaration, not superclass inheritance. Unambiguous default methods are
 composed into the class and may call other face requirements through `self`.
 An exact class method overrides a default; competing defaults require an
-explicit override. Face-typed values, dynamic dispatch, and transitive face
-composition are later slices.
+explicit override. Faces may compose other faces transitively; requirements and
+defaults flow through the chain, and cycles are rejected. Face-typed values and
+dynamic dispatch are later slices.
 
-**Open questions:** transitive face composition, custom constructor rules,
-enum payloads and explicit values,
+**Open questions:** custom constructor rules, enum payloads and explicit values,
 value versus reference behavior, private fields, and whether limited
 implementation inheritance will exist.
