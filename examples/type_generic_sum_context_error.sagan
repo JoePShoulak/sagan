@@ -1,0 +1,9 @@
+enum Result<T, E> {
+  Success(T)
+  Failure(E)
+}
+
+fun main(): Int {
+  let invalid = Failure("missing context")
+  return 0
+}

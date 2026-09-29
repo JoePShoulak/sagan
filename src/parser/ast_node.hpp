@@ -416,6 +416,7 @@ namespace parser
 
     kind type_kind;
     std::string name;
+    std::vector<std::string> type_parameters;
     std::optional<std::string> composition_keyword;
     std::vector<std::string> composed_interfaces;
     std::vector<statement_ref> members;
@@ -433,6 +434,7 @@ namespace parser
     std::vector<enum_member> enum_members;
 
     type_declaration(span source_range, kind declared_kind, std::string identifier,
+                     std::vector<std::string> generic_parameters,
                      std::optional<std::string> composition,
                      std::vector<std::string> interfaces,
                      std::vector<statement_ref> declared_members,

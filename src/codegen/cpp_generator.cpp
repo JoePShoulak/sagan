@@ -75,6 +75,9 @@ namespace codegen
         if (class_types.contains(name) || face_types.contains(name))
           return "std::shared_ptr<" + identifier(name) + ">";
         if (user_types.contains(name)) return identifier(name);
+        if (const std::size_t open = name.find('<'); open != std::string::npos && name.ends_with('>') &&
+            user_types.contains(name.substr(0, open)))
+          return identifier(name.substr(0, open));
         for (const std::string_view family : {std::string_view{"Vector"}, std::string_view{"Coordinate"}})
         {
           if (!std::string_view{name}.starts_with(family)) continue;
@@ -111,6 +114,14 @@ namespace codegen
         return {};
       }
 
+      auto binding_type(const parser::identifier_expression &value) const -> std::string
+      {
+        for (auto entry = types.declarations.rbegin(); entry != types.declarations.rend(); ++entry)
+          if (entry->range.begin == value.range.begin && entry->range.end == value.range.end)
+            return entry->type;
+        return expression_type(value);
+      }
+
       auto weak_member(const parser::member_expression &value) const -> bool
       {
         const std::string target = expression_type(*value.target);
@@ -130,6 +141,29 @@ namespace codegen
       auto enum_factory(const std::string &enum_name, const std::string &case_name) const -> std::string
       {
         return identifier(enum_name + "__" + case_name);
+      }
+
+      auto generic_arguments(const std::string &type) const -> std::vector<std::string>
+      {
+        const std::size_t open = type.find('<');
+        if (open == std::string::npos || !type.ends_with('>')) return {};
+        const std::string contents = type.substr(open + 1, type.size() - open - 2);
+        std::vector<std::string> result;
+        std::size_t begin = 0;
+        int depth = 0;
+        for (std::size_t index = 0; index <= contents.size(); ++index)
+        {
+          if (index < contents.size() && contents[index] == '<') ++depth;
+          else if (index < contents.size() && contents[index] == '>') --depth;
+          if (index == contents.size() || (contents[index] == ',' && depth == 0))
+          {
+            std::string argument = contents.substr(begin, index - begin);
+            while (!argument.empty() && argument.front() == ' ') argument.erase(argument.begin());
+            result.push_back(std::move(argument));
+            begin = index + 1;
+          }
+        }
+        return result;
       }
 
       auto assignable(const parser::expression &value) -> std::string
@@ -290,6 +324,26 @@ namespace codegen
                    expression(*call->arguments.front()) + "}";
           if (called_name && enum_cases.contains(called_name->name))
           {
+            const auto &enum_case = enum_cases.at(called_name->name);
+            const auto declaration = enum_declarations.at(enum_case.first);
+            if (!declaration->type_parameters.empty())
+            {
+              const auto instantiated = generic_arguments(expression_type(value));
+              const auto &case_declaration = declaration->enum_members[enum_case.second];
+              std::string result = identifier(enum_case.first) + "{" + identifier(enum_case.first) + "::Tag::" +
+                                   identifier(called_name->name) + ", {";
+              for (std::size_t index = 0; index < call->arguments.size(); ++index)
+              {
+                if (index != 0) result += ", ";
+                std::string payload_type = case_declaration.payload_types[index];
+                for (std::size_t parameter = 0; parameter < declaration->type_parameters.size(); ++parameter)
+                  if (payload_type == declaration->type_parameters[parameter] && parameter < instantiated.size())
+                    payload_type = instantiated[parameter];
+                result += type_name(payload_type, call->arguments[index]->range) + "{" +
+                          expression(*call->arguments[index]) + "}";
+              }
+              return result + "}}";
+            }
             std::string result = enum_factory(enum_cases.at(called_name->name).first, called_name->name) + "(";
             for (std::size_t index = 0; index < call->arguments.size(); ++index)
             {
@@ -589,7 +643,10 @@ namespace codegen
             if (const auto *member = dynamic_cast<const parser::member_expression *>(branch.pattern.get()))
               covered_cases.insert(member->member_name);
           }
-          const auto matched_enum = enum_declarations.find(matched_type);
+          const std::size_t matched_open = matched_type.find('<');
+          const std::string matched_base = matched_open == std::string::npos
+                                               ? matched_type : matched_type.substr(0, matched_open);
+          const auto matched_enum = enum_declarations.find(matched_base);
           const bool exhaustive_enum = matched_enum != enum_declarations.end() &&
               covered_cases.size() == matched_enum->second->enum_members.size();
           output << "const auto " << temporary << " = " << expression(*matched->subject) << ";\n";
@@ -635,11 +692,19 @@ namespace codegen
               {
                 output << "{\n";
                 ++depth;
+                const std::size_t generic_open = matched_type.find('<');
+                const std::string matched_base = generic_open == std::string::npos
+                                                     ? matched_type : matched_type.substr(0, generic_open);
+                const bool generic_payload = enum_declarations.contains(matched_base) &&
+                    !enum_declarations.at(matched_base)->type_parameters.empty();
                 for (std::size_t index = 0; index < call->arguments.size(); ++index)
                 {
                   const auto &binding = dynamic_cast<const parser::identifier_expression &>(*call->arguments[index]);
                   output << indentation() << "auto " << identifier(binding.name) << " = ";
-                  if (call->arguments.size() == 1)
+                  if (generic_payload)
+                    output << "std::any_cast<" << type_name(binding_type(binding), binding.range) << ">(" << temporary
+                           << ".payload.at(" << index << "));\n";
+                  else if (call->arguments.size() == 1)
                     output << "std::get<" << enum_case->second.second << ">(" << temporary << ".payload);\n";
                   else
                     output << "std::get<" << index << ">(std::get<" << enum_case->second.second << ">(" << temporary
@@ -915,6 +980,21 @@ namespace codegen
 
       auto enumeration(const parser::type_declaration &value) -> void
       {
+        if (!value.type_parameters.empty())
+        {
+          output << "struct " << identifier(value.name) << "\n{\n  enum class Tag\n  {\n";
+          for (std::size_t index = 0; index < value.enum_members.size(); ++index)
+            output << "    " << identifier(value.enum_members[index].name)
+                   << (index + 1 == value.enum_members.size() ? "\n" : ",\n");
+          output << "  };\n  Tag tag;\n  std::vector<std::any> payload;\n};\n\n";
+          output << "std::ostream &operator<<(std::ostream &stream, const " << identifier(value.name)
+                 << " &value)\n{\n  switch (value.tag)\n  {\n";
+          for (const auto &member : value.enum_members)
+            output << "    case " << identifier(value.name) << "::Tag::" << identifier(member.name)
+                   << ": return stream << " << escaped_string(member.name) << ";\n";
+          output << "  }\n  return stream;\n}\n\n";
+          return;
+        }
         const bool payload_enum = std::any_of(value.enum_members.begin(), value.enum_members.end(), [](const auto &member)
         {
           return !member.payload_types.empty();

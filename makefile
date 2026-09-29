@@ -33,7 +33,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo execution-demo optional-demo weak-demo payload-enum-demo ast-demo get-version FORCE
+.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo execution-demo optional-demo weak-demo payload-enum-demo generic-sum-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -89,6 +89,9 @@ weak-demo: $(TARGET)
 
 payload-enum-demo: $(TARGET)
 	bash scripts/payload_enum_demo.sh
+
+generic-sum-demo: $(TARGET)
+	bash scripts/generic_sum_demo.sh
 
 ast-demo: $(TARGET)
 	@mkdir -p build

@@ -83,6 +83,12 @@ the surrounding declaration namespace. Match patterns use the case name and
 bind one name per payload value; covering every case makes the match exhaustive.
 Payload-constructor names must currently be unique within that namespace.
 
+Enums may declare type parameters: `enum Result<T, E>`. An expected type such
+as `let result: Result<Int, String> = Failure("problem")` supplies generic
+arguments that the selected case cannot infer. Fully qualified generic case
+construction is reserved but not yet executable; until that increment lands,
+construction with incomplete inference requires an expected type.
+
 **Open questions:** inference requirements, duplicate declarations, scope,
 forward references, explicit enum values, generic
 declarations, module resolution and visibility, and entry-point forms. These require semantic

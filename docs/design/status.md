@@ -106,8 +106,8 @@ numeric enum values remain future semantic and runtime work.
 
 ## Major open language questions
 
-General-purpose generics, automatic handling of all-strong reference cycles,
-general sum types,
+Generic sum enums execute with contextual type arguments. Generic functions,
+explicit generic case qualification, automatic handling of all-strong reference cycles,
 explicit numeric enum values, catchable native runtime errors,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import

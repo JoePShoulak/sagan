@@ -55,9 +55,48 @@ namespace semantic
     struct enum_case_type
     {
       std::string enum_name;
+      std::vector<std::string> type_parameters;
       std::vector<std::string> payload_types;
       std::size_t index = 0;
     };
+
+    struct generic_type
+    {
+      std::string base;
+      std::vector<std::string> arguments;
+    };
+
+    auto generic_instance(const std::string_view type) -> generic_type
+    {
+      const std::size_t open = type.find('<');
+      if (open == std::string_view::npos || !type.ends_with('>')) return {std::string(type), {}};
+      generic_type result{std::string(type.substr(0, open)), {}};
+      const std::string_view contents = type.substr(open + 1, type.size() - open - 2);
+      std::size_t begin = 0;
+      int depth = 0;
+      for (std::size_t index = 0; index <= contents.size(); ++index)
+      {
+        if (index < contents.size() && contents[index] == '<') ++depth;
+        else if (index < contents.size() && contents[index] == '>') --depth;
+        if (index == contents.size() || (contents[index] == ',' && depth == 0))
+        {
+          std::string argument(contents.substr(begin, index - begin));
+          while (!argument.empty() && argument.front() == ' ') argument.erase(argument.begin());
+          while (!argument.empty() && argument.back() == ' ') argument.pop_back();
+          result.arguments.push_back(std::move(argument));
+          begin = index + 1;
+        }
+      }
+      return result;
+    }
+
+    auto substitute_type(const std::string &type, const std::vector<std::string> &parameters,
+                         const std::vector<std::string> &arguments) -> std::string
+    {
+      for (std::size_t index = 0; index < parameters.size() && index < arguments.size(); ++index)
+        if (type == parameters[index]) return arguments[index];
+      return type;
+    }
 
     struct interface_type
     {
@@ -180,6 +219,8 @@ namespace semantic
       std::unordered_map<std::string, parser::span> interface_ranges;
       std::unordered_map<std::string, std::unordered_set<std::string>> enums;
       std::unordered_map<std::string, enum_case_type> enum_cases;
+      std::unordered_map<std::string, std::vector<std::string>> generic_enums;
+      std::optional<std::string> expected_expression;
       std::optional<std::string> active_class;
 
       auto open_scope() -> void
@@ -404,6 +445,8 @@ namespace semantic
           else if (inner == "Float") inner = "Float64";
           return "Optional<" + inner + ">";
         }
+        const auto generic = generic_instance(*name);
+        if (!generic.arguments.empty()) return fixed_annotation(name);
         return *name;
       }
 
@@ -414,6 +457,17 @@ namespace semantic
         if (*name == "Float") return "Float64";
         if (const auto contained = optional_element(*name))
           return "Optional<" + fixed_annotation(std::optional<std::string>{*contained}) + ">";
+        const auto generic = generic_instance(*name);
+        if (!generic.arguments.empty())
+        {
+          std::string result = generic.base + '<';
+          for (std::size_t index = 0; index < generic.arguments.size(); ++index)
+          {
+            if (index != 0) result += ", ";
+            result += fixed_annotation(std::optional<std::string>{generic.arguments[index]});
+          }
+          return result + '>';
+        }
         return *name;
       }
 
@@ -548,6 +602,7 @@ namespace semantic
       auto collect_enum_type(const parser::type_declaration &type) -> void
       {
         if (type.type_kind != parser::type_declaration::kind::enum_type) return;
+        generic_enums[type.name] = type.type_parameters;
         auto &members = enums[type.name];
         for (std::size_t index = 0; index < type.enum_members.size(); ++index)
         {
@@ -560,8 +615,10 @@ namespace semantic
               payload_types.push_back(fixed_annotation(std::optional<std::string>{payload}));
             require(!enum_cases.contains(member.name),
                     "Payload enum constructor '" + member.name + "' is already declared", member.range);
-            enum_cases.emplace(member.name, enum_case_type{type.name, payload_types, index});
-            add_binding(member.name, binding{"Function", callable_signature{payload_types, type.name}});
+            enum_cases.emplace(member.name, enum_case_type{type.name, type.type_parameters, payload_types, index});
+            if (type.type_parameters.empty())
+              add_binding(member.name, binding{"Function", callable_signature{payload_types, type.name}});
+            else add_binding(member.name, binding{"GenericFunction", {}});
           }
         }
       }
@@ -782,16 +839,47 @@ namespace semantic
             }
             if (const auto enum_case = enum_cases.find(identifier->name); enum_case != enum_cases.end())
             {
-              const auto &expected = enum_case->second.payload_types;
-              require(arguments.size() == expected.size(),
-                      "Enum case '" + identifier->name + "' expects " + std::to_string(expected.size()) +
+              const auto &case_type = enum_case->second;
+              std::vector<std::string> type_arguments(case_type.type_parameters.size(), std::string(unknown_type));
+              if (expected_expression)
+              {
+                const auto contextual = generic_instance(*expected_expression);
+                if (contextual.base == case_type.enum_name && contextual.arguments.size() == type_arguments.size())
+                  type_arguments = contextual.arguments;
+              }
+              require(arguments.size() == case_type.payload_types.size(),
+                      "Enum case '" + identifier->name + "' expects " +
+                          std::to_string(case_type.payload_types.size()) +
                           " payload value(s), but received " + std::to_string(arguments.size()),
                       value.range);
               for (std::size_t index = 0; index < arguments.size(); ++index)
-                require_compatible(expected[index], arguments[index], call->arguments[index]->range,
-                                   "Enum case payload");
+              {
+                for (std::size_t parameter = 0; parameter < case_type.type_parameters.size(); ++parameter)
+                  if (case_type.payload_types[index] == case_type.type_parameters[parameter] &&
+                      is_unknown(type_arguments[parameter]))
+                    type_arguments[parameter] = arguments[index];
+                require_compatible(substitute_type(case_type.payload_types[index], case_type.type_parameters,
+                                                   type_arguments),
+                                   arguments[index], call->arguments[index]->range, "Enum case payload");
+              }
+              require(std::none_of(type_arguments.begin(), type_arguments.end(), [](const auto &type)
+                      { return is_unknown(type); }),
+                      "Cannot infer every generic argument for enum case '" + identifier->name +
+                          "'; provide an expected " + case_type.enum_name + " type",
+                      value.range);
               static_cast<void>(record(*call->callee, "Function"));
-              return record(value, enum_case->second.enum_name);
+              std::string result = case_type.enum_name;
+              if (!type_arguments.empty())
+              {
+                result += '<';
+                for (std::size_t index = 0; index < type_arguments.size(); ++index)
+                {
+                  if (index != 0) result += ", ";
+                  result += type_arguments[index];
+                }
+                result += '>';
+              }
+              return record(value, result);
             }
             if (objects.contains(identifier->name))
             {
@@ -1310,8 +1398,11 @@ namespace semantic
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
           const std::string declared = annotation(declaration->type_name);
+          const auto previous_expected = expected_expression;
+          if (!is_unknown(declared)) expected_expression = fixed_annotation(declaration->type_name);
           std::string inferred = declaration->initializer ? expression(*declaration->initializer)
                                                            : std::string(unknown_type);
+          expected_expression = previous_expected;
           if (declared == "Float32" && declaration->initializer)
           {
             if (const auto *literal = dynamic_cast<const parser::literal_expression *>(declaration->initializer.get());
@@ -1406,7 +1497,10 @@ namespace semantic
         }
         else if (const auto *returned = dynamic_cast<const parser::return_statement *>(&value))
         {
+          const auto previous_expected = expected_expression;
+          if (!return_types.empty()) expected_expression = return_types.back();
           const std::string actual = returned->value ? expression(*returned->value) : std::string(void_type);
+          expected_expression = previous_expected;
           if (!return_types.empty() && !is_unknown(return_types.back()))
           {
             require_compatible(return_types.back(), actual, returned->range, "Return");
@@ -1457,7 +1551,8 @@ namespace semantic
               {
                 if (const auto enum_case = enum_cases.find(callee->name); enum_case != enum_cases.end())
                 {
-                  require(enum_case->second.enum_name == subject,
+                  const auto matched_generic = generic_instance(subject);
+                  require(enum_case->second.enum_name == matched_generic.base,
                           "Enum case '" + callee->name + "' belongs to " + enum_case->second.enum_name +
                               ", but the match subject is " + subject,
                           branch.range);
@@ -1472,9 +1567,12 @@ namespace semantic
                   {
                     const auto *binding_name = dynamic_cast<const parser::identifier_expression *>(call->arguments[index].get());
                     require(binding_name != nullptr, "Enum case payload patterns must be binding names", branch.range);
-                    add_binding(binding_name->name, binding{enum_case->second.payload_types[index], {}});
+                    const std::string payload_type = substitute_type(enum_case->second.payload_types[index],
+                                                                     enum_case->second.type_parameters,
+                                                                     matched_generic.arguments);
+                    add_binding(binding_name->name, binding{payload_type, {}});
                     model.declarations.push_back(
-                        typed_declaration{binding_name->range, binding_name->name, enum_case->second.payload_types[index]});
+                        typed_declaration{binding_name->range, binding_name->name, payload_type});
                   }
                   block(*branch.body);
                   close_scope();
@@ -1513,7 +1611,7 @@ namespace semantic
             paths.push_back(scopes);
           }
           has_fallback |= has_some && has_none;
-          if (const auto enum_type = enums.find(subject); enum_type != enums.end())
+          if (const auto enum_type = enums.find(generic_instance(subject).base); enum_type != enums.end())
             has_fallback |= covered_enum_cases.size() == enum_type->second.size();
           if (!has_fallback) paths.push_back(before);
           merge_initialization(before, paths);

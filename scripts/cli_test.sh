@@ -199,6 +199,8 @@ expect_failure "payload enum arity diagnostic" 1 "Enum case 'Success' expects 1 
   "$binary" --types examples/type_payload_enum_arity_error.sagan
 expect_failure "payload enum match diagnostic" 1 "Enum case 'Message' belongs to Signal" \
   "$binary" --types examples/type_payload_enum_match_error.sagan
+expect_failure "generic sum context diagnostic" 1 "Cannot infer every generic argument" \
+  "$binary" --types examples/type_generic_sum_context_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

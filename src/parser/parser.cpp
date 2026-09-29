@@ -341,6 +341,15 @@ namespace parser
   {
     const token &keyword = previous();
     const token &name = expect(tokens::IDENTIFIER, "a type name after '" + keyword.text + "'");
+    std::vector<std::string> type_parameters;
+    if (match(tokens::LANGLE))
+    {
+      do
+      {
+        type_parameters.push_back(expect(tokens::IDENTIFIER, "a generic type parameter").text);
+      } while (match(tokens::COMMA));
+      expect(tokens::RANGLE, "'>' after generic type parameters");
+    }
     std::optional<std::string> composition_keyword;
     std::vector<std::string> interfaces;
     if (match(tokens::KWD_IS) || match(tokens::KWD_HAS))
@@ -432,6 +441,7 @@ namespace parser
     }
     const token &close = expect(tokens::RBRACE, "'}' after the type body");
     return std::make_unique<type_declaration>(span{keyword.range.begin, close.range.end}, type, name.text,
+                                              std::move(type_parameters),
                                               std::move(composition_keyword), std::move(interfaces),
                                               std::move(members), std::move(enum_members));
   }

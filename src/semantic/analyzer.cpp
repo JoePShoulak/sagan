@@ -88,7 +88,8 @@ namespace semantic
           {
             throw semantic_error("Undefined type '" + base + "'", range);
           }
-          if (declaration->kind != "type" && declaration->kind != "builtin type" && declaration->kind != "import")
+          if (declaration->kind != "type" && declaration->kind != "builtin type" &&
+              declaration->kind != "type parameter" && declaration->kind != "import")
           {
             throw semantic_error("'" + base + "' does not name a type", range);
           }
@@ -96,7 +97,21 @@ namespace semantic
           if (open != std::string::npos)
           {
             if (!name->ends_with('>')) throw semantic_error("Malformed type annotation '" + *name + "'", range);
-            resolve_type(std::optional<std::string>{name->substr(open + 1, name->size() - open - 2)}, range);
+            const std::string arguments = name->substr(open + 1, name->size() - open - 2);
+            std::size_t begin = 0;
+            int depth = 0;
+            for (std::size_t index = 0; index <= arguments.size(); ++index)
+            {
+              if (index < arguments.size() && arguments[index] == '<') ++depth;
+              else if (index < arguments.size() && arguments[index] == '>') --depth;
+              if (index == arguments.size() || (arguments[index] == ',' && depth == 0))
+              {
+                std::string argument = arguments.substr(begin, index - begin);
+                while (!argument.empty() && argument.front() == ' ') argument.erase(argument.begin());
+                resolve_type(std::optional<std::string>{argument}, range);
+                begin = index + 1;
+              }
+            }
           }
         }
       }
@@ -243,6 +258,8 @@ namespace semantic
           resolve_name(interface_name, value.range);
         }
         const std::size_t parent = open_scope("type " + value.name);
+        for (const auto &parameter : value.type_parameters)
+          declare(parameter, "type parameter", value.range);
         if (value.type_kind == parser::type_declaration::kind::class_type ||
             value.type_kind == parser::type_declaration::kind::interface_type)
         {

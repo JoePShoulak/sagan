@@ -79,7 +79,8 @@ class_member := "weak"? "let" "."? identifier (":" type)? ("=" expression)?
               | "fun" "."? identifier "(" parameters? ")" (":" type)? function_body
 constructor_declaration := "new" "(" typed_parameters? ")" block
 composition := ("is" | "has") identifier ("," identifier)*
-enum_declaration := "enum" identifier "{" enum_members? "}"
+enum_declaration := "enum" identifier generic_parameters? "{" enum_members? "}"
+generic_parameters := "<" identifier ("," identifier)* ">"
 enum_members := documented_enum_member ((newline+ | ",") documented_enum_member)* ","?
 documented_enum_member := documentation_comment* identifier ("(" type_list? ")")?
 type_list := type ("," type)*

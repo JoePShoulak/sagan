@@ -1,0 +1,22 @@
+enum Result<T, E> {
+  Success(T)
+  Failure(E)
+}
+
+fun describe(result: Result<Int, String>): String {
+  match result {
+    case Success(value) return "Result: ${value}"
+    case Failure(message) return "Error: ${message}"
+  }
+}
+
+fun main(): Int {
+  let success: Result<Int, String> = Success(42)
+  let failure: Result<Int, String> = Failure("guidance unavailable")
+
+  print(describe(success))
+  print(describe(failure))
+
+  if describe(success) == "Result: 42" return 0
+  else return 1
+}

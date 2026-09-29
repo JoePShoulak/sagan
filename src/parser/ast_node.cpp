@@ -617,11 +617,13 @@ namespace parser
   }
 
   type_declaration::type_declaration(const span source_range, const kind declared_kind,
-                                     std::string identifier, std::optional<std::string> composition,
+                                     std::string identifier, std::vector<std::string> generic_parameters,
+                                     std::optional<std::string> composition,
                                      std::vector<std::string> interfaces,
                                      std::vector<statement_ref> declared_members,
                                      std::vector<enum_member> declared_enum_members)
       : statement(source_range), type_kind(declared_kind), name(std::move(identifier)),
+        type_parameters(std::move(generic_parameters)),
         composition_keyword(std::move(composition)), composed_interfaces(std::move(interfaces)),
         members(std::move(declared_members)), enum_members(std::move(declared_enum_members))
   {
@@ -649,6 +651,11 @@ namespace parser
       }
     }
     stream << ")\n";
+    for (const auto &parameter : type_parameters)
+    {
+      write_indent(stream, indent + 2);
+      stream << "TypeParameter(" << parameter << ")\n";
+    }
     print_documentation(stream, indent + 2);
     for (const auto &member : members)
     {

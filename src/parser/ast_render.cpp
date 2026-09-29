@@ -418,6 +418,9 @@ namespace parser
         {
           node->children.push_back(make_statement_node(*member));
         }
+        for (const auto &parameter : type->type_parameters)
+          node->children.insert(node->children.begin(), std::make_unique<visual_node>(
+              visual_node{"Type parameter\n" + parameter, "type"}));
         for (const auto &member : type->enum_members)
         {
           auto member_node = std::make_unique<visual_node>(

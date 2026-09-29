@@ -122,6 +122,16 @@ exhaustive match through the native tagged-variant representation:
 make payload-enum-demo
 ```
 
+## Generic-sum demonstration
+
+`examples/generic_sum_demo.sagan` declares `Result<T, E>`, uses expected result
+types to specialize success and failure construction, exhaustively binds both
+payload types, and executes the generated native program:
+
+```bash
+make generic-sum-demo
+```
+
 ## Semantic-analysis demonstration
 
 `examples/semantic_demo.sagan` exercises program, type, function, block, and
