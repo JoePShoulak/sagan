@@ -21,6 +21,7 @@ local declarations, assignment, calls, grouping, common unary/binary operators,
 prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned vector and coordinate values, their spreads, indexing, named components, iteration,
 printing and interpolation,
+typed expression lambdas with local lexical captures and immediate or stored calls,
 checked integer and floating-point exponentiation through `^` and `^=`,
 conditional expressions, `if`/`else`, `while`/`until`, loop control, and
 returns. Homogeneous array literals preserve the element width inferred by the
@@ -71,7 +72,7 @@ dimension permits it; components are assignable because variables are mutable
 by default.
 
 Open work includes generated-code structure, runtime interfaces, memory
-management, exception lowering, debug information, compiler selection and flags,
+management, escaping closures, exception lowering, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler

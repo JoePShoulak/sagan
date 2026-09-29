@@ -131,7 +131,8 @@ constructs a vector with a spread, constructs a coordinate, prints and indexes
 both dimensioned values, reads and updates named components, iterates the
 vector's components, performs checked vector/scalar arithmetic and compound updates, and mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,
-tests the result, and returns success from `main`. Its `match` cases, `for`
+executes a stored capturing lambda and an immediately invoked lambda, tests the
+result, and returns success from `main`. Its `match` cases, `for`
 loop, and final `if` branches demonstrate same-line bodies without braces.
 
 ```bash

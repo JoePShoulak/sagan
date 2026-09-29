@@ -16,10 +16,10 @@ verified_by: null
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, calls/returns, literal collections, dimensions and named components, definite initialization/returns, unreachable code, entry points, demos |
+| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, named and lambda calls/returns, literal collections, dimensions and named components, definite initialization/returns, unreachable code, entry points, demos |
 | Runtime and memory model | **Provisional/planned** | design intent only |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, output/interpolation, deterministic checked scalar/vector arithmetic and powers, typed collections, dimensioned vectors/coordinates, named components and spreads, loops, expression-pattern matching, native execution demo |
+| C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, output/interpolation, local captured/immediate lambdas, deterministic checked scalar/vector arithmetic and powers, typed collections, dimensioned vectors/coordinates, named components and spreads, loops, expression-pattern matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
 
 ## Tokenizer verification
@@ -70,9 +70,10 @@ expression, collection, control-flow, matching, exception, and
 unterminated-block errors are demonstrated. Faces, classes, simple enums,
 interface composition, class fields and methods, private method spelling, and
 `self` are parsed and rendered; their conformance and object semantics remain
-future work. Named functions and methods accept block or `=>` expression bodies,
-and anonymous typed lambdas are represented as expressions; capture and callable
-semantics remain future analysis.
+future work. Named functions and methods accept block or `=>` expression bodies.
+Typed expression lambdas are callable, may capture local lexical state, and can
+be stored in local variables or invoked immediately. Escaping closures and
+function-type annotations remain future runtime and type-system work.
 Module declarations, import sources and aliases, and standalone exports are
 parsed and rendered. Import resolution, visibility, initialization, and package
 behavior remain semantic and module-loader work.

@@ -51,9 +51,11 @@ component type, such as `Vector3<Float64>`; compatibility requires equal
 dimensions and lossless component widening.
 
 Dimensioned `.x`, `.y`, `.z`, and `.w` members resolve to their component type
-when present. Other member access, lambda callability, interface conformance,
-and several user-defined-type relationships currently remain `Unknown`. The
-generic model and multi-error recovery strategy also remain open.
+when present. Typed expression lambdas retain parameter and result signatures
+through local bindings; stored and immediate calls validate arity and lossless
+argument compatibility. Other member access, escaping closure types, interface
+conformance, and several user-defined-type relationships currently remain
+`Unknown`. The generic model and multi-error recovery strategy also remain open.
 
 Type annotations must resolve to built-in, declared, or imported type symbols.
 Non-`Void` block-bodied functions must return on every statically guaranteed

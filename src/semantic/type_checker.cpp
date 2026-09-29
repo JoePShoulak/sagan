@@ -139,6 +139,7 @@ namespace semantic
       type_model model;
       std::vector<std::unordered_map<std::string, std::vector<binding>>> scopes{1};
       std::vector<std::string> return_types;
+      std::unordered_map<const parser::expression *, callable_signature> callables;
 
       auto open_scope() -> void
       {
@@ -396,11 +397,15 @@ namespace semantic
           require(matches && !matches->empty(), "Undefined name '" + identifier->name + "'", value.range);
           require(matches->front().initialized, "Variable '" + identifier->name + "' is used before initialization",
                   value.range);
+          if (matches->front().callable) callables[&value] = *matches->front().callable;
           return record(value, matches->front().type);
         }
         if (const auto *grouping = dynamic_cast<const parser::grouping_expression *>(&value))
         {
-          return record(value, expression(*grouping->value));
+          const std::string type = expression(*grouping->value);
+          if (const auto found = callables.find(grouping->value.get()); found != callables.end())
+            callables[&value] = found->second;
+          return record(value, type);
         }
         if (const auto *unary = dynamic_cast<const parser::unary_expression *>(&value))
         {
@@ -501,7 +506,16 @@ namespace semantic
             return record(value, viable.front()->result);
           }
           static_cast<void>(expression(*call->callee));
-          return record(value, std::string(unknown_type));
+          const auto callable = callables.find(call->callee.get());
+          require(callable != callables.end(), "Called expression is not callable", call->callee->range);
+          require(callable->second.parameters.size() == arguments.size(),
+                  "Callable expects " + std::to_string(callable->second.parameters.size()) +
+                      " arguments, but received " + std::to_string(arguments.size()),
+                  value.range);
+          for (std::size_t index = 0; index < arguments.size(); ++index)
+            require_compatible(callable->second.parameters[index], arguments[index], call->arguments[index]->range,
+                               "Callable argument");
+          return record(value, callable->second.result);
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
         {
@@ -632,15 +646,20 @@ namespace semantic
         }
         if (const auto *lambda = dynamic_cast<const parser::lambda_expression *>(&value))
         {
+          callable_signature signature;
           open_scope();
           for (const auto &parameter : lambda->parameters)
           {
-            add_binding(parameter.name, binding{fixed_annotation(parameter.type_name), {}});
+            const std::string parameter_type = fixed_annotation(parameter.type_name);
+            signature.parameters.push_back(parameter_type);
+            add_binding(parameter.name, binding{parameter_type, {}});
           }
           const std::string body = expression(*lambda->body);
-          const std::string result = fixed_annotation(lambda->return_type);
-          if (!is_unknown(result)) require_compatible(result, body, value.range, "Lambda return");
+          signature.result = fixed_annotation(lambda->return_type);
+          if (!is_unknown(signature.result)) require_compatible(signature.result, body, value.range, "Lambda return");
+          else signature.result = body;
           close_scope();
+          callables[&value] = std::move(signature);
           return record(value, "Function");
         }
         return record(value, std::string(unknown_type));
@@ -772,13 +791,20 @@ namespace semantic
                                        ? inferred
                                    : is_unknown(declared) ? inferred
                                                           : declared;
+          std::optional<callable_signature> callable;
+          if (declaration->initializer)
+          {
+            if (const auto found = callables.find(declaration->initializer.get()); found != callables.end())
+              callable = found->second;
+          }
           if (!predeclared)
           {
-            add_binding(declaration->name, binding{type, {}, declaration->initializer != nullptr});
+            add_binding(declaration->name, binding{type, callable, declaration->initializer != nullptr});
           }
           else
           {
             scopes.back()[declaration->name].front().type = type;
+            scopes.back()[declaration->name].front().callable = std::move(callable);
             scopes.back()[declaration->name].front().initialized = declaration->initializer != nullptr;
           }
           require(!is_unknown(type),

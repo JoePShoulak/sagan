@@ -356,6 +356,19 @@ namespace codegen
           }
           return result + "return " + temporary + "; }())";
         }
+        if (const auto *lambda = dynamic_cast<const parser::lambda_expression *>(&value))
+        {
+          std::string result = "[&](";
+          for (std::size_t index = 0; index < lambda->parameters.size(); ++index)
+          {
+            if (index != 0) result += ", ";
+            const auto &parameter = lambda->parameters[index];
+            result += type(parameter.type_name, value.range) + " " + identifier(parameter.name);
+          }
+          result += ") -> " + type_name(expression_type(*lambda->body), value.range) + " { return " +
+                    expression(*lambda->body) + "; }";
+          return result;
+        }
         fail("expression is not available in the initial native subset", value.range);
         return {};
       }

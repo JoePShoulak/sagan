@@ -37,12 +37,16 @@ Overflow raises a runtime error. Division and remainder by zero raise runtime
 errors for integer and floating-point operands. Compound assignments use the
 same checks. Floating-point remainder follows `fmod` semantics.
 
-**Implemented syntax:** anonymous lambdas use `fun(parameters) => expression`,
-with optional parameter and return annotations. A lambda is a primary expression
-and can participate in postfix chains, including immediate calls when grouped.
+**Implemented native semantics:** anonymous lambdas use
+`fun(parameters) => expression`, with optional parameter and return annotations.
+Typed lambdas can be stored in local variables, called through those variables,
+or called immediately when grouped. They capture surrounding local bindings by
+reference in the current native subset. Their arguments and result are checked
+with the same lossless-conversion rules as named functions. Untyped lambda
+parameters remain valid parser/type-model input but are not native-emittable.
 
-**Provisional semantics:** lambda capture behavior and the semantic rules for
-spread outside array and dictionary literals, safe access, dictionary-key
+**Provisional semantics:** escaping closure ownership, function-type annotations,
+and the semantic rules for spread outside array and dictionary literals, safe access, dictionary-key
 hashability, and assignment expressions.
 
 **Settled dictionary-spread behavior:** dictionary entries are applied from

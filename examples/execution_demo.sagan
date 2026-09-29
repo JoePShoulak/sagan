@@ -40,6 +40,10 @@ fun main(): Int {
   let guided_direction = direction
   guided_direction.x += 0.5
   guided_direction.y = 4.0
+  let lambda_offset = 2
+  let launch_transform = fun(value: Int): Int => value + lambda_offset
+  let transformed_answer = launch_transform(40)
+  let immediate_answer = (fun(value: Int): Int => value * 2)(21)
 
   print("The answer from 🚀 is:")
   print(answer)
@@ -62,6 +66,8 @@ fun main(): Int {
   print("Reversed direction: ${reversed_direction}")
   print("Restored direction: ${restored_direction}")
   print("Guided direction: ${guided_direction}")
+  print("Captured lambda result: ${transformed_answer}")
+  print("Immediate lambda result: ${immediate_answer}")
   match configured_countdown {
     case 3 print("Match selected the nominal countdown")
     case else print("Match selected the fallback")
@@ -80,6 +86,6 @@ fun main(): Int {
     launched = true
   }
 
-  if answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
+  if answer == 42 and transformed_answer == 42 and immediate_answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
   else return 1
 }

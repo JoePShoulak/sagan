@@ -1638,6 +1638,14 @@ namespace
         "  let horizontal = direction.x\n  let altitude = position.z\n  let frame = position.w\n"
         "  direction.y = 8.0\n  direction.z += 1.0\n}\n",
         {"horizontal: Float64", "altitude: Int8", "frame: Int8"});
+    passed &= expect_type_model(
+        "lambda callability captures and immediate calls",
+        "fun exercise(): Int {\n  let offset = 2\n"
+        "  let add = fun(value: Int): Int => value + offset\n"
+        "  let answer = add(40)\n"
+        "  let immediate = (fun(value: Int): Int => value * 2)(21)\n"
+        "  return answer + immediate\n}\n",
+        {"add: Function", "answer: Int64", "immediate: Int64"});
     passed &= expect_type_error("initializer type mismatch", "let value: Bool = 1\n",
                                 "Variable initializer requires Bool, but received Int");
     passed &= expect_type_error("uninferable variable", "let pending\n",
@@ -1740,6 +1748,11 @@ namespace
     passed &= expect_type_error("dimensioned values are not optional",
                                 "let invalid = <1.0, 2.0>?.x\n",
                                 "Safe member access is not defined for Vector values");
+    passed &= expect_type_error("lambda argument type mismatch",
+                                "fun invalid(): Int {\n"
+                                "  let apply = fun(value: Int): Int => value\n"
+                                "  return apply(true)\n}\n",
+                                "No matching overload for 'apply'");
     passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
     passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
     passed &= expect_entry_error("missing entry point", "let library_value = 1\n",
