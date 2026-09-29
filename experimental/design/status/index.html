@@ -3311,8 +3311,8 @@
 </tr>
 <tr>
 <td>Runtime and memory model</td>
-<td><strong>Reference, weak-edge, and absence foundations implemented</strong></td>
-<td>shared reference-counted class/face values, dynamic dispatch, explicit <code>weak let</code> fields, optional weak reads, payload matching, safe <code>?.</code>, and lazy <code>??</code></td>
+<td><strong>Reference ownership model implemented</strong></td>
+<td>shared reference-counted class/face values, dynamic dispatch, explicit <code>weak let</code> fields, compile-time rejection of all-strong declaration cycles and strong face fields, optional weak reads, payload matching, safe <code>?.</code>, and lazy <code>??</code></td>
 </tr>
 <tr>
 <td>Standard/core libraries</td>
@@ -3389,9 +3389,11 @@ classes with declared transitive conformance and dispatch through shared
 reference-counted objects. Optional values, payload matching, safe access, and
 lazy coalescing provide the absence model used by <code>weak let</code> class fields.
 Weak fields begin empty, accept strong class or face values on assignment, and
-read as <code>Optional&lt;T&gt;</code> so expired targets become <code>None</code>. Cycles with an explicit
-weak edge can therefore be reclaimed; automatic handling of all-strong cycles
-remains future work. Named functions
+read as <code>Optional&lt;T&gt;</code> so expired targets become <code>None</code>. The checker rejects
+all-strong declaration cycles, including nested optional/generic references,
+and requires face-typed fields to be weak because their concrete targets are
+dynamic. Every permitted ownership cycle therefore has an explicit weak edge
+and can be reclaimed without a tracing collector. Named functions
 and methods accept block or <code>=&gt;</code> expression bodies.
 Typed expression lambdas are callable, may capture local lexical state, and can
 be stored in local variables or invoked immediately. Escaping closures and
@@ -3418,7 +3420,6 @@ Generic classes, generic face defaults, and class-level generic methods execute
 with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with <code>is</code>. Method-specific face generics,
-automatic handling of all-strong reference cycles,
 module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.</p>
@@ -3431,6 +3432,22 @@ conversion rules, generic algorithms, runtime representation, and whether type
 separation prevents meaningful simulation errors without creating unnecessary
 friction. This review must happen before work begins on math, rendering, or
 physics libraries.</p>
+<p>The 1.0 release must also provide professional graphical installers for Windows,
+macOS, and Linux, plus platform-appropriate command-line installation. The
+installed toolchain must place <code>sagan</code> on the user's command path, support
+<code>sagan file.sagan</code>, provide normal install-location, permission, progress, and
+uninstall behavior, and register <code>.sagan</code> files for native double-click launch.
+Whether that launch opens a visible terminal or uses another execution surface
+is intentionally deferred until installer design begins. Release artifacts will
+be published through GitHub's release/package facilities; HP1 may additionally
+host or mirror installer and package data where convenient.</p>
+<p>After 1.0 is declared complete, but before the math, rendering, and physics
+libraries begin, hold a dedicated lifecycle and release-operations review. It
+must settle release cadence and channels, the events that trigger builds,
+testing, signing, publication, documentation promotion, rollback, security and
+support work, and maintenance responsibilities outside day-to-day language
+development. Full-functionality VS Code extension work is planned for the same
+transition and awaits its separate requirements.</p>
 
 
 
