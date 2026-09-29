@@ -5,7 +5,11 @@ import telemetry as flight_data
 
 fun main(): Int {
   let answer = calculate_course(40)
+  let direct_offset = flight_data.offset()
+  let signal = flight_data.Signal.nominal
   print("Cross-module answer: ${answer}")
-  if answer == 42 return 0
+  print("Namespace offset: ${direct_offset}")
+  print("Namespace enum: ${signal}")
+  if answer == 42 and direct_offset == 2 and signal == flight_data.Signal.nominal return 0
   else return 1
 }

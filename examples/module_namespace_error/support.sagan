@@ -1,0 +1,3 @@
+module support
+
+fun private_value(): Int => 42

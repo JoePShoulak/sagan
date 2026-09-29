@@ -86,7 +86,7 @@ method bodies. Class construction uses shared reference-counted storage, and
 conversion to a declared face preserves object identity for runtime dispatch.
 
 `--emit-cpp-modules` resolves a flat sibling-file module graph and links its
-selective imports into one checked compilation unit. Dependency-private
+selective imports and exported namespace members into one checked compilation unit. Dependency-private
 top-level names receive deterministic module-qualified identities, imported
 aliases point to exported identities, and dependency declarations are emitted
 before their consumers. The module demo compiles and executes the resulting

@@ -43,11 +43,11 @@ declaration and expression types.
 contract. It does not generate or run a program.
 `--modules` recursively resolves sibling `<module>.sagan` files from the entry
 file's directory, validates module declarations and exports, rejects dependency
-cycles, and prints the dependency-ordered graph. It does not yet link imported
-declarations into semantic analysis or generated code.
-`--emit-cpp-modules` links selective imports into one isolated compilation
-unit, performs semantic, type, and entry-point validation, then prints or writes
-the generated C++. Whole-module namespace access is not executable yet.
+cycles, and prints the dependency-ordered graph.
+`--emit-cpp-modules` links selective imports and exported members accessed
+through whole-module namespaces into one isolated compilation unit, performs
+semantic, type, and entry-point validation, then prints or writes the generated
+C++.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
@@ -120,8 +120,8 @@ semantic model; `type-demo` prints the successful type model; and `clean`
 removes compiler objects and the binary. `entry-demo` validates a successful
 entry point and focused control-flow failures. The test target exercises
 semantic/type/entry/code-generation success plus focused failures.
-`module-demo` prints a three-module dependency graph and verifies export,
-filename, and cycle diagnostics.
+`module-demo` prints a three-module dependency graph, executes selective and
+namespace imports, and verifies export visibility, filename, and cycle diagnostics.
 `execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
 runs it, and reports the native exit code.
 

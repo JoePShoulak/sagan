@@ -31,7 +31,8 @@ Development currently proceeds through five broad stages:
 
 The module pipeline has additionally begun with deterministic sibling-file
 resolution, export validation, dependency ordering, cycle detection, isolated
-semantic/type linking, and native cross-module execution.
+semantic/type linking, selective and namespace imports, and native cross-module
+execution.
 
 See the [implementation overview](../implementation/index.md) for the present
 boundary between working code and intended architecture. Among the ideas

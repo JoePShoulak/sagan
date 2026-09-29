@@ -79,17 +79,17 @@ launching a browser.
 
 `examples/module_demo/` contains a three-file dependency graph with a transitive
 selective import, an export alias, a local import alias, and a whole-module
-import. The demo prints every source file and the dependency-ordered graph, then
-links the selective imports, compiles generated C++, prints a cross-module
-result, and confirms focused cycle, missing-export, and filename/declaration diagnostics.
+namespace import. The demo prints every source file and the dependency-ordered
+graph, then links both import forms, compiles generated C++, calls an exported
+namespace function, accesses an exported namespaced enum, and confirms focused
+cycle, visibility, missing-export, and filename/declaration diagnostics.
 
 ```bash
 make module-demo
 ```
 
 The demonstration proves module structure, visibility, semantic/type linking,
-and native cross-file execution. Whole-module namespace member access remains
-future work; executable imports are currently selective.
+whole-module namespace access, and native cross-file execution.
 
 ## Semantic-analysis demonstration
 

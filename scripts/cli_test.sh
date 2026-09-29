@@ -181,6 +181,8 @@ expect_failure "module extension diagnostic" 1 "must use the .sagan extension" \
   "$binary" --modules README.md
 expect_failure "linked module type diagnostic" 1 "No matching overload for 'guidance__calculate'" \
   "$binary" --emit-cpp-modules examples/module_type_error/main.sagan
+expect_failure "module namespace visibility diagnostic" 1 "Module 'support' does not export 'private_value'" \
+  "$binary" --emit-cpp-modules examples/module_namespace_error/main.sagan
 expect_failure "unwritable output" 1 "Could not write" \
   "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
 

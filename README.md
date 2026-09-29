@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.43.0](https://img.shields.io/badge/development-0.43.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.44.0](https://img.shields.io/badge/development-0.44.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -71,8 +71,10 @@ propagation, handled exceptions, and early returns.
 The module pipeline loads flat sibling `.sagan` files recursively from the
 entry file's directory, validates filename declarations and public exports,
 applies import/export aliases, isolates dependency-private symbols, orders
-dependencies, and rejects cycles. Selective imports participate in semantic and
-type checking and can be compiled together into a native executable.
+dependencies, and rejects cycles. Selective imports and exported members of
+whole-module namespace imports participate in semantic and type checking and
+can be compiled together into a native executable; private members remain
+inaccessible across module boundaries.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
 
 ```text

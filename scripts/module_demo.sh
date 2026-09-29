@@ -68,4 +68,15 @@ if [[ "$type_status" -eq 0 || "$type_output" != *"No matching overload for 'guid
 fi
 echo "Confirmed linked type error: imported function rejects String"
 
-echo "Module demo passed: sibling resolution, transitive dependencies, exports, aliases, semantic/type linking, native execution, and cycle diagnostics are working."
+set +e
+namespace_output="$(bin/sagan --emit-cpp-modules examples/module_namespace_error/main.sagan 2>&1)"
+namespace_status=$?
+set -e
+if [[ "$namespace_status" -eq 0 || "$namespace_output" != *"Module 'support' does not export 'private_value'"* ]]; then
+  echo "Expected module namespace visibility diagnostic." >&2
+  echo "$namespace_output" >&2
+  exit 1
+fi
+echo "Confirmed namespace visibility error: private member is inaccessible"
+
+echo "Module demo passed: sibling resolution, transitive dependencies, selective and namespace imports, export visibility, semantic/type linking, native execution, and cycle diagnostics are working."

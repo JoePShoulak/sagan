@@ -1,6 +1,12 @@
 module telemetry
 
+enum Signal {
+  nominal
+  lost
+}
+
 fun helper(): Int => 2
 fun offset(): Int => helper()
 
 export offset
+export Signal

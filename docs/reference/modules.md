@@ -46,18 +46,19 @@ simulation/telemetry.sagan  -> module telemetry
 publishes a local top-level variable, function, or type under `public`.
 Selecting a private or missing name is an error.
 
-Selective imports are linked into a single checked compilation unit. Each
+Selective and whole-module imports are linked into a single checked compilation unit. Each
 dependency's top-level declarations receive a deterministic module-qualified
 identity before name and type analysis, preventing private declarations in
 different modules from colliding. Imported aliases resolve to those linked
 identities. The C++ backend then emits dependency declarations before their
 consumers, allowing cross-module functions and types to execute natively.
 
-`import guidance` loads the whole module and reserves `guidance` (or its `as`
-alias) as the future module-namespace binding. Namespace member lookup is not
-semantically linked yet; executable cross-file code currently uses selective
-imports. Dependencies are resolved transitively in dependency
-order, and cycles are rejected with the complete cycle path.
+`import guidance` loads the whole module and binds the `guidance` namespace;
+`import guidance as flight` binds it as `flight` instead. Exported functions
+and types are accessed through that namespace, such as `flight.course()` or
+`flight.Status.nominal`. Attempting to access a private or missing member is an
+error. Dependencies are resolved transitively in dependency order, and cycles
+are rejected with the complete cycle path.
 
 Inspect the resolved graph with:
 
@@ -69,7 +70,7 @@ bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/modules.cpp
 **Settled design:** math is automatically available. Physics and rendering are
 first-party core libraries that require explicit imports.
 
-**Open work:** namespace member access, mutable module-level initialization,
-hierarchical package layout, additional search paths, distribution, and the final module names and import
+**Open work:** mutable module-level initialization, hierarchical package layout,
+additional search paths, distribution, and the final module names and import
 granularity of physics and rendering. The flat filename mapping is the settled
 initial behavior, not yet a complete package system.

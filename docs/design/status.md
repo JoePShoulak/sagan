@@ -21,7 +21,7 @@ verified_by: null
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation | **Initial executable subset implemented** | `--emit-cpp`, value exceptions and cleanup, reference-counted classes, runtime faces, dynamic dispatch, private fields/methods, `new(...)` constructors, lambdas, checked arithmetic, typed collections, dimensioned values, loops, matching, native execution demo |
 | Deterministic execution | **Numeric foundation implemented** | checked integer arithmetic, division/modulo guards, focused runtime-error fixtures |
-| Module resolution | **Executable selective imports implemented** | flat sibling-file mapping, declaration/export validation, isolated linked symbols, aliases, transitive ordering, cycle diagnostics, native module demo |
+| Module resolution | **Executable imports implemented** | flat sibling-file mapping, declaration/export validation, selective and whole-module namespace access, isolated linked symbols, aliases, transitive ordering, cycle diagnostics, native module demo |
 
 ## Tokenizer verification
 
@@ -87,9 +87,10 @@ function-type annotations remain future runtime and type-system work.
 Module declarations, import sources and aliases, and standalone exports are
 parsed and rendered. The initial loader resolves sibling files transitively,
 validates module names and public exports, preserves aliases, and rejects
-cycles. Selective imports are isolated, linked, semantically analyzed,
-type-checked, and emitted together for native cross-module calls. Namespace
-access, mutable module initialization, and broader package behavior remain future work.
+cycles. Selective imports and exported namespace members are isolated, linked,
+semantically analyzed, type-checked, and emitted together for native
+cross-module calls. Mutable module initialization and broader package behavior
+remain future work.
 Documentation comments attach to supported declarations with retained text and
 source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
@@ -102,6 +103,6 @@ remain future semantic and runtime work.
 Generic annotations, reference-count cycles and weak references,
 generics and possible sum types,
 payload-bearing enums and explicit enum values, catchable native runtime errors,
-module namespaces and packages, and the concrete math, physics, and rendering APIs
+module packages, and the concrete math, physics, and rendering APIs
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.

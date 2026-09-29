@@ -172,6 +172,8 @@ namespace modules
     class symbol_rewriter
     {
       const std::unordered_map<std::string, std::string> &bindings;
+      const std::unordered_map<std::string, std::string> &namespaces;
+      const std::unordered_map<std::string, std::unordered_map<std::string, std::string>> &public_names;
       std::vector<std::unordered_set<std::string>> locals;
 
       auto annotation(std::optional<std::string> &name) const -> void
@@ -185,6 +187,27 @@ namespace modules
         return std::any_of(locals.rbegin(), locals.rend(), [&](const auto &scope) { return scope.contains(name); });
       }
 
+      auto expression(parser::expression_ref &value) -> void
+      {
+        if (const auto *member = dynamic_cast<const parser::member_expression *>(value.get()))
+        {
+          const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
+          if (target && !is_local(target->name))
+          {
+            if (const auto namespace_value = namespaces.find(target->name); namespace_value != namespaces.end())
+            {
+              const auto module_exports = public_names.find(namespace_value->second);
+              if (module_exports == public_names.end() || !module_exports->second.contains(member->member_name))
+                throw std::runtime_error("Module '" + namespace_value->second + "' does not export '" +
+                                         member->member_name + "'");
+              const auto public_name = module_exports->second.find(member->member_name);
+              value = std::make_unique<parser::identifier_expression>(member->range, public_name->second);
+            }
+          }
+        }
+        expression(*value);
+      }
+
       auto expression(parser::expression &value) -> void
       {
         if (auto *identifier = dynamic_cast<parser::identifier_expression *>(&value))
@@ -193,51 +216,51 @@ namespace modules
             if (const auto found = bindings.find(identifier->name); found != bindings.end())
               identifier->name = found->second;
         }
-        else if (auto *group = dynamic_cast<parser::grouping_expression *>(&value)) expression(*group->value);
-        else if (auto *unary = dynamic_cast<parser::unary_expression *>(&value)) expression(*unary->operand);
+        else if (auto *group = dynamic_cast<parser::grouping_expression *>(&value)) expression(group->value);
+        else if (auto *unary = dynamic_cast<parser::unary_expression *>(&value)) expression(unary->operand);
         else if (auto *binary = dynamic_cast<parser::binary_expression *>(&value))
         {
-          expression(*binary->left);
-          expression(*binary->right);
+          expression(binary->left);
+          expression(binary->right);
         }
         else if (auto *conditional = dynamic_cast<parser::conditional_expression *>(&value))
         {
-          expression(*conditional->condition);
-          expression(*conditional->when_true);
-          expression(*conditional->when_false);
+          expression(conditional->condition);
+          expression(conditional->when_true);
+          expression(conditional->when_false);
         }
         else if (auto *assignment = dynamic_cast<parser::assignment_expression *>(&value))
         {
-          expression(*assignment->target);
-          expression(*assignment->value);
+          expression(assignment->target);
+          expression(assignment->value);
         }
         else if (auto *call = dynamic_cast<parser::call_expression *>(&value))
         {
-          expression(*call->callee);
-          for (auto &argument : call->arguments) expression(*argument);
+          expression(call->callee);
+          for (auto &argument : call->arguments) expression(argument);
         }
         else if (auto *index = dynamic_cast<parser::index_expression *>(&value))
         {
-          expression(*index->target);
-          expression(*index->index);
+          expression(index->target);
+          expression(index->index);
         }
-        else if (auto *member = dynamic_cast<parser::member_expression *>(&value)) expression(*member->target);
+        else if (auto *member = dynamic_cast<parser::member_expression *>(&value)) expression(member->target);
         else if (auto *string = dynamic_cast<parser::string_expression *>(&value))
         {
           for (auto &part : string->parts)
-            if (part.interpolation) expression(*part.interpolation);
+            if (part.interpolation) expression(part.interpolation);
         }
-        else if (auto *spread = dynamic_cast<parser::spread_expression *>(&value)) expression(*spread->value);
+        else if (auto *spread = dynamic_cast<parser::spread_expression *>(&value)) expression(spread->value);
         else if (auto *collection = dynamic_cast<parser::collection_expression *>(&value))
         {
-          for (auto &element : collection->elements) expression(*element);
+          for (auto &element : collection->elements) expression(element);
         }
         else if (auto *dictionary = dynamic_cast<parser::dictionary_expression *>(&value))
         {
           for (auto &entry : dictionary->entries)
           {
-            if (entry.key) expression(*entry.key);
-            expression(*entry.value);
+            if (entry.key) expression(entry.key);
+            expression(entry.value);
           }
         }
         else if (auto *lambda = dynamic_cast<parser::lambda_expression *>(&value))
@@ -249,7 +272,7 @@ namespace modules
             annotation(parameter.type_name);
             locals.back().insert(parameter.name);
           }
-          expression(*lambda->body);
+          expression(lambda->body);
           locals.pop_back();
         }
       }
@@ -273,7 +296,7 @@ namespace modules
           locals.back().insert(parameter.name);
         }
         if (value.body) block(*value.body);
-        if (value.expression_body) expression(*value.expression_body);
+        if (value.expression_body) expression(value.expression_body);
         locals.pop_back();
       }
 
@@ -282,7 +305,7 @@ namespace modules
         if (auto *declaration = dynamic_cast<parser::let_declaration *>(&value))
         {
           annotation(declaration->type_name);
-          if (declaration->initializer) expression(*declaration->initializer);
+          if (declaration->initializer) expression(declaration->initializer);
           if (top_level)
           {
             if (const auto found = bindings.find(declaration->name); found != bindings.end())
@@ -291,27 +314,27 @@ namespace modules
           else if (!member) locals.back().insert(declaration->name);
         }
         else if (auto *expression_value = dynamic_cast<parser::expression_statement *>(&value))
-          expression(*expression_value->value);
+          expression(expression_value->value);
         else if (auto *assignment = dynamic_cast<parser::assignment_statement *>(&value))
         {
-          expression(*assignment->target);
-          expression(*assignment->value);
+          expression(assignment->target);
+          expression(assignment->value);
         }
         else if (auto *nested = dynamic_cast<parser::block_statement *>(&value)) block(*nested);
         else if (auto *conditional = dynamic_cast<parser::if_statement *>(&value))
         {
-          expression(*conditional->condition);
+          expression(conditional->condition);
           block(*conditional->then_branch);
           if (conditional->else_branch) statement(*conditional->else_branch, false, false);
         }
         else if (auto *loop = dynamic_cast<parser::condition_loop_statement *>(&value))
         {
-          expression(*loop->condition);
+          expression(loop->condition);
           block(*loop->body);
         }
         else if (auto *loop = dynamic_cast<parser::for_statement *>(&value))
         {
-          expression(*loop->iterable);
+          expression(loop->iterable);
           locals.emplace_back();
           locals.back().insert(loop->binding);
           block(*loop->body);
@@ -319,18 +342,18 @@ namespace modules
         }
         else if (auto *returned = dynamic_cast<parser::return_statement *>(&value))
         {
-          if (returned->value) expression(*returned->value);
+          if (returned->value) expression(returned->value);
         }
         else if (auto *yielded = dynamic_cast<parser::yield_statement *>(&value))
         {
-          if (yielded->value) expression(*yielded->value);
+          if (yielded->value) expression(yielded->value);
         }
         else if (auto *matched = dynamic_cast<parser::match_statement *>(&value))
         {
-          expression(*matched->subject);
+          expression(matched->subject);
           for (auto &branch : matched->cases)
           {
-            if (branch.pattern) expression(*branch.pattern);
+            if (branch.pattern) expression(branch.pattern);
             block(*branch.body);
           }
         }
@@ -339,12 +362,12 @@ namespace modules
           block(*hope->protected_body);
           for (auto &handler : hope->handlers)
           {
-            expression(*handler.pattern);
+            expression(handler.pattern);
             block(*handler.body);
           }
           if (hope->cleanup) block(*hope->cleanup);
         }
-        else if (auto *scream = dynamic_cast<parser::scream_statement *>(&value)) expression(*scream->value);
+        else if (auto *scream = dynamic_cast<parser::scream_statement *>(&value)) expression(scream->value);
         else if (auto *function_value = dynamic_cast<parser::function_declaration *>(&value))
           function(*function_value, top_level);
         else if (auto *type = dynamic_cast<parser::type_declaration *>(&value))
@@ -361,8 +384,10 @@ namespace modules
       }
 
     public:
-      explicit symbol_rewriter(const std::unordered_map<std::string, std::string> &module_bindings)
-          : bindings(module_bindings)
+      symbol_rewriter(const std::unordered_map<std::string, std::string> &module_bindings,
+                      const std::unordered_map<std::string, std::string> &module_namespaces,
+                      const std::unordered_map<std::string, std::unordered_map<std::string, std::string>> &exports)
+          : bindings(module_bindings), namespaces(module_namespaces), public_names(exports)
       {
       }
 
@@ -428,12 +453,13 @@ namespace modules
     {
       parser::program tree = parse_file(module.path);
       auto bindings = linked_names.at(module.name);
+      std::unordered_map<std::string, std::string> namespaces;
       for (const auto &imported : module.imports)
       {
-        if (imported.whole_module) continue;
-        bindings[imported.binding_name] = public_names.at(imported.module_name).at(imported.imported_name);
+        if (imported.whole_module) namespaces[imported.binding_name] = imported.module_name;
+        else bindings[imported.binding_name] = public_names.at(imported.module_name).at(imported.imported_name);
       }
-      symbol_rewriter(bindings).rewrite(tree);
+      symbol_rewriter(bindings, namespaces, public_names).rewrite(tree);
       for (auto &entry : tree.statements)
       {
         if (dynamic_cast<parser::module_declaration *>(entry.get()) ||
