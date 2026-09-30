@@ -28,7 +28,10 @@ native_output="build/module_demo"
 if [[ "${OS:-}" == "Windows_NT" ]]; then
   native_output="build/module_demo.exe"
 fi
-repo_tmp_native="$(cygpath -w "$repo_root/build/tmp")"
+repo_tmp_native="$repo_root/build/tmp"
+if command -v cygpath >/dev/null 2>&1; then
+  repo_tmp_native="$(cygpath -w "$repo_tmp_native")"
+fi
 TMPDIR="$repo_tmp_native" TMP="$repo_tmp_native" TEMP="$repo_tmp_native" \
   g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/module_demo.cpp -o "$native_output"
 "$native_output"
