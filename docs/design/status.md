@@ -178,11 +178,12 @@ unsigned. Automated isolated-environment testing is the implementation gate;
 a clean Windows x64 computer or VM run of the exact signed release candidate is
 a separate release-blocking acceptance gate and is currently pending.
 
-Before 1.0 is declared or published, hold a dedicated lifecycle and
-release-operations review. It must settle release cadence and channels, the
-events that trigger builds, testing, signing, publication, documentation
-promotion, rollback, security and support work, and maintenance responsibilities
-outside day-to-day language development. The resulting policy governs the 1.0
-release itself, so feature-complete implementation alone does not cross the 1.0
-gate. Full-functionality VS Code extension work is paused and is not a 1.0
-release requirement.
+The pre-1.0 lifecycle review is complete. Public releases are on demand from
+verified signed tags on `main`; previews publish after automated gates, while
+stable artifacts remain in a draft until the exact signed installer has clean-
+machine evidence and the project owner approves the protected publication
+environment. GitHub Releases is canonical, HP1 is a non-blocking verified
+mirror, artifacts and versioned documentation are immutable, and only the
+latest stable release receives best-effort support. Signing credentials and the
+final clean-machine run remain external 1.0 release gates. Full-functionality
+VS Code extension work is paused and is not a 1.0 release requirement.

@@ -104,6 +104,22 @@ Every build also produces a sibling `.exe.sha256` checksum. Signing credentials
 must be supplied by protected release infrastructure and must never be stored in
 the repository.
 
+Public releases also provide a portable CLI archive. It changes no registry
+keys, shortcuts, file associations, or PATH entries. From Git Bash, substitute
+the release version and run:
+
+```bash
+gh release download v1.0.0 --pattern 'sagan-1.0.0-windows-x64.zip'
+mkdir -p "$HOME/.local/sagan"
+unzip sagan-1.0.0-windows-x64.zip -d "$HOME/.local/sagan"
+export PATH="$HOME/.local/sagan/bin:$PATH"
+sagan --version
+```
+
+That `export` affects only the current shell. To keep it for future Git Bash
+sessions, add the same export line to `~/.bashrc`. The graphical installer is
+required for Start-menu entries and `.sagan` Explorer integration.
+
 The smoke test installs into an isolated directory and deliberately removes
 all UCRT64/MinGW runtime directories from `PATH`. It verifies direct CLI
 startup, compilation and execution of a generated program, windowed Explorer

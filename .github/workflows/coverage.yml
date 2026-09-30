@@ -25,6 +25,9 @@ jobs:
       - name: Build and collect coverage
         run: bash scripts/coverage.sh --require-lcov
 
+      - name: Enforce release coverage floor
+        run: bash scripts/coverage_threshold.sh
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:

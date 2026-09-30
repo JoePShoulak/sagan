@@ -17,6 +17,7 @@ Before changing code or documentation:
 - run the [tests](testing.md);
 - follow the [documentation workflow](documentation.md);
 - preserve the [Windows installer release gate](windows-installer-release.md);
+- follow the [release lifecycle](release-lifecycle.md) for public tags and artifacts;
 - record unsettled design as provisional or open rather than inventing semantics;
 - preserve [licensing and attribution](licensing-and-attribution.md); and
 - do not treat successful tokenization as successful parsing or execution.

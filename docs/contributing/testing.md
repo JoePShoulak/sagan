@@ -36,7 +36,9 @@ ordinary build never tries to link coverage objects without the gcov runtime.
 `.github/workflows/coverage.yml` repeats this process on Ubuntu for every push
 and pull request, then uploads `build/coverage.info` to Codecov. Authentication
 uses GitHub OIDC rather than a stored `CODECOV_TOKEN`. Codecov upload failures
-fail the coverage job so a missing report cannot appear successful.
+fail the coverage job so a missing report cannot appear successful. CI and the
+release workflow also enforce a 90% line-coverage floor with
+`scripts/coverage_threshold.sh`.
 
 The live Codecov badge is authoritative for the current percentage. The suite
 covers tokenizer lifecycle and defensive invariants; Unicode, emoji, escapes,

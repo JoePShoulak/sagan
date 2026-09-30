@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.70.0](https://img.shields.io/badge/development-0.70.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.71.0](https://img.shields.io/badge/development-0.71.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -197,6 +197,13 @@ in-place upgrades, downgrade refusal, checksums, and Authenticode signing for
 public releases. Automated isolated-path tests cover implementation; the exact
 signed release candidate must also pass a clean Windows x64 machine or VM before
 publication.
+
+The release lifecycle is now defined: verified signed tags on `main` create
+immutable signed preview releases or stable drafts, stable publication requires
+the clean-machine record and project-owner approval, and GitHub Releases is
+canonical with a non-blocking HP1 mirror. Each Windows release includes the
+installer plus a non-mutating portable CLI ZIP, checksums, a release manifest,
+an SBOM, and reviewed notes. Support is best effort for the latest stable only.
 
 The compiler-owned editor-tooling track has begun without changing the held VS
 Code extension. The compiler builds as a reusable static library and exposes

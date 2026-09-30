@@ -28,6 +28,15 @@ cp "$repo_root/packaging/windows/sagan.ico" "$stage_dir/assets/sagan.ico"
 cp "$repo_root/editors/vscode-sagan/LICENSE.txt" "$stage_dir/licenses/Sagan-GPL-3.0.txt"
 cp "$repo_root/third_party/uni-algo/LICENSE.md" "$stage_dir/licenses/uni-algo-MIT.txt"
 cp "$repo_root/third_party/unicode/LICENSE.txt" "$stage_dir/licenses/Unicode.txt"
+mkdir -p "$stage_dir/licenses/toolchain"
+for license_package in binutils crt gcc-libs headers winpthreads; do
+  license_source="$toolchain_root/share/licenses/$license_package"
+  if [[ ! -d "$license_source" ]]; then
+    echo "The Windows toolchain is missing license material for $license_package." >&2
+    exit 1
+  fi
+  cp -a "$license_source" "$stage_dir/licenses/toolchain/"
+done
 
 compiler_target="$("$toolchain_root/bin/g++.exe" -dumpmachine)"
 compiler_version="$("$toolchain_root/bin/g++.exe" -dumpversion)"

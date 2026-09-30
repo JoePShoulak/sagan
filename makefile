@@ -111,6 +111,7 @@ obj/version.o: obj/version.cpp src/version.hpp
 test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_DEMO) $(SEMANTIC_INDEX_DEMO)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/installer_policy_test.sh
+	bash scripts/release_policy_test.sh
 	$(SOURCE_DIAGNOSTICS_TEST)
 	$(WORKSPACE_DEMO)
 	$(SEMANTIC_INDEX_DEMO)

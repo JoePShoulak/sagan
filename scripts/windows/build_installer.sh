@@ -17,7 +17,9 @@ if [[ ! -x "$iscc" ]]; then
   exit 1
 fi
 
-bash "$repo_root/scripts/windows/stage_installer.sh"
+if [[ "${SAGAN_STAGE_READY:-false}" != true ]]; then
+  bash "$repo_root/scripts/windows/stage_installer.sh"
+fi
 version="$(bash "$repo_root/scripts/version.sh" numeric)"
 mkdir -p "$repo_root/build/installer"
 source_dir="$(cygpath -w "$repo_root/build/windows-stage")"

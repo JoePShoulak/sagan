@@ -4,6 +4,11 @@
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
+#ifdef SignToolName
+  #define SaganBinarySignFlag " signonce"
+#else
+  #define SaganBinarySignFlag ""
+#endif
 
 [Setup]
 AppId={{09D785A5-B94E-4D75-9CC9-E57831637DD5}
@@ -40,10 +45,10 @@ Name: addtopath; Description: "Add Sagan to PATH"; GroupDescription: "Command-li
 Name: fileassociation; Description: "Run .sagan files from File Explorer"; GroupDescription: "File integration:"; Flags: checkedonce
 
 [Files]
-Source: "{#SourceDir}\bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "{#SourceDir}\bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion{#SaganBinarySignFlag}
 Source: "{#SourceDir}\toolchain\*"; DestDir: "{app}\toolchain"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#SourceDir}\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion
-Source: "{#SourceDir}\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion
+Source: "{#SourceDir}\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#SourceDir}\VERSION"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]

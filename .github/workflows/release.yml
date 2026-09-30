@@ -1,0 +1,261 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-tag:
+    name: Validate signed release tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      preview: ${{ steps.release.outputs.preview }}
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate identity, signature, main ancestry, and version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-rc\.([1-9][0-9]*))?$ ]]
+          version="${BASH_REMATCH[1]}"
+          tag_object="$(git rev-parse "$TAG^{tag}")"
+          verified="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/$tag_object" --jq '.verification.verified')"
+          [[ "$verified" == true ]] || {
+            echo "Release tag $TAG is not a verified signed annotated tag." >&2
+            exit 1
+          }
+          git fetch origin main
+          git merge-base --is-ancestor "$TAG^{}" origin/main || {
+            echo "Release tag $TAG is not on main." >&2
+            exit 1
+          }
+          [[ "$(bash scripts/version.sh numeric)" == "$version" ]] || {
+            echo "Release tag version does not match Sagan's history-derived version." >&2
+            exit 1
+          }
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          if [[ "$TAG" == *-rc.* ]]; then
+            printf 'preview=true\n' >> "$GITHUB_OUTPUT"
+          else
+            printf 'preview=false\n' >> "$GITHUB_OUTPUT"
+          fi
+
+  test:
+    name: Compiler and documentation gates
+    needs: validate-tag
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            make
+            mingw-w64-ucrt-x86_64-gcc
+            zip
+            unzip
+      - name: Run compiler and CLI tests
+        shell: msys2 {0}
+        run: make test
+      - name: Set up documentation environment
+        shell: msys2 {0}
+        run: bash scripts/docs.sh setup
+      - name: Validate documentation and release metadata
+        shell: msys2 {0}
+        env:
+          SAGAN_DOCS_VERSION: ${{ needs.validate-tag.outputs.version }}
+          SAGAN_DOCS_CHANNEL: released
+        run: |
+          bash scripts/docs.sh check
+          bash scripts/docs.sh release-check
+
+  coverage:
+    name: Enforce coverage floor
+    needs: validate-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install coverage tools
+        run: sudo apt-get update && sudo apt-get install --yes lcov
+      - name: Collect and enforce coverage
+        run: |
+          bash scripts/coverage.sh --require-lcov
+          bash scripts/coverage_threshold.sh
+
+  build-windows:
+    name: Build signed Windows release assets
+    needs:
+      - validate-tag
+      - test
+      - coverage
+    runs-on: windows-latest
+    environment: release-signing
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            make
+            mingw-w64-ucrt-x86_64-gcc
+            zip
+            unzip
+      - name: Install Inno Setup
+        shell: cmd
+        run: choco install innosetup --yes --no-progress
+      - name: Require configured signing command
+        shell: msys2 {0}
+        env:
+          SIGN_COMMAND: ${{ secrets.SAGAN_SIGNTOOL_COMMAND }}
+        run: |
+          [[ -n "$SIGN_COMMAND" ]] || {
+            echo "Public releases require the release-signing environment's SAGAN_SIGNTOOL_COMMAND secret." >&2
+            exit 1
+          }
+      - name: Build installer, portable ZIP, checksums, manifest, and SBOM
+        shell: msys2 {0}
+        env:
+          SAGAN_SIGNTOOL_COMMAND: ${{ secrets.SAGAN_SIGNTOOL_COMMAND }}
+        run: bash scripts/windows/build_release_assets.sh
+      - name: Verify Authenticode and package behavior
+        shell: msys2 {0}
+        run: |
+          bash scripts/windows/verify_installer_artifact.sh --release
+          bash scripts/windows/test_installer.sh
+          bash scripts/windows/test_portable.sh
+      - name: Upload gated release assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: sagan-${{ github.ref_name }}-release-assets
+          if-no-files-found: error
+          path: |
+            build/installer/*.exe
+            build/installer/*.exe.sha256
+            build/release/*.zip
+            build/release/*.zip.sha256
+            build/release/*-release-manifest.json
+            build/release/*-sbom.spdx.json
+
+  scan:
+    name: Scan shipped release payload
+    needs:
+      - validate-tag
+      - build-windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: sagan-${{ github.ref_name }}-release-assets
+          path: release-assets
+      - name: Scan for affecting high or critical vulnerabilities
+        uses: anchore/scan-action@v7
+        with:
+          path: release-assets
+          fail-build: true
+          severity-cutoff: high
+
+  create-release:
+    name: Create immutable preview or stable draft
+    needs:
+      - validate-tag
+      - scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: sagan-${{ github.ref_name }}-release-assets
+          path: release-assets
+      - name: Create preview release or stable draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          PREVIEW: ${{ needs.validate-tag.outputs.preview }}
+        run: |
+          if [[ "$PREVIEW" == true ]]; then
+            gh release create "$TAG" release-assets/* \
+              --repo "$GITHUB_REPOSITORY" --verify-tag --prerelease \
+              --generate-notes --title "Sagan ${TAG#v}"
+          else
+            gh release create "$TAG" release-assets/* \
+              --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
+              --generate-notes --title "Sagan ${TAG#v}"
+            body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
+            {
+              printf '%s\n\n' "$body"
+              printf '%s\n' '## Stable-release acceptance'
+              printf '%s\n' 'Clean-machine evidence: PENDING'
+              printf '%s\n' 'Test the exact signed installer attached to this draft, then replace PENDING with VERIFIED, tester, date, Windows version, and installer SHA-256 before approving publication.'
+            } > release-notes.md
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file release-notes.md
+          fi
+
+  publish-stable:
+    name: Publish approved stable release
+    if: needs.validate-tag.outputs.preview == 'false'
+    needs:
+      - validate-tag
+      - create-release
+    runs-on: ubuntu-latest
+    environment: stable-release
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Require recorded clean-machine evidence and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.validate-tag.outputs.version }}
+        run: |
+          body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
+          grep -Eq '^Clean-machine evidence: VERIFIED' <<<"$body" || {
+            echo "Record clean-machine evidence in the draft release before approving stable publication." >&2
+            exit 1
+          }
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          gh workflow run documentation.yml --repo "$GITHUB_REPOSITORY" \
+            --ref "$TAG" -f "release_version=$VERSION"
+
+  mirror-hp1:
+    name: Mirror published stable release to HP1
+    if: needs.validate-tag.outputs.preview == 'false'
+    needs:
+      - validate-tag
+      - publish-stable
+    runs-on:
+      - self-hosted
+      - sagan-docs-hp1
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Mirror and verify release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: bash deploy/releases/mirror.sh "$TAG"

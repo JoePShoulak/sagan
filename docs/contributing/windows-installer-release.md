@@ -42,7 +42,8 @@ An unsigned artifact is a development artifact regardless of version text.
 ## Public-release signing gate
 
 Public installers and their embedded uninstallers require a trusted
-Authenticode signature. Release infrastructure supplies an Inno Setup sign-tool
+Authenticode signature. Sagan's own installed executables are signed as part of
+the same build. Release infrastructure supplies an Inno Setup sign-tool
 command through `SAGAN_SIGNTOOL_COMMAND`; the command must contain Inno's `$f`
 file placeholder. Certificate material and credentials must remain in protected
 release infrastructure, never in source control.
@@ -53,8 +54,13 @@ Before publication, run:
 bash scripts/windows/verify_installer_artifact.sh --release
 ```
 
-This verifies both the checksum and Windows trust validation. The lifecycle
-review will decide the credential provider and release trigger before 1.0.
+This verifies both the checksum and Windows trust validation. Verified signed
+tags trigger release builds; the signing provider and credentials must be
+configured in the protected `release-signing` environment before 1.0.
+
+Unsigned artifacts built on ordinary `main` CI runs are development artifacts
+only. Both preview and stable GitHub Releases fail closed unless the trusted
+signature verifies.
 
 ## Clean-machine acceptance gate
 
