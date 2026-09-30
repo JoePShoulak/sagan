@@ -18,6 +18,10 @@ same mathematical and simulation vocabulary as the language. Unlike math, it
 will require an explicit import so programs that do not need physics do not
 incur its dependencies or runtime costs.
 
+Native units are already a language feature; they do not require importing the
+physics library. The library will use those checked units rather than inventing
+a second unit system.
+
 ## Intended role
 
 The library will eventually provide the supported physical-modeling facilities

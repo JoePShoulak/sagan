@@ -152,6 +152,6 @@ Release documentation must be built from the matching Sagan release ref. Never
 overwrite an archived release merely to reflect the current repository; publish
 a new release version instead.
 
-The [documentation roadmaps](documentation-roadmaps.md) define the post-1.0
-expansion plan and the ordered behavior-confirmation audit used to move pages
-from internal drafts to publication-ready documentation.
+The [documentation roadmaps](documentation-roadmaps.md) define the expansion
+plan leading into 1.0 and the ordered behavior-confirmation audit used to move
+pages from internal drafts to publication-ready documentation.

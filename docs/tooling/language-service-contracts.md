@@ -9,9 +9,11 @@ verified_by: null
 
 # Language-service contracts
 
-These proposed C++ contracts precede large implementation changes. Names may
-receive mechanical refinement, but their ownership boundaries and invariants
-are the editor-integration contract.
+These C++ contracts guide editor-tooling implementation. The source,
+diagnostic, recovering-syntax, workspace, and semantic-index foundations are
+implemented; later sections also describe APIs that remain on the roadmap.
+Names may receive mechanical refinement, but their ownership boundaries and
+invariants are the editor-integration contract.
 
 ## Library boundaries
 

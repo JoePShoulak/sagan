@@ -10,10 +10,10 @@ verified_by: null
 # Standard-library status
 | Area | Design status | Implementation status |
 | --- | --- | --- |
-| Built-in math availability | Settled | Not implemented |
+| Built-in math availability | Decided | Library not implemented |
 | Math types and operations | Direction settled; APIs open | Not implemented |
-| Physics as explicit first-party core library | Settled | Not implemented |
-| Rendering as explicit first-party core library | Settled | Not implemented |
+| Physics as explicit first-party core library | Decided | Not implemented |
+| Rendering as explicit first-party core library | Decided | Not implemented |
 | Module and package names | Open | Not implemented |
 | General standard-library boundary | Open | Not implemented |
 | Basic output intrinsic | Provisional | `print(value)` implemented for the native subset |

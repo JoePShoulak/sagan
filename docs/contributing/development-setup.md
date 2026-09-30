@@ -17,8 +17,8 @@ bash scripts/test.sh
 ```
 
 The test script expects `make`, `g++`, and `cygpath`, builds with C++23
-warnings enabled as errors, runs tokenizer self-tests, and prints the current
-version.
+warnings enabled as errors, runs the complete compiler and CLI test suite, and
+prints the current version.
 
 Useful commands:
 
@@ -59,5 +59,5 @@ bin/sagan --version
 The version source is regenerated on every build. Use `fix:` for a patch,
 `feat:` for a minor change, and `!` or a `BREAKING CHANGE:` footer for a major
 change. See the [versioning workflow](versioning.md) for badge preparation and
-verification. Public release tags and source-compatibility guarantees will be
-specified before the first release.
+verification. Public releases follow the signed-tag and compatibility rules in
+the [release lifecycle](release-lifecycle.md).

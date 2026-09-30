@@ -67,7 +67,8 @@ bash scripts/docs.sh check
 ```
 
 The parser suite establishes syntactic correctness for the current grammar. The
-semantic suite establishes the implemented scope, name-resolution, and initial
-scalar/function type rules. Coverage does not establish deferred type
-relationships or full runtime behavior. The execution demo does establish that
-the current minimal generated C++ compiles and runs natively.
+semantic suite covers scopes, names, types, generics, classes, faces, modules,
+units, ownership rules, and control flow. Coverage measures which implementation
+lines the tests execute; it does not by itself prove that every language rule is
+correct. Execution demos additionally prove that representative generated C++
+compiles and runs natively.

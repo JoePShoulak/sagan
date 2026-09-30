@@ -8,8 +8,6 @@ verified_by: null
 ---
 
 # Parser
-**Status: complete for the current syntax specification.**
-
 The strict parser consumes the token stream and constructs typed,
 ownership-safe Sagan syntax trees with source-spanned diagnostics. The separate
 compiler-owned `src/syntax` layer wraps it for editor workloads, retaining
@@ -19,7 +17,7 @@ after malformed or incomplete input.
 ## Implemented slices
 
 - Programs and newline-separated declarations
-- `let` declarations with optional simple type annotations and initializers
+- `let` declarations with optional type annotations and initializers
 - Identifier, numeric, Boolean, and grouped primary expressions
 - Prefix and postfix operators
 - Calls with zero or more arguments
@@ -52,7 +50,8 @@ after malformed or incomplete input.
 - `hope`/`unless`/`finally` exception regions and value-bearing `scream`
 - `face` signatures and default methods, plus `is`/`has` composition lists
 - `class` fields, methods, leading-dot private methods, and `self`
-- Simple newline- or comma-separated `enum` members
+- Newline- or comma-separated enum members, including typed payloads and
+  explicit numeric tags
 - Documentation comments on individual enum members
 - Named block- or expression-bodied functions with optional annotations
 - Anonymous expression-bodied lambdas with optional annotations

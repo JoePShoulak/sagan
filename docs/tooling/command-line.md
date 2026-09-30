@@ -113,8 +113,9 @@ Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
 Type output confirms the documented scalar/function, generic-function and
 generic-sum, collection, class, member, constructor, and face-dispatch subset.
-Generated C++ supports only the initial executable subset documented under
-[code generation](../implementation/code-generation.md).
+Generated C++ supports the language surface documented under
+[code generation](../implementation/code-generation.md), with explicit
+limitations listed there.
 
 ## Make targets
 

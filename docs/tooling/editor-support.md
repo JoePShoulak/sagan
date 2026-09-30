@@ -23,8 +23,10 @@ diagnostics. The extension should be evaluated as basic syntax coloring only.
 See [getting-started editor support](../getting-started/editor-support.md) for
 installation.
 
-Compiler-owned editor infrastructure is being prepared separately from the
-extension. Track the [editor feature readiness checklist](extension-readiness.md)
+Compiler-owned editor infrastructure is being built separately from the
+extension. Source snapshots, diagnostics, recovering syntax, workspace
+overlays, and stable semantic identities are available; position-based queries
+and LSP transport are not. Track the [editor feature readiness checklist](extension-readiness.md)
 and [language-server capability contract](language-server-capabilities.md).
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.

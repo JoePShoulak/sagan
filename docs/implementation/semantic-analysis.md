@@ -8,10 +8,7 @@ verified_by: null
 ---
 
 # Semantic analysis
-**Status: executable-subset name resolution, type checking, and control-flow
-validation implemented.**
-
-The first semantic pass consumes the source-spanned AST and produces a printable
+The semantic passes consume the source-spanned AST and produce a printable
 semantic model. It creates program and nested lexical scopes, installs built-in
 type names, collects declarations, resolves identifier references, and reports
 duplicate declarations or undefined names with source locations.
@@ -32,7 +29,7 @@ face types, reject declaration initializers, accept strong values on assignment,
 and type reads as `Optional<T>`. Exception-pattern binding, automatic cycle handling,
 and borrowing remain future work.
 
-The initial type checker infers scalar literals; validates annotations,
+The type checker infers scalar literals; validates annotations,
 initializers, assignments, Boolean conditions, conditional branches, core
 operators, calls, overload selection, and returns; and visits every current
 statement family.
@@ -97,4 +94,4 @@ definite initialization and statements after a guaranteed return are rejected.
 
 Executable validation is separate from ordinary module analysis. An executable
 must define exactly one parameterless `main` returning `Int` or `Void`. This
-contract is implemented and feeds the initial C++ backend.
+contract is implemented and feeds the C++ backend.

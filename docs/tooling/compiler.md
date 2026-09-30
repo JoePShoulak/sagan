@@ -8,10 +8,11 @@ verified_by: null
 ---
 
 # Compiler
-The current `sagan` executable is both a native execution driver and a front-end
-inspection tool. A source path compiles and runs the program; `--tokens` prints
-a token stream, while parser flags render its source-spanned AST as text, DOT,
-SVG, or interactive HTML.
+The `sagan` command can run a program or show what the compiler understands
+about it. A source path compiles and runs the program. `--tokens` shows the
+smallest pieces recognized from the text, while the AST flags show the parsed
+structure as text, DOT, SVG, or interactive HTML. AST means *abstract syntax
+tree*: a tree-shaped representation of the program's grammar.
 It can also analyze lexical scopes and print symbols and resolved references.
 The `--types` mode prints the implemented scalar/function type model.
 The `--entry` mode validates whether a fully checked unit has a legal executable
@@ -54,6 +55,7 @@ The first runs compiled-in tokenizer, parser, renderer, and defensive checks;
 the second prints the Git-derived development build identity. The complete
 `bash scripts/test.sh` command also runs the separate CLI integration suite.
 
-!!! warning
-    C++ generation and direct execution are limited to the documented native
-    subset. Compiler discovery and configuration are still deliberately small.
+!!! note
+    Sagan currently generates C++ and uses `g++` as its native backend.
+    Compiler discovery and configuration are intentionally small, and the
+    generated C++ interface is not a stable public ABI.

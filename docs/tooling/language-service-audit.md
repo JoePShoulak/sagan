@@ -9,8 +9,12 @@ verified_by: null
 
 # Language-service readiness audit
 
-This audit records the compiler state before editor-tooling infrastructure is
-added. It is an implementation audit, not permission to redesign Sagan 1.0.
+This audit records the compiler state before editor-tooling infrastructure was
+added. It is a historical baseline, so its “missing” tables describe the
+starting point rather than today's implementation. Current progress is tracked
+in the [language-service roadmap](language-service-roadmap.md) and
+[extension readiness checklist](extension-readiness.md). It is not permission
+to redesign Sagan 1.0.
 Editor integrations must consume the compiler's rules rather than reproduce
 them in TypeScript, TextMate metadata, or another editor-specific database.
 

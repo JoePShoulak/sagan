@@ -7,23 +7,28 @@ verified_on: null
 verified_by: null
 ---
 
-# Documentation status
+# Project status
+
+This page is the technical progress map. It distinguishes behavior that works
+today from planned libraries and external release gates. The `work-in-progress`
+metadata at the top means the prose still awaits the owner's documentation
+audit; it does not mean every listed compiler feature is unfinished.
 ## Roadmap snapshot
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Language direction | **Settled enough for early work** | README design and lexical rules |
+| Language direction | **1.0 hypercore defined** | README, reference, and executable tests |
 | Token vocabulary | **Implemented** | `tokens.hpp`, `tokens.cpp` |
 | Tokenizer | **Complete for the current lexical specification** | Unicode-aware lexer, comprehensive self-tests, examples |
 | Parser and Sagan AST | **Complete for the current syntax specification** | modules, imports, exports, declarations, functions, types, composition, expressions, collections, control flow, matching, exceptions, documentation, AST renderers, parser demos |
-| Semantic analysis | **Executable-subset foundation implemented** | scopes, names, types, lossless widening, generic call inference, generic sum construction, payload-bearing nominal enums and exhaustive matches, private class state, constructors, face-typed values and `self`, transitive conformance/defaults, collections, dimensions, definite initialization/returns, unreachable code, entry points, demos |
+| Semantic analysis | **Hypercore rules implemented** | scopes, names, types, lossless widening, generics, payload enums, exhaustive matches, classes, faces, collections, units, control flow, and entry points |
 | Runtime and memory model | **Reference ownership model implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, compile-time rejection of all-strong declaration cycles and strong face fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
-| C++ code generation and execution | **Initial executable subset implemented** | direct `sagan file.sagan`, `--run-package`, temporary native builds, exit propagation, `--emit-cpp`, reference-counted classes/faces, exceptions, lambdas, checked arithmetic, collections, dimensions, control flow, demos |
-| Native units of measure | **Implemented pre-1.0 slice** | static dimensions/quantities/units, affine temperatures, scientific catalog and SI prefixes, callable constraints, custom declarations, erased native representation, `make units-demo` |
+| C++ code generation and execution | **Hypercore backend implemented** | direct `sagan file.sagan`, packages, classes/faces, exceptions, lambdas, checked arithmetic, collections, units, control flow, and demos |
+| Native units of measure | **Implemented** | static dimensions/quantities/units, affine temperatures, scientific catalog and SI prefixes, callable constraints, custom declarations, erased native representation, `make units-demo` |
 | Deterministic execution | **1.0 hypercore contract settled** | exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
-| Editor-tooling foundation | **Phase 0–3 foundation implemented** | reusable compiler archive, source identity/UTF-16 positions, structured diagnostics, lossless recovery, thread-safe versioned overlays, overlay-aware module resolution, cached workspace analysis, dependency invalidation, cancellation/stale-result gates, demos |
+| Editor-tooling foundation | **Phases 0–4 implemented; work paused** | reusable compiler archive, source identity/UTF-16 positions, diagnostics, recovery, overlays, invalidation, cancellation, stable semantic identities and indexes |
 
 ## Tokenizer verification
 
@@ -37,13 +42,12 @@ and is not unfinished tokenizer behavior.
 
 The `bin/sagan` compiler can directly compile and run supported source files or
 manifest-backed packages. It can also print tokens, parse the current grammar, emit text,
-DOT, SVG, or interactive HTML ASTs, and print the initial semantic model. The
+DOT, SVG, or interactive HTML ASTs, and print the semantic model. The
 HTML renderer supports zooming and panning. Parser and semantic demonstrations
 provide broad successful source files plus focused malformed examples. The
 semantic mode validates names and scopes. Type mode additionally validates the
-implemented scalar and function rules. The initial backend can emit C++ for a
-validated scalar/function/control-flow subset, and the execution demo compiles
-that output with `g++` and runs it.
+implemented type rules. The backend emits C++ for checked programs, and the
+execution demo compiles that output with `g++` and runs it.
 Entry mode performs the complete implemented checks and requires exactly one
 parameterless `main` returning `Int` or `Void`.
 
@@ -57,8 +61,9 @@ The parser currently verifies `let` declarations, core primary expressions,
 the settled operator-precedence table, chained calls/indexing/member access,
 ordinary and safe access, mutating method calls, ordinary/raw/multiline/
 interpolated strings, and array/dictionary/Cartesian-vector/point expressions
-with spreads plus exactly three-dimensional spherical-vector/point literals with
-spreads and trailing commas. Text, DOT, SVG, and interactive HTML tree renderers
+with spreads, plus exactly three-dimensional spherical-vector/point literals.
+Spherical literals do not accept spreads. All collection forms accept trailing
+commas. Text, DOT, SVG, and interactive HTML tree renderers
 cover every implemented AST node. Blocks, same-line single-statement bodies,
 ordinary and compound assignment, expression statements, and
 `if`/`else if`/`else` control flow are also verified. The parser
@@ -73,8 +78,8 @@ meaning and exhaustiveness remain semantic work. The parser and execution demos 
 handlers execute in source order, unmatched values propagate, and cleanup runs
 across normal completion, exception paths, and early returns. Successful source plus focused
 expression, collection, control-flow, matching, exception, and
-unterminated-block errors are demonstrated. Classes now execute with typed
-typed fields, checked `new(...)` constructors, default construction, `self`, private field access/mutation, and
+unterminated-block errors are demonstrated. Classes execute with typed fields,
+checked `new(...)` constructors, default construction, `self`, private field access/mutation, and
 ordinary or `!`-suffixed methods. `is` and `has` composition require every face
 signature to have an exact class implementation or an unambiguous default. Simple
 nominal enums now execute with `Type.member` selection, equality, matching,
@@ -114,7 +119,7 @@ values, bind payload names in `match`, and establish exhaustiveness. Every case
 has a unique signed 64-bit tag, with zero-based implicit sequencing and explicit
 assignments that reset the following sequence.
 
-## Major open language questions
+## Deliberately deferred language work
 
 Generic sum enums execute with contextual or explicitly qualified type
 arguments, and top-level generic functions execute with call-site inference.

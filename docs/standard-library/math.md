@@ -19,6 +19,11 @@ ecosystem. Programs will not need an import to use its eventual public surface.
 Physics and rendering will share this mathematical vocabulary rather than
 defining incompatible alternatives.
 
+This does not mean Sagan currently has no mathematical behavior. Checked
+numeric operations, Cartesian vectors and points, spherical forms, and native
+units are language features today. This page covers the larger automatic math
+library that will be designed after the 1.0 language release.
+
 ## Intended scope
 
 The design direction includes the mathematical facilities needed by geometry,

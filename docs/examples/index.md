@@ -241,8 +241,8 @@ bash scripts/semantic_demo.sh
 The script prints the input's scope/symbol/resolution model, then confirms that
 `examples/semantic_undefined_error.sagan` and
 `examples/semantic_duplicate_error.sagan` fail with focused diagnostics. This
-demonstrates the first semantic pass only; it does not type-check or execute the
-source.
+demonstrates name and scope analysis only; use the type or execution demos for
+later compiler stages.
 
 ## Type-checking demonstration
 
@@ -257,13 +257,12 @@ bash scripts/type_demo.sh
 
 The script prints a successful `TypeModel`, then confirms focused failures for
 an incorrect return type, an uninferable variable, heterogeneous collections,
-and an invalid vector component. This is not an execution demo, and `Unknown`
-still marks deferred member and user-defined-type semantics.
+and an invalid vector component. This is not an execution demo.
 
 ## Executable-entry demonstration
 
-`examples/entry_demo.sagan` is the first source fixture shaped like an
-executable program. It has a parameterless `main(): Int`, local arithmetic,
+`examples/entry_demo.sagan` is a small source fixture shaped like an executable
+program. It has a parameterless `main(): Int`, local arithmetic,
 conditional control flow, and guaranteed returns.
 
 ```bash
@@ -276,7 +275,7 @@ generate or execute native code.
 
 ## Native execution demonstration
 
-`examples/execution_demo.sagan` is the first end-to-end executable fixture. It
+`examples/execution_demo.sagan` is the broad end-to-end executable fixture. It
 calls an emoji-named function to compute `40 + 2`, builds and iterates a typed
 countdown array using a spread, reads a checked array index, formats interpolated
 strings,
@@ -308,8 +307,8 @@ negative integer exponents, `0 ^ 0`, fixed-width integer power overflow,
 checked addition, subtraction, multiplication, division, remainder, negation,
 increment, decrement, vector component overflow, and vector division-by-zero
 failures
-raise runtime errors. This demonstrates only the documented initial backend
-subset, not the entire parsed language.
+raise runtime errors. Features listed as deferred in the reference—such as
+generator execution and spherical arithmetic—are intentionally absent.
 
 The string error fixture demonstrates the focused diagnostic for an empty
 `${}` interpolation. The collection fixture demonstrates the minimum

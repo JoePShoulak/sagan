@@ -26,8 +26,8 @@ verified_by: null
 - `src/semantic/type_checker.*`: scalar inference, compatibility,
   overload/call/return checks, and a printable type model.
 - `src/semantic/semantic_error.hpp`: source-located semantic diagnostics.
-- `src/codegen/cpp_generator.*`: C++ emission for the initial executable
-  subset, including portable identifier encoding, built-in output, and typed
+- `src/codegen/cpp_generator.*`: C++ emission for checked programs, including
+  portable identifier encoding, built-in output, and typed
   array/dictionary/index/iteration lowering driven by the checked type model.
 - `src/driver/native_runner.*`: temporary native builds, compiler invocation,
   executable launch, cleanup, and exit-code propagation.
@@ -49,8 +49,8 @@ verified_by: null
 
 The CLI reads a file and either prints its token stream explicitly or passes it
 to the parser. AST modes print or render the resulting tree; semantic and
-type modes perform name resolution and optionally initial type checking. The
-C++ modes validate an executable entry point and emit the supported subset.
+type modes perform name resolution and type checking. The C++ modes validate an
+executable entry point and emit the checked program.
 Direct source and package-run modes invoke the native compiler and program.
 Lexical, syntax, and semantic failures are reported with source locations.
 
@@ -71,7 +71,8 @@ Codecov measures the front-end, semantic pass, and CLI suite. Coverage includes
 lifecycle and malformed-input paths, Unicode and emoji edges, parser and
 semantic errors, renderer output, CLI behavior, and defensive invariants.
 
-## Planned components
+## Remaining boundaries
 
-Broader lowering, runtime support, stable compiler/toolchain configuration,
-installation, and the standard/core libraries are not complete.
+Position-based editor queries, formatting and safe source edits, reusable
+build/debug operations, LSP transport, broader platform packaging, and the
+math, physics, and rendering libraries are not complete.

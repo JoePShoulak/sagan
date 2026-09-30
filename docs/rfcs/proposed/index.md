@@ -8,3 +8,7 @@ verified_by: null
 ---
 
 # Proposed RFCs
+
+There are no active written RFCs. Planned math, physics, rendering, and deferred
+language work are not automatically proposals; each needs a concrete design and
+review question before it belongs here.

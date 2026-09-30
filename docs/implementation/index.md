@@ -8,27 +8,26 @@ verified_by: null
 ---
 
 # Implementation
-The present executable implements the syntactic front end and initial semantic
-pass of a future compiler:
+The compiler implements the full path from source text to a native executable:
 
 ```text
-UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> initial C++ emission
+UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> C++ emission
 ```
 
-The initial executable path is:
+The executable path is:
 
 ```text
-validated subset -> generated C++ -> g++ (demo script) -> native executable
+validated program -> generated C++ -> g++ -> native executable
 ```
 
-This path is operational for the documented minimal subset. Read about the [architecture](architecture.md),
+This path is operational for the documented language. Read about the [architecture](architecture.md),
 [tokenizer](tokenizer.md), [parser](parser.md), and
 [Schematic-derived foundations](schematic-foundations.md). The
-[semantic analyzer](semantic-analysis.md) page records the implemented first
-pass and its next boundary. The [code generator](code-generation.md) records
-the supported initial native subset and its deliberate limitations.
+[semantic analyzer](semantic-analysis.md) page explains name, type, and
+control-flow checking. The [code generator](code-generation.md) records the
+native backend and its deliberate limitations.
 
-The implemented semantic subset is now sufficient to validate the shape and
-control-flow safety of a small executable program. The first C++ emission slice
-is complete; widening backend coverage and integrating runtime facilities are
-the next pipeline stage.
+Editor-facing analysis reuses the same compiler logic through immutable source
+snapshots, recovering syntax, unsaved overlays, structured diagnostics, and a
+semantic index. Position-based queries, formatting, safe edits, build/debug
+contracts, and Language Server Protocol transport remain separate later work.

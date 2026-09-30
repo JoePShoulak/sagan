@@ -8,8 +8,6 @@ verified_by: null
 ---
 
 # Code generation
-**Status: initial executable subset implemented.**
-
 `bin/sagan --emit-cpp` translates a semantically validated executable unit into
 C++. With an output path it writes a `.cpp` file; without one it prints the
 translation. `scripts/execution_demo.sh` compiles that file with `g++` and runs

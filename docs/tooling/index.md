@@ -17,11 +17,14 @@ Current tooling includes:
 - Bash scripts for compiler tests and documentation;
 - semantic analysis, type checking, C++ generation, and direct native execution;
 - package/module discovery and a self-contained Windows installer;
+- a reusable compiler library, recovering document analysis, workspace
+  overlays, and a compiler-owned semantic index for future editor features;
 - an early VS Code syntax-highlighting extension; and
 - MkDocs and Mike for experimental and released versioned documentation.
 
-There is no package registry, formatter, debugger integration, language server,
-REPL, or reusable editor-facing language-service layer yet. The
+There is no package registry, formatter, debugger integration, Language Server
+Protocol server, or REPL yet. The reusable language-service foundation exists,
+but position-based queries and editor protocol transport are still future work. The
 [readiness audit](language-service-audit.md), [proposed contracts](language-service-contracts.md),
 [implementation roadmap](language-service-roadmap.md), and
 [extension readiness checklist](extension-readiness.md) define the work needed

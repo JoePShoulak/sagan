@@ -9,8 +9,8 @@ verified_by: null
 
 # Documentation roadmaps
 
-These roadmaps begin after the Sagan language and implementation reach the
-agreed 1.0 boundary. They serve different purposes:
+These roadmaps guide the work leading into the 1.0 documentation audit and its
+eventual public release. They serve different purposes:
 
 1. the **documentation expansion roadmap** turns the internal notes into a
    complete, publishable documentation set; and

@@ -8,7 +8,7 @@ verified_by: null
 ---
 
 # Diagnostics
-**Implemented tooling foundation:** diagnostics have a compiler-owned
+Diagnostics have a compiler-owned
 structured form with schema `sagan.language-service/1`, stable phase codes,
 severity, owning phase, byte and UTF-16 ranges, message, related-location, note,
 and fix containers. Terminal text and JSON are separate renderers. Strict batch
@@ -35,7 +35,7 @@ the resulting structured diagnostics:
 make editor-tooling-demo
 ```
 
-**Implemented:** lexical failures use `parser::parse_error` with source spans
+Lexical failures use `parser::parse_error` with source spans
 and focused messages. Current examples include malformed numeric literals,
 invalid digit separators, incomplete scientific exponents, unknown characters,
 unknown or malformed escapes, and unterminated strings, interpolation, or block
@@ -49,7 +49,7 @@ bin/sagan --tokens examples/tokenizer_error.sagan
 
 The diagnostic identifies the invalid source region for `1e`.
 
-**Implemented:** the parser produces focused syntax diagnostics for malformed
+The parser produces focused syntax diagnostics for malformed
 assignments and member access, misplaced or incomplete declarations, invalid
 control flow, malformed interpolation and collections, exception constructs,
 documentation-comment placement, and other established grammar rules. Run the
