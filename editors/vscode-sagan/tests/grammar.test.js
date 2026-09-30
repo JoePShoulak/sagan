@@ -144,13 +144,13 @@ async function main() {
   assert(!malformed.some((token) => [".5", "5."].includes(token.text) && token.scopes.includes("constant.numeric.float.sagan")));
   assertScoped(malformed, "5", "constant.numeric.integer.sagan");
 
-  const parserDemo = fs.readFileSync(path.join(repositoryRoot, "examples", "parser_demo.sagan"), "utf8");
-  const parserTokens = tokenize(grammar, parserDemo);
+  const astExample = fs.readFileSync(path.join(repositoryRoot, "examples", "ast.sagan"), "utf8");
+  const parserTokens = tokenize(grammar, astExample);
   assertScoped(parserTokens, "yield", "keyword.control.flow.sagan");
   assertScoped(parserTokens, "ready", "variable.other.enummember.sagan");
   assertScoped(parserTokens, "NetworkError", "variable.other.sagan");
   assertScoped(parserTokens, "flush!", "entity.name.function.mutating.sagan");
-  assert(parserTokens.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))), "Parser demo contains invalid scopes");
+  assert(parserTokens.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))), "AST example contains invalid scopes");
 
   console.log("All Sagan TextMate grammar tests passed.");
 }

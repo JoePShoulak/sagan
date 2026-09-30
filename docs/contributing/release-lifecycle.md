@@ -64,7 +64,8 @@ Every Windows release contains:
 
 - `sagan-VERSION-windows-x64.exe`, the signed graphical installer;
 - `sagan-VERSION-windows-x64.zip`, a portable CLI archive;
-- SHA-256 sidecars for both packages;
+- `sagan-language-EXTENSION_VERSION.vsix`, the compatible VS Code extension;
+- SHA-256 sidecars for all three packages;
 - `sagan-VERSION-release-manifest.json`;
 - `sagan-VERSION-sbom.spdx.json`; and
 - reviewed release notes plus GitHub's source archives.
@@ -118,5 +119,6 @@ The repository intentionally fails closed until release infrastructure has:
 - Joe as the required reviewer for `stable-release`; and
 - recorded clean-machine evidence for the exact signed 1.0.0 installer.
 
-The full VS Code extension and the math, rendering, and physics libraries remain
+Visual Studio Marketplace publication, semantic editor features, and the math,
+rendering, and physics libraries remain
 separate post-1.0 work.

@@ -11,9 +11,9 @@ verified_by: null
 
 Sagan's stable Windows releases are available from two locations:
 
-- **[HP1 download mirror](https://sagan.shoulak.org/downloads/)** — installers, portable ZIP archives,
-  checksums, release manifests, and software bills of materials hosted beside
-  this documentation.
+- **[HP1 download mirror](https://sagan.shoulak.org/downloads/)** — installers,
+  portable ZIP archives, VS Code extension packages, checksums, release
+  manifests, and software bills of materials hosted beside this documentation.
 - **[GitHub Releases](https://github.com/JoePShoulak/sagan/releases)** — the
   canonical source and release record.
 
@@ -26,4 +26,6 @@ existing files.
 
 Windows is the only supported installation platform today. Start with the
 [installation guide](installation.md) for the installer, portable CLI setup,
-and Windows warning details.
+and Windows warning details. The matching VS Code extension is distributed as
+a `.vsix` asset with each release; follow the [editor-support guide](editor-support.md)
+to install and verify it.

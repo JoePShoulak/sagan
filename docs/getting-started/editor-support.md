@@ -8,22 +8,66 @@ verified_by: null
 ---
 
 # Editor support
-The repository contains an early VS Code extension under
-`editors/vscode-sagan/` and a packaged `.vsix` file.
 
-Version 0.1.0 associates `.sagan` files with Sagan and uses a
-tokenizer-aligned TextMate grammar for declarations, keywords, literals,
-operators, punctuation, comments, strings and interpolation, Unicode
-identifiers, private members, and mutating method names.
+Sagan provides a VS Code extension that associates `.sagan` files with the
+language, supplies tokenizer-aligned TextMate highlighting, and discovers a
+compatible Sagan compiler. The extension has its own version number; the VSIX
+attached to a Sagan release is built from that same tagged source and is the
+recommended match for the release.
 
-This is lexical coloring only: it colors text according to token-shaped
-patterns. There is no language server, IntelliSense, parser-backed validation,
-formatting engine, refactoring, or semantic highlighting yet. The compiler now
-contains reusable document, diagnostic, workspace, and semantic-index
-foundations for those later features, so the extension will not need to
-reimplement Sagan's rules.
+There is no Visual Studio Marketplace listing yet. Install the extension from a
+release asset or build it from source.
 
-Run the extension in an Extension Development Host with `F5`, or package it from
-`editors/vscode-sagan/` with `npx --yes @vscode/vsce package` and install the
-resulting VSIX. Treat coloring as an editing aid, not as proof that a construct
-is supported by the compiler.
+## Install from a Sagan release
+
+1. Open the [HP1 download mirror](https://sagan.shoulak.org/downloads/) or the
+   canonical [GitHub Releases](https://github.com/JoePShoulak/sagan/releases)
+   page.
+2. Select the same Sagan release as the compiler you installed.
+3. Download `sagan-language-EXTENSION_VERSION.vsix` and its `.sha256` file.
+4. In VS Code, open **Extensions**, select the `...` menu, choose
+   **Install from VSIX...**, and select the downloaded file.
+
+Alternatively, install the downloaded asset from Bash:
+
+```bash
+code --install-extension sagan-language-VERSION.vsix
+```
+
+## Build and install from a repository clone
+
+Use this route when working with Sagan's experimental branch:
+
+```bash
+cd editors/vscode-sagan
+npm ci
+npm test
+npm run package
+code --install-extension sagan-language-*.vsix
+```
+
+The repository's extension version is currently 0.2.0. Its version is
+independent of the compiler version.
+
+## Verify the installation
+
+1. Open a `.sagan` file and confirm VS Code identifies it as **Sagan**.
+2. Confirm comments, declarations, strings, interpolation, keywords, and types
+   receive syntax coloring.
+3. Run **Sagan: Show Tooling Status** from the Command Palette.
+4. If the compiler is not discovered, set `sagan.compiler.path` to the Sagan
+   executable and run the command again.
+
+The extension can locate the compiler and validate its
+`sagan.language-service/1` capability response. TextMate coloring is lexical;
+it is not proof that code parses or type-checks. Semantic completion, hover,
+go-to-definition, refactoring, formatting, and live diagnostics remain
+unavailable until the compiler exposes and the extension consumes the required
+language-server capabilities.
+
+## Development-host testing
+
+Open `editors/vscode-sagan/` in VS Code, press `F5`, and choose **Run Sagan
+Extension** if prompted. The Extension Development Host opens the bundled
+demonstration file. This is intended for extension development, not ordinary
+installation.

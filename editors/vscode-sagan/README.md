@@ -42,6 +42,10 @@ npm run package
 
 The resulting `.vsix` can be installed from VS Code's Extensions view or with the `code --install-extension` command.
 
+Official Sagan releases attach the compatible VSIX and its SHA-256 checksum to
+the GitHub Release. The same files are available from the HP1 download mirror.
+The extension is not currently published to the Visual Studio Marketplace.
+
 ## Grammar limits
 
 TextMate highlighting is lexical and cannot fully resolve context-sensitive constructs. In particular, braces may delimit blocks or dictionaries, and angle brackets may delimit vectors or serve as comparison operators. The grammar gives their tokens stable scopes while leaving those grammatical distinctions and all semantic validation to the compiler or a future parser-backed language service.

@@ -28,6 +28,8 @@ def asset_kind(name: str) -> str:
     lowered = name.lower()
     if lowered.endswith(".exe"):
         return "Windows installer"
+    if lowered.endswith(".vsix"):
+        return "VS Code extension"
     if lowered.endswith(".zip"):
         return "Portable archive"
     if lowered.endswith(".sha256"):
@@ -122,7 +124,7 @@ def render(releases: list[dict[str, object]]) -> str:
 </head>
 <body>
   <nav><a href="/">Documentation</a><a href="https://github.com/JoePShoulak/sagan/releases">GitHub releases</a></nav>
-  <header><h1>Sagan downloads</h1><p>Windows installers, portable archives, checksums, and release metadata mirrored on HP1.</p></header>
+  <header><h1>Sagan downloads</h1><p>Windows installers, portable archives, VS Code extensions, checksums, and release metadata mirrored on HP1.</p></header>
   {empty}{''.join(sections)}
 </body>
 </html>
