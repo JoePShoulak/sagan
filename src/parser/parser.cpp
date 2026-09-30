@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include "parse_error.hpp"
+#include "naming.hpp"
 #include "tokens.hpp"
 
 #include <utility>
@@ -111,6 +112,10 @@ namespace parser
       {
         declaration = parse_let_declaration();
       }
+      else if (match(tokens::KWD_CONST))
+      {
+        declaration = parse_const_declaration();
+      }
       else if (match(tokens::KWD_FUN))
       {
         declaration = parse_function_declaration();
@@ -189,18 +194,23 @@ namespace parser
     if (check(tokens::DOC_COMMENT))
     {
       auto documentation = parse_documentation_comments();
-      if (!match(tokens::KWD_LET))
+      if (!match(tokens::KWD_LET) && !match(tokens::KWD_CONST))
       {
-        throw parse_error("A documentation comment inside a block must precede a variable declaration",
+        throw parse_error("A documentation comment inside a block must precede a binding declaration",
                           documentation.back().range);
       }
-      auto declaration = parse_let_declaration();
+      auto declaration = previous().id == tokens::KWD_CONST
+                             ? parse_const_declaration() : parse_let_declaration();
       declaration->documentation = std::move(documentation);
       return declaration;
     }
     if (match(tokens::KWD_LET))
     {
       return parse_let_declaration();
+    }
+    if (match(tokens::KWD_CONST))
+    {
+      return parse_const_declaration();
     }
     if (match(tokens::KWD_IF))
     {
@@ -266,6 +276,10 @@ namespace parser
     const token &keyword = previous();
     const bool private_member = allow_private && match(tokens::DOT);
     const token &name = expect(tokens::IDENTIFIER, "an identifier after 'let'");
+    if (is_constant_name(name.text))
+      throw parse_error("SCREAMING_SNAKE_CASE names are reserved for const declarations; use 'const " +
+                            name.text + "' or rename this mutable variable",
+                        name.range);
     std::optional<std::string> type_name;
     if (match(tokens::COLON))
     {
@@ -282,6 +296,26 @@ namespace parser
     return std::make_unique<let_declaration>(span{keyword.range.begin, end}, name.text, private_member, weak_member,
                                              std::move(type_name),
                                              std::move(initializer));
+  }
+
+  auto syntax_parser::parse_const_declaration(const bool allow_private) -> statement_ref
+  {
+    const token &keyword = previous();
+    const bool private_member = allow_private && match(tokens::DOT);
+    const token &name = expect(tokens::IDENTIFIER, "a SCREAMING_SNAKE_CASE identifier after 'const'");
+    if (!is_constant_name(name.text))
+      throw parse_error("Constant names must use ASCII SCREAMING_SNAKE_CASE ([A-Z][A-Z0-9_]*)",
+                        name.range);
+    std::optional<std::string> type_name;
+    if (match(tokens::COLON)) type_name = parse_type_annotation("a type name after ':'");
+    if (allow_private && !type_name)
+      throw parse_error("Constant class field '" + name.text + "' requires a type annotation", name.range);
+    if (!match(tokens::EQUAL))
+      throw parse_error("Constant '" + name.text + "' requires an initializer", name.range);
+    auto initializer = parse_expression();
+    return std::make_unique<const_declaration>(span{keyword.range.begin, initializer->range.end},
+                                               name.text, private_member, std::move(type_name),
+                                               std::move(initializer));
   }
 
   auto syntax_parser::parse_function_declaration(const bool body_optional, const bool allow_private,
@@ -465,6 +499,12 @@ namespace parser
       else if (type == type_declaration::kind::class_type && match(tokens::KWD_LET))
       {
         auto member = parse_let_declaration(true);
+        member->documentation = std::move(documentation);
+        members.push_back(std::move(member));
+      }
+      else if (type == type_declaration::kind::class_type && match(tokens::KWD_CONST))
+      {
+        auto member = parse_const_declaration(true);
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }

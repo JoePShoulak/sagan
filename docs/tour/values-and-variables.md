@@ -18,6 +18,23 @@ altitude = altitude + 500.0
 altitude += 500.0
 ```
 
+Use `const` when the name should never be assigned again:
+
+```sagan
+const DISTANCE = 100 meter
+const TIME = 20 second
+const SPEED = DISTANCE / TIME
+print(SPEED)
+```
+
+The name must use ASCII `SCREAMING_SNAKE_CASE`. `const` is the rule that makes
+it immutable; uppercase letters alone do not. Sagan rejects `let SPEED = 5`
+so a mutable variable cannot look like a constant. `const` requires a value
+immediately. It stops reassignment and direct mutation through that name,
+including `SPEED += ...`, `VALUES[0] = ...`, and mutating `!` methods. It does
+not deeply freeze a referenced object shared with a mutable alias, and it does
+not promise that the value is evaluated at compile time.
+
 The parser supports `=`, `+=`, `-=`, `*=`, `/=`, `%=`, and `^=` reassignment
 statements inside function bodies. `^=` uses Sagan's exponentiation operator;
 there are no initial bitwise operators.

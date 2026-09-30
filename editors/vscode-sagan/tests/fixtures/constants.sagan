@@ -1,0 +1,11 @@
+const SPEED_OF_LIGHT = 299_792_458
+class Orbit {
+  const .STANDARD_RADIUS: Int = 3
+}
+fun main(): Int {
+  const MAX_RETRIES = 5
+  let mutable = 1
+  let MISLEADING = 2
+  const invalid_name = 3
+  return MAX_RETRIES
+}

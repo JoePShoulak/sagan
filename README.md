@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.74.0](https://img.shields.io/badge/development-0.74.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.75.0](https://img.shields.io/badge/development-0.75.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -66,6 +66,14 @@ let movement = <10.0, 2.0, 0.0> meter
 let spacecraft = launch_pad + movement
 
 let line_of_sight = s<100.0, 0.5, 1.2> meter
+```
+
+### Constants say so explicitly
+
+`const` makes a binding read-only; uppercase spelling alone never does.
+
+```sagan
+const TEST_SPEED: Float64<meter / second> = 9.80665 (meter / second)
 ```
 
 ### Composition comes first

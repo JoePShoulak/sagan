@@ -13,7 +13,7 @@ which smaller pieces may appear inside a larger piece. The notation is intended
 as a reference, not as the easiest way to learn the language; the
 [tour](../tour/index.md) teaches the same forms through examples.
 
-Declarations use words such as `let`, `fun`, `face`,
+Declarations use words such as `let`, `const`, `fun`, `face`,
 `class`, and `enum`; braces delimit multi-statement bodies; one-statement
 control-flow bodies may remain on their header line without braces; newlines
 normally terminate statements; `=>` introduces expression bodies; and
@@ -23,14 +23,16 @@ The implemented collection grammar is equivalent to this simplified notation:
 
 ```text
 program     := newline* (documented_declaration newline+)* documented_declaration? newline*
-declaration := let_declaration | function_declaration | face_declaration
+declaration := let_declaration | const_declaration | function_declaration | face_declaration
              | class_declaration | enum_declaration | module_declaration
              | import_declaration | export_declaration
-statement   := let_declaration | assignment_statement | expression_statement
+statement   := let_declaration | const_declaration | assignment_statement | expression_statement
              | if_statement | for_statement | condition_loop | loop_control
              | return_statement | yield_statement | match_statement
              | hope_statement | scream_statement
 let_declaration := "let" identifier (":" type)? ("=" expression)?
+const_declaration := "const" constant_identifier (":" type)? "=" expression
+constant_identifier := ASCII_SCREAMING_SNAKE_CASE
 array       := "[" (expression ("," expression)* ","?)? "]"
 dictionary  := "{" (dictionary_entry ("," dictionary_entry)* ","?)? "}"
 dictionary_entry := expression ":" expression | spread
@@ -68,6 +70,7 @@ face_declaration := "face" identifier generic_parameters? composition? "{" face_
 face_member := method_signature function_body?
 class_declaration := "class" identifier generic_parameters? composition? "{" class_member* "}"
 class_member := "weak"? "let" "."? identifier (":" type)? ("=" expression)?
+              | "const" "."? constant_identifier ":" type "=" expression
               | constructor_declaration
               | "fun" "."? identifier generic_parameters? "(" parameters? ")" (":" type)? function_body
 constructor_declaration := "new" "(" typed_parameters? ")" block

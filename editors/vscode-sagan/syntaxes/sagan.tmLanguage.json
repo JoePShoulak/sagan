@@ -193,10 +193,26 @@
           }
         },
         {
+          "match": "\\b(const)(\\s+)(\\.?)(?:\\s*)([A-Z][A-Z0-9_]*)\\b",
+          "captures": {
+            "1": { "name": "keyword.declaration.constant.sagan" },
+            "3": { "name": "punctuation.accessor.private.sagan" },
+            "4": { "name": "constant.other.definition.sagan" }
+          }
+        },
+        {
+          "match": "\\b(const)(\\s+)(\\.?)(?:\\s*)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.constant.sagan" },
+            "3": { "name": "punctuation.accessor.private.sagan" },
+            "4": { "name": "invalid.illegal.constant-name.sagan" }
+          }
+        },
+        {
           "match": "\\b(let)(\\s+)([A-Z][A-Z0-9_]*)\\b",
           "captures": {
             "1": { "name": "keyword.declaration.variable.sagan" },
-            "3": { "name": "constant.other.definition.naming-convention.sagan" }
+            "3": { "name": "invalid.illegal.constant-name.sagan" }
           }
         },
         {
@@ -282,7 +298,7 @@
         { "name": "keyword.operator.logical.sagan", "match": "\\b(?:and|or|not)\\b" },
         { "name": "keyword.operator.type.sagan", "match": "\\b(?:is|has)\\b" },
         { "name": "variable.language.self.sagan", "match": "\\bself\\b" },
-        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|fun|new|class|face|enum|module)\\b" }
+        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|new|class|face|enum|module)\\b" }
       ]
     },
     "method-identifiers": {

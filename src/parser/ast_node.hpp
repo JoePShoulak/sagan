@@ -239,7 +239,7 @@ namespace parser
 
   using statement_ref = std::unique_ptr<statement>;
 
-  struct let_declaration final : statement
+  struct let_declaration : statement
   {
     std::string name;
     bool private_member;
@@ -250,6 +250,13 @@ namespace parser
     let_declaration(span source_range, std::string identifier, bool is_private, bool is_weak,
                     std::optional<std::string> annotation,
                     expression_ref initial_value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct const_declaration final : let_declaration
+  {
+    const_declaration(span source_range, std::string identifier, bool is_private,
+                      std::optional<std::string> annotation, expression_ref initial_value);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 

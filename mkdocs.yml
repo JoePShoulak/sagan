@@ -165,6 +165,7 @@ nav:
           - Versioning: contributing/versioning.md
           - Windows installer release gate: contributing/windows-installer-release.md
           - Release lifecycle: contributing/release-lifecycle.md
+          - Ecosystem release readiness: contributing/ecosystem-release-readiness.md
           - Documentation workflow: contributing/documentation.md
           - Documentation roadmaps: contributing/documentation-roadmaps.md
           - Self-hosting: contributing/hosting.md

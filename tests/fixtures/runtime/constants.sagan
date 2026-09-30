@@ -1,0 +1,37 @@
+const SPEED_OF_LIGHT = 299_792_458
+const TEST_SPEED: Float64<meter / second> = 9.80665 (meter / second)
+
+class Orbit {
+  const STANDARD_RADIUS: Int = 3
+}
+
+class Probe {
+  let value: Int = 0
+}
+
+fun identity<T>(value: T): T => value
+
+fun main(): Int {
+  const MAX_RETRIES: Int = 5
+  const DISTANCE = 100 meter
+  const TIME = 20 second
+  const SPEED = DISTANCE / TIME
+  const MOVEMENT = <1, 2, 3>
+  const ORIGIN = (0, 0, 0)
+  const ORBIT = Orbit()
+  let mutable_probe = Probe()
+  const PROBE = mutable_probe
+  mutable_probe.value = 7
+  let destination = ORIGIN + MOVEMENT
+  let mutable = 0
+  mutable += 1
+  print("Retries: ${MAX_RETRIES}")
+  print("Speed: ${SPEED}")
+  print("Radius: ${ORBIT.STANDARD_RADIUS}")
+  print("Typed speed: ${TEST_SPEED}")
+  print(destination)
+  print("Alias value: ${PROBE.value}")
+  print("Generic retries: ${identity(MAX_RETRIES)}")
+  if SPEED_OF_LIGHT > 0 and mutable == 1 return 0
+  else return 1
+}

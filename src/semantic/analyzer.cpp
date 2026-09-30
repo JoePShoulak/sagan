@@ -1,4 +1,5 @@
 #include "analyzer.hpp"
+#include "../parser/naming.hpp"
 
 #include "semantic_error.hpp"
 
@@ -292,8 +293,10 @@ namespace semantic
       {
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
+          const bool constant = dynamic_cast<const parser::const_declaration *>(declaration);
           declare(declaration->name,
-                  current_scope == 0 ? symbol_kind::variable : symbol_kind::field,
+                  current_scope == 0 ? (constant ? symbol_kind::constant : symbol_kind::variable)
+                                     : (constant ? symbol_kind::constant_field : symbol_kind::field),
                   declaration->range,
                   declaration->private_member ? symbol_visibility::private_access
                                               : symbol_visibility::public_access,
@@ -507,7 +510,10 @@ namespace semantic
         {
           resolve_type(declaration->type_name, declaration->range);
           if (declaration->initializer) expression(*declaration->initializer);
-          if (!already_declared) declare(declaration->name, symbol_kind::variable, declaration->range,
+          if (!already_declared) declare(declaration->name,
+                                         dynamic_cast<const parser::const_declaration *>(declaration)
+                                             ? symbol_kind::constant : symbol_kind::variable,
+                                         declaration->range,
                                          declaration->private_member ? symbol_visibility::private_access
                                                                      : symbol_visibility::public_access,
                                          symbol_origin::source, documentation(declaration->documentation));
@@ -653,6 +659,7 @@ namespace semantic
     case symbol_kind::module: return "module";
     case symbol_kind::imported_namespace: return "import";
     case symbol_kind::variable: return "variable";
+    case symbol_kind::constant: return "constant";
     case symbol_kind::parameter: return "parameter";
     case symbol_kind::loop_binding: return "loop binding";
     case symbol_kind::match_binding: return "match binding";
@@ -664,6 +671,7 @@ namespace semantic
     case symbol_kind::quantity: return "quantity";
     case symbol_kind::unit: return "unit";
     case symbol_kind::field: return "field";
+    case symbol_kind::constant_field: return "constant field";
     case symbol_kind::method: return "method";
     case symbol_kind::enum_case: return "enum member";
     case symbol_kind::enum_constructor: return "enum constructor";
@@ -672,6 +680,17 @@ namespace semantic
     case symbol_kind::builtin_value: return "builtin value";
     }
     return "unknown";
+  }
+
+  auto rename_preserves_binding_convention(const symbol_kind kind,
+                                           const std::string_view proposed) -> bool
+  {
+    if (proposed.empty()) return false;
+    if (kind == symbol_kind::constant || kind == symbol_kind::constant_field)
+      return parser::is_constant_name(proposed);
+    if (kind == symbol_kind::variable || kind == symbol_kind::field)
+      return !parser::is_constant_name(proposed);
+    return true;
   }
 
   auto semantic_model::print(std::ostream &stream) const -> void

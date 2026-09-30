@@ -21,6 +21,7 @@ namespace semantic
     module,
     imported_namespace,
     variable,
+    constant,
     parameter,
     loop_binding,
     match_binding,
@@ -32,6 +33,7 @@ namespace semantic
     quantity,
     unit,
     field,
+    constant_field,
     method,
     enum_case,
     enum_constructor,
@@ -45,6 +47,9 @@ namespace semantic
   enum class reference_kind { unclassified, read, write, type, call, import, conformance, export_reference };
 
   auto name(symbol_kind value) -> std::string_view;
+  // Naming gate used before a future symbol-identity rename edit is offered.
+  // Other identifier and conflict checks remain the rename operation's job.
+  auto rename_preserves_binding_convention(symbol_kind kind, std::string_view proposed) -> bool;
 
   struct symbol
   {

@@ -89,7 +89,9 @@ only, and the C++ backend stores ordinary native numeric and geometry values.
 
 Generic parameters are invariant: `Box<Child>` is not automatically a
 `Box<Parent>`. Variance, borrowing, user-defined implicit conversions, and a
-general compile-time-constant system are deferred.
+general compile-time evaluation of `const` expressions remain deferred.
+`const` currently means a type-checked immutable binding and const view,
+not a compile-time value or a deep-frozen object graph.
 
 Annotations must name types. Typed variables may begin uninitialized, but they
 must be definitely assigned before use; compound assignment counts as a read.

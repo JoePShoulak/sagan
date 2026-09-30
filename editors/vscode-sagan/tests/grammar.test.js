@@ -119,6 +119,15 @@ async function main() {
     assertScoped(vocabulary, operator, "keyword.operator");
   assertScoped(vocabulary, "None", "constant.language.optional.none.sagan");
 
+  const constants = tokenize(grammar, readFixture("constants.sagan"));
+  assertScoped(constants, "const", "keyword.declaration.constant.sagan");
+  assertScoped(constants, "SPEED_OF_LIGHT", "constant.other.definition.sagan");
+  assertScoped(constants, "STANDARD_RADIUS", "constant.other.definition.sagan");
+  assertScoped(constants, "MAX_RETRIES", "constant.other.definition.sagan");
+  assertScoped(constants, "MISLEADING", "invalid.illegal.constant-name.sagan");
+  assertScoped(constants, "invalid_name", "invalid.illegal.constant-name.sagan");
+  assertNeverScoped(constants, "MISLEADING", "constant.other.definition.sagan");
+
   const strings = tokenize(grammar, readFixture("strings.sagan"));
   assertScoped(strings, "\\u{1F680}", "constant.character.escape.sagan");
   assertScoped(strings, "${", "punctuation.section.interpolation.begin.sagan");

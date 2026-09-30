@@ -14,6 +14,7 @@ namespace
 
   const std::unordered_map<std::string, int> keywords = {
       {"let", tokens::KWD_LET},
+      {"const", tokens::KWD_CONST},
       {"weak", tokens::KWD_WEAK},
       {"fun", tokens::KWD_FUN},
       {"new", tokens::KWD_NEW},

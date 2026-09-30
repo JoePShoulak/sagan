@@ -1,0 +1,9 @@
+module main
+
+import SPEED from values
+
+fun main(): Int {
+  print("Imported speed: ${SPEED}")
+  if SPEED == 3 return 0
+  else return 1
+}

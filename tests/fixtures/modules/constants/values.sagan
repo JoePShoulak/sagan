@@ -1,0 +1,5 @@
+module values
+
+const SPEED = 3
+
+export SPEED

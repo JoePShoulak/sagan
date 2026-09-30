@@ -19,6 +19,7 @@ tests=(
   generic_sum_test.sh
   generic_class_test.sh
   closure_test.sh
+  constants_test.sh
 )
 
 for test_script in "${tests[@]}"; do

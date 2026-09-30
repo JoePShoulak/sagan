@@ -875,11 +875,19 @@ namespace codegen
               initializer = converted_expression(*declaration->initializer, checked_type);
             else initializer = expression(*declaration->initializer);
           }
-          box(declaration->name);
-          output << "auto " << identifier(declaration->name) << " = std::make_shared<"
-                 << type_name(checked_type, declaration->range) << ">(";
-          if (!initializer.empty()) output << initializer;
-          output << ");\n";
+          if (dynamic_cast<const parser::const_declaration *>(declaration))
+          {
+            output << "const " << type_name(checked_type, declaration->range) << ' '
+                   << identifier(declaration->name) << " = " << initializer << ";\n";
+          }
+          else
+          {
+            box(declaration->name);
+            output << "auto " << identifier(declaration->name) << " = std::make_shared<"
+                   << type_name(checked_type, declaration->range) << ">(";
+            if (!initializer.empty()) output << initializer;
+            output << ");\n";
+          }
         }
         else if (const auto *expression_value = dynamic_cast<const parser::expression_statement *>(&value))
           output << expression(*expression_value->value) << ";\n";
@@ -1308,6 +1316,7 @@ namespace codegen
               output << (private_access ? "private:\n" : "public:\n");
             }
             output << indentation();
+            if (dynamic_cast<const parser::const_declaration *>(field)) output << "const ";
             if (field->weak_member)
               output << "std::weak_ptr<" << identifier(*field->type_name) << "> ";
             else output << type(field->type_name, field->range) << ' ';
@@ -2001,16 +2010,27 @@ namespace codegen
           }
         }
         for (const auto &entry : tree.statements)
+          if (const auto *constant = dynamic_cast<const parser::const_declaration *>(entry.get()))
+            output << "extern const " << type_name(declaration_type(*constant), constant->range)
+                   << ' ' << identifier(constant->name) << ";\n";
+        output << '\n';
+        for (const auto &entry : tree.statements)
         {
           const auto *declaration = dynamic_cast<const parser::function_declaration *>(entry.get());
           if (!declaration)
           {
             if (dynamic_cast<const parser::type_declaration *>(entry.get()) ||
-                dynamic_cast<const parser::measurement_declaration *>(entry.get())) continue;
+                dynamic_cast<const parser::measurement_declaration *>(entry.get()) ||
+                dynamic_cast<const parser::const_declaration *>(entry.get())) continue;
             fail("only functions and classes are supported at the top level", entry->range);
           }
           function(*declaration);
         }
+        for (const auto &entry : tree.statements)
+          if (const auto *constant = dynamic_cast<const parser::const_declaration *>(entry.get()))
+            output << "const " << type_name(declaration_type(*constant), constant->range) << ' '
+                   << identifier(constant->name) << " = "
+                   << converted_expression(*constant->initializer, declaration_type(*constant)) << ";\n";
         return output.str();
       }
     };

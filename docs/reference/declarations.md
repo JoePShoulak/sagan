@@ -8,7 +8,8 @@ verified_by: null
 ---
 
 # Declarations
-Declarations introduce names. `let` declares mutable variables; `fun` introduces
+Declarations introduce names. `let` declares mutable variables; `const`
+declares immutable bindings; `fun` introduces
 functions; `face`, `class`, and `enum` introduce named types; and
 `dimension`, `quantity`, `unit`, and `affine unit` introduce compile-time
 measurement metadata. Measurement declarations are checked for duplicate names,
@@ -23,13 +24,28 @@ forms.
 
 `///` and `/** ... */` documentation comments attach to the declaration that
 immediately follows them. The AST preserves each comment separately with its
-source span and text. Supported targets are modules, imports, exports, `let`,
+source span and text. Supported targets are modules, imports, exports, `let`, `const`,
 `fun`, `face`, `class`, and `enum` declarations, including fields, methods, and
 local variables and individual enum members.
 
 ```sagan
 let altitude: Float = 125_000.0
+const MAX_RETRIES: Int = 5
 ```
+
+`const` always requires an initializer and an ASCII `SCREAMING_SNAKE_CASE`
+name (`[A-Z][A-Z0-9_]*`). The keyword creates the immutable binding;
+capitalization alone never does. Consequently `let MAX_RETRIES = 5` is an
+error, not a constant. Constants may infer a type or use an annotation and may
+be local, module-level, exported, or imported. Reassignment, increment,
+compound assignment, indexed or field mutation rooted at the constant, and a
+mutating `!` method call through it are rejected. A mutable alias to the same
+referenced object can still mutate that object: this is a const view, not a
+transitive deep freeze or general compile-time expression evaluator.
+The compiler exposes the same naming check for future rename tooling; an
+editor must not offer a rename that would give a constant a lowercase name or
+a mutable variable the reserved constant spelling. A full rename operation is
+not implemented yet.
 
 Top-level declarations may define mutable variables, functions, faces, classes,
 and enums. Functions may use a block body or a short expression body:
@@ -46,6 +62,9 @@ constructors.
 
 Class fields require explicit types and may
 have default initializers. A class may declare overloaded `new(...)` constructors;
+`const` fields require an explicit type and a declaration-site initializer.
+Constructor-only initialization of const fields is deferred; a const field
+cannot be assigned again, even in `new`.
 calling `ClassName(arguments...)` selects exactly one compatible constructor.
 Every field without a declaration-site default must be assigned on every
 constructor path. With no declared constructor, `ClassName()` is available only

@@ -18,6 +18,8 @@ after malformed or incomplete input.
 
 - Programs and newline-separated declarations
 - `let` declarations with optional type annotations and initializers
+- `const` declarations with mandatory initializers and ASCII
+  `SCREAMING_SNAKE_CASE` names
 - Identifier, numeric, Boolean, and grouped primary expressions
 - Prefix and postfix operators
 - Calls with zero or more arguments

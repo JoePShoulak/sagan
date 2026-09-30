@@ -10,9 +10,10 @@ verified_by: null
 # Editor support
 The version 0.2.0 VS Code extension in `editors/vscode-sagan/` associates
 `.sagan` files with the language and provides a tokenizer-aligned Sagan TextMate
-grammar. It covers declarations, keywords, types, literals, operators,
-punctuation, comments, strings and nested interpolation, Unicode identifiers,
-private members, and mutating method names.
+grammar. It covers declarations (including explicit `const` and visibly invalid
+`let ALL_CAPS` names), keywords, types, literals, operators, punctuation,
+comments, strings and nested interpolation, Unicode identifiers, private
+members, and mutating method names.
 
 It also discovers a Sagan compiler, validates the versioned
 `sagan.language-service/1` capability response, and exposes **Sagan: Show

@@ -35,6 +35,7 @@ namespace semantic
       std::string type;
       std::optional<callable_signature> callable;
       bool initialized = true;
+      bool constant = false;
     };
 
     struct dimensioned_type
@@ -51,6 +52,7 @@ namespace semantic
       std::unordered_map<std::string, std::string> fields;
       std::unordered_set<std::string> private_fields;
       std::unordered_set<std::string> weak_fields;
+      std::unordered_set<std::string> constant_fields;
       std::unordered_set<std::string> defaulted_fields;
       std::vector<callable_signature> constructors;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
@@ -794,7 +796,8 @@ namespace semantic
         {
           const std::string declared = annotation(declaration->type_name);
           add_binding(declaration->name,
-                      binding{declared, function_signature_type(fixed_annotation(declaration->type_name)), false});
+                      binding{declared, function_signature_type(fixed_annotation(declaration->type_name)), false,
+                              dynamic_cast<const parser::const_declaration *>(declaration) != nullptr});
         }
         else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&value))
         {
@@ -829,6 +832,8 @@ namespace semantic
             object.fields.emplace(field->name, fixed_annotation(field->type_name));
             if (field->private_member) object.private_fields.insert(field->name);
             if (field->weak_member) object.weak_fields.insert(field->name);
+            if (dynamic_cast<const parser::const_declaration *>(field))
+              object.constant_fields.insert(field->name);
             if (field->initializer || field->weak_member) object.defaulted_fields.insert(field->name);
           }
           else if (const auto *method = dynamic_cast<const parser::function_declaration *>(member.get()))
@@ -1305,6 +1310,7 @@ namespace semantic
           for (const auto &argument : call->arguments) arguments.push_back(expression(*argument));
           if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get()))
           {
+            if (member->member_name.ends_with('!')) require_mutable_root(*member->target);
             if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get()))
             {
               const auto qualified = generic_instance(target->name);
@@ -1826,8 +1832,37 @@ namespace semantic
         close_scope();
       }
 
+      auto require_mutable_root(const parser::expression &value) -> void
+      {
+        if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(&value))
+        {
+          const auto *matches = find(identifier->name);
+          if (matches && !matches->empty())
+            require(!matches->front().constant,
+                    "Constant '" + identifier->name + "' cannot be mutated", value.range);
+          return;
+        }
+        if (const auto *group = dynamic_cast<const parser::grouping_expression *>(&value))
+        {
+          require_mutable_root(*group->value);
+          return;
+        }
+        if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
+        {
+          require_mutable_root(*member->target);
+          const auto receiver = generic_instance(expression(*member->target));
+          if (const auto object = objects.find(receiver.base); object != objects.end())
+            require(!object->second.constant_fields.contains(member->member_name),
+                    "Constant field '" + member->member_name + "' cannot be mutated", value.range);
+          return;
+        }
+        if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
+          require_mutable_root(*index->target);
+      }
+
       auto assignment_target(const parser::expression &value) -> std::string
       {
+        require_mutable_root(value);
         if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(&value))
         {
           const auto *matches = find(identifier->name);
@@ -2071,6 +2106,9 @@ namespace semantic
       {
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
+          const bool constant = dynamic_cast<const parser::const_declaration *>(declaration);
+          require(!constant || declaration->initializer,
+                  "Constant '" + declaration->name + "' requires an initializer", declaration->range);
           const std::string declared = annotation(declaration->type_name);
           const auto previous_expected = expected_expression;
           if (!is_unknown(declared)) expected_expression = fixed_annotation(declaration->type_name);
@@ -2107,13 +2145,15 @@ namespace semantic
           }
           if (!predeclared)
           {
-            add_binding(declaration->name, binding{type, callable, declaration->initializer != nullptr});
+            add_binding(declaration->name,
+                        binding{type, callable, declaration->initializer != nullptr, constant});
           }
           else
           {
             scopes.back()[declaration->name].front().type = type;
             scopes.back()[declaration->name].front().callable = std::move(callable);
             scopes.back()[declaration->name].front().initialized = declaration->initializer != nullptr;
+            scopes.back()[declaration->name].front().constant = constant;
           }
           require(!is_unknown(type),
                   "Variable '" + declaration->name + "' requires a type annotation or initializer",
@@ -2126,6 +2166,7 @@ namespace semantic
         }
         else if (const auto *assignment = dynamic_cast<const parser::assignment_statement *>(&value))
         {
+          require_mutable_root(*assignment->target);
           const std::string target = assignment->operation == "=" ? assignment_target(*assignment->target)
                                                                   : expression(*assignment->target);
           const std::string assigned = expression(*assignment->value);

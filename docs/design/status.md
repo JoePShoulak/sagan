@@ -26,9 +26,14 @@ audit; it does not mean every listed compiler feature is unfinished.
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation and execution | **Hypercore backend implemented** | direct `sagan file.sagan`, packages, classes/faces, exceptions, lambdas, checked arithmetic, collections, units, control flow, and demos |
 | Native units of measure | **Implemented** | static dimensions/quantities/units, affine temperatures, scientific catalog and SI prefixes, callable constraints, custom declarations, erased native representation, `make units-demo` |
+| Explicit constants | **Implemented as immutable bindings** | `const` plus ASCII SCREAMING_SNAKE_CASE, const-view mutation checks, class fields with declaration initializers, native execution and editor grammar tests; general compile-time evaluation deferred |
 | Deterministic execution | **1.0 hypercore contract settled** | exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
-| Editor-tooling foundation | **Phases 0–4 implemented; work paused** | reusable compiler archive, source identity/UTF-16 positions, diagnostics, recovery, overlays, invalidation, cancellation, stable semantic identities and indexes |
+| Editor-tooling foundation | **Read-only query work resumed** | reusable compiler archive, source identity/UTF-16 positions, diagnostics, recovery, overlays, invalidation, cancellation, stable semantic identities and indexes; no LSP server yet |
+
+Every release is a coordinated ecosystem freeze: compiler/language, included
+libraries, documentation, and extension must agree and pass together. See the
+[ecosystem release checklist](../contributing/ecosystem-release-readiness.md).
 
 ## Tokenizer verification
 
@@ -190,5 +195,6 @@ machine evidence and the project owner approves the protected publication
 environment. GitHub Releases is canonical, HP1 is a non-blocking verified
 mirror, artifacts and versioned documentation are immutable, and only the
 latest stable release receives best-effort support. Signing credentials and the
-final clean-machine run remain external 1.0 release gates. Full-functionality
-VS Code extension work is paused and is not a 1.0 release requirement.
+final clean-machine run remain external 1.0 release gates.
+Full-functionality VS Code extension work has resumed; matching extension
+tests and compiler capabilities are part of every release gate.

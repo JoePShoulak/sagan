@@ -41,6 +41,12 @@ Identifiers are case-sensitive. Names beginning with `__` are reserved for the
 compiler. A trailing `!` may be included in a method identifier as Sagan's
 mutating-counterpart naming convention.
 
+`const` is a keyword, not an identifier. A constant's name is deliberately
+stricter than an ordinary identifier: it must match ASCII
+`[A-Z][A-Z0-9_]*`. Unicode and emoji remain valid for ordinary Sagan names,
+but do not yet have a capitalization rule for constants. A `let` name matching
+this reserved form is rejected rather than silently becoming a constant.
+
 ## Numbers
 
 Sagan supports decimal integers, decimal floating-point values, scientific
@@ -84,7 +90,7 @@ delimiter contexts are preserved for the parser to interpret.
 ## Keywords
 
 ```text
-let weak fun new class face enum dimension quantity unit affine
+let const weak fun new class face enum dimension quantity unit affine
 if else match case for in while until break continue return yield
 import from as module export
 hope unless finally scream

@@ -279,7 +279,8 @@ namespace sagan::language_service
                             const bool declaration)
     {
       values.push_back(semantic_classification{symbol.id, symbol.kind, range, declaration,
-                                                false,
+                                                symbol.kind == semantic::symbol_kind::constant ||
+                                                    symbol.kind == semantic::symbol_kind::constant_field,
                                                 symbol.visibility == semantic::symbol_visibility::private_access,
                                                 symbol.origin == semantic::symbol_origin::builtin});
     };
@@ -439,7 +440,8 @@ namespace sagan::language_service
       {
         if (symbol.origin == semantic::symbol_origin::generated ||
             (!prefix.empty() && !symbol.name.starts_with(prefix)) || seen.contains(symbol.name)) continue;
-        const bool local_variable = symbol.kind == semantic::symbol_kind::variable;
+        const bool local_variable = symbol.kind == semantic::symbol_kind::variable ||
+                                    symbol.kind == semantic::symbol_kind::constant;
         if (scope_id != 0 && local_variable &&
             (symbol.declaration.begin > static_cast<int>(offset) ||
              symbol.declaration.end > static_cast<int>(offset))) continue;

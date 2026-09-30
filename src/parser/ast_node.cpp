@@ -352,6 +352,24 @@ namespace parser
     }
   }
 
+  const_declaration::const_declaration(const span source_range, std::string identifier,
+                                       const bool is_private, std::optional<std::string> annotation,
+                                       expression_ref initial_value)
+      : let_declaration(source_range, std::move(identifier), is_private, false,
+                        std::move(annotation), std::move(initial_value))
+  {
+  }
+
+  auto const_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "Const(" << (private_member ? "." : "") << name;
+    if (type_name) stream << ": " << *type_name;
+    stream << ")\n";
+    print_documentation(stream, indent + 2);
+    if (initializer) initializer->print(stream, indent + 2);
+  }
+
   expression_statement::expression_statement(const span source_range, expression_ref statement_value)
       : statement(source_range), value(std::move(statement_value))
   {

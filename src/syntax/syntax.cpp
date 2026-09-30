@@ -83,7 +83,8 @@ namespace sagan::syntax
 
     auto declaration_start(const int kind) -> bool
     {
-      return kind == tokens::KWD_LET || kind == tokens::KWD_FUN || kind == tokens::KWD_FACE ||
+      return kind == tokens::KWD_LET || kind == tokens::KWD_CONST ||
+             kind == tokens::KWD_FUN || kind == tokens::KWD_FACE ||
              kind == tokens::KWD_CLASS || kind == tokens::KWD_ENUM || kind == tokens::KWD_MODULE ||
              kind == tokens::KWD_IMPORT || kind == tokens::KWD_EXPORT;
     }

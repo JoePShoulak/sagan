@@ -15,7 +15,8 @@ with `g++` and runs the resulting native executable.
 
 The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
-local declarations, assignment, calls, grouping, common unary/binary operators,
+local declarations, immutable local and module-level constants, assignment,
+calls, grouping, common unary/binary operators,
 prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned Cartesian and spherical vector and point values, Cartesian spreads,
 indexing, named components, iteration,
@@ -49,8 +50,13 @@ an implicit native success return.
 
 Unsupported AST forms produce a source-located backend diagnostic rather than
 silently generating incorrect code. The emitter currently requires explicit
-function signatures and supports only function declarations at the program
-root.
+function signatures. At the program root it emits functions and `const`
+bindings; ordinary top-level `let` bindings are not yet emitted. Constants
+become native `const` values instead of shared mutable scalar boxes. For a
+module-level constant, an `extern const` declaration lets functions refer to
+it before its source-order definition. Reference-valued constants retain the
+normal pointer representation and enforce the const view in Sagan's type
+checker, without claiming a deep-frozen object graph.
 
 Homogeneous dictionary literals with backend-supported scalar key and value
 types lower to `std::unordered_map`. Key lookup is checked and raises the native
