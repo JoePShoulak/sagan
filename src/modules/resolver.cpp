@@ -29,12 +29,19 @@ namespace modules
       return contents.str();
     }
 
-    auto parse_file(const std::filesystem::path &path) -> parser::program
+    auto parse_file(const std::filesystem::path &path, const sagan::source::source_provider &source)
+      -> parser::program
     {
       try
       {
-        const std::string source = read_file(path);
-        parser::tokenizer lexer(parser::programText{source}, get_token);
+        const auto snapshot = source.read_path(path);
+        if (!snapshot)
+        {
+          if (snapshot.error->code == sagan::source::provider_error_code::not_found)
+            throw std::runtime_error("Could not open module '" + path.string() + "'");
+          throw std::runtime_error(snapshot.error->message);
+        }
+        parser::tokenizer lexer(parser::programText{std::string(snapshot.value->text())}, get_token);
         std::vector<parser::token> tokens;
         while (auto next = lexer.next()) tokens.push_back(std::move(*next));
         parser::syntax_parser syntax(std::move(tokens));
@@ -198,6 +205,7 @@ namespace modules
       std::filesystem::path source_root;
       std::filesystem::path entry;
       std::optional<package_manifest> package;
+      const sagan::source::source_provider &source;
       std::unordered_map<std::string, int> states;
       std::vector<std::string> stack;
       std::vector<module_info> resolved;
@@ -225,7 +233,7 @@ namespace modules
 
         states[name] = 1;
         stack.push_back(name);
-        parser::program tree = parse_file(path);
+        parser::program tree = parse_file(path, source);
         const auto declaration = declared_name(tree);
         if ((imported || package.has_value()) && !declaration)
           throw std::runtime_error("Module '" + name + "' must declare 'module " + name + "'");
@@ -286,9 +294,11 @@ namespace modules
       }
 
     public:
-      explicit resolver(std::filesystem::path entry_path, std::optional<package_manifest> manifest = {})
+      explicit resolver(std::filesystem::path entry_path, const sagan::source::source_provider &source_provider,
+                        std::optional<package_manifest> manifest = {})
           : source_root(manifest ? manifest->source_root : std::filesystem::absolute(entry_path).parent_path()),
-            entry(std::filesystem::absolute(std::move(entry_path)).lexically_normal()), package(std::move(manifest))
+            entry(std::filesystem::absolute(std::move(entry_path)).lexically_normal()), package(std::move(manifest)),
+            source(source_provider)
       {
       }
 
@@ -530,7 +540,7 @@ namespace modules
       }
     };
 
-    auto link_graph(const module_graph &graph) -> parser::program
+    auto link_graph(const module_graph &graph, const sagan::source::source_provider &source) -> parser::program
     {
       std::unordered_map<std::string, std::unordered_map<std::string, std::string>> linked_names;
       std::unordered_map<std::string, std::unordered_map<std::string, std::string>> public_names;
@@ -540,7 +550,7 @@ namespace modules
 
       for (const auto &module : graph.modules)
       {
-        parser::program tree = parse_file(module.path);
+        parser::program tree = parse_file(module.path, source);
         for (const auto &entry : tree.statements)
         {
           std::string name;
@@ -557,7 +567,7 @@ namespace modules
       std::vector<parser::statement_ref> combined;
       for (const auto &module : graph.modules)
       {
-        parser::program tree = parse_file(module.path);
+        parser::program tree = parse_file(module.path, source);
         auto bindings = linked_names.at(module.name);
         std::unordered_map<std::string, std::string> namespaces;
         for (const auto &imported : module.imports)
@@ -608,15 +618,29 @@ namespace modules
 
   auto resolve(const std::filesystem::path &entry_path) -> module_graph
   {
+    const sagan::source::disk_source_provider source;
+    return resolve(entry_path, source);
+  }
+
+  auto resolve(const std::filesystem::path &entry_path, const sagan::source::source_provider &source)
+    -> module_graph
+  {
     if (entry_path.extension() != ".sagan")
       throw std::runtime_error("Module entry file must use the .sagan extension");
     const auto manifest = discover_manifest(entry_path);
-    return resolver(entry_path, manifest).run();
+    return resolver(entry_path, source, manifest).run();
   }
 
   auto link(const std::filesystem::path &entry_path) -> parser::program
   {
-    return link_graph(resolve(entry_path));
+    const sagan::source::disk_source_provider source;
+    return link(entry_path, source);
+  }
+
+  auto link(const std::filesystem::path &entry_path, const sagan::source::source_provider &source)
+    -> parser::program
+  {
+    return link_graph(resolve(entry_path, source), source);
   }
 
   auto load_package(const std::filesystem::path &package_path) -> package_manifest
@@ -637,15 +661,29 @@ namespace modules
 
   auto resolve_package(const std::filesystem::path &package_path) -> module_graph
   {
+    const sagan::source::disk_source_provider source;
+    return resolve_package(package_path, source);
+  }
+
+  auto resolve_package(const std::filesystem::path &package_path,
+                       const sagan::source::source_provider &source) -> module_graph
+  {
     auto manifest = load_package(package_path);
     const auto entry_path = path_for_module(manifest.source_root, manifest.entry_module);
-    if (!std::filesystem::is_regular_file(entry_path))
+    if (!source.exists_path(entry_path))
       throw std::runtime_error("Package entry module does not exist: " + entry_path.string());
-    return resolver(entry_path, std::move(manifest)).run();
+    return resolver(entry_path, source, std::move(manifest)).run();
   }
 
   auto link_package(const std::filesystem::path &package_path) -> parser::program
   {
-    return link_graph(resolve_package(package_path));
+    const sagan::source::disk_source_provider source;
+    return link_package(package_path, source);
+  }
+
+  auto link_package(const std::filesystem::path &package_path,
+                    const sagan::source::source_provider &source) -> parser::program
+  {
+    return link_graph(resolve_package(package_path, source), source);
   }
 }

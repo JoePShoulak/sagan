@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../parser/ast_node.hpp"
+#include "../source/provider.hpp"
 
 namespace modules
 {
@@ -63,9 +64,15 @@ namespace modules
   };
 
   auto resolve(const std::filesystem::path &entry_path) -> module_graph;
+  auto resolve(const std::filesystem::path &entry_path, const sagan::source::source_provider &source) -> module_graph;
   auto link(const std::filesystem::path &entry_path) -> parser::program;
+  auto link(const std::filesystem::path &entry_path, const sagan::source::source_provider &source) -> parser::program;
   auto load_package(const std::filesystem::path &package_path) -> package_manifest;
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>;
   auto resolve_package(const std::filesystem::path &package_path) -> module_graph;
+  auto resolve_package(const std::filesystem::path &package_path,
+                       const sagan::source::source_provider &source) -> module_graph;
   auto link_package(const std::filesystem::path &package_path) -> parser::program;
+  auto link_package(const std::filesystem::path &package_path,
+                    const sagan::source::source_provider &source) -> parser::program;
 }

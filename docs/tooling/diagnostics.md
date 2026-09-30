@@ -23,9 +23,10 @@ bin/sagan --capabilities-json
 
 The reusable checker accepts immutable document snapshots and returns
 `complete`, `incomplete`, `recovered`, or `cancelled` with the analyzed document
-version. `stale` is reserved for the document-overlay phase. Recovered results
-include a partial top-level AST where practical; they never make malformed
-source valid for strict compilation.
+version. Workspace analysis produces `stale` when a document or dependency
+changes before an older result can publish, and suppresses that result's value
+and diagnostics. Recovered results include a partial top-level AST where
+practical; they never make malformed source valid for strict compilation.
 
 Run the recovery demonstration, which prints deliberately incomplete Sagan and
 the resulting structured diagnostics:

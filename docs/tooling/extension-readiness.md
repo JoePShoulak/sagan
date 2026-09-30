@@ -15,8 +15,8 @@ contract is not yet implemented; the extension must not reproduce it.
 
 | Editor feature | Compiler/service gate | Current state |
 | --- | --- | --- |
-| Open/change/save/close | Versioned document store and overlay resolver | **Blocked** |
-| Diagnostics | Structured diagnostics, recovery, UTF-16 conversion, stale-version gate | **Blocked** |
+| Open/change/save/close | Versioned document store and overlay resolver | **Compiler API available; LSP transport blocked** |
+| Diagnostics | Structured diagnostics, recovery, UTF-16 conversion, stale-version gate | **Compiler API available; publication/LSP transport blocked** |
 | Hover | Symbol/type/doc query plus semantic snapshot | **Blocked** |
 | Go to definition/type definition | Stable symbols and indexed locations | **Blocked** |
 | Implementations/conformances | Face/class conformance index | **Blocked** |
@@ -28,7 +28,7 @@ contract is not yet implemented; the extension must not reproduce it.
 | Workspace symbols | Workspace semantic index | **Blocked** |
 | Folding | Recovering lossless syntax tree | **Foundation available; fine-grained block nodes blocked** |
 | Selection ranges | Syntax parent chains with precise ranges | **Foundation available; expression parent chains blocked** |
-| Document links | Resolved import/module targets | **Blocked** |
+| Document links | Resolved import/module targets | **Module targets available; position query/LSP transport blocked** |
 | Inlay hints | Resolved types/parameters with suppression rules | **Blocked** |
 | Rename | Versioned identity-based safe workspace edits | **Blocked** |
 | Quick fixes/code actions | Structured fixes and proven refactoring actions | **Blocked** |

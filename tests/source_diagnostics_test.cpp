@@ -1,9 +1,14 @@
 #include "../src/diagnostics/diagnostic.hpp"
 #include "../src/language_service/language_service.hpp"
+#include "../src/language_service/workspace.hpp"
+#include "../src/modules/resolver.hpp"
+#include "../src/source/provider.hpp"
 #include "../src/source/source.hpp"
 #include "../src/syntax/syntax.hpp"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -93,6 +98,7 @@ auto main() -> int
   passed &= check(capabilities.contains("\"schema\":\"sagan.language-service/1\"") &&
                       capabilities.contains("\"structuredDiagnostics\":true") &&
                       capabilities.contains("\"recovery\":true") &&
+                      capabilities.contains("\"documentOverlays\":true") &&
                       capabilities.contains("\"languageServer\":false"),
                   "versioned capability discovery");
   passed &= check(diagnostics::default_code(diagnostics::phase::runtime) == "SAG-RUN-0001" &&
@@ -188,6 +194,88 @@ auto main() -> int
     prefix_safe &= prefix.diagnostics.size() <= 8;
   }
   passed &= check(prefix_safe, "every cursor prefix produces a bounded syntax result");
+
+  auto disk = std::make_shared<source::disk_source_provider>();
+  auto overlays = std::make_shared<source::document_store>(disk);
+  const source::document_uri untitled{"untitled:workspace-demo"};
+  passed &= check(static_cast<bool>(overlays->open(untitled, 1, "let 🚀 = 1\n")),
+                  "open unsaved document overlay");
+  auto overlay_snapshot = overlays->read(untitled);
+  const auto overlay_rocket = static_cast<source::byte_offset>(overlay_snapshot.value->text().find("🚀"));
+  passed &= check(static_cast<bool>(overlays->change(
+                      untitled, 1, 2,
+                      {{{overlay_snapshot.value->identity().id, {overlay_rocket, overlay_rocket + 4}}, "answer"}})),
+                  "apply versioned UTF-8 overlay edit");
+  overlay_snapshot = overlays->read(untitled);
+  passed &= check(overlay_snapshot && overlay_snapshot.value->version() == 2 &&
+                      overlay_snapshot.value->text() == "let answer = 1\n",
+                  "overlay read returns latest unsaved snapshot");
+  passed &= check(!overlays->replace(untitled, 1, 3, "let stale = 0\n") &&
+                      overlays->replace(untitled, 2, 3, "let answer = 2\n") &&
+                      overlays->save(untitled, 3) && overlays->close(untitled),
+                  "overlay lifecycle rejects stale versions and supports save close");
+
+  const auto workspace_root = std::filesystem::absolute("build/editor-workspace-test").lexically_normal();
+  std::filesystem::remove_all(workspace_root);
+  std::filesystem::create_directories(workspace_root);
+  const auto main_path = workspace_root / "main.sagan";
+  const auto support_path = workspace_root / "support.sagan";
+  {
+    std::ofstream main_file(main_path);
+    main_file << "module main\nimport live from support\nfun main(): Int => live()\n";
+    std::ofstream support_file(support_path);
+    support_file << "module support\nfun disk(): Int => 1\nexport disk\n";
+  }
+  const auto main_identity = source::identity_from_path(source::document_id{100}, main_path);
+  const auto support_identity = source::identity_from_path(source::document_id{101}, support_path);
+  passed &= check(static_cast<bool>(overlays->open(
+                      support_identity.uri, 1, "module support\nfun live(): Int => 2\nexport live\n")),
+                  "open module overlay");
+  bool overlay_resolved = false;
+  try
+  {
+    const auto graph = modules::resolve(main_path, *overlays);
+    overlay_resolved = graph.modules.size() == 2 && graph.modules.front().name == "support" &&
+                       graph.modules.front().exports.front().public_name == "live";
+  }
+  catch (...) {}
+  passed &= check(overlay_resolved, "module resolver prefers unsaved overlay over disk");
+  overlays->close(support_identity.uri);
+  bool disk_rejected_live_import = false;
+  try { static_cast<void>(modules::resolve(main_path, *overlays)); }
+  catch (const std::runtime_error &error) { disk_rejected_live_import = std::string(error.what()).contains("does not export 'live'"); }
+  passed &= check(disk_rejected_live_import, "closing overlay restores disk module view");
+  std::filesystem::remove_all(workspace_root);
+
+  language_service::workspace workspace(overlays);
+  const source::document_uri dependency_uri{"untitled:dependency"};
+  const source::document_uri dependent_uri{"untitled:dependent"};
+  passed &= check(workspace.open(dependency_uri, 1, "fun value(): Int => 1\n") &&
+                      workspace.open(dependent_uri, 1, "fun result(): Int => 2\n"),
+                  "workspace tracks multiple open documents");
+  workspace.set_dependencies(dependent_uri, {dependency_uri});
+  auto superseded = workspace.begin_analysis(dependent_uri);
+  auto replacement_request = workspace.begin_analysis(dependent_uri);
+  auto superseded_result = language_service::analyze_document(superseded.value->document);
+  superseded_result = workspace.finish_analysis(*superseded.value, std::move(superseded_result));
+  passed &= check(superseded.value->cancellation.is_cancelled() && replacement_request &&
+                      superseded_result.state == diagnostics::result_state::stale,
+                  "new request cancels and supersedes older analysis for the same snapshot");
+  auto pending_dependent = workspace.begin_analysis(dependent_uri);
+  passed &= check(pending_dependent && workspace.replace(dependency_uri, 1, 2, "fun value(): Int => 3\n") &&
+                      pending_dependent.value->cancellation.is_cancelled(),
+                  "dependency edits cancel obsolete dependent analysis");
+  auto obsolete_result = language_service::analyze_document(pending_dependent.value->document);
+  obsolete_result = workspace.finish_analysis(*pending_dependent.value, std::move(obsolete_result));
+  passed &= check(obsolete_result.state == diagnostics::result_state::stale && !obsolete_result.value &&
+                      obsolete_result.diagnostics.empty(),
+                  "workspace rejects stale analysis publication");
+  const auto current_result = workspace.analyze(dependent_uri);
+  passed &= check(current_result.state == diagnostics::result_state::complete &&
+                      current_result.analyzed_version == 1,
+                  "workspace analyzes current snapshot after invalidation");
+  workspace.close(dependent_uri);
+  workspace.close(dependency_uri);
 
   return passed ? 0 : 1;
 }

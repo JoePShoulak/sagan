@@ -32,11 +32,13 @@ verified_by: null
 - `src/driver/native_runner.*`: temporary native builds, compiler invocation,
   executable launch, cleanup, and exit-code propagation.
 - `src/source/*`: immutable document identity, version, text, byte ranges, and
-  UTF-16-compatible line indexing.
+  UTF-16-compatible line indexing, plus disk/overlay source providers.
 - `src/diagnostics/*`: structured diagnostics/results, cancellation, and
   terminal/JSON presentation.
 - `src/language_service/*`: reusable strict and recovering document analysis
-  and versioned capability discovery.
+  and versioned capability discovery; workspace state adds document lifecycle,
+  cached analysis, dependency invalidation, cancellation, and stale-result
+  rejection.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
@@ -54,8 +56,10 @@ Lexical, syntax, and semantic failures are reported with source locations.
 
 The compiler objects are archived into `build/lib/libsagan-compiler.a`; the
 batch CLI links that library rather than owning a separate implementation.
-Future workspace, query, formatter, operation, debugger, and LSP layers extend
-the same compiler-owned contracts.
+Future semantic-query, formatter, operation, debugger, and LSP layers extend
+the same compiler-owned contracts. The module resolver already consumes the
+shared source-provider interface, so an unsaved imported file takes precedence
+over its disk version without alternate parsing logic.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> C++ emission

@@ -72,6 +72,16 @@ partial tree and bounded diagnostic set are produced where practical.
 
 ## Phase 3 — document store and workspace overlays
 
+**Status: foundation implemented.** Thread-safe disk and overlay providers now
+support open/change/save/close, monotonic versions, validated UTF-8 byte edits,
+multiple simultaneous buffers, and overlay-first module resolution. Workspace
+state caches current results, tracks dependencies, invalidates transitive
+dependents conservatively on source changes, cancels superseded requests, and
+turns obsolete completions into `stale` results. Project manifests remain disk
+configuration; every Sagan module source read uses the provider. Export-surface
+fingerprints and finer local-only invalidation are deferred optimizations that
+do not change the service contract.
+
 - Introduce disk and overlay `source_provider` implementations.
 - Implement open/change/save/close with monotonic versions and validated edits.
 - Refactor resolver/project discovery to read all source through the provider.

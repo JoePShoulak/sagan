@@ -12,8 +12,10 @@ verified_by: null
 Sagan does not yet ship a language server. The compiler does expose
 `--capabilities-json` using the `sagan.language-service/1` schema and currently
 reports strict checking, structured diagnostics, UTF-16 positions, and
-cancellation as available. Bounded lexical/syntax recovery and lossless source
-retention are also available; overlays and LSP transport remain unavailable.
+cancellation as available. Bounded lexical/syntax recovery, lossless source
+retention, versioned document overlays, overlay-first module resolution,
+dependency invalidation, cached reanalysis, cancellation, and stale-result
+rejection are also available. LSP transport remains unavailable.
 This document defines the guarantees
 the completed Sagan 1.0 server must satisfy and the capability-discovery shape
 clients may rely on. It is not a claim that blocked capabilities work today.

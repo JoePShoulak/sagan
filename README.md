@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.63.1](https://img.shields.io/badge/development-0.63.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.64.0](https://img.shields.io/badge/development-0.64.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -178,8 +178,12 @@ byte and UTF-16 positions, structured diagnostics, cancellation, strict and
 recovering document analysis, JSON diagnostics, and capability discovery. Its
 lossless syntax representation retains comments and whitespace, and bounded
 top-level recovery returns partial trees and multiple diagnostics for
-incomplete editor input. Overlays, semantic queries, formatting, refactoring,
-and LSP transport remain capability-disabled until their roadmap phases land.
+incomplete editor input. A thread-safe document store now handles versioned
+open/change/save/close overlays, and module imports resolve unsaved buffers
+before disk files. Workspace analysis caches current results, invalidates
+transitive dependents, cancels obsolete requests, and rejects stale
+publication. Semantic queries, formatting, refactoring, and LSP transport
+remain capability-disabled until their roadmap phases land.
 
 ## Build and explore
 
@@ -195,6 +199,7 @@ make geometry-demo
 bin/sagan --capabilities-json
 bin/sagan --diagnostics-json examples/type_error.sagan
 make editor-tooling-demo
+make workspace-demo
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 make ownership-demo

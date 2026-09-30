@@ -133,6 +133,7 @@ make package-demo
 make run-demo
 make geometry-demo
 make editor-tooling-demo
+make workspace-demo
 make optional-demo
 make weak-demo
 make payload-enum-demo
@@ -185,6 +186,9 @@ vectors, including translation and point subtraction, then demonstrates native
 `s(...)` spherical points and `s<...>` spherical vectors.
 `editor-tooling-demo` prints deliberately incomplete source, capability
 discovery, and the recovered structured diagnostics produced for it.
+`workspace-demo` shows an unsaved module overlay changing import resolution,
+then demonstrates dependency cancellation, stale-result rejection, and the
+return to disk contents after close.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 `weak-demo` shows a live weak reference resolving to `Some`, lets its strong

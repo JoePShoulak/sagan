@@ -41,7 +41,7 @@ namespace sagan::language_service
 
   auto supported_capabilities() -> capabilities
   {
-    return capabilities{diagnostics::schema_version, true, true, true, true, true, false, false};
+    return capabilities{diagnostics::schema_version, true, true, true, true, true, true, false};
   }
 
   auto capabilities_json() -> std::string
