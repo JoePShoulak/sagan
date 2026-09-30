@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.69.0](https://img.shields.io/badge/development-0.69.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.70.0](https://img.shields.io/badge/development-0.70.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -191,6 +191,12 @@ release cadence, channels, automation triggers, signing, publishing, support,
 rollback, and maintenance. The resulting policy governs the 1.0 release itself;
 1.0 is not complete merely because the implementation is feature-complete.
 Full VS Code extension work is paused and is not a 1.0 release gate.
+
+The 1.0 installer contract is Windows x64, self-contained and offline, with
+in-place upgrades, downgrade refusal, checksums, and Authenticode signing for
+public releases. Automated isolated-path tests cover implementation; the exact
+signed release candidate must also pass a clean Windows x64 machine or VM before
+publication.
 
 The compiler-owned editor-tooling track has begun without changing the held VS
 Code extension. The compiler builds as a reusable static library and exposes

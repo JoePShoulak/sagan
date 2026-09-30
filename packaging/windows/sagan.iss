@@ -23,13 +23,17 @@ OutputBaseFilename=sagan-{#AppVersion}-windows-x64
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64os
+ArchitecturesInstallIn64BitMode=x64os
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ChangesAssociations=yes
 ChangesEnvironment=yes
 MinVersion=10.0
+#ifdef SignToolName
+SignTool={#SignToolName}
+SignedUninstaller=yes
+#endif
 
 [Tasks]
 Name: addtopath; Description: "Add Sagan to PATH"; GroupDescription: "Command-line integration:"; Flags: checkedonce
@@ -63,6 +67,78 @@ Root: HKA; Subkey: "Software\Classes\Sagan.Source\shell\edit\command"; ValueType
 [Code]
 const
   PathValue = 'Path';
+  UninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{09D785A5-B94E-4D75-9CC9-E57831637DD5}_is1';
+
+function VersionPart(Version: String; Part: Integer): Integer;
+var
+  Index: Integer;
+  Separator: Integer;
+  Current: String;
+begin
+  Result := 0;
+  Current := Version;
+  for Index := 0 to Part do
+  begin
+    Separator := Pos('.', Current);
+    if Separator = 0 then
+    begin
+      if Index = Part then Result := StrToIntDef(Current, 0);
+      Exit;
+    end;
+    if Index = Part then
+    begin
+      Result := StrToIntDef(Copy(Current, 1, Separator - 1), 0);
+      Exit;
+    end;
+    Delete(Current, 1, Separator);
+  end;
+end;
+
+function CompareSemanticVersions(Left: String; Right: String): Integer;
+var
+  Part: Integer;
+  LeftPart: Integer;
+  RightPart: Integer;
+begin
+  Result := 0;
+  for Part := 0 to 2 do
+  begin
+    LeftPart := VersionPart(Left, Part);
+    RightPart := VersionPart(Right, Part);
+    if LeftPart < RightPart then
+    begin
+      Result := -1;
+      Exit;
+    end;
+    if LeftPart > RightPart then
+    begin
+      Result := 1;
+      Exit;
+    end;
+  end;
+end;
+
+function InstalledVersion(var Version: String): Boolean;
+begin
+  Result := RegQueryStringValue(HKCU, UninstallKey, 'DisplayVersion', Version);
+  if not Result then
+    Result := RegQueryStringValue(HKLM, UninstallKey, 'DisplayVersion', Version);
+end;
+
+function InitializeSetup(): Boolean;
+var
+  ExistingVersion: String;
+begin
+  Result := True;
+  if InstalledVersion(ExistingVersion) and
+     (CompareSemanticVersions(ExistingVersion, '{#AppVersion}') > 0) then
+  begin
+    SuppressibleMsgBox(
+      'Sagan ' + ExistingVersion + ' is already installed. Uninstall it before installing the older ' +
+      '{#AppVersion} release.', mbCriticalError, MB_OK, IDOK);
+    Result := False;
+  end;
+end;
 
 procedure GetEnvironmentLocation(var RootKey: Integer; var EnvironmentKey: String);
 begin

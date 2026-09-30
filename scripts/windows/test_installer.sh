@@ -19,7 +19,11 @@ MSYS2_ARG_CONV_EXCL='*' "$installer" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /C
 
 # Inspect imports before launching so a regression fails non-interactively
 # instead of presenting a missing-DLL dialog on a CI desktop.
-objdump="$install_dir/toolchain/ucrt64/bin/objdump.exe"
+objdump="${OBJDUMP:-/c/msys64/ucrt64/bin/objdump.exe}"
+if [[ ! -x "$objdump" ]]; then
+  echo "Installer testing requires objdump; set OBJDUMP to its path." >&2
+  exit 1
+fi
 for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-launch.exe"; do
   imports="$("$objdump" -p "$executable" | grep 'DLL Name')"
   if printf '%s\n' "$imports" | grep -Eiq 'lib(gcc|stdc\+\+|winpthread)'; then
@@ -44,6 +48,26 @@ PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
 # This invokes the bundled compiler and then executes the generated program,
 # proving Sagan can add only the child toolchain environment it actually needs.
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" "$repo_root/examples/run_demo.sagan"
+
+# Simulate a newer installed release and prove the older package is refused.
+# The test owns this current-user installation and restores its metadata before
+# continuing, so it cannot disturb a machine-wide Sagan installation.
+uninstall_key='HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{09D785A5-B94E-4D75-9CC9-E57831637DD5}_is1'
+downgrade_log="$repo_root/build/installer-downgrade.log"
+MSYS2_ARG_CONV_EXCL='*' reg.exe add "$uninstall_key" /v DisplayVersion /t REG_SZ /d 999.0.0 /f >/dev/null
+rm -f "$downgrade_log"
+if MSYS2_ARG_CONV_EXCL='*' "$installer" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER \
+  "/DIR=$(cygpath -w "$install_dir")" "/LOG=$(cygpath -w "$downgrade_log")"; then
+  echo "The installer unexpectedly allowed a downgrade from 999.0.0 to $version." >&2
+  exit 1
+fi
+grep -Fq 'InitializeSetup returned False; aborting.' "$downgrade_log"
+MSYS2_ARG_CONV_EXCL='*' reg.exe add "$uninstall_key" /v DisplayVersion /t REG_SZ /d "$version" /f >/dev/null
+
+# Re-running the same installer exercises the supported in-place upgrade path.
+MSYS2_ARG_CONV_EXCL='*' "$installer" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER "/DIR=$(cygpath -w "$install_dir")" \
+  /TASKS="addtopath,fileassociation"
+PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
 launcher_data="$repo_root/build/installer-launcher-data"
 mkdir -p "$launcher_data"
 PATH="$runtime_isolated_path" LOCALAPPDATA="$(cygpath -w "$launcher_data")" \

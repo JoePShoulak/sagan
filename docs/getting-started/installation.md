@@ -23,6 +23,12 @@ start normally from a terminal or File Explorer without requiring MSYS2's
 `PATH`. The bundled toolchain remains available internally for
 compiling generated C++ programs.
 
+The installer is a self-contained offline package. Supported upgrades install
+in place using the stable Sagan application identity and preserve the selected
+location and integrations. Installing an older Sagan version over a newer one
+is refused; uninstall the newer version first when an explicit downgrade is
+necessary. Windows ARM64, Linux, and macOS are not supported by Sagan 1.0.
+
 After installation, open a new terminal and run:
 
 ```bash
@@ -82,8 +88,21 @@ Build the Windows installer locally with Inno Setup 6 installed:
 
 ```bash
 bash scripts/windows/build_installer.sh
+bash scripts/windows/verify_installer_artifact.sh
 bash scripts/windows/test_installer.sh
 ```
+
+Development installers may be unsigned. A public release must be built with
+`SAGAN_SIGNTOOL_COMMAND` set to an Inno Setup-compatible Authenticode signing
+command and must pass:
+
+```bash
+bash scripts/windows/verify_installer_artifact.sh --release
+```
+
+Every build also produces a sibling `.exe.sha256` checksum. Signing credentials
+must be supplied by protected release infrastructure and must never be stored in
+the repository.
 
 The smoke test installs into an isolated directory and deliberately removes
 all UCRT64/MinGW runtime directories from `PATH`. It verifies direct CLI
@@ -91,6 +110,12 @@ startup, compilation and execution of a generated program, windowed Explorer
 dispatch through `sagan-launch.exe`, file association, PATH registration, and
 clean uninstallation. This prevents a developer or CI MSYS2 installation from
 masking missing runtime dependencies in the packaged executables.
+
+CI and the isolated-path smoke test establish implementation readiness. Before
+publishing 1.0, the exact signed release candidate must still be installed,
+run, upgraded, associated with `.sagan`, and uninstalled on a clean Windows x64
+computer or VM. Until that evidence is recorded, installer acceptance remains
+pending even when automated checks pass.
 
 For documentation tooling, install Python 3 and run:
 

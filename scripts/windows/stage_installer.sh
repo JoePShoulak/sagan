@@ -29,11 +29,68 @@ cp "$repo_root/editors/vscode-sagan/LICENSE.txt" "$stage_dir/licenses/Sagan-GPL-
 cp "$repo_root/third_party/uni-algo/LICENSE.md" "$stage_dir/licenses/uni-algo-MIT.txt"
 cp "$repo_root/third_party/unicode/LICENSE.txt" "$stage_dir/licenses/Unicode.txt"
 
-for directory in bin include lib libexec x86_64-w64-mingw32; do
-  if [[ -d "$toolchain_root/$directory" ]]; then
-    cp -a "$toolchain_root/$directory" "$stage_dir/toolchain/ucrt64/"
+compiler_target="$("$toolchain_root/bin/g++.exe" -dumpmachine)"
+compiler_version="$("$toolchain_root/bin/g++.exe" -dumpversion)"
+staged_toolchain="$stage_dir/toolchain/ucrt64"
+
+# Ship only the GCC C++ compilation closure Sagan needs. Copying the complete
+# UCRT64 prefix also bundles unrelated development tools, debuggers, Python,
+# tests, and documentation, making the offline installer unnecessarily large.
+mkdir -p \
+  "$staged_toolchain/bin" \
+  "$staged_toolchain/include" \
+  "$staged_toolchain/lib" \
+  "$staged_toolchain/lib/gcc/$compiler_target" \
+  "$staged_toolchain/$compiler_target"
+
+for executable in g++.exe gcc.exe as.exe ld.exe; do
+  if [[ ! -f "$toolchain_root/bin/$executable" ]]; then
+    echo "The Windows toolchain is missing $toolchain_root/bin/$executable." >&2
+    exit 1
   fi
+  cp -L "$toolchain_root/bin/$executable" "$staged_toolchain/bin/"
 done
+
+# Compiler processes load these MinGW runtime dependencies. Generated Sagan
+# programs also use the C++ runtime DLL unless callers request static linkage.
+for runtime_dll in \
+  libgcc_s_seh-1.dll libgmp-10.dll libiconv-2.dll libintl-8.dll \
+  libisl-23.dll libmpc-3.dll libmpfr-6.dll libstdc++-6.dll \
+  libwinpthread-1.dll libzstd.dll zlib1.dll; do
+  cp -L "$toolchain_root/bin/$runtime_dll" "$staged_toolchain/bin/"
+done
+cp -a "$toolchain_root/include/." "$staged_toolchain/include/"
+# The MinGW platform headers share this prefix with optional third-party SDKs.
+# Remove packages that cannot be reached by Sagan's generated standard C++.
+for unrelated_headers in \
+  gdb isl libiberty lzma ncurses ncursesw openssl pkgconf python3.12 \
+  readline tcl8.6 tk8.6 tre X11; do
+  rm -rf "$staged_toolchain/include/$unrelated_headers"
+done
+cp -a "$toolchain_root/lib/gcc/$compiler_target/$compiler_version" \
+  "$staged_toolchain/lib/gcc/$compiler_target/"
+rm -rf \
+  "$staged_toolchain/lib/gcc/$compiler_target/$compiler_version/install-tools" \
+  "$staged_toolchain/lib/gcc/$compiler_target/$compiler_version/plugin"
+rm -f \
+  "$staged_toolchain/lib/gcc/$compiler_target/$compiler_version/cc1.exe" \
+  "$staged_toolchain/lib/gcc/$compiler_target/$compiler_version/g++-mapper-server.exe" \
+  "$staged_toolchain/lib/gcc/$compiler_target/$compiler_version/libgcov.a"
+
+# GCC's default C++ link line resolves these CRT objects and import libraries
+# from the prefix lib directory. Do not ship unrelated third-party archives.
+for runtime_library in \
+  crt2.o default-manifest.o libstdc++.a libstdc++.dll.a libmingw32.a \
+  libgcc_s.a libmingwex.a libmsvcrt.a libkernel32.a libpthread.a \
+  libadvapi32.a libshell32.a libuser32.a; do
+  cp -L "$toolchain_root/lib/$runtime_library" "$staged_toolchain/lib/"
+done
+cp -a "$toolchain_root/$compiler_target/." "$staged_toolchain/$compiler_target/"
+
+if find "$staged_toolchain" -type f \( -iname 'python*.exe' -o -iname 'gdb*.exe' \) -print -quit | grep -q .; then
+  echo "The staged compiler unexpectedly contains an unrelated Python or GDB executable." >&2
+  exit 1
+fi
 
 printf '%s\n' "$version" > "$stage_dir/VERSION"
 
@@ -41,4 +98,6 @@ unset CXX
 "$stage_dir/bin/sagan.exe" --version
 "$stage_dir/bin/sagan.exe" "$repo_root/examples/run_demo.sagan"
 
+toolchain_megabytes="$(du -sm "$staged_toolchain" | awk '{print $1}')"
+echo "Staged GCC C++ toolchain size: ${toolchain_megabytes} MiB"
 echo "Staged the self-contained Windows distribution at $repo_root/$stage_dir"

@@ -160,6 +160,7 @@ nav:
       - contributing/index.md
       - Development setup: contributing/development-setup.md
       - Versioning: contributing/versioning.md
+      - Windows installer release gate: contributing/windows-installer-release.md
       - Documentation workflow: contributing/documentation.md
       - Documentation roadmaps: contributing/documentation-roadmaps.md
       - Self-hosting: contributing/hosting.md

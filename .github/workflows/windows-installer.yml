@@ -44,6 +44,10 @@ jobs:
         shell: msys2 {0}
         run: bash scripts/windows/build_installer.sh
 
+      - name: Verify development artifact and checksum
+        shell: msys2 {0}
+        run: bash scripts/windows/verify_installer_artifact.sh
+
       - name: Smoke-test install, execution, and uninstall
         shell: msys2 {0}
         run: bash scripts/windows/test_installer.sh
@@ -52,5 +56,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: sagan-windows-x64-installer
-          path: build/installer/*.exe
+          path: |
+            build/installer/*.exe
+            build/installer/*.exe.sha256
           if-no-files-found: error

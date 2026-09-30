@@ -171,6 +171,13 @@ and show a native diagnostic dialog. Release artifacts will
 be published through GitHub's release/package facilities; HP1 may additionally
 host or mirror installer and package data where convenient.
 
+Installer policy is settled for 1.0: Windows x64 only, a self-contained offline
+package, in-place upgrades, refused downgrades, SHA-256 sidecars, and mandatory
+Authenticode signing for public releases. Development artifacts may remain
+unsigned. Automated isolated-environment testing is the implementation gate;
+a clean Windows x64 computer or VM run of the exact signed release candidate is
+a separate release-blocking acceptance gate and is currently pending.
+
 Before 1.0 is declared or published, hold a dedicated lifecycle and
 release-operations review. It must settle release cadence and channels, the
 events that trigger builds, testing, signing, publication, documentation
