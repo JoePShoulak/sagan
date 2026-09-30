@@ -7,6 +7,7 @@
 #include "../semantic/analyzer.hpp"
 #include "../semantic/semantic_error.hpp"
 #include "../semantic/type_checker.hpp"
+#include "../syntax/syntax.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -40,7 +41,7 @@ namespace sagan::language_service
 
   auto supported_capabilities() -> capabilities
   {
-    return capabilities{diagnostics::schema_version, true, true, true, true, false, false, false};
+    return capabilities{diagnostics::schema_version, true, true, true, true, true, false, false};
   }
 
   auto capabilities_json() -> std::string
@@ -118,6 +119,28 @@ namespace sagan::language_service
           diagnostics::result_state::incomplete, {},
           {make_diagnostic(document, active_phase, error.range, error.what())}, document.version()};
     }
+  }
+
+  auto analyze_document(const source::document_snapshot &document, const check_options options,
+                        const diagnostics::cancellation_token cancellation)
+    -> diagnostics::analysis_result<check_summary>
+  {
+    auto syntax_result = syntax::analyze(document, syntax::analysis_options{true, 64}, cancellation);
+    if (syntax_result.state == diagnostics::result_state::cancelled)
+      return cancelled(document);
+    if (syntax_result.state != diagnostics::result_state::complete)
+    {
+      check_summary summary;
+      if (syntax_result.value)
+      {
+        summary.token_count = syntax_result.value->tokens.size();
+        if (syntax_result.value->recovered_ast)
+          summary.statement_count = syntax_result.value->recovered_ast->statements.size();
+      }
+      return diagnostics::analysis_result<check_summary>{
+          syntax_result.state, summary, std::move(syntax_result.diagnostics), document.version()};
+    }
+    return check_document(document, options, cancellation);
   }
 }
 

@@ -19,6 +19,8 @@ verified_by: null
 - `src/parser/parser.*`: recursive-descent parser for the current Sagan grammar.
 - `src/parser/ast_node.*`: typed, source-spanned Sagan syntax tree.
 - `src/parser/ast_render.*`: text, DOT, SVG, and interactive HTML AST output.
+- `src/syntax/*`: lossless token/trivia retention, snapshot-local syntax
+  identity, bounded lexical/parser recovery, and partial top-level trees.
 - `src/semantic/analyzer.*`: lexical scopes, symbols, name resolution, and a
   printable semantic model.
 - `src/semantic/type_checker.*`: scalar inference, compatibility,
@@ -33,8 +35,8 @@ verified_by: null
   UTF-16-compatible line indexing.
 - `src/diagnostics/*`: structured diagnostics/results, cancellation, and
   terminal/JSON presentation.
-- `src/language_service/*`: reusable strict document checking and versioned
-  capability discovery.
+- `src/language_service/*`: reusable strict and recovering document analysis
+  and versioned capability discovery.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
@@ -52,8 +54,8 @@ Lexical, syntax, and semantic failures are reported with source locations.
 
 The compiler objects are archived into `build/lib/libsagan-compiler.a`; the
 batch CLI links that library rather than owning a separate implementation.
-Future workspace, recovery, query, formatter, operation, debugger, and LSP
-layers extend the same compiler-owned contracts.
+Future workspace, query, formatter, operation, debugger, and LSP layers extend
+the same compiler-owned contracts.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> C++ emission

@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.62.0](https://img.shields.io/badge/development-0.62.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.63.0](https://img.shields.io/badge/development-0.63.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -172,13 +172,14 @@ maintenance. Full VS Code extension readiness will be coordinated in the same
 transition period under separately supplied requirements.
 
 The compiler-owned editor-tooling track has begun without changing the held VS
-Code extension. The compiler now builds as a reusable static library and
-exposes the first versioned `sagan.language-service/1` contracts: document
-URI/path/version identity, UTF-8 byte and UTF-16 position conversion,
-structured diagnostics, cancellation, strict document checking, JSON
-diagnostics, and capability discovery. Recovery, overlays, semantic queries,
-formatting, refactoring, and LSP transport remain capability-disabled until
-their roadmap phases land.
+Code extension. The compiler builds as a reusable static library and exposes
+versioned `sagan.language-service/1` contracts for document identity, UTF-8
+byte and UTF-16 positions, structured diagnostics, cancellation, strict and
+recovering document analysis, JSON diagnostics, and capability discovery. Its
+lossless syntax representation retains comments and whitespace, and bounded
+top-level recovery returns partial trees and multiple diagnostics for
+incomplete editor input. Overlays, semantic queries, formatting, refactoring,
+and LSP transport remain capability-disabled until their roadmap phases land.
 
 ## Build and explore
 
@@ -193,6 +194,7 @@ make run-demo
 make geometry-demo
 bin/sagan --capabilities-json
 bin/sagan --diagnostics-json examples/type_error.sagan
+make editor-tooling-demo
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 make ownership-demo

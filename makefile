@@ -23,7 +23,8 @@ LIBRARY_SOURCES := \
 	src/parser/unicode.cpp \
 	src/semantic/analyzer.cpp \
 	src/semantic/type_checker.cpp \
-	src/source/source.cpp
+	src/source/source.cpp \
+	src/syntax/syntax.cpp
 
 LIBRARY_OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(LIBRARY_SOURCES))
 CLI_OBJECTS := obj/main.o obj/version.o
@@ -121,6 +122,9 @@ run-demo: $(TARGET)
 
 geometry-demo: $(TARGET)
 	bash scripts/geometry_demo.sh
+
+editor-tooling-demo: $(TARGET)
+	bash scripts/editor_tooling_demo.sh
 
 execution-demo: $(TARGET)
 	bash scripts/execution_demo.sh

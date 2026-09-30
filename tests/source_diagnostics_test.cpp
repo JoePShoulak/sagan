@@ -1,7 +1,9 @@
 #include "../src/diagnostics/diagnostic.hpp"
 #include "../src/language_service/language_service.hpp"
 #include "../src/source/source.hpp"
+#include "../src/syntax/syntax.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -90,13 +92,102 @@ auto main() -> int
   const auto capabilities = language_service::capabilities_json();
   passed &= check(capabilities.contains("\"schema\":\"sagan.language-service/1\"") &&
                       capabilities.contains("\"structuredDiagnostics\":true") &&
-                      capabilities.contains("\"recovery\":false") &&
+                      capabilities.contains("\"recovery\":true") &&
                       capabilities.contains("\"languageServer\":false"),
                   "versioned capability discovery");
   passed &= check(diagnostics::default_code(diagnostics::phase::runtime) == "SAG-RUN-0001" &&
                       diagnostics::state_name(diagnostics::result_state::stale) == "stale" &&
                       diagnostics::severity_name(diagnostics::severity::hint) == "hint",
                   "stable diagnostic vocabulary");
+
+  const std::string preserved_source =
+      "// ordinary comment\n/** declaration docs */\nfun 🚀(): Int => 42  /* trailing */\n";
+  source::document_snapshot preserved_document(
+      source::document_identity{source::document_id{10}, source::document_uri{"file:///preserved.sagan"}, {}},
+      11, preserved_source);
+  auto preserved = syntax::analyze(preserved_document);
+  std::string reconstructed;
+  if (preserved.value)
+  {
+    for (const auto &token : preserved.value->tokens)
+    {
+      for (const auto &trivia : token.leading_trivia) reconstructed += trivia.text;
+      reconstructed += token.source_text;
+    }
+    for (const auto &trivia : preserved.value->trailing_trivia) reconstructed += trivia.text;
+  }
+  passed &= check(preserved.state == diagnostics::result_state::complete &&
+                      preserved.value && preserved.value->strict_ast &&
+                      reconstructed == preserved_source,
+                  "lossless syntax preserves comments and whitespace");
+  bool saw_line_comment = false;
+  bool saw_block_comment = false;
+  if (preserved.value)
+  {
+    for (const auto &token : preserved.value->tokens)
+      for (const auto &trivia : token.leading_trivia)
+      {
+        saw_line_comment |= trivia.kind == syntax::trivia_kind::line_comment;
+        saw_block_comment |= trivia.kind == syntax::trivia_kind::block_comment;
+      }
+    for (const auto &trivia : preserved.value->trailing_trivia)
+      saw_block_comment |= trivia.kind == syntax::trivia_kind::block_comment;
+  }
+  passed &= check(saw_line_comment && saw_block_comment, "lossless syntax classifies ordinary comments");
+
+  const std::string partial_source =
+      "fun good(): Int => 1\nfun bad(: Int => 2\nlet = 3\nfun later(): Int => 4\n";
+  source::document_snapshot partial_document(
+      source::document_identity{source::document_id{11}, source::document_uri{"file:///partial.sagan"}, {}},
+      12, partial_source);
+  auto partial = syntax::analyze(partial_document);
+  passed &= check(partial.state == diagnostics::result_state::recovered && partial.value &&
+                      !partial.value->strict_ast && partial.value->recovered_ast &&
+                      partial.value->recovered_ast->statements.size() == 2 &&
+                      partial.diagnostics.size() == 2,
+                  "parser recovery keeps valid declarations and reports multiple errors");
+  auto service_partial = language_service::analyze_document(partial_document);
+  passed &= check(service_partial.state == diagnostics::result_state::recovered &&
+                      service_partial.value && service_partial.value->statement_count == 2 &&
+                      service_partial.diagnostics.size() == 2,
+                  "language service exposes recovered syntax results");
+
+  const std::string lexical_source = "let first = @\nlet second = ~\n";
+  source::document_snapshot lexical_document(
+      source::document_identity{source::document_id{12}, source::document_uri{"file:///lexical.sagan"}, {}},
+      13, lexical_source);
+  auto lexical = syntax::analyze(lexical_document);
+  const auto lexical_count = std::count_if(lexical.diagnostics.begin(), lexical.diagnostics.end(), [](const auto &value)
+  {
+    return value.owner == diagnostics::phase::lexical;
+  });
+  passed &= check(lexical.state == diagnostics::result_state::recovered && lexical.value &&
+                      lexical_count == 2,
+                  "lexer recovery reports multiple malformed regions");
+
+  auto strict_partial = syntax::analyze(partial_document, syntax::analysis_options{false, 64});
+  passed &= check(strict_partial.state == diagnostics::result_state::incomplete && strict_partial.value &&
+                      !strict_partial.value->recovered_ast && strict_partial.diagnostics.size() == 1,
+                  "strict syntax analysis remains fail-fast");
+
+  diagnostics::cancellation_source syntax_cancellation;
+  syntax_cancellation.cancel();
+  auto cancelled_syntax = syntax::analyze(preserved_document, {}, syntax_cancellation.token());
+  passed &= check(cancelled_syntax.state == diagnostics::result_state::cancelled && !cancelled_syntax.value,
+                  "syntax analysis honors cancellation");
+
+  bool prefix_safe = true;
+  for (std::size_t length = 0; length <= preserved_source.size(); ++length)
+  {
+    source::document_snapshot prefix_document(
+        source::document_identity{source::document_id{20 + length}, source::document_uri{"untitled:prefix"}, {}},
+        static_cast<source::document_version>(length), preserved_source.substr(0, length));
+    const auto prefix = syntax::analyze(prefix_document, syntax::analysis_options{true, 8});
+    prefix_safe &= prefix.state == diagnostics::result_state::complete ||
+                   prefix.state == diagnostics::result_state::recovered;
+    prefix_safe &= prefix.diagnostics.size() <= 8;
+  }
+  passed &= check(prefix_safe, "every cursor prefix produces a bounded syntax result");
 
   return passed ? 0 : 1;
 }

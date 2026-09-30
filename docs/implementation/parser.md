@@ -10,8 +10,11 @@ verified_by: null
 # Parser
 **Status: complete for the current syntax specification.**
 
-The parser consumes the token stream and constructs typed, ownership-safe Sagan
-syntax trees with source-spanned diagnostics.
+The strict parser consumes the token stream and constructs typed,
+ownership-safe Sagan syntax trees with source-spanned diagnostics. The separate
+compiler-owned `src/syntax` layer wraps it for editor workloads, retaining
+trivia and exact source while recovering independent top-level declarations
+after malformed or incomplete input.
 
 ## Implemented slices
 
@@ -88,8 +91,10 @@ Focused diagnostics cover malformed assignments, postfix and member access,
 control flow, declarations and types, string interpolation, collections,
 matching, exceptions, lambdas, modules, documentation-comment placement, and
 other established grammar rules. `bash scripts/parser_demo.sh` runs the broad
-successful fixture and the focused failure fixtures together.
+successful fixture and the focused failure fixtures together. Run
+`make editor-tooling-demo` to see deliberately incomplete source produce
+multiple structured diagnostics and a recovered compiler result.
 
-The parser now covers the complete current concrete grammar. Semantic analysis
-is the next compiler stage. Error recovery beyond the first syntax error is a
-future usability enhancement rather than a blocker for parser completion.
+The parser now covers the complete current concrete grammar. Strict compilation
+still rejects the first malformed construct; editor analysis instead provides
+bounded recovery without loosening the language grammar.

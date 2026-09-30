@@ -81,6 +81,15 @@ expect_failure "structured lexical diagnostic" 1 '"code":"SAG-LEX-0001"' \
   "$binary" --diagnostics-json examples/tokenizer_error.sagan
 expect_failure "structured syntax diagnostic" 1 '"code":"SAG-SYN-0001"' \
   "$binary" --diagnostics-json examples/parser_error.sagan
+recovery_output="$($binary --diagnostics-json examples/editor_recovery_demo.sagan 2>&1 || true)"
+recovery_count="$(grep -o '"code":"SAG-SYN-0001"' <<<"$recovery_output" | wc -l | tr -d ' ')"
+[[ "$recovery_count" -eq 2 ]] || {
+  echo "[FAIL] recovered structured diagnostics: expected 2 syntax diagnostics, got $recovery_count" >&2
+  echo "$recovery_output" >&2
+  exit 1
+}
+grep -Fq '"state":"recovered"' <<<"$recovery_output"
+echo "[PASS] recovered structured diagnostics"
 expect_failure "structured type diagnostic" 1 '"code":"SAG-TYP-0001"' \
   "$binary" --diagnostics-json examples/type_error.sagan
 expect_output "weak ownership cycle type model" "TypeModel" \

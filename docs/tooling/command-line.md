@@ -67,10 +67,12 @@ configured entry, and returns its exit code.
 manifest or discovers the nearest manifest for a source file; a loose file
 prints `console`.
 `--capabilities-json` prints the versioned compiler-service schema and granular
-implemented/unavailable feature flags. `--diagnostics-json` performs the strict
-lexical, syntax, semantic, and type check through the reusable language-service
-API and prints one machine-readable JSON document. It exits successfully only
-for a complete check; this is an automation/testing interface, not the future
+implemented/unavailable feature flags. `--diagnostics-json` performs recovering
+lexical and syntax analysis followed, for complete syntax, by strict semantic
+and type checking through the reusable language-service API. It prints one
+machine-readable JSON document, including `recovered` state and multiple
+diagnostics where applicable. It exits successfully only for a complete check;
+this is an automation/testing interface, not the future
 stdio Language Server Protocol transport.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
@@ -130,6 +132,7 @@ make module-demo
 make package-demo
 make run-demo
 make geometry-demo
+make editor-tooling-demo
 make optional-demo
 make weak-demo
 make payload-enum-demo
@@ -180,6 +183,8 @@ manifest-backed package without an external build script.
 `geometry-demo` executes the affine distinction between points and displacement
 vectors, including translation and point subtraction, then demonstrates native
 `s(...)` spherical points and `s<...>` spherical vectors.
+`editor-tooling-demo` prints deliberately incomplete source, capability
+discovery, and the recovered structured diagnostics produced for it.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 `weak-demo` shows a live weak reference resolving to `Some`, lets its strong

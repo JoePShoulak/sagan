@@ -41,5 +41,8 @@ namespace sagan::language_service
   auto check_document(const source::document_snapshot &document, check_options options = {},
                       diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<check_summary>;
+  auto analyze_document(const source::document_snapshot &document, check_options options = {},
+                        diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<check_summary>;
 }
 

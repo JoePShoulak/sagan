@@ -1,0 +1,7 @@
+fun available(): Int => 1
+
+fun incomplete(: Int => 2
+
+let = 3
+
+fun still_available(): Int => 4

@@ -26,8 +26,8 @@ contract is not yet implemented; the extension must not reproduce it.
 | Semantic highlighting | Stable classification vocabulary and ranges | **Blocked** |
 | Document symbols | Hierarchical declaration index | **Blocked** |
 | Workspace symbols | Workspace semantic index | **Blocked** |
-| Folding | Recovering lossless syntax tree | **Blocked** |
-| Selection ranges | Syntax parent chains with precise ranges | **Blocked** |
+| Folding | Recovering lossless syntax tree | **Foundation available; fine-grained block nodes blocked** |
+| Selection ranges | Syntax parent chains with precise ranges | **Foundation available; expression parent chains blocked** |
 | Document links | Resolved import/module targets | **Blocked** |
 | Inlay hints | Resolved types/parameters with suppression rules | **Blocked** |
 | Rename | Versioned identity-based safe workspace edits | **Blocked** |

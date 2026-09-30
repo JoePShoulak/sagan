@@ -2340,7 +2340,7 @@ auto main(const int argc, char **argv) -> int
     document.emplace(sagan::source::identity_from_path(sagan::source::document_id{1}, path), 0, source);
     if (mode == output_mode::diagnostics_json)
     {
-      const auto checked = sagan::language_service::check_document(*document);
+      const auto checked = sagan::language_service::analyze_document(*document);
       std::cout << sagan::diagnostics::render_json(*document, checked.state, checked.diagnostics);
       return checked.state == sagan::diagnostics::result_state::complete ? 0 : 1;
     }

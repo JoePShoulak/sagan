@@ -51,6 +51,15 @@ diagnostic snapshots pass Unicode/emoji/CRLF tests.
 
 ## Phase 2 — lossless and recovering syntax
 
+**Status: foundation implemented.** A reusable lossless syntax layer preserves
+ordinary comments, documentation-comment tokens, whitespace, newlines, exact
+source text, and snapshot-local token/node identities. Recovering analysis
+collects bounded lexical and syntax diagnostics, partitions malformed top-level
+input at declaration boundaries, and retains successfully parsed declarations
+in a partial AST. Arbitrary cursor prefixes are covered by focused tests. Fine-
+grained expression nodes, inserted missing-token nodes, and deeper nested-block
+recovery remain future refinements for position queries.
+
 - Preserve ordinary comments, documentation comments, whitespace, newlines, and
   required delimiter trivia in a lossless token/syntax representation.
 - Add stable snapshot-local node IDs and precise name/type/operator ranges.

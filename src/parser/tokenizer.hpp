@@ -59,6 +59,7 @@ namespace parser
 		auto get_token() -> std::optional<token>;
 		auto started() const -> bool;
 		auto empty() const -> bool;
+		auto recover_after_error(span error_range) -> void;
 	};
 
 } // namespace parser
