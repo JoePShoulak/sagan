@@ -301,6 +301,8 @@
       
         
       
+        
+      
     
     
     
@@ -361,6 +363,42 @@
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/downloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downloads
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
               
             
               
@@ -504,7 +542,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -534,14 +572,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -808,7 +846,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -838,14 +876,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_7">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3892,8 +3930,9 @@
 </div>
 <h1 id="self-hosting">Self-hosting</h1>
 <p>The canonical URL is <code>https://sagan.shoulak.org/</code>. HP1 serves released
-documentation archives plus the continuously updated <code>experimental</code> version
-through an independently managed public route.</p>
+documentation archives, the continuously updated <code>experimental</code> version, and
+a verified stable-release mirror at <code>/downloads/</code> through an independently
+managed public route.</p>
 <h2 id="hermes-ecosystem-route">Hermes ecosystem route</h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>public DNS
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  -&gt; Frontdoor VIP 192.168.20.10
@@ -3914,6 +3953,12 @@ own public routing, certificates, and the public VIP.</p>
 <li><code>deploy/hp1/sagan-docs</code> starts, stops, and inspects the user-owned process.</li>
 <li><code>deploy/hp1/install-user.sh</code> atomically installs a staged release and adds a
   user crontab entry so it starts after reboot.</li>
+<li><code>deploy/releases/mirror.sh</code> verifies one immutable GitHub release and rebuilds
+  the public download catalog.</li>
+<li><code>deploy/releases/sync.sh</code> reconciles every published stable GitHub release
+  into the HP1 mirror.</li>
+<li><code>deploy/releases/index.py</code> creates <code>/downloads/index.html</code> and the
+  machine-readable <code>/downloads/releases.json</code> catalog.</li>
 <li><code>deploy/frontdoor/sagan.shoulak.org.conf</code> is the Apache route to integrate
   into the Frontdoor project on both peers.</li>
 <li><code>scripts/docs_versions.sh</code> publishes <code>experimental</code> or an approved immutable
@@ -3954,9 +3999,11 @@ the release gate:</p>
 <p>On HP1 itself, the CI runner uses the local-only route:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bash<span class="w"> </span>deploy/hosting/update.sh<span class="w"> </span>hp1-local
 </span></code></pre></div>
-<p>That command packages the generated <code>docs-site</code> branch, atomically advances the
-origin's <code>current</code> deployment symlink, restarts the unprivileged server, and verifies its
-loopback health endpoint. The lower-level local installer refuses to run unless
+<p>That command first reconciles stable GitHub releases, packages the generated
+<code>docs-site</code> branch, atomically advances the origin's <code>current</code> deployment
+symlink, exposes the verified mirror through that snapshot's <code>/downloads/</code>
+symlink, restarts the unprivileged server, and verifies its loopback health
+endpoint. The lower-level local installer refuses to run unless
 the deployment wrapper supplies its explicit safety flag. The origin launcher
 also removes GitHub's job-tracking marker from the long-lived server process so
 the runner does not clean it up when the deployment job finishes.</p>
@@ -3976,8 +4023,8 @@ and its documentation are approved:</p>
 <li>allow the release gate to create that immutable version, move <code>latest</code>, and
    set <code>latest</code> as the site-root default;</li>
 <li>allow the HP1 job to install the complete versioned site atomically; and</li>
-<li>verify the root, <code>latest</code>, the numbered release, and <code>experimental</code> through
-   the origin and public route.</li>
+<li>verify the root, <code>latest</code>, the numbered release, <code>experimental</code>, and
+   <code>/downloads/</code> through the origin and public route.</li>
 </ol>
 <p>Versioned files can be installed on HP1 without system privileges. DNS,
 certificate issuance, and Frontdoor changes remain separate hosting steps.</p>
@@ -4042,6 +4089,13 @@ Each snapshot contains every documentation version present in <code>docs-site</c
 deployment time. If a rollback is needed, point
 <code>~/.local/share/sagan-docs/current</code> at a known-good snapshot and restart the
 server. Do not rerun the public-route deployment for an origin-only problem.</p>
+<p>Mirrored binaries live separately under <code>~/.local/share/sagan-releases/vVERSION</code>
+so documentation snapshot rotation cannot remove them. The <code>latest</code> symlink
+tracks the highest mirrored stable semantic version. A mirror run never
+replaces an existing version directory; publish a new Sagan version to correct
+an asset. Published SHA-256 files are verified. For legacy releases that lack
+one, HP1 generates and serves its own checksum without modifying the downloaded
+asset.</p>
 
 
 
