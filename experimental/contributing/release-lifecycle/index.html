@@ -3745,6 +3745,12 @@ boundary.</p>
 documentation are immutable. A failed candidate receives the next identifier;
 an urgent correction uses the ordinary patch pipeline rather than replacing or
 skipping gates.</p>
+<p>Release tags use the project owner's registered SSH signing key. A checkout can
+verify a candidate independently from GitHub with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>-c<span class="w"> </span>gpg.ssh.allowedSignersFile<span class="o">=</span>.github/allowed_signers<span class="w"> </span>verify-tag<span class="w"> </span>vVERSION
+</span></code></pre></div>
+<p>The release workflow requires that local verification and GitHub's verified-tag
+result both succeed.</p>
 <h2 id="automated-gates">Automated gates</h2>
 <p>Tag automation verifies the signature, main ancestry, and history-derived
 version before running:</p>
