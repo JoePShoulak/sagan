@@ -4,6 +4,15 @@ set -euo pipefail
 export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+git_safe_root="$repo_root"
+if command -v cygpath >/dev/null 2>&1; then
+  git_safe_root="$(cygpath -m "$repo_root")"
+fi
+
+# Windows sandbox builds may run Git as a different account from the checkout
+# owner. Trust only this script's own repository for these read-only queries.
+repo_git() { git -c safe.directory="$git_safe_root" -C "$repo_root" "$@"; }
+
 config_path="$repo_root/version.conf"
 
 if [[ ! -f "$config_path" ]]; then
@@ -43,8 +52,8 @@ commit_impact() {
   local feature_pattern='^feat(\([^)]*\))?:'
   local fix_pattern='^fix(\([^)]*\))?:'
 
-  subject="$(git -C "$repo_root" show -s --format=%s "$commit")"
-  body="$(git -C "$repo_root" show -s --format=%b "$commit")"
+  subject="$(repo_git show -s --format=%s "$commit")"
+  body="$(repo_git show -s --format=%b "$commit")"
   if [[ "$subject" =~ $breaking_pattern ]] || printf '%s\n' "$body" | grep -qE '^BREAKING CHANGE:'; then
     printf 'major\n'
   elif [[ "$subject" =~ $feature_pattern ]]; then
@@ -60,7 +69,7 @@ current_numeric_version() {
   local version="$VERSION_BASE"
   local commit impact
   validate_version "$version"
-  git -C "$repo_root" cat-file -e "${VERSION_BASE_COMMIT}^{commit}" 2>/dev/null || {
+  repo_git cat-file -e "${VERSION_BASE_COMMIT}^{commit}" 2>/dev/null || {
     echo "Version base commit '$VERSION_BASE_COMMIT' is unavailable" >&2
     exit 1
   }
@@ -68,15 +77,15 @@ current_numeric_version() {
     [[ -n "$commit" ]] || continue
     impact="$(commit_impact "$commit")"
     version="$(bump_version "$version" "$impact")"
-  done < <(git -C "$repo_root" rev-list --reverse "${VERSION_BASE_COMMIT}..HEAD")
+  done < <(repo_git rev-list --reverse "${VERSION_BASE_COMMIT}..HEAD")
   printf '%s\n' "$version"
 }
 
 current_build_version() {
   local version revision dirty=""
   version="$(current_numeric_version)"
-  revision="$(git -C "$repo_root" rev-parse --short=8 HEAD 2>/dev/null || printf 'unknown')"
-  if [[ -n "$(git -C "$repo_root" status --porcelain --untracked-files=normal 2>/dev/null)" ]]; then
+  revision="$(repo_git rev-parse --short=8 HEAD 2>/dev/null || printf 'unknown')"
+  if [[ -n "$(repo_git status --porcelain --untracked-files=normal 2>/dev/null)" ]]; then
     dirty=".dirty"
   fi
   printf '%s+g%s%s\n' "$version" "$revision" "$dirty"

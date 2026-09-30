@@ -16,5 +16,6 @@ next_minor="$(bash scripts/version.sh next minor)"
 IFS=. read -r current_major current_minor current_patch <<<"$current_numeric"
 [[ "$next_minor" == "$current_major.$((current_minor + 1)).0" ]]
 bash scripts/version.sh current | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\+g[0-9a-f]{8}(\.dirty)?$'
+make -s get-version | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\+g[0-9a-f]{8}(\.dirty)?$'
 
 echo "Versioning tests passed."
