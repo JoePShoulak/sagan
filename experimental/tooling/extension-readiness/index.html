@@ -3773,12 +3773,12 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Hover</td>
 <td>Symbol/type/doc query plus semantic snapshot</td>
-<td><strong>Source documentation and inferred type query available; LSP transport blocked</strong></td>
+<td><strong>Compiler query and shared source/builtin documentation available; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Go to definition/type definition</td>
 <td>Stable symbols and indexed locations</td>
-<td><strong>Definition query available; type definition and LSP transport blocked</strong></td>
+<td><strong>Compiler queries available; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Implementations/conformances</td>
@@ -3793,12 +3793,12 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Signature help</td>
 <td>Resolved overload/signature query</td>
-<td><strong>Resolved strict-call type/active-argument query available; names, overload choices, incomplete calls, and LSP transport blocked</strong></td>
+<td><strong>Compiler query supports names, overload alternatives and conservative incomplete-call recovery; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Completion</td>
 <td>Parser context, semantic scope/type state, module/catalog metadata</td>
-<td><strong>Lexical-scope candidate query available; contextual completion and LSP transport blocked</strong></td>
+<td><strong>Compiler query supports scope, members, modules, imports and contextual keywords; external package catalogs and LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Semantic highlighting</td>
@@ -3823,7 +3823,7 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Selection ranges</td>
 <td>Syntax parent chains with precise ranges</td>
-<td><strong>Token/trivia, delimiter, declaration, and document expansion query available; expression parent chains and LSP transport blocked</strong></td>
+<td><strong>Typed-expression and recovering syntax expansion available; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Document links</td>
@@ -3833,7 +3833,7 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Inlay hints</td>
 <td>Resolved types/parameters with suppression rules</td>
-<td><strong>Blocked</strong></td>
+<td><strong>Compiler inferred-type and parameter-name hints available; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Rename</td>
@@ -3853,12 +3853,12 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Type hierarchy</td>
 <td>Type/conformance semantic index</td>
-<td><strong>Compiler index available; hierarchy query blocked</strong></td>
+<td><strong>Compiler query available for indexed conformances; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Call hierarchy</td>
 <td>Resolved callable/call-site index</td>
-<td><strong>Blocked</strong></td>
+<td><strong>Compiler query available for resolved calls; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Check/build/run tasks</td>
