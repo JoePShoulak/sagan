@@ -4164,6 +4164,11 @@ Strict type-checked snapshots also retain resolved call metadata so
 <code>signature_help</code> can report parameter/result types and the active argument,
 including nested calls. It does not yet provide parameter names, alternate
 overloads, documentation, or recovery for incomplete calls.
+<code>selection_ranges</code> returns strictly nested, innermost-first byte ranges from
+source tokens or trivia through balanced delimiters and top-level declarations
+to the whole document. It works without a type model; expression-level AST
+selection is not yet available. Invalid positions are <code>incomplete</code>, and a
+version mismatch is <code>stale</code>.
 A version or document-identity mismatch returns <code>stale</code>;
 invalid UTF-16 boundaries return <code>incomplete</code>. Its selection ranges come from
 recovering syntax tokens, so names in comments or strings do not masquerade as
