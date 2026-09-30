@@ -3830,7 +3830,7 @@ after malformed or incomplete input.</p>
 <p>The quickest visual demonstration is:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bash<span class="w"> </span>scripts/ast_demo.sh
 </span></code></pre></div>
-<p>It parses the expanded <code>examples/parser_demo.sagan</code>, writes
+<p>It parses <code>examples/ast.sagan</code>, writes
 <code>build/ast-demo.html</code>, and opens
 the page in the default Windows browser. The page embeds its SVG tree and has no
 Graphviz or network dependency. Its controls provide zoom in, zoom out, fit,
@@ -3843,8 +3843,8 @@ the renderer as their parser slices land.</p>
 <p>Focused diagnostics cover malformed assignments, postfix and member access,
 control flow, declarations and types, string interpolation, collections,
 matching, exceptions, lambdas, modules, documentation-comment placement, and
-other established grammar rules. <code>bash scripts/parser_demo.sh</code> runs the broad
-successful fixture and the focused failure fixtures together. Run
+other established grammar rules. <code>bash tests/integration/parser_test.sh</code> runs
+the broad successful fixture and focused failure fixtures together. Run
 <code>make editor-tooling-demo</code> to see deliberately incomplete source produce
 multiple structured diagnostics and a recovered compiler result.</p>
 <p>The parser now covers the complete current concrete grammar. Strict compilation

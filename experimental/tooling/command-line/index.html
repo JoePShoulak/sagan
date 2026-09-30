@@ -3842,21 +3842,21 @@ error dialog when execution fails.</p>
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
 large syntax trees.</p>
 <p>For the repository demonstrations, the concrete forms are:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bin/sagan<span class="w"> </span>examples/run_demo.sagan
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>examples/tokenizer_demo.sagan
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>bin/sagan<span class="w"> </span>--ast<span class="w"> </span>examples/parser_demo.sagan
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>bin/sagan<span class="w"> </span>--ast-dot<span class="w"> </span>examples/parser_demo.sagan
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>bin/sagan<span class="w"> </span>--ast-svg<span class="w"> </span>examples/parser_demo.sagan<span class="w"> </span>build/ast.svg
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>bin/sagan<span class="w"> </span>--ast-html<span class="w"> </span>examples/parser_demo.sagan<span class="w"> </span>build/ast.html
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>bin/sagan<span class="w"> </span>--semantic<span class="w"> </span>examples/semantic_demo.sagan
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>bin/sagan<span class="w"> </span>--types<span class="w"> </span>examples/type_demo.sagan
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>bin/sagan<span class="w"> </span>--entry<span class="w"> </span>examples/entry_demo.sagan
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>bin/sagan<span class="w"> </span>--modules<span class="w"> </span>examples/module_demo/main.sagan
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>examples/execution_demo.sagan<span class="w"> </span>build/execution_demo.cpp
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>bin/sagan<span class="w"> </span>--emit-cpp-modules<span class="w"> </span>examples/module_demo/main.sagan<span class="w"> </span>build/module_demo.cpp
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>bin/sagan<span class="w"> </span>--package<span class="w"> </span>examples/package_demo
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>examples/package_demo<span class="w"> </span>build/package_demo.cpp
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>bin/sagan<span class="w"> </span>--run-package<span class="w"> </span>examples/package_demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bin/sagan<span class="w"> </span>examples/showcase.sagan
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>tests/fixtures/syntax/tokenizer.sagan
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>bin/sagan<span class="w"> </span>--ast<span class="w"> </span>examples/ast.sagan
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>bin/sagan<span class="w"> </span>--ast-dot<span class="w"> </span>examples/ast.sagan
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>bin/sagan<span class="w"> </span>--ast-svg<span class="w"> </span>examples/ast.sagan<span class="w"> </span>build/ast.svg
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>bin/sagan<span class="w"> </span>--ast-html<span class="w"> </span>examples/ast.sagan<span class="w"> </span>build/ast.html
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>bin/sagan<span class="w"> </span>--semantic<span class="w"> </span>tests/fixtures/semantic/scopes.sagan
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>bin/sagan<span class="w"> </span>--types<span class="w"> </span>tests/fixtures/semantic/types.sagan
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>bin/sagan<span class="w"> </span>--entry<span class="w"> </span>tests/fixtures/semantic/entry.sagan
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>bin/sagan<span class="w"> </span>--modules<span class="w"> </span>tests/fixtures/modules/module_demo/main.sagan
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>examples/showcase.sagan<span class="w"> </span>build/execution_demo.cpp
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>bin/sagan<span class="w"> </span>--emit-cpp-modules<span class="w"> </span>tests/fixtures/modules/module_demo/main.sagan<span class="w"> </span>build/module_demo.cpp
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>bin/sagan<span class="w"> </span>--package<span class="w"> </span>examples/package
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>examples/package<span class="w"> </span>build/package_demo.cpp
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>bin/sagan<span class="w"> </span>--run-package<span class="w"> </span>examples/package
 </span></code></pre></div>
 <p>Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
@@ -3868,59 +3868,36 @@ limitations listed there.</p>
 <h2 id="make-targets">Make targets</h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>all
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>make<span class="w"> </span><span class="nb">test</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>make<span class="w"> </span>coverage
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>make<span class="w"> </span>demo
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>make<span class="w"> </span>parser-demo
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>make<span class="w"> </span>integration-test
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>make<span class="w"> </span>coverage
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>make<span class="w"> </span>tokenizer-inspect
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>make<span class="w"> </span>ast-demo
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>make<span class="w"> </span>semantic-demo
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>make<span class="w"> </span>type-demo
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>make<span class="w"> </span>entry-demo
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>make<span class="w"> </span>module-demo
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>make<span class="w"> </span>package-demo
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>make<span class="w"> </span>run-demo
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>make<span class="w"> </span>geometry-demo
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>make<span class="w"> </span>editor-tooling-demo
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>make<span class="w"> </span>workspace-demo
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>make<span class="w"> </span>semantic-index-demo
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>make<span class="w"> </span>optional-demo
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>make<span class="w"> </span>weak-demo
-</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>make<span class="w"> </span>payload-enum-demo
-</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>make<span class="w"> </span>generic-sum-demo
-</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>make<span class="w"> </span>generic-class-demo
-</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>make<span class="w"> </span>execution-demo
-</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>make<span class="w"> </span>get-version
-</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>make<span class="w"> </span>clean
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>make<span class="w"> </span>package-demo
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>make<span class="w"> </span>run-demo
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>make<span class="w"> </span>geometry-demo
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>make<span class="w"> </span>units-demo
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>make<span class="w"> </span>editor-tooling-demo
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>make<span class="w"> </span>get-version
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>make<span class="w"> </span>clean
 </span></code></pre></div>
 <p>The wrapper scripts used for the complete local checks are:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>scripts/test.sh
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>bash<span class="w"> </span>scripts/ast_demo.sh
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>bash<span class="w"> </span>scripts/ast_demo.sh<span class="w"> </span>--no-open
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>bash<span class="w"> </span>scripts/semantic_demo.sh
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>bash<span class="w"> </span>scripts/type_demo.sh
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>bash<span class="w"> </span>scripts/entry_demo.sh
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>bash<span class="w"> </span>scripts/module_demo.sh
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>bash<span class="w"> </span>scripts/package_demo.sh
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>bash<span class="w"> </span>scripts/run_demo.sh
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>bash<span class="w"> </span>scripts/geometry_demo.sh
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>bash<span class="w"> </span>scripts/optional_demo.sh
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>bash<span class="w"> </span>scripts/weak_demo.sh
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>bash<span class="w"> </span>scripts/payload_enum_demo.sh
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>bash<span class="w"> </span>scripts/generic_sum_demo.sh
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>bash<span class="w"> </span>scripts/generic_class_demo.sh
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>bash<span class="w"> </span>scripts/execution_demo.sh
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>bash<span class="w"> </span>tests/integration/run.sh
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>bash<span class="w"> </span>scripts/package_demo.sh
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>bash<span class="w"> </span>scripts/run_demo.sh
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>bash<span class="w"> </span>scripts/geometry_demo.sh
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>bash<span class="w"> </span>scripts/units_demo.sh
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
 </span></code></pre></div>
-<p><code>all</code> builds <code>bin/sagan</code>; <code>test</code> runs self-tests; <code>coverage</code> performs a clean
-instrumented build and produces LCOV output when <code>lcov</code> is installed; <code>demo</code> tokenizes the
-repository example; <code>parser-demo</code> prints the parser example's AST; <code>ast-demo</code>
-writes the visual source-and-tree page to <code>build/ast-demo.html</code>; <code>get-version</code>
-prints the calculated build identity; <code>semantic-demo</code> prints the successful
-semantic model; <code>type-demo</code> prints the successful type model; and <code>clean</code>
-removes compiler objects and the binary. <code>entry-demo</code> validates a successful
-entry point and focused control-flow failures. The test target exercises
-semantic/type/entry/code-generation success plus focused failures.
-<code>module-demo</code> prints a three-module dependency graph, executes selective and
-namespace imports, and verifies export visibility, filename, and cycle diagnostics.
+<p><code>all</code> builds <code>bin/sagan</code>; <code>test</code> runs unit, CLI, and integration tests;
+<code>integration-test</code> runs the fixture-driven end-to-end layer; <code>coverage</code> performs
+a clean instrumented build and produces LCOV output when <code>lcov</code> is installed;
+<code>tokenizer-inspect</code> prints tokens for the representative syntax fixture;
+<code>ast-demo</code> writes the visual source-and-tree page to <code>build/ast-demo.html</code>;
+<code>get-version</code> prints the calculated build identity; and <code>clean</code> removes compiler
+objects and binaries.
 <code>package-demo</code> prints a strict manifest and nested source tree, resolves dotted
 modules, emits C++, compiles it, and runs the resulting native program.
 <code>run-demo</code> proves that the compiler driver directly runs a source file and a
@@ -3928,30 +3905,12 @@ manifest-backed package without an external build script.
 <code>geometry-demo</code> executes the affine distinction between points and displacement
 vectors, including translation and point subtraction, then demonstrates native
 <code>s(...)</code> spherical points and <code>s&lt;...&gt;</code> spherical vectors.
+<code>units-demo</code> runs the representative physical-units program.
 <code>editor-tooling-demo</code> prints deliberately incomplete source, capability
 discovery, and the recovered structured diagnostics produced for it.
-<code>workspace-demo</code> shows an unsaved module overlay changing import resolution,
-then demonstrates dependency cancellation, stale-result rejection, and the
-return to disk contents after close.
-<code>semantic-index-demo</code> shows deterministic compiler-owned symbol identities,
-distinct overloads and shadowed locals, stable built-ins, documentation,
-canonical types, generic specializations, receiver members, face conformances,
-safe partial-tree indexing, and cross-module identity-based references.
-<code>optional-demo</code> prints its Sagan source and generated C++, then executes typed
-optional construction, payload matching, safe access, and lazy fallback chains.
-<code>weak-demo</code> shows a live weak reference resolving to <code>Some</code>, lets its strong
-owner leave scope, then shows the expired reference resolving to <code>None</code>.
-<code>payload-enum-demo</code> constructs typed cases, binds their payloads in an
-exhaustive match, shows the tagged-variant C++ excerpts, and runs the result.
-<code>generic-sum-demo</code> infers a top-level <code>identity&lt;T&gt;</code> function at its call sites,
-specializes a generic result enum from an expected type and explicit
-<code>Result&lt;Int, String&gt;.Failure(...)</code> qualification, then executes both payload matches.
-<code>generic-class-demo</code> infers <code>Box&lt;T&gt;</code> from constructor arguments, checks typed
-fields and methods, converts it to <code>Readable&lt;T&gt;</code>, executes an inherited generic
-face default with virtual <code>self</code> dispatch, infers a class method's independent
-<code>U</code>, and performs typed mutation through generated C++ templates.
-<code>execution-demo</code> shows the Sagan input and generated C++, builds it with <code>g++</code>,
-runs it, and reports the native exit code.</p>
+The former feature-specific demos are regression tests under
+<code>tests/integration/</code>; their Sagan inputs are organized by compiler phase under
+<code>tests/fixtures/</code>.</p>
 <p>Development versions have the form
 <code>MAJOR.MINOR.PATCH+gREVISION[.dirty]</code>. Conventional Commit markers after the
 configured baseline determine the numeric version, and <code>.dirty</code> records tracked

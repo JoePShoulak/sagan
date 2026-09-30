@@ -3677,7 +3677,7 @@ and fix containers. Terminal text and JSON are separate renderers. Strict batch
 checking remains fail-fast, while the editor-facing analysis path performs
 bounded lexical and top-level syntax recovery and can report multiple errors
 from one document. Capability discovery reports recovery as available.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bin/sagan<span class="w"> </span>--diagnostics-json<span class="w"> </span>examples/type_error.sagan
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bin/sagan<span class="w"> </span>--diagnostics-json<span class="w"> </span>tests/fixtures/semantic/type_error.sagan
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bin/sagan<span class="w"> </span>--capabilities-json
 </span></code></pre></div>
 <p>The reusable checker accepts immutable document snapshots and returns
@@ -3696,7 +3696,7 @@ invalid digit separators, incomplete scientific exponents, unknown characters,
 unknown or malformed escapes, and unterminated strings, interpolation, or block
 comments.</p>
 <p>Run the deliberate error example:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>examples/tokenizer_error.sagan
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>tests/fixtures/syntax/tokenizer_error.sagan
 </span></code></pre></div>
 <p>The diagnostic identifies the invalid source region for <code>1e</code>.</p>
 <p>The parser produces focused syntax diagnostics for malformed
@@ -3704,7 +3704,7 @@ assignments and member access, misplaced or incomplete declarations, invalid
 control flow, malformed interpolation and collections, exception constructs,
 documentation-comment placement, and other established grammar rules. Run the
 complete positive and negative demonstration with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>scripts/parser_demo.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>tests/integration/parser_test.sh
 </span></code></pre></div>
 <p>These errors establish grammatical validity only. Semantic and type failures
 also use the structured presentation in the strict document checker. Module,

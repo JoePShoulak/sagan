@@ -3674,8 +3674,8 @@
 <h1 id="code-generation">Code generation</h1>
 <p><code>bin/sagan --emit-cpp</code> translates a semantically validated executable unit into
 C++. With an output path it writes a <code>.cpp</code> file; without one it prints the
-translation. <code>scripts/execution_demo.sh</code> compiles that file with <code>g++</code> and runs
-the resulting native executable.</p>
+translation. <code>tests/integration/codegen_test.sh</code> compiles representative output
+with <code>g++</code> and runs the resulting native executable.</p>
 <p>The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
