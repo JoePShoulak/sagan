@@ -8,6 +8,29 @@ verified_by: null
 ---
 
 # Examples
+
+## Executable documentation examples
+
+Examples in this section are executable programs archived with the
+documentation. The documentation build runs every `.sagan` file under
+`docs/examples/executable/` and requires its output to match the adjacent
+`.stdout` file exactly.
+
+### Hello from Sagan
+
+```sagan
+--8<-- "docs/examples/executable/hello.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/hello.stdout"
+```
+
+[Download the Sagan source](executable/hello.sagan) or
+[view the expected output](executable/hello.stdout).
+
 ## Tokenizer demonstration
 
 `examples/tokenizer_demo.sagan` is the representative source fixture. It

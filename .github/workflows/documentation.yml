@@ -9,6 +9,7 @@ on:
       - "mkdocs.yml"
       - "requirements-docs.txt"
       - "scripts/docs.sh"
+      - "scripts/docs_examples_test.sh"
       - "scripts/docs_status.py"
       - "scripts/docs_release_check.py"
       - "scripts/docs_versions.sh"
@@ -16,6 +17,8 @@ on:
       - "deploy/docs/**"
       - "deploy/hp1/**"
       - "deploy/hosting/update.sh"
+      - "src/**"
+      - "makefile"
       - ".github/workflows/documentation.yml"
   pull_request:
     paths:
@@ -23,6 +26,7 @@ on:
       - "mkdocs.yml"
       - "requirements-docs.txt"
       - "scripts/docs.sh"
+      - "scripts/docs_examples_test.sh"
       - "scripts/docs_status.py"
       - "scripts/docs_release_check.py"
       - "scripts/docs_versions.sh"
@@ -30,6 +34,8 @@ on:
       - "deploy/docs/**"
       - "deploy/hp1/**"
       - "deploy/hosting/update.sh"
+      - "src/**"
+      - "makefile"
       - ".github/workflows/documentation.yml"
   workflow_dispatch:
     inputs:

@@ -18,6 +18,36 @@ bash scripts/docs.sh check
 bash scripts/docs_versions_test.sh
 ```
 
+## Executable examples
+
+Executable documentation examples live under `docs/examples/executable/` so
+their source and expected output are retained in every published documentation
+archive. Each `NAME.sagan` program must have a same-named `NAME.stdout` file
+containing its exact expected standard output. Programs must exit successfully
+and must not require interactive input.
+
+`bash scripts/docs.sh check` builds the current Sagan compiler, runs every
+archived executable example, and compares its output exactly after normalizing
+platform line endings before building the site. A missing expected-output
+file, an orphaned output file, a nonzero
+exit status, output on standard error, or any output difference fails the
+documentation build. Do not paste a second, independently maintained copy of
+an executable example into a page; use the snippets extension to display the
+archived source directly.
+
+Add a new example with this layout:
+
+```text
+docs/examples/executable/example-name.sagan
+docs/examples/executable/example-name.stdout
+```
+
+Then run:
+
+```bash
+bash scripts/docs.sh check
+```
+
 The unreleased documentation channel is named **experimental**. It is useful to
 project contributors and to anyone building from a clone of the live repository.
 Documentation changes on pull requests are validated on a GitHub-hosted runner.

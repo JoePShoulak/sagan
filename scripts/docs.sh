@@ -50,6 +50,7 @@ case "${1:-}" in
       echo "Documentation environment is missing. Run: bash scripts/docs.sh setup" >&2
       exit 1
     }
+    bash scripts/docs_examples_test.sh
     "$venv_python" -m mkdocs build --strict --clean
     ;;
   release-check)
