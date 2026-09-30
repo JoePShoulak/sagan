@@ -3702,6 +3702,14 @@ exceptions to distinct structured codes.</p>
 <p><strong>Exit:</strong> batch behavior remains unchanged; position round trips and structured
 diagnostic snapshots pass Unicode/emoji/CRLF tests.</p>
 <h2 id="phase-2-lossless-and-recovering-syntax">Phase 2 — lossless and recovering syntax</h2>
+<p><strong>Status: foundation implemented.</strong> A reusable lossless syntax layer preserves
+ordinary comments, documentation-comment tokens, whitespace, newlines, exact
+source text, and snapshot-local token/node identities. Recovering analysis
+collects bounded lexical and syntax diagnostics, partitions malformed top-level
+input at declaration boundaries, and retains successfully parsed declarations
+in a partial AST. Arbitrary cursor prefixes are covered by focused tests. Fine-
+grained expression nodes, inserted missing-token nodes, and deeper nested-block
+recovery remain future refinements for position queries.</p>
 <ul>
 <li>Preserve ordinary comments, documentation comments, whitespace, newlines, and
   required delimiter trivia in a lossless token/syntax representation.</li>

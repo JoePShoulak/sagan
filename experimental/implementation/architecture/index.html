@@ -3523,6 +3523,8 @@
 <li><code>src/parser/parser.*</code>: recursive-descent parser for the current Sagan grammar.</li>
 <li><code>src/parser/ast_node.*</code>: typed, source-spanned Sagan syntax tree.</li>
 <li><code>src/parser/ast_render.*</code>: text, DOT, SVG, and interactive HTML AST output.</li>
+<li><code>src/syntax/*</code>: lossless token/trivia retention, snapshot-local syntax
+  identity, bounded lexical/parser recovery, and partial top-level trees.</li>
 <li><code>src/semantic/analyzer.*</code>: lexical scopes, symbols, name resolution, and a
   printable semantic model.</li>
 <li><code>src/semantic/type_checker.*</code>: scalar inference, compatibility,
@@ -3537,8 +3539,8 @@
   UTF-16-compatible line indexing.</li>
 <li><code>src/diagnostics/*</code>: structured diagnostics/results, cancellation, and
   terminal/JSON presentation.</li>
-<li><code>src/language_service/*</code>: reusable strict document checking and versioned
-  capability discovery.</li>
+<li><code>src/language_service/*</code>: reusable strict and recovering document analysis
+  and versioned capability discovery.</li>
 <li>span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.</li>
 <li><code>src/version.hpp</code> plus generated <code>obj/version.cpp</code>: build identity.</li>
@@ -3554,8 +3556,8 @@ Direct source and package-run modes invoke the native compiler and program.
 Lexical, syntax, and semantic failures are reported with source locations.</p>
 <p>The compiler objects are archived into <code>build/lib/libsagan-compiler.a</code>; the
 batch CLI links that library rather than owning a separate implementation.
-Future workspace, recovery, query, formatter, operation, debugger, and LSP
-layers extend the same compiler-owned contracts.</p>
+Future workspace, query, formatter, operation, debugger, and LSP layers extend
+the same compiler-owned contracts.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>UTF-8 source -&gt; tokenizer -&gt; parser -&gt; AST -&gt; name analysis -&gt; type checking -&gt; C++ emission
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                                  |              |               |              |
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                                  +-&gt; renderers   +-&gt; model       +-&gt; model      +-&gt; native runner

@@ -3491,8 +3491,11 @@
 </div>
 <h1 id="parser">Parser</h1>
 <p><strong>Status: complete for the current syntax specification.</strong></p>
-<p>The parser consumes the token stream and constructs typed, ownership-safe Sagan
-syntax trees with source-spanned diagnostics.</p>
+<p>The strict parser consumes the token stream and constructs typed,
+ownership-safe Sagan syntax trees with source-spanned diagnostics. The separate
+compiler-owned <code>src/syntax</code> layer wraps it for editor workloads, retaining
+trivia and exact source while recovering independent top-level declarations
+after malformed or incomplete input.</p>
 <h2 id="implemented-slices">Implemented slices</h2>
 <ul>
 <li>Programs and newline-separated declarations</li>
@@ -3562,10 +3565,12 @@ the renderer as their parser slices land.</p>
 control flow, declarations and types, string interpolation, collections,
 matching, exceptions, lambdas, modules, documentation-comment placement, and
 other established grammar rules. <code>bash scripts/parser_demo.sh</code> runs the broad
-successful fixture and the focused failure fixtures together.</p>
-<p>The parser now covers the complete current concrete grammar. Semantic analysis
-is the next compiler stage. Error recovery beyond the first syntax error is a
-future usability enhancement rather than a blocker for parser completion.</p>
+successful fixture and the focused failure fixtures together. Run
+<code>make editor-tooling-demo</code> to see deliberately incomplete source produce
+multiple structured diagnostics and a recovered compiler result.</p>
+<p>The parser now covers the complete current concrete grammar. Strict compilation
+still rejects the first malformed construct; editor analysis instead provides
+bounded recovery without loosening the language grammar.</p>
 
 
 

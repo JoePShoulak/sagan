@@ -3396,23 +3396,29 @@
 <p><strong>Implemented tooling foundation:</strong> diagnostics have a compiler-owned
 structured form with schema <code>sagan.language-service/1</code>, stable phase codes,
 severity, owning phase, byte and UTF-16 ranges, message, related-location, note,
-and fix containers. Terminal text and JSON are separate renderers. The current
-strict checker reports one diagnostic because recovering analysis is a later
-roadmap phase; capability discovery reports that limitation explicitly.</p>
+and fix containers. Terminal text and JSON are separate renderers. Strict batch
+checking remains fail-fast, while the editor-facing analysis path performs
+bounded lexical and top-level syntax recovery and can report multiple errors
+from one document. Capability discovery reports recovery as available.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bin/sagan<span class="w"> </span>--diagnostics-json<span class="w"> </span>examples/type_error.sagan
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bin/sagan<span class="w"> </span>--capabilities-json
 </span></code></pre></div>
 <p>The reusable checker accepts immutable document snapshots and returns
-<code>complete</code>, <code>incomplete</code>, or <code>cancelled</code> with the analyzed document version.
-<code>recovered</code> and <code>stale</code> are reserved result states whose producing subsystems
-are not implemented yet.</p>
+<code>complete</code>, <code>incomplete</code>, <code>recovered</code>, or <code>cancelled</code> with the analyzed document
+version. <code>stale</code> is reserved for the document-overlay phase. Recovered results
+include a partial top-level AST where practical; they never make malformed
+source valid for strict compilation.</p>
+<p>Run the recovery demonstration, which prints deliberately incomplete Sagan and
+the resulting structured diagnostics:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>editor-tooling-demo
+</span></code></pre></div>
 <p><strong>Implemented:</strong> lexical failures use <code>parser::parse_error</code> with source spans
 and focused messages. Current examples include malformed numeric literals,
 invalid digit separators, incomplete scientific exponents, unknown characters,
 unknown or malformed escapes, and unterminated strings, interpolation, or block
 comments.</p>
 <p>Run the deliberate error example:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>examples/tokenizer_error.sagan
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>examples/tokenizer_error.sagan
 </span></code></pre></div>
 <p>The diagnostic identifies the invalid source region for <code>1e</code>.</p>
 <p><strong>Implemented:</strong> the parser produces focused syntax diagnostics for malformed
@@ -3420,7 +3426,7 @@ assignments and member access, misplaced or incomplete declarations, invalid
 control flow, malformed interpolation and collections, exception constructs,
 documentation-comment placement, and other established grammar rules. Run the
 complete positive and negative demonstration with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bash<span class="w"> </span>scripts/parser_demo.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>scripts/parser_demo.sh
 </span></code></pre></div>
 <p>These errors establish grammatical validity only. Semantic and type failures
 also use the structured presentation in the strict document checker. Module,
