@@ -3546,15 +3546,16 @@ collection-like delimiters have the forms shown in the language tour.</p>
 </span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>type_list := type ("," type)*
 </span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
 </span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>type_annotation := identifier ("&lt;" type_annotation ("," type_annotation)* "&gt;")?
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>qualified_enum_case := type_annotation "." identifier
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>explicit_generic_call := identifier "&lt;" type_list "&gt;" "(" arguments? ")"
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>qualified_name := identifier ("." identifier)*
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>module_declaration := "module" qualified_name
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>import_declaration := "import" (qualified_name | identifier "from" qualified_name) ("as" identifier)?
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>export_declaration := "export" identifier ("as" identifier)?
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>documented_declaration := documentation_comment* declaration
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>parameters  := parameter ("," parameter)* ","?
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>parameter   := identifier (":" type)?
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>                 | "(" (type_annotation ("," type_annotation)*)? ")" "=&gt;" type_annotation
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>qualified_enum_case := type_annotation "." identifier
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>explicit_generic_call := identifier "&lt;" type_list "&gt;" "(" arguments? ")"
+</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>qualified_name := identifier ("." identifier)*
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>module_declaration := "module" qualified_name
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>import_declaration := "import" (qualified_name | identifier "from" qualified_name) ("as" identifier)?
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>export_declaration := "export" identifier ("as" identifier)?
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>documented_declaration := documentation_comment* declaration
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>parameters  := parameter ("," parameter)* ","?
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>parameter   := identifier (":" type)?
 </span></code></pre></div>
 <p><code>same_line_statement</code> is exactly one statement beginning on the same logical
 line as its controlling header. A newline after the condition or pattern

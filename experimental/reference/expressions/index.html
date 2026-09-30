@@ -3636,14 +3636,21 @@ same checks. Floating-point remainder follows <code>fmod</code> semantics. These
 are catchable as the appropriate built-in <code>RuntimeError</code> case.</p>
 <p><strong>Implemented native semantics:</strong> anonymous lambdas use
 <code>fun(parameters) =&gt; expression</code>, with optional parameter and return annotations.
-Typed lambdas can be stored in local variables, called through those variables,
-or called immediately when grouped. They capture surrounding local bindings by
-reference in the current native subset. Their arguments and result are checked
-with the same lossless-conversion rules as named functions. Untyped lambda
-parameters remain valid parser/type-model input but are not native-emittable.</p>
-<p><strong>Provisional semantics:</strong> escaping closure ownership, function-type annotations,
-and the semantic rules for spread outside array and dictionary literals, safe access, dictionary-key
-hashability, and assignment expressions.</p>
+Function types use <code>(Parameter, ...) =&gt; Result</code>; <code>() =&gt; Int</code> is therefore a
+parameterless function returning <code>Int</code>. Typed lambdas can be stored, passed,
+returned, called immediately, or called through variables and parameters.
+Their arguments and results use the same lossless-conversion rules as named
+functions.</p>
+<p>Closures capture surrounding local variables and parameters by shared
+reference. Captured storage remains alive while any closure refers to it, so an
+escaping closure cannot retain a dangling stack reference. Copies of one
+closure share its captured state, and multiple closures created in the same
+scope observe mutations to the same captured variable. Untyped lambda
+parameters remain parser/type-model input but are not native-emittable.</p>
+<p>Closures that capture a method's contextual <code>self</code> are rejected in 1.0 rather
+than being emitted with an unsafe object lifetime. Those lifetime semantics
+remain provisional, as do the rules for spread outside array and dictionary
+literals, safe access, dictionary-key hashability, and assignment expressions.</p>
 <p>Numeric and geometry literals accept unit suffixes. A simple suffix is a unit
 name (<code>10 meter</code>); a composite suffix is parenthesized
 (<code>&lt;1.0, 0.0, 0.0&gt; (meter / second)</code>). <code>value as unit</code> explicitly converts a

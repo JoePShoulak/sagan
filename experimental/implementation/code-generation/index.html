@@ -3481,7 +3481,8 @@ prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned Cartesian and spherical vector and point values, Cartesian spreads,
 indexing, named components, iteration,
 printing and interpolation,
-typed expression lambdas with local lexical captures and immediate or stored calls,
+typed expression lambdas, source-level function types, higher-order calls, and
+escaping shared-reference captures,
 classes with typed fields, default or overloaded <code>new(...)</code> construction, <code>self</code>, and
 public/private fields and methods,
 reference-counted class and face values, dynamic face dispatch, and composed
@@ -3578,8 +3579,8 @@ C++ translation.
 <code>--emit-cpp-package</code> starts from a strict package manifest, maps qualified
 module names to nested files under its source root, and uses the same linking
 and validation pipeline. The package demo compiles and executes that result.</p>
-<p>Open work includes generated-code structure, borrowing, escaping closures,
-richer exception patterns, debug information, compiler selection and flags,
+<p>Open work includes generated-code structure, borrowing, contextual <code>self</code>
+capture in escaping closures, richer exception patterns, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler

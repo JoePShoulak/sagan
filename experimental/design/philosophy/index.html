@@ -3656,9 +3656,10 @@ interfaces may compose other interfaces.</p>
 <p><strong>Settled design.</strong> Variables are mutable by default. A trailing <code>!</code> is part of
 a method name and conventionally identifies a mutating counterpart; it is not an
 effect system.</p>
-<p><strong>Planned.</strong> Reference counting is the intended memory-management model.
-Parallel execution is deferred. Exact unsafe escape hatches, ownership behavior,
-and concurrency rules remain to be designed.</p>
+<p><strong>Implemented foundation.</strong> Class/face values and escaping closure captures use
+reference-counted storage; explicit weak class fields break object cycles.
+Parallel execution and unsafe escape hatches are explicitly post-1.0 work.
+Their concurrency and foreign-ownership rules are not part of the 1.0 contract.</p>
 <h2 id="simulation-oriented-modular-by-default">Simulation-oriented, modular by default</h2>
 <p>Sagan is designed around geometry, numerical simulation, physics, and
 rendering. These domains share types and conventions, but programs should not

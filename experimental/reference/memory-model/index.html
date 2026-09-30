@@ -3496,11 +3496,18 @@ face value on assignment, and returns <code>Optional&lt;T&gt;</code> when read. 
 <p>Sagan does not have a general <code>null</code> value. A plain class or face value is
 always present; <code>None</code> is valid only where an <code>Optional&lt;T&gt;</code> supplies the absent
 case.</p>
+<p>Escaping closures use the same reference-counted lifetime principle. Local
+variables and parameters captured by a lambda reside in shared cells. The
+declaring scope and every closure created from that scope refer to the same
+cell, so mutation remains visible and the cell is released after the scope and
+all capturing closures are gone. Function values are written as
+<code>(Parameter, ...) =&gt; Result</code>. Capturing contextual <code>self</code> is rejected in 1.0
+until object-capture lifetime rules are defined.</p>
 <p>Reference cycles must currently contain an explicit weak edge to be reclaimed;
 all-strong cycles remain retained. <strong>Open questions:</strong> borrowing, automatic cycle
 detection or collection, destruction order,
-thread interaction, foreign ownership, value semantics, and observable lifetime
-behavior.</p>
+thread interaction, foreign ownership, contextual <code>self</code> capture, value
+semantics, and destruction observability beyond the guarantees above.</p>
 <p>The design also intends to prevent concurrent mutation of the same data when
 parallel execution is eventually introduced, but parallel execution itself is
 deferred.</p>

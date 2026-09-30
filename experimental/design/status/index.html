@@ -3711,8 +3711,8 @@
 </tr>
 <tr>
 <td>Deterministic execution</td>
-<td><strong>Catchable runtime-error foundation implemented</strong></td>
-<td>checked arithmetic and collection lookup failures become nominal <code>RuntimeError</code> values, with focused fixtures and a native demo</td>
+<td><strong>1.0 hypercore contract settled</strong></td>
+<td>exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded</td>
 </tr>
 <tr>
 <td>Module and package resolution</td>
@@ -3787,9 +3787,11 @@ and requires face-typed fields to be weak because their concrete targets are
 dynamic. Every permitted ownership cycle therefore has an explicit weak edge
 and can be reclaimed without a tracing collector. Named functions
 and methods accept block or <code>=&gt;</code> expression bodies.
-Typed expression lambdas are callable, may capture local lexical state, and can
-be stored in local variables or invoked immediately. Escaping closures and
-function-type annotations remain future runtime and type-system work.
+Function types use <code>(Parameter, ...) =&gt; Result</code>. Typed expression lambdas may
+be stored, passed, returned, or invoked immediately, and keep captured local
+variables and parameters alive in shared reference-counted cells. Closure
+copies share captured mutation. Contextual <code>self</code> capture remains deferred.
+Lambdas that attempt that capture are rejected explicitly in 1.0.
 Module declarations, import sources and aliases, and standalone exports are
 parsed and rendered. The loader resolves loose sibling files or manifest-backed packages transitively,
 validates module names and public exports, preserves aliases, and rejects
@@ -3814,7 +3816,9 @@ with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with <code>is</code>. Method-specific face generics, external package
 dependencies and distribution, and the concrete math, physics, and rendering APIs
-remain unresolved. Math's automatic availability and the explicit-import
+remain post-1.0 work. Implementation inheritance, parallelism, unsafe escape
+hatches, registries, lockfiles, and remote dependency resolution are also
+explicitly deferred. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.</p>
 <h2 id="required-pre-10-design-checkpoints">Required pre-1.0 design checkpoints</h2>
 <p>The geometry checkpoint is complete: locations are named <code>Point</code> and remain
@@ -3835,6 +3839,12 @@ function/method/constructor/lambda parameters and results, generic arguments,
 and face signatures. Generated values retain only their ordinary numeric or
 geometry representation. Dynamic/logarithmic units, uncertainty, fractional
 dimensions, external catalogs, and coordinate frames remain deferred.</p>
+<p>The hypercore determinism checkpoint is complete. Sagan guarantees reproducible
+language results for exact integer/boolean/string/enum/optional operations,
+source-ordered control flow and collections, deterministic module resolution,
+and reference-counted identity/capture behavior. Floating-point bit identity,
+host/toolchain output, external I/O, concurrency, and future library numerics
+are outside this initial contract; see <a href="../determinism/">Determinism</a>.</p>
 <p>Windows is the initial supported installation platform; macOS and Linux remain
 tracked future targets. The Windows installer foundation now bundles the UCRT64
 compiler used by the C++ backend, places <code>sagan</code> on PATH, supplies location,

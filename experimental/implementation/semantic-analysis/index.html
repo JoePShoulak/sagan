@@ -3522,7 +3522,8 @@ class members and unmatched constructor calls are rejected. Every field without
 a declaration-site default must be assigned on every constructor path.
 Face annotations accept a class value only when that class declares transitive
 <code>is</code> or <code>has</code> conformance; calls through the face use its checked method set.
-Escaping closure types remain open, but a class declaring <code>is</code> or <code>has</code> a face must satisfy
+Function types and escaping shared-reference closure captures are implemented.
+Contextual <code>self</code> capture remains deferred and is rejected explicitly. A class declaring <code>is</code> or <code>has</code> a face must satisfy
 every required method with an exact class implementation or face default.
 Both composition words have identical meaning and do not create inheritance.
 An unambiguous face default satisfies its own requirement and becomes a class

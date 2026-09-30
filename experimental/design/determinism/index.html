@@ -3469,25 +3469,43 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="determinism">Determinism</h1>
-<p>Cross-platform deterministic simulation is a <strong>settled goal</strong>, not an
-implemented guarantee.</p>
-<p>The intended result is that identical inputs produce identical results on every
-supported platform covered by the determinism contract. Translating to C++ does
-not provide that property by itself. A useful contract will need to constrain at
-least:</p>
+<p>Sagan 1.0 defines a <strong>deterministic hypercore profile</strong>. This is deliberately
+narrower than claiming that every future simulation produces identical bits on
+every machine.</p>
+<p>For identical source, package configuration, explicit program inputs, and Sagan
+compiler version, the following implemented operations have deterministic
+language results on supported targets:</p>
 <ul>
-<li>floating-point behavior and permitted transformations;</li>
-<li>generated C++ and compiler flags;</li>
-<li>mathematical and standard-library implementations;</li>
-<li>iteration order and other observable container behavior;</li>
-<li>runtime scheduling once concurrency exists; and</li>
-<li>the definition of supported platforms and compiler versions.</li>
+<li>booleans, strings, enums, optionals, and checked signed integer operations;</li>
+<li>arrays, fixed-size vectors and points, whose elements are evaluated and
+  retained in source order;</li>
+<li>dictionary construction and lookup, including source-ordered spread
+  replacement (dictionary iteration is not implemented);</li>
+<li>source-ordered control flow, matching, exception handlers, and cleanup;</li>
+<li>deterministic module resolution and Unicode/emoji identifier encoding; and</li>
+<li>reference-counted class/face identity and shared closure captures, excluding
+  the timing of otherwise unobservable destruction.</li>
 </ul>
-<p><strong>Open questions:</strong> whether determinism is bit-for-bit or tolerance-based for
-particular operations, which transcendental functions are covered, how external
-I/O participates, and how deterministic modes interact with performance.</p>
-<p>Until these questions are answered and tested, documentation and examples must
-describe determinism as a project goal rather than a current compiler property.</p>
+<p>Integer overflow, invalid integer exponentiation, zero division/remainder,
+out-of-range indexing, and missing dictionary keys raise defined nominal
+<code>RuntimeError</code> cases instead of inheriting undefined C++ behavior.</p>
+<p>The 1.0 deterministic profile does <strong>not</strong> promise cross-platform bit identity
+for floating-point arithmetic, NaN payloads, signed zero, future transcendental
+math, host/compiler diagnostics, filesystem or process behavior, allocation
+addresses, wall-clock timing, or destruction timing. Programs whose result
+depends on the evaluation order of separate side-effecting call arguments are
+also outside the profile until the backend sequences every argument explicitly.
+Console newline encoding is a host presentation detail; the logical printed
+lines and UTF-8 text are the language result.</p>
+<p>Concurrency, random-number sources, clocks, networking, and unsafe/foreign
+interfaces are absent from the 1.0 hypercore. When introduced, each must define
+its own reproducibility contract before it can participate in deterministic
+mode. The core math, physics, and rendering libraries will separately specify
+whether floating operations are bit-exact, implementation-pinned, or governed
+by documented numerical tolerances.</p>
+<p>This contract guarantees reproducible semantics for exact hypercore programs;
+it does not claim reproducible binaries, a stable C++ ABI, or identical native
+toolchain output.</p>
 
 
 

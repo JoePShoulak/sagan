@@ -3478,7 +3478,9 @@ types, and may be overloaded by parameter types.</p>
 <p>Expression bodies and lambdas use <code>=&gt;</code>:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let greater = fun(a: Float, b: Float) =&gt; a &gt; b
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>fun square(value: Float): Float =&gt; value * value
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>let predicate: (Float, Float) =&gt; Bool = greater
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>fun square(value: Float): Float =&gt; value * value
 </span></code></pre></div>
 <p>A mutating counterpart may conventionally end in <code>!</code>, and the tokenizer emits
 a distinct method-identifier token:</p>
@@ -3491,13 +3493,17 @@ annotations parse into the AST. Named functions, interface defaults, and
 class methods may instead use <code>=&gt; expression</code>. Anonymous lambdas accept
 typed parameters and an optional return annotation. The initial checker
 validates scalar parameters and returns and selects compatible overloads.
-Typed expression lambdas execute, can be called immediately or through a
-local variable, and capture surrounding locals by reference. Escaping
-closures, source-level function-type annotations, and member calls remain
-future work.</p>
+Typed expression lambdas execute, can be stored in explicitly annotated
+function values, passed to higher-order functions, returned from functions,
+and called immediately or through variables and parameters. Captured locals
+and parameters use shared reference-counted cells, preserving mutation and
+lifetime when a closure escapes. Run <code>make closure-demo</code> for an executable
+example.</p>
 </div>
-<p><strong>Provisional design:</strong> multiple returns, destructuring, variadic parameters,
-yielding, overload selection, capture behavior, and inference rules.</p>
+<p>Lambdas that refer to a method's contextual <code>self</code> are rejected in 1.0; the
+required object-lifetime semantics remain deferred. Other provisional areas
+include multiple returns, destructuring, variadic parameters, yielding, and
+broader inference rules.</p>
 
 
 
