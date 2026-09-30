@@ -155,6 +155,11 @@ invalid point arithmetic and prepares transform semantics without adding runtime
 cost. Cartesian/spherical conversion will be the first geometry contract taken
 up with core math after 1.0. Math, rendering, and physics
 library work remains paused until the hypercore and installation work are complete.
+Late in the pre-1.0 roadmap, Sagan will investigate units of measure as optional
+interfaces on numeric values. The design must assess whether opt-in units can be
+tracked reliably through arithmetic, conversions, and generic code; the problem
+is difficult, but the potential safety and scientific-programming payoff is
+substantial. This remains an investigation rather than a settled commitment.
 
 Windows is the initial supported installation platform. The Windows installer
 foundation bundles the UCRT64 backend toolchain, configures PATH, supplies

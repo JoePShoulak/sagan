@@ -136,6 +136,13 @@ for the first core math geometry API after 1.0. All four families have fixed-siz
 component storage, frame tracking remains deferred, and future generic APIs must
 preserve the semantic and representation distinctions.
 
+Late in the pre-1.0 roadmap, investigate units of measure as optional interfaces
+on numeric values. The checkpoint should determine whether unit conformance can
+remain opt-in while still tracking units through arithmetic, conversions, and
+generic code. Reliable unit tracking will be difficult, but the safety and
+scientific-programming payoff could be substantial; this is an investigation,
+not yet a settled language commitment.
+
 Windows is the initial supported installation platform; macOS and Linux remain
 tracked future targets. The Windows installer foundation now bundles the UCRT64
 compiler used by the C++ backend, places `sagan` on PATH, supplies location,
