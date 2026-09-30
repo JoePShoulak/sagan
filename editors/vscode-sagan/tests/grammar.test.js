@@ -128,6 +128,16 @@ async function main() {
   assertScoped(constants, "invalid_name", "invalid.illegal.constant-name.sagan");
   assertNeverScoped(constants, "MISLEADING", "constant.other.definition.sagan");
 
+  const measurements = tokenize(grammar, readFixture("measurements.sagan"));
+  assertScoped(measurements, "dimension", "keyword.declaration.measurement.dimension.sagan");
+  assertScoped(measurements, "Length", "entity.name.type.dimension.sagan");
+  assertScoped(measurements, "quantity", "keyword.declaration.measurement.quantity.sagan");
+  assertScoped(measurements, "Speed", "entity.name.type.quantity.sagan");
+  assertScoped(measurements, "affine", "storage.modifier.affine.sagan");
+  assertScoped(measurements, "unit", "keyword.declaration.measurement.unit.sagan");
+  assertScoped(measurements, "meter", "entity.name.type.unit.sagan");
+  assertScoped(measurements, "Celsius", "entity.name.type.unit.sagan");
+
   const strings = tokenize(grammar, readFixture("strings.sagan"));
   assertScoped(strings, "\\u{1F680}", "constant.character.escape.sagan");
   assertScoped(strings, "${", "punctuation.section.interpolation.begin.sagan");

@@ -2,7 +2,7 @@
   "name": "sagan-language",
   "displayName": "Sagan Language",
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "sagan-language",
   "icon": "images/sagan-logo.png",
   "repository": {

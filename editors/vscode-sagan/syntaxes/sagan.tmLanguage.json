@@ -178,6 +178,35 @@
           }
         },
         {
+          "match": "\\b(dimension)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.measurement.dimension.sagan" },
+            "3": { "name": "entity.name.type.dimension.sagan" }
+          }
+        },
+        {
+          "match": "\\b(quantity)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.measurement.quantity.sagan" },
+            "3": { "name": "entity.name.type.quantity.sagan" }
+          }
+        },
+        {
+          "match": "\\b(affine)(\\s+)(unit)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "storage.modifier.affine.sagan" },
+            "3": { "name": "keyword.declaration.measurement.unit.sagan" },
+            "5": { "name": "entity.name.type.unit.sagan" }
+          }
+        },
+        {
+          "match": "\\b(unit)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.measurement.unit.sagan" },
+            "3": { "name": "entity.name.type.unit.sagan" }
+          }
+        },
+        {
           "match": "\\b(module)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
           "captures": {
             "1": { "name": "keyword.declaration.module.sagan" },
@@ -298,7 +327,7 @@
         { "name": "keyword.operator.logical.sagan", "match": "\\b(?:and|or|not)\\b" },
         { "name": "keyword.operator.type.sagan", "match": "\\b(?:is|has)\\b" },
         { "name": "variable.language.self.sagan", "match": "\\bself\\b" },
-        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|new|class|face|enum|module)\\b" }
+        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|new|class|face|enum|dimension|quantity|unit|affine|module)\\b" }
       ]
     },
     "method-identifiers": {

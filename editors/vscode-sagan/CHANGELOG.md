@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Highlight `dimension`, `quantity`, `unit`, and `affine unit` declarations with contextual declaration-name scopes.
+- Exercise native measurement declarations, measured annotations, suffixes, and conversions in focused fixtures and the demonstration file.
+
 ## 0.2.0
 
 - Add capability-aware extension activation and compiler discovery.

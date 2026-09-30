@@ -8,6 +8,10 @@ import physics as simulation_physics
 export ExplorerShip
 export GuidanceStatus as Status
 
+dimension Distance
+quantity Speed = Distance / Time
+unit mission_meter: Distance = meter
+
 /// Produces rendered frames.
 face Renderable {
   /// Renders the current object.
@@ -69,6 +73,7 @@ let select_greater = fun(left: Float, right: Float): Float =>
   left > right ? left ; right
 
 let altitude: Float = 125_000.0
+let measured_altitude: Float64<mission_meter> = 125_000 mission_meter
 let target_altitude = (altitude)
 let telemetry_pending
 let orbital_energy = -2^3^2 + 4 * 5

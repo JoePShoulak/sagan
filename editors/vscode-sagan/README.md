@@ -4,7 +4,7 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for the experimental Sagan programming language. Version 0.2.0 tracks the tokenizer and parser grammar and introduces capability-aware compiler discovery.
+VS Code language support for the experimental Sagan programming language. Version 0.2.1 tracks the tokenizer and parser grammar, including constants and native measurement declarations, and provides capability-aware compiler discovery.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
 
