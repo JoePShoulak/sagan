@@ -18,6 +18,7 @@ printf 'old' > "$test_root/v1.0.0/sagan-1.0.0-windows-x64.zip"
 printf 'preview' > "$test_root/v1.3.0-rc.1/sagan-1.3.0-rc.1-windows-x64.zip"
 
 python3 deploy/releases/index.py --root "$test_root"
+python3 deploy/releases/github.py --help >/dev/null
 
 grep -Fq '<h2>v1.3.0-rc.1 <span class="badge">Latest</span> <span class="badge preview">Preview</span>' "$test_root/index.html"
 grep -Fq 'sagan-1.2.0-windows-x64.exe' "$test_root/index.html"

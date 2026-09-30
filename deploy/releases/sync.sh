@@ -2,11 +2,8 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-command -v gh >/dev/null 2>&1 || { echo "GitHub CLI is required." >&2; exit 1; }
-
 mapfile -t tags < <(
-  gh release list --repo JoePShoulak/sagan --exclude-drafts \
-    --limit 100 --json tagName --jq '.[].tagName' | sort -V
+  python3 "$repo_root/deploy/releases/github.py" list | sort -V
 )
 
 for tag in "${tags[@]}"; do

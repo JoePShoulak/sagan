@@ -5,9 +5,8 @@ if [[ $# -ne 1 || ! "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[1-9][0-9]*)?$ ]]; the
   echo "usage: bash deploy/releases/mirror.sh vMAJOR.MINOR.PATCH[-rc.NUMBER]" >&2
   exit 2
 fi
-command -v gh >/dev/null 2>&1 || { echo "GitHub CLI is required." >&2; exit 1; }
-
 tag="$1"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 release_root="${SAGAN_RELEASE_MIRROR_ROOT:-$HOME/.local/share/sagan-releases}"
 destination="$release_root/$tag"
 mkdir -p "$release_root"
@@ -25,7 +24,7 @@ publish_index() {
     latest="${stable_tags[${#stable_tags[@]} - 1]}"
     ln -sfn "$latest" "$release_root/latest"
   fi
-  python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/index.py" --root "$release_root"
+  python3 "$script_dir/index.py" --root "$release_root"
 }
 
 if [[ -d "$destination" ]]; then
@@ -43,7 +42,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-gh release download "$tag" --repo JoePShoulak/sagan --dir "$staging"
+python3 "$script_dir/github.py" download "$tag" "$staging"
 (
   cd "$staging"
   shopt -s nullglob
