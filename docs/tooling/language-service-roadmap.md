@@ -120,6 +120,15 @@ the position-based query and presentation APIs built on these records.
 
 ## Phase 5 — read-only language features
 
+**Status: in progress.** A reusable `document_queries` API now resolves exact
+identifier occurrences from recovering syntax tokens and the semantic index.
+Focused tests cover UTF-16 and byte positions, version mismatch, hover source
+documentation, resolved types, local and imported definitions, references,
+highlights, face implementations, and hierarchical document symbols. The API
+does not yet cover type definitions, signatures, completion, workspace symbols,
+semantic classifications, folding, selection ranges, links, or inlay hints.
+These are not advertised as editor capabilities while LSP transport is absent.
+
 - Implement symbol-at-position, hover, resolved types, definition, type
   definition, implementations, references, highlights, and signature help.
 - Implement compiler-derived completions, semantic classifications, document and

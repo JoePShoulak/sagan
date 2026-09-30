@@ -19,8 +19,10 @@ rejection are also available. Strict semantic indexing now supplies opaque
 stable symbol IDs, typed kinds/visibility/origin, document-owned declaration
 ranges, overloads, generic specializations, conformances, receiver members,
 canonical types, and identity-based document/workspace references. Selective
-imports and namespace members link to exported identities. Position-query APIs
-are not yet complete, and LSP transport remains unavailable.
+imports and namespace members link to exported identities. The library now has
+tested position queries for symbols, source hover, inferred type, definitions,
+references, highlights, face implementations, and document symbols. Other
+position queries are incomplete, and LSP transport remains unavailable.
 This document defines the guarantees
 the completed Sagan 1.0 server must satisfy and the capability-discovery shape
 clients may rely on. It is not a claim that blocked capabilities work today.

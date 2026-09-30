@@ -17,14 +17,14 @@ contract is not yet implemented; the extension must not reproduce it.
 | --- | --- | --- |
 | Open/change/save/close | Versioned document store and overlay resolver | **Compiler API available; LSP transport blocked** |
 | Diagnostics | Structured diagnostics, recovery, UTF-16 conversion, stale-version gate | **Compiler API available; publication/LSP transport blocked** |
-| Hover | Symbol/type/doc query plus semantic snapshot | **Blocked** |
-| Go to definition/type definition | Stable symbols and indexed locations | **Semantic index available; position query/LSP transport blocked** |
-| Implementations/conformances | Face/class conformance index | **Compiler index available; query/LSP transport blocked** |
-| References/highlights | Identity-based workspace reference index | **Compiler index available; position query/LSP transport blocked** |
+| Hover | Symbol/type/doc query plus semantic snapshot | **Source documentation and inferred type query available; LSP transport blocked** |
+| Go to definition/type definition | Stable symbols and indexed locations | **Definition query available; type definition and LSP transport blocked** |
+| Implementations/conformances | Face/class conformance index | **Face implementation query available; LSP transport blocked** |
+| References/highlights | Identity-based workspace reference index | **Position queries available; LSP transport blocked** |
 | Signature help | Resolved overload/signature query | **Blocked** |
 | Completion | Parser context, semantic scope/type state, module/catalog metadata | **Blocked** |
 | Semantic highlighting | Stable classification vocabulary and ranges | **Blocked** |
-| Document symbols | Hierarchical declaration index | **Typed declaration foundation available; hierarchy query blocked** |
+| Document symbols | Hierarchical declaration index | **Hierarchy query available; LSP transport blocked** |
 | Workspace symbols | Workspace semantic index | **Compiler index available; query/LSP transport blocked** |
 | Folding | Recovering lossless syntax tree | **Foundation available; fine-grained block nodes blocked** |
 | Selection ranges | Syntax parent chains with precise ranges | **Foundation available; expression parent chains blocked** |

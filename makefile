@@ -12,6 +12,7 @@ LIBRARY_SOURCES := \
 	src/diagnostics/diagnostic.cpp \
 	src/driver/native_runner.cpp \
 	src/language_service/language_service.cpp \
+	src/language_service/queries.cpp \
 	src/language_service/workspace.cpp \
 	src/modules/resolver.cpp \
 	src/parser/ast_render.cpp \
@@ -40,6 +41,7 @@ COMPILER_LIBRARY := build/lib/libsagan-compiler.a
 SOURCE_DIAGNOSTICS_TEST := bin/source-diagnostics-test
 WORKSPACE_TEST := bin/workspace-test
 SEMANTIC_INDEX_TEST := bin/semantic-index-test
+LANGUAGE_QUERIES_TEST := bin/language-queries-test
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
 BUILD_TMP := build/tmp
@@ -96,6 +98,10 @@ $(SEMANTIC_INDEX_TEST): tests/semantic_index_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
+$(LANGUAGE_QUERIES_TEST): tests/language_queries_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+
 obj/%.o: src/%.cpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
@@ -108,7 +114,7 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST)
+test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
@@ -116,6 +122,7 @@ test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TE
 	$(SOURCE_DIAGNOSTICS_TEST)
 	$(WORKSPACE_TEST)
 	$(SEMANTIC_INDEX_TEST)
+	$(LANGUAGE_QUERIES_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
 	bash tests/integration/run.sh

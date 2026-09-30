@@ -163,6 +163,16 @@ future source-edit concern.
 
 ## Language queries
 
+The first concrete query layer is `src/language_service/queries.hpp`.
+`document_queries` takes one immutable document snapshot and matching semantic
+index, with an optional workspace index for imports. It returns structured
+results for byte or UTF-16 symbol selection, definitions, references, document
+highlights, face implementations, resolved type, source hover, and hierarchical
+document symbols. A version or document-identity mismatch returns `stale`;
+invalid UTF-16 boundaries return `incomplete`. Its selection ranges come from
+recovering syntax tokens, so names in comments or strings do not masquerade as
+declarations. These library APIs are not yet advertised as LSP features.
+
 `language_service` accepts a workspace/document snapshot and byte or UTF-16
 position, returning compiler data:
 
