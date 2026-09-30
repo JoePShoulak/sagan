@@ -3870,7 +3870,7 @@
 
 <div class="admonition warning">
 <p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
+<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="documentation-workflow">Documentation workflow</h1>
 <h2 id="writing-for-humans-first">Writing for humans first</h2>
@@ -3959,20 +3959,22 @@ temporarily point to <code>experimental</code>.</p>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 </span></code></pre></div>
-<p>To confirm a page as accurate and ready for publication, change all five fields together:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">publication-ready</span>
+<p>After the primary audit confirms a page as complete, change all five fields
+together:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">complete</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RELEASE_VERSION</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">YYYY-MM-DD</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reviewer name</span>
 </span></code></pre></div>
 <p><code>bash scripts/docs.sh check</code> rejects missing, incomplete, contradictory, or stale
-ready-state metadata. In <code>experimental</code>, a ready page may be verified for an
+completion metadata. In <code>experimental</code>, a complete page may be verified for an
 upcoming semantic release so it can be reviewed before publication. A released
 build accepts only pages verified for that exact release version. Previously
-ready pages must therefore be reviewed and confirmed for each new release before
-they can remain publication-ready in its archive.</p>
-<p>Use <code>review-needed</code> when a draft is substantial enough for review but is not yet confirmed.</p>
+complete pages must therefore be reviewed and confirmed for each new release before
+they can remain complete in its archive.</p>
+<p>Use <code>review-needed</code> only after the primary audit deliberately sends a page to
+Zach. All unaudited pages remain <code>work-in-progress</code>.</p>
 <h2 id="version-publication">Version publication</h2>
 <p>Every push to <code>main</code> refreshes only the <code>experimental</code> version. A manual
 documentation workflow run with a release version performs the publication
@@ -3984,7 +3986,7 @@ overwrite an archived release merely to reflect the current repository; publish
 a new release version instead.</p>
 <p>The <a href="../documentation-roadmaps/">documentation roadmaps</a> define the expansion
 plan leading into 1.0 and the ordered behavior-confirmation audit used to move
-pages from internal drafts to publication-ready documentation.</p>
+pages from unaudited drafts to complete documentation.</p>
 
 
 

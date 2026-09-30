@@ -3892,7 +3892,7 @@
 
 <div class="admonition warning">
 <p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
+<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="release-lifecycle">Release lifecycle</h1>
 <p>Sagan releases are on demand. The project has stable and preview channels;
@@ -3939,7 +3939,8 @@ formal incident-management commitment.</p>
 <ul>
 <li><code>sagan-VERSION-windows-x64.exe</code>, the signed graphical installer;</li>
 <li><code>sagan-VERSION-windows-x64.zip</code>, a portable CLI archive;</li>
-<li>SHA-256 sidecars for both packages;</li>
+<li><code>sagan-language-EXTENSION_VERSION.vsix</code>, the compatible VS Code extension;</li>
+<li>SHA-256 sidecars for all three packages;</li>
 <li><code>sagan-VERSION-release-manifest.json</code>;</li>
 <li><code>sagan-VERSION-sbom.spdx.json</code>; and</li>
 <li>reviewed release notes plus GitHub's source archives.</li>
@@ -3983,7 +3984,8 @@ guaranteed backports, deadlines, or service levels.</p>
 <li>Joe as the required reviewer for <code>stable-release</code>; and</li>
 <li>recorded clean-machine evidence for the exact signed 1.0.0 installer.</li>
 </ul>
-<p>The full VS Code extension and the math, rendering, and physics libraries remain
+<p>Visual Studio Marketplace publication, semantic editor features, and the math,
+rendering, and physics libraries remain
 separate post-1.0 work.</p>
 
 

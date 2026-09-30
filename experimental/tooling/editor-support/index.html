@@ -3705,17 +3705,20 @@
 
 <div class="admonition warning">
 <p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
+<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="editor-support">Editor support</h1>
-<p>The version 0.1.0 VS Code extension in <code>editors/vscode-sagan/</code> associates
+<p>The version 0.2.0 VS Code extension in <code>editors/vscode-sagan/</code> associates
 <code>.sagan</code> files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations, keywords, types, literals, operators,
 punctuation, comments, strings and nested interpolation, Unicode identifiers,
 private members, and mutating method names.</p>
+<p>It also discovers a Sagan compiler, validates the versioned
+<code>sagan.language-service/1</code> capability response, and exposes <strong>Sagan: Show
+Tooling Status</strong> without enabling capabilities the compiler does not advertise.</p>
 <p>TextMate remains lexical and cannot resolve whether braces are blocks or
 dictionaries, or whether angle brackets are vectors or comparisons.</p>
-<p>There is no parser integration, language server, IntelliSense, completion,
+<p>There is no active language server, IntelliSense, completion,
 hover information, go-to-definition, formatter, refactoring, or semantic
 diagnostics. The extension should be evaluated as basic syntax coloring only.
 See <a href="../../getting-started/editor-support/">getting-started editor support</a> for

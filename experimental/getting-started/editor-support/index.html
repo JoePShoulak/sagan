@@ -491,6 +491,32 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use an editor
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -515,6 +541,69 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-a-sagan-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from a Sagan release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-and-install-from-a-repository-clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build and install from a repository clone
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-the-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify the installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-host-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development-host testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -3688,6 +3777,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-a-sagan-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from a Sagan release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-and-install-from-a-repository-clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build and install from a repository clone
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-the-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify the installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-host-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development-host testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -3705,25 +3846,59 @@
 
 <div class="admonition warning">
 <p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
+<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="editor-support">Editor support</h1>
-<p>The repository contains an early VS Code extension under
-<code>editors/vscode-sagan/</code> and a packaged <code>.vsix</code> file.</p>
-<p>Version 0.1.0 associates <code>.sagan</code> files with Sagan and uses a
-tokenizer-aligned TextMate grammar for declarations, keywords, literals,
-operators, punctuation, comments, strings and interpolation, Unicode
-identifiers, private members, and mutating method names.</p>
-<p>This is lexical coloring only: it colors text according to token-shaped
-patterns. There is no language server, IntelliSense, parser-backed validation,
-formatting engine, refactoring, or semantic highlighting yet. The compiler now
-contains reusable document, diagnostic, workspace, and semantic-index
-foundations for those later features, so the extension will not need to
-reimplement Sagan's rules.</p>
-<p>Run the extension in an Extension Development Host with <code>F5</code>, or package it from
-<code>editors/vscode-sagan/</code> with <code>npx --yes @vscode/vsce package</code> and install the
-resulting VSIX. Treat coloring as an editing aid, not as proof that a construct
-is supported by the compiler.</p>
+<p>Sagan provides a VS Code extension that associates <code>.sagan</code> files with the
+language, supplies tokenizer-aligned TextMate highlighting, and discovers a
+compatible Sagan compiler. The extension has its own version number; the VSIX
+attached to a Sagan release is built from that same tagged source and is the
+recommended match for the release.</p>
+<p>There is no Visual Studio Marketplace listing yet. Install the extension from a
+release asset or build it from source.</p>
+<h2 id="install-from-a-sagan-release">Install from a Sagan release</h2>
+<ol>
+<li>Open the <a href="https://sagan.shoulak.org/downloads/">HP1 download mirror</a> or the
+   canonical <a href="https://github.com/JoePShoulak/sagan/releases">GitHub Releases</a>
+   page.</li>
+<li>Select the same Sagan release as the compiler you installed.</li>
+<li>Download <code>sagan-language-EXTENSION_VERSION.vsix</code> and its <code>.sha256</code> file.</li>
+<li>In VS Code, open <strong>Extensions</strong>, select the <code>...</code> menu, choose
+   <strong>Install from VSIX...</strong>, and select the downloaded file.</li>
+</ol>
+<p>Alternatively, install the downloaded asset from Bash:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>code<span class="w"> </span>--install-extension<span class="w"> </span>sagan-language-VERSION.vsix
+</span></code></pre></div>
+<h2 id="build-and-install-from-a-repository-clone">Build and install from a repository clone</h2>
+<p>Use this route when working with Sagan's experimental branch:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>editors/vscode-sagan
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>npm<span class="w"> </span>ci
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>npm<span class="w"> </span><span class="nb">test</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>npm<span class="w"> </span>run<span class="w"> </span>package
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>code<span class="w"> </span>--install-extension<span class="w"> </span>sagan-language-*.vsix
+</span></code></pre></div>
+<p>The repository's extension version is currently 0.2.0. Its version is
+independent of the compiler version.</p>
+<h2 id="verify-the-installation">Verify the installation</h2>
+<ol>
+<li>Open a <code>.sagan</code> file and confirm VS Code identifies it as <strong>Sagan</strong>.</li>
+<li>Confirm comments, declarations, strings, interpolation, keywords, and types
+   receive syntax coloring.</li>
+<li>Run <strong>Sagan: Show Tooling Status</strong> from the Command Palette.</li>
+<li>If the compiler is not discovered, set <code>sagan.compiler.path</code> to the Sagan
+   executable and run the command again.</li>
+</ol>
+<p>The extension can locate the compiler and validate its
+<code>sagan.language-service/1</code> capability response. TextMate coloring is lexical;
+it is not proof that code parses or type-checks. Semantic completion, hover,
+go-to-definition, refactoring, formatting, and live diagnostics remain
+unavailable until the compiler exposes and the extension consumes the required
+language-server capabilities.</p>
+<h2 id="development-host-testing">Development-host testing</h2>
+<p>Open <code>editors/vscode-sagan/</code> in VS Code, press <code>F5</code>, and choose <strong>Run Sagan
+Extension</strong> if prompted. The Extension Development Host opens the bundled
+demonstration file. This is intended for extension development, not ordinary
+installation.</p>
 
 
 
