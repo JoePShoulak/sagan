@@ -1585,6 +1585,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1806,6 +1816,186 @@
     
   
     Editor support
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="language-service-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language-service audit
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="language-service-contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="language-service-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language-service roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="extension-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Editor feature readiness
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="language-server-capabilities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language-server capabilities
   
 
     
@@ -3079,19 +3269,24 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="compiler-and-tooling">Compiler and tooling</h1>
-<p>Current tooling is intentionally small:</p>
+<p>Current tooling includes:</p>
 <ul>
 <li>the <code>bin/sagan</code> tokenizer and parser inspection driver;</li>
 <li>text, DOT, SVG, and interactive HTML AST renderers;</li>
 <li>Make targets for build, tests, examples, cleanup, and version display;</li>
 <li>GCC/LCOV coverage instrumentation with Codecov reporting in GitHub Actions;</li>
 <li>Bash scripts for compiler tests and documentation;</li>
+<li>semantic analysis, type checking, C++ generation, and direct native execution;</li>
+<li>package/module discovery and a self-contained Windows installer;</li>
 <li>an early VS Code syntax-highlighting extension; and</li>
 <li>MkDocs and Mike for experimental and released versioned documentation.</li>
 </ul>
-<p>There is no package manager, formatter, debugger integration, language server,
-REPL, semantic linter, semantic analyzer, code generator, or executable Sagan
-runtime.</p>
+<p>There is no package registry, formatter, debugger integration, language server,
+REPL, or reusable editor-facing language-service layer yet. The
+<a href="language-service-audit/">readiness audit</a>, <a href="language-service-contracts/">proposed contracts</a>,
+<a href="language-service-roadmap/">implementation roadmap</a>, and
+<a href="extension-readiness/">extension readiness checklist</a> define the work needed
+without duplicating compiler logic in an editor extension.</p>
 
 
 
