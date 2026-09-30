@@ -28,6 +28,16 @@ documentation are immutable. A failed candidate receives the next identifier;
 an urgent correction uses the ordinary patch pipeline rather than replacing or
 skipping gates.
 
+Release tags use the project owner's registered SSH signing key. A checkout can
+verify a candidate independently from GitHub with:
+
+```bash
+git -c gpg.ssh.allowedSignersFile=.github/allowed_signers verify-tag vVERSION
+```
+
+The release workflow requires that local verification and GitHub's verified-tag
+result both succeed.
+
 ## Automated gates
 
 Tag automation verifies the signature, main ancestry, and history-derived

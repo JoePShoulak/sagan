@@ -30,6 +30,7 @@ jobs:
         run: |
           [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-rc\.([1-9][0-9]*))?$ ]]
           version="${BASH_REMATCH[1]}"
+          git -c gpg.ssh.allowedSignersFile=.github/allowed_signers verify-tag "$TAG"
           tag_object="$(git rev-parse "$TAG^{tag}")"
           verified="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/$tag_object" --jq '.verification.verified')"
           [[ "$verified" == true ]] || {

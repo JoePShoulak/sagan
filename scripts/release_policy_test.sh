@@ -14,6 +14,8 @@ bash -n \
   "$repo_root/deploy/releases/mirror.sh"
 
 grep -Fq 'Validate signed release tag' "$workflow"
+grep -Fq 'gpg.ssh.allowedSignersFile=.github/allowed_signers verify-tag' "$workflow"
+grep -Eq '^[^ ]+ ssh-ed25519 [A-Za-z0-9+/]+={0,2}$' "$repo_root/.github/allowed_signers"
 grep -Fq 'verify_installer_artifact.sh --release' "$workflow"
 grep -Fq 'Clean-machine evidence: PENDING' "$workflow"
 grep -Fq 'environment: stable-release' "$workflow"
