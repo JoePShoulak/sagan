@@ -4237,16 +4237,21 @@ and external-package candidates require real metadata, not editor-maintained
 lists. The server must not advertise completion until its protocol and
 lifecycle tests pass.</p>
 <h2 id="structured-edits-and-formatting">Structured edits and formatting</h2>
-<p>The first concrete implementation is in <code>src/language_service/edits.hpp</code>,
-<code>formatter.hpp</code>, and <code>refactor.hpp</code>. <code>preview_edits</code> validates exact document
-versions, identities, UTF boundaries, and non-overlap, then returns proposed
-text without writing. The current formatter is a strict-parse,
-token-preserving indentation pass, not the completed style formatter described
-below. <code>rename_local</code> is the only current refactoring; it rechecks and rebinds
-the proposed source by symbol identity. <code>organize_imports</code> handles only an
-uninterrupted, comment-free top-level import block and rechecks the result.
-Other transformations are target
-contracts and must remain disabled until their proof gates exist.</p>
+<p>The implementation is in <code>src/language_service/edits.hpp</code>, <code>formatter.hpp</code>,
+and <code>refactor.hpp</code>. <code>preview_edits</code> validates exact document versions,
+identities, UTF boundaries, and non-overlap, then returns proposed text without
+writing. The strict-parse formatter applies token-preserving two-space
+indentation, canonical proven gaps, and safe trailing-whitespace cleanup; it
+preserves existing line breaks and declines ambiguous or incomplete source.
+<code>rename_local</code> rechecks and rebinds proposed source by symbol identity.
+<code>organize_imports</code> handles only an uninterrupted, comment-free top-level
+import block. <code>add_missing_import</code> uses an exact public workspace symbol ID,
+then validates the new binding. <code>plan_diagnostic_fix</code> accepts only a
+compiler-issued fix for the exact document version and rechecks its preview.
+<code>source_edit_capabilities()</code> is the authoritative action list, including
+unavailability reasons; its <code>sagan-source-edits-v1</code> schema is exposed by
+<code>capabilities_json</code>. Other transformations stay disabled until their proof
+gates exist.</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">versioned_document_edits</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">document_uri</span><span class="w"> </span><span class="n">uri</span><span class="p">;</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="n">document_version</span><span class="w"> </span><span class="n">expected_version</span><span class="p">;</span>
@@ -4259,8 +4264,9 @@ contracts and must remain disabled until their proof gates exist.</p>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">};</span>
 </span></code></pre></div>
 <p>Edits are sorted, deterministic, non-overlapping, previewable, and validated
-against exact document versions. Rename and refactoring operate on symbol IDs,
-then rerun conflict, visibility, and type checks before returning an edit.</p>
+against exact document versions. Each available transformation performs its
+applicable syntax, binding, and type proof before returning an edit; unsupported
+transformations must not be inferred from this shared edit structure.</p>
 <p>Formatting is a reusable library operation with whole-document, range, and
 on-type entry points. It consumes a lossless syntax tree, preserves comments,
 is deterministic and idempotent, and returns structured edits rather than

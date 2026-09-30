@@ -3964,6 +3964,11 @@ uses the versioned <code>sagan.language-service/1</code> schema and reports:</p>
 <li>cancellation and incremental synchronization modes; and</li>
 <li>explicit unavailability reasons for compiler features not present in a build.</li>
 </ul>
+<p>The current compiler-library discovery JSON includes
+<code>"sourceEditsSchema":"sagan-source-edits-v1"</code>. Its C++
+<code>source_edit_capabilities()</code> action list reports which formatting and
+proof-gated edit actions are available and why others are disabled. This is
+not an LSP <code>initialize</code> response: the language server has not been implemented.</p>
 <p>Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.</p>
 

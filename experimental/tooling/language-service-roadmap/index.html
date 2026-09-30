@@ -4193,15 +4193,18 @@ until Phase 8 implements and tests transport.</p>
 </ul>
 <p><strong>Exit:</strong> each query has focused source/library tests and deterministic ordering.</p>
 <h2 id="phase-6-formatter-and-safe-source-edits">Phase 6 — formatter and safe source edits</h2>
-<p><strong>Status: in progress.</strong> The library now has a conservative, token-preserving
-two-space indentation and conservative token-gap formatter with
-document/range/on-type APIs, golden, idempotence, and preview tests. Versioned
-multi-document edit validation rejects stale,
-overlapping, or invalid UTF boundaries. Identity-based local rename is offered
-only after a successful semantic recheck and reference-rebinding proof.
-Comment-free top-of-file import blocks can be organized and rechecked; ambiguous
-trivia causes refusal. The remaining style rules, public/cross-module rename,
-and other refactorings below are not yet available. See
+<p><strong>Status: complete for the safety-gated Phase 6 scope.</strong> The strict-parse,
+token-preserving two-space formatter handles document/range/on-type requests,
+tested token-gap rules, and trailing horizontal whitespace, with golden and
+idempotence tests. It deliberately preserves line breaks and ambiguous gaps.
+Versioned multi-document edit validation rejects stale, overlapping, or invalid
+UTF boundaries. Identity-based local rename requires semantic recheck and
+reference-rebinding proof. Comment-free top-of-file import blocks can be
+organized; exact public workspace symbols can be imported with collision and
+binding checks. Compiler-issued diagnostic fixes are version-gated and
+rechecked. Capability discovery names available actions and explicit refusals.
+Public/cross-module rename, unused-import removal, face synthesis, and
+extraction remain disabled until their safety analyses exist. See
 <a href="../formatting-and-edits/">formatting and source edits</a>.</p>
 <ul>
 <li>Implement the deterministic lossless formatter with document/range/on-type
@@ -4211,8 +4214,10 @@ and other refactorings below are not yet available. See
   generation, diagnostic fixes, extract-variable, and extract-function only as
   their safety analyses become complete.</li>
 </ul>
-<p><strong>Exit:</strong> no edit is offered through textual name matching; conflicts or
-uncertain preservation cause a structured refusal rather than a risky edit.</p>
+<p><strong>Exit met:</strong> no edit is offered through textual name matching; conflicts or
+uncertain preservation cause a structured refusal rather than a risky edit.
+The explicitly disabled transformations are follow-on work, not advertised
+Phase 6 capabilities.</p>
 <h2 id="phase-7-operations-and-debugger-prerequisites">Phase 7 — operations and debugger prerequisites</h2>
 <ul>
 <li>Refactor check/build/run into cancellable structured operations with progress,
