@@ -90,6 +90,7 @@ documented_enum_member := documentation_comment* identifier ("(" type_list? ")")
 type_list := type ("," type)*
 
 type_annotation := identifier ("<" type_annotation ("," type_annotation)* ">")?
+                 | "(" (type_annotation ("," type_annotation)*)? ")" "=>" type_annotation
 qualified_enum_case := type_annotation "." identifier
 explicit_generic_call := identifier "<" type_list ">" "(" arguments? ")"
 qualified_name := identifier ("." identifier)*

@@ -165,6 +165,42 @@ namespace semantic
       {
         if (name)
         {
+          if (name->starts_with('('))
+          {
+            int parentheses = 0;
+            std::size_t close = std::string::npos;
+            for (std::size_t index = 0; index < name->size(); ++index)
+            {
+              if ((*name)[index] == '(') ++parentheses;
+              else if ((*name)[index] == ')' && --parentheses == 0) { close = index; break; }
+            }
+            if (close == std::string::npos || name->substr(close, 4) != ") =>")
+              throw semantic_error("Malformed function type annotation '" + *name + "'", range);
+            const std::string parameters = name->substr(1, close - 1);
+            std::size_t begin = 0;
+            parentheses = 0;
+            int angles = 0;
+            for (std::size_t index = 0; index <= parameters.size(); ++index)
+            {
+              if (index < parameters.size() && parameters[index] == '(') ++parentheses;
+              else if (index < parameters.size() && parameters[index] == ')') --parentheses;
+              else if (index < parameters.size() && parameters[index] == '<') ++angles;
+              else if (index < parameters.size() && parameters[index] == '>') --angles;
+              if (index == parameters.size() ||
+                  (parameters[index] == ',' && parentheses == 0 && angles == 0))
+              {
+                std::string parameter = parameters.substr(begin, index - begin);
+                while (!parameter.empty() && parameter.front() == ' ') parameter.erase(parameter.begin());
+                while (!parameter.empty() && parameter.back() == ' ') parameter.pop_back();
+                if (!parameter.empty()) resolve_type(std::optional<std::string>{parameter}, range, kind);
+                begin = index + 1;
+              }
+            }
+            std::string result = name->substr(close + 4);
+            while (!result.empty() && result.front() == ' ') result.erase(result.begin());
+            resolve_type(std::optional<std::string>{result}, range, kind);
+            return;
+          }
           const std::size_t open = name->find('<');
           const std::string base = open == std::string::npos ? *name : name->substr(0, open);
           std::string lookup = base;

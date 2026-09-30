@@ -21,7 +21,7 @@ verified_by: null
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation and execution | **Initial executable subset implemented** | direct `sagan file.sagan`, `--run-package`, temporary native builds, exit propagation, `--emit-cpp`, reference-counted classes/faces, exceptions, lambdas, checked arithmetic, collections, dimensions, control flow, demos |
 | Native units of measure | **Implemented pre-1.0 slice** | static dimensions/quantities/units, affine temperatures, scientific catalog and SI prefixes, callable constraints, custom declarations, erased native representation, `make units-demo` |
-| Deterministic execution | **Catchable runtime-error foundation implemented** | checked arithmetic and collection lookup failures become nominal `RuntimeError` values, with focused fixtures and a native demo |
+| Deterministic execution | **1.0 hypercore contract settled** | exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
 | Editor-tooling foundation | **Phase 0–3 foundation implemented** | reusable compiler archive, source identity/UTF-16 positions, structured diagnostics, lossless recovery, thread-safe versioned overlays, overlay-aware module resolution, cached workspace analysis, dependency invalidation, cancellation/stale-result gates, demos |
 
@@ -92,9 +92,11 @@ and requires face-typed fields to be weak because their concrete targets are
 dynamic. Every permitted ownership cycle therefore has an explicit weak edge
 and can be reclaimed without a tracing collector. Named functions
 and methods accept block or `=>` expression bodies.
-Typed expression lambdas are callable, may capture local lexical state, and can
-be stored in local variables or invoked immediately. Escaping closures and
-function-type annotations remain future runtime and type-system work.
+Function types use `(Parameter, ...) => Result`. Typed expression lambdas may
+be stored, passed, returned, or invoked immediately, and keep captured local
+variables and parameters alive in shared reference-counted cells. Closure
+copies share captured mutation. Contextual `self` capture remains deferred.
+Lambdas that attempt that capture are rejected explicitly in 1.0.
 Module declarations, import sources and aliases, and standalone exports are
 parsed and rendered. The loader resolves loose sibling files or manifest-backed packages transitively,
 validates module names and public exports, preserves aliases, and rejects
@@ -121,7 +123,9 @@ with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with `is`. Method-specific face generics, external package
 dependencies and distribution, and the concrete math, physics, and rendering APIs
-remain unresolved. Math's automatic availability and the explicit-import
+remain post-1.0 work. Implementation inheritance, parallelism, unsafe escape
+hatches, registries, lockfiles, and remote dependency resolution are also
+explicitly deferred. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.
 
 ## Required pre-1.0 design checkpoints
@@ -145,6 +149,13 @@ function/method/constructor/lambda parameters and results, generic arguments,
 and face signatures. Generated values retain only their ordinary numeric or
 geometry representation. Dynamic/logarithmic units, uncertainty, fractional
 dimensions, external catalogs, and coordinate frames remain deferred.
+
+The hypercore determinism checkpoint is complete. Sagan guarantees reproducible
+language results for exact integer/boolean/string/enum/optional operations,
+source-ordered control flow and collections, deterministic module resolution,
+and reference-counted identity/capture behavior. Floating-point bit identity,
+host/toolchain output, external I/O, concurrency, and future library numerics
+are outside this initial contract; see [Determinism](determinism.md).
 
 Windows is the initial supported installation platform; macOS and Linux remain
 tracked future targets. The Windows installer foundation now bundles the UCRT64

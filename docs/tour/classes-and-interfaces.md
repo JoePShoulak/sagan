@@ -81,4 +81,5 @@ expired targets read as `None`.
 
 **Open questions:** explicit enum values, automatic handling of
 all-strong reference cycles or borrowing, and whether limited
-implementation inheritance will exist.
+implementation inheritance will exist after 1.0; it is explicitly outside the
+1.0 hypercore contract.

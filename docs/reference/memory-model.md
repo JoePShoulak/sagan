@@ -41,11 +41,19 @@ Sagan does not have a general `null` value. A plain class or face value is
 always present; `None` is valid only where an `Optional<T>` supplies the absent
 case.
 
+Escaping closures use the same reference-counted lifetime principle. Local
+variables and parameters captured by a lambda reside in shared cells. The
+declaring scope and every closure created from that scope refer to the same
+cell, so mutation remains visible and the cell is released after the scope and
+all capturing closures are gone. Function values are written as
+`(Parameter, ...) => Result`. Capturing contextual `self` is rejected in 1.0
+until object-capture lifetime rules are defined.
+
 Reference cycles must currently contain an explicit weak edge to be reclaimed;
 all-strong cycles remain retained. **Open questions:** borrowing, automatic cycle
 detection or collection, destruction order,
-thread interaction, foreign ownership, value semantics, and observable lifetime
-behavior.
+thread interaction, foreign ownership, contextual `self` capture, value
+semantics, and destruction observability beyond the guarantees above.
 
 The design also intends to prevent concurrent mutation of the same data when
 parallel execution is eventually introduced, but parallel execution itself is

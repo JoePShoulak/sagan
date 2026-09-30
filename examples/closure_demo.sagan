@@ -1,0 +1,15 @@
+fun make_counter(start: Int): () => Int => fun(): Int => start := start + 1
+
+fun apply_twice(transform: (Int) => Int, value: Int): Int => transform(transform(value))
+
+fun main(): Int {
+  let counter: () => Int = make_counter(40)
+  let shared_counter: () => Int = counter
+  let offset = 1
+  let add_offset: (Int) => Int = fun(value: Int): Int => value + offset
+
+  print(counter())
+  print(shared_counter())
+  print(apply_twice(add_offset, 40))
+  return 0
+}

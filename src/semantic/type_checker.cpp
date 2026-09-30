@@ -72,6 +72,58 @@ namespace semantic
       std::vector<std::string> arguments;
     };
 
+    auto function_signature_type(const std::string_view type) -> std::optional<callable_signature>
+    {
+      if (!type.starts_with('(')) return {};
+      int depth = 0;
+      std::size_t close = std::string_view::npos;
+      for (std::size_t index = 0; index < type.size(); ++index)
+      {
+        if (type[index] == '(') ++depth;
+        else if (type[index] == ')' && --depth == 0)
+        {
+          close = index;
+          break;
+        }
+      }
+      if (close == std::string_view::npos || type.substr(close, 4) != ") =>") return {};
+      callable_signature result;
+      const std::string_view parameters = type.substr(1, close - 1);
+      std::size_t begin = 0;
+      depth = 0;
+      int angle_depth = 0;
+      for (std::size_t index = 0; index <= parameters.size(); ++index)
+      {
+        if (index < parameters.size() && parameters[index] == '(') ++depth;
+        else if (index < parameters.size() && parameters[index] == ')') --depth;
+        else if (index < parameters.size() && parameters[index] == '<') ++angle_depth;
+        else if (index < parameters.size() && parameters[index] == '>') --angle_depth;
+        if (index == parameters.size() ||
+            (parameters[index] == ',' && depth == 0 && angle_depth == 0))
+        {
+          std::string parameter(parameters.substr(begin, index - begin));
+          while (!parameter.empty() && parameter.front() == ' ') parameter.erase(parameter.begin());
+          while (!parameter.empty() && parameter.back() == ' ') parameter.pop_back();
+          if (!parameter.empty()) result.parameters.push_back(std::move(parameter));
+          begin = index + 1;
+        }
+      }
+      result.result = std::string(type.substr(close + 4));
+      while (!result.result.empty() && result.result.front() == ' ') result.result.erase(result.result.begin());
+      return result;
+    }
+
+    auto callable_type(const callable_signature &signature) -> std::string
+    {
+      std::string result = "(";
+      for (std::size_t index = 0; index < signature.parameters.size(); ++index)
+      {
+        if (index != 0) result += ", ";
+        result += signature.parameters[index];
+      }
+      return result + ") => " + signature.result;
+    }
+
     auto generic_instance(const std::string_view type) -> generic_type
     {
       const std::size_t open = type.find('<');
@@ -101,6 +153,13 @@ namespace semantic
     {
       for (std::size_t index = 0; index < parameters.size() && index < arguments.size(); ++index)
         if (type == parameters[index]) return arguments[index];
+      if (auto function = function_signature_type(type))
+      {
+        for (auto &parameter : function->parameters)
+          parameter = substitute_type(parameter, parameters, arguments);
+        function->result = substitute_type(function->result, parameters, arguments);
+        return callable_type(*function);
+      }
       const auto generic = generic_instance(type);
       if (!generic.arguments.empty())
       {
@@ -126,6 +185,17 @@ namespace semantic
           arguments[index] = actual;
         return arguments[index] == actual;
       }
+      const auto expected_function = function_signature_type(pattern);
+      const auto received_function = function_signature_type(actual);
+      if (expected_function || received_function)
+      {
+        if (!expected_function || !received_function ||
+            expected_function->parameters.size() != received_function->parameters.size()) return false;
+        for (std::size_t index = 0; index < expected_function->parameters.size(); ++index)
+          if (!infer_type_arguments(expected_function->parameters[index], received_function->parameters[index],
+                                    parameters, arguments)) return false;
+        return infer_type_arguments(expected_function->result, received_function->result, parameters, arguments);
+      }
       const auto expected = generic_instance(pattern);
       const auto received = generic_instance(actual);
       if (expected.arguments.empty()) return true;
@@ -134,6 +204,60 @@ namespace semantic
         if (!infer_type_arguments(expected.arguments[index], received.arguments[index], parameters, arguments))
           return false;
       return true;
+    }
+
+    auto expression_contains_name(const parser::expression &value, const std::string_view name) -> bool
+    {
+      if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(&value))
+        return identifier->name == name;
+      if (const auto *measured = dynamic_cast<const parser::measured_expression *>(&value))
+        return expression_contains_name(*measured->value, name);
+      if (const auto *grouping = dynamic_cast<const parser::grouping_expression *>(&value))
+        return expression_contains_name(*grouping->value, name);
+      if (const auto *unary = dynamic_cast<const parser::unary_expression *>(&value))
+        return expression_contains_name(*unary->operand, name);
+      if (const auto *binary = dynamic_cast<const parser::binary_expression *>(&value))
+        return expression_contains_name(*binary->left, name) || expression_contains_name(*binary->right, name);
+      if (const auto *conditional = dynamic_cast<const parser::conditional_expression *>(&value))
+        return expression_contains_name(*conditional->condition, name) ||
+               expression_contains_name(*conditional->when_true, name) ||
+               expression_contains_name(*conditional->when_false, name);
+      if (const auto *assignment = dynamic_cast<const parser::assignment_expression *>(&value))
+        return expression_contains_name(*assignment->target, name) ||
+               expression_contains_name(*assignment->value, name);
+      if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
+      {
+        if (expression_contains_name(*call->callee, name)) return true;
+        return std::any_of(call->arguments.begin(), call->arguments.end(), [&](const auto &argument)
+        {
+          return expression_contains_name(*argument, name);
+        });
+      }
+      if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
+        return expression_contains_name(*index->target, name) || expression_contains_name(*index->index, name);
+      if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
+        return expression_contains_name(*member->target, name);
+      if (const auto *string = dynamic_cast<const parser::string_expression *>(&value))
+        return std::any_of(string->parts.begin(), string->parts.end(), [&](const auto &part)
+        {
+          return part.interpolation && expression_contains_name(*part.interpolation, name);
+        });
+      if (const auto *spread = dynamic_cast<const parser::spread_expression *>(&value))
+        return expression_contains_name(*spread->value, name);
+      if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
+        return std::any_of(collection->elements.begin(), collection->elements.end(), [&](const auto &element)
+        {
+          return expression_contains_name(*element, name);
+        });
+      if (const auto *dictionary = dynamic_cast<const parser::dictionary_expression *>(&value))
+        return std::any_of(dictionary->entries.begin(), dictionary->entries.end(), [&](const auto &entry)
+        {
+          return (entry.key && expression_contains_name(*entry.key, name)) ||
+                 expression_contains_name(*entry.value, name);
+        });
+      if (const auto *lambda = dynamic_cast<const parser::lambda_expression *>(&value))
+        return expression_contains_name(*lambda->body, name);
+      return false;
     }
 
     auto enum_numeric_value(const std::string &spelling, const parser::span range) -> std::int64_t
@@ -604,6 +728,7 @@ namespace semantic
       auto annotation(const std::optional<std::string> &name) const -> std::string
       {
         if (!name) return std::string(unknown_type);
+        if (function_signature_type(*name)) return fixed_annotation(name);
         if (const auto contained = optional_element(*name))
         {
           std::string inner = *contained;
@@ -619,6 +744,14 @@ namespace semantic
       auto fixed_annotation(const std::optional<std::string> &name) const -> std::string
       {
         if (!name) return std::string(unknown_type);
+        if (const auto function = function_signature_type(*name))
+        {
+          callable_signature fixed = *function;
+          for (auto &parameter : fixed.parameters)
+            parameter = fixed_annotation(std::optional<std::string>{parameter});
+          fixed.result = fixed_annotation(std::optional<std::string>{fixed.result});
+          return callable_type(fixed);
+        }
         if (*name == "Int") return "Int64";
         if (*name == "Float") return "Float64";
         if (const auto contained = optional_element(*name))
@@ -659,13 +792,14 @@ namespace semantic
       {
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
+          const std::string declared = annotation(declaration->type_name);
           add_binding(declaration->name,
-                      binding{annotation(declaration->type_name), {}, false});
+                      binding{declared, function_signature_type(fixed_annotation(declaration->type_name)), false});
         }
         else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&value))
         {
           const auto declared_signature = signature(*function);
-          add_binding(function->name, binding{"Function", declared_signature});
+          add_binding(function->name, binding{callable_type(declared_signature), declared_signature});
         }
         else if (const auto *type = dynamic_cast<const parser::type_declaration *>(&value))
         {
@@ -1663,21 +1797,24 @@ namespace semantic
         }
         if (const auto *lambda = dynamic_cast<const parser::lambda_expression *>(&value))
         {
+          require(!expression_contains_name(*lambda->body, "self"),
+                  "Capturing 'self' in a lambda is not available in Sagan 1.0", value.range);
           callable_signature signature;
           open_scope();
           for (const auto &parameter : lambda->parameters)
           {
             const std::string parameter_type = fixed_annotation(parameter.type_name);
             signature.parameters.push_back(parameter_type);
-            add_binding(parameter.name, binding{parameter_type, {}});
+            add_binding(parameter.name, binding{parameter_type, function_signature_type(parameter_type)});
           }
           const std::string body = expression(*lambda->body);
           signature.result = fixed_annotation(lambda->return_type);
           if (!is_unknown(signature.result)) require_compatible(signature.result, body, value.range, "Lambda return");
           else signature.result = body;
           close_scope();
+          const std::string type = callable_type(signature);
           callables[&value] = std::move(signature);
-          return record(value, "Function");
+          return record(value, type);
         }
         return record(value, std::string(unknown_type));
       }
@@ -1744,7 +1881,7 @@ namespace semantic
         for (const auto &parameter : value.parameters)
         {
           const std::string type = fixed_annotation(parameter.type_name);
-          add_binding(parameter.name, binding{type, {}});
+          add_binding(parameter.name, binding{type, function_signature_type(type)});
           model.declarations.push_back(typed_declaration{value.range, parameter.name, type});
         }
         return_types.push_back(fixed_annotation(value.return_type));
@@ -1962,6 +2099,7 @@ namespace semantic
                                    : is_unknown(declared) ? inferred
                                                           : declared;
           std::optional<callable_signature> callable;
+          if (const auto declared_callable = function_signature_type(type)) callable = declared_callable;
           if (declaration->initializer)
           {
             if (const auto found = callables.find(declaration->initializer.get()); found != callables.end())

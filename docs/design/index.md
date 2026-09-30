@@ -22,4 +22,4 @@ The design documentation uses five confidence labels:
 | **Open question** | A decision that has deliberately not been made. |
 
 Read the [design philosophy](philosophy.md), [goals and non-goals](goals-and-non-goals.md),
-[determinism goal](determinism.md), and [status matrix](status.md).
+[deterministic hypercore contract](determinism.md), and [status matrix](status.md).

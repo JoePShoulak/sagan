@@ -42,9 +42,10 @@ interfaces may compose other interfaces.
 a method name and conventionally identifies a mutating counterpart; it is not an
 effect system.
 
-**Planned.** Reference counting is the intended memory-management model.
-Parallel execution is deferred. Exact unsafe escape hatches, ownership behavior,
-and concurrency rules remain to be designed.
+**Implemented foundation.** Class/face values and escaping closure captures use
+reference-counted storage; explicit weak class fields break object cycles.
+Parallel execution and unsafe escape hatches are explicitly post-1.0 work.
+Their concurrency and foreign-ownership rules are not part of the 1.0 contract.
 
 ## Simulation-oriented, modular by default
 

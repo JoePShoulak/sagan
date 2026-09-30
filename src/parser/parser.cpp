@@ -871,6 +871,21 @@ namespace parser
 
   auto syntax_parser::parse_type_annotation(const std::string &description) -> std::string
   {
+    if (match(tokens::LPAREN))
+    {
+      std::string result = "(";
+      if (!check(tokens::RPAREN))
+      {
+        do
+        {
+          if (result.size() != 1) result += ", ";
+          result += parse_type_annotation("a function parameter type");
+        } while (match(tokens::COMMA));
+      }
+      expect(tokens::RPAREN, "')' after function parameter types");
+      expect(tokens::FAT_ARROW, "'=>' after function parameter types");
+      return result + ") => " + parse_type_annotation("a function result type");
+    }
     std::string result = expect(tokens::IDENTIFIER, description).text;
     if (result == "Δ") result = "Delta";
     if (match(tokens::LANGLE))

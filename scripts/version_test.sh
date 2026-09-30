@@ -9,7 +9,7 @@ cd "$repo_root"
 [[ "$(bash scripts/version.sh bump 0.1.14 minor)" == "0.2.0" ]]
 [[ "$(bash scripts/version.sh bump 0.1.14 major)" == "1.0.0" ]]
 [[ "$(bash scripts/version.sh bump 0.1.14 none)" == "0.1.14" ]]
-[[ "$(bash scripts/version.sh impact 4e5a8b1)" == "minor" ]]
+[[ "$(bash scripts/version.sh impact e2bb1d6)" == "minor" ]]
 current_numeric="$(bash scripts/version.sh numeric)"
 next_minor="$(bash scripts/version.sh next minor)"
 [[ "$current_numeric" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]

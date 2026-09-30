@@ -40,15 +40,23 @@ are catchable as the appropriate built-in `RuntimeError` case.
 
 **Implemented native semantics:** anonymous lambdas use
 `fun(parameters) => expression`, with optional parameter and return annotations.
-Typed lambdas can be stored in local variables, called through those variables,
-or called immediately when grouped. They capture surrounding local bindings by
-reference in the current native subset. Their arguments and result are checked
-with the same lossless-conversion rules as named functions. Untyped lambda
-parameters remain valid parser/type-model input but are not native-emittable.
+Function types use `(Parameter, ...) => Result`; `() => Int` is therefore a
+parameterless function returning `Int`. Typed lambdas can be stored, passed,
+returned, called immediately, or called through variables and parameters.
+Their arguments and results use the same lossless-conversion rules as named
+functions.
 
-**Provisional semantics:** escaping closure ownership, function-type annotations,
-and the semantic rules for spread outside array and dictionary literals, safe access, dictionary-key
-hashability, and assignment expressions.
+Closures capture surrounding local variables and parameters by shared
+reference. Captured storage remains alive while any closure refers to it, so an
+escaping closure cannot retain a dangling stack reference. Copies of one
+closure share its captured state, and multiple closures created in the same
+scope observe mutations to the same captured variable. Untyped lambda
+parameters remain parser/type-model input but are not native-emittable.
+
+Closures that capture a method's contextual `self` are rejected in 1.0 rather
+than being emitted with an unsafe object lifetime. Those lifetime semantics
+remain provisional, as do the rules for spread outside array and dictionary
+literals, safe access, dictionary-key hashability, and assignment expressions.
 
 Numeric and geometry literals accept unit suffixes. A simple suffix is a unit
 name (`10 meter`); a composite suffix is parenthesized

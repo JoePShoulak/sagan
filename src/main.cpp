@@ -1745,7 +1745,31 @@ namespace
         "  let answer = add(40)\n"
         "  let immediate = (fun(value: Int): Int => value * 2)(21)\n"
         "  return answer + immediate\n}\n",
-        {"add: Function", "answer: Int64", "immediate: Int64"});
+        {"add: (Int64) => Int64", "answer: Int64", "immediate: Int64"});
+    passed &= expect_type_model(
+        "function annotations and escaping closures",
+        "fun make_counter(start: Int): () => Int => fun(): Int => start := start + 1\n"
+        "fun apply(transform: (Int) => Int, value: Int): Int => transform(value)\n"
+        "fun exercise(): Int {\n  let counter: () => Int = make_counter(40)\n"
+        "  let result = apply(fun(value: Int): Int => value + 1, counter())\n  return result\n}\n",
+        {"counter: () => Int64", "result: Int64"});
+    passed &= expect_type_error(
+        "function annotation mismatch",
+        "fun exercise(): Void {\n"
+        "  let transform: (Int) => Int = fun(value: String): String => value\n}\n",
+        "Variable initializer requires (Int64) => Int64, but received (String) => String");
+    passed &= expect_type_model(
+        "named functions and generic higher order functions",
+        "fun increment(value: Int): Int => value + 1\n"
+        "fun preserve<T>(transform: (T) => T): (T) => T => transform\n"
+        "fun exercise(): Int {\n  let transform: (Int) => Int = increment\n"
+        "  let same = preserve(transform)\n  return same(41)\n}\n",
+        {"transform: (Int64) => Int64", "same: (Int64) => Int64"});
+    passed &= expect_type_error(
+        "lambda self capture is rejected safely",
+        "class Counter {\n  let value: Int = 0\n"
+        "  fun reader(): () => Int => fun(): Int => self.value\n}\n",
+        "Capturing 'self' in a lambda is not available in Sagan 1.0");
     passed &= expect_type_model(
         "default class construction fields self and methods",
         "face Countable {\n  fun increment!(): Int\n  fun current(): Int\n}\n"

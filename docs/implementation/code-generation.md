@@ -22,7 +22,8 @@ prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned Cartesian and spherical vector and point values, Cartesian spreads,
 indexing, named components, iteration,
 printing and interpolation,
-typed expression lambdas with local lexical captures and immediate or stored calls,
+typed expression lambdas, source-level function types, higher-order calls, and
+escaping shared-reference captures,
 classes with typed fields, default or overloaded `new(...)` construction, `self`, and
 public/private fields and methods,
 reference-counted class and face values, dynamic face dispatch, and composed
@@ -130,8 +131,8 @@ C++ translation.
 module names to nested files under its source root, and uses the same linking
 and validation pipeline. The package demo compiles and executes that result.
 
-Open work includes generated-code structure, borrowing, escaping closures,
-richer exception patterns, debug information, compiler selection and flags,
+Open work includes generated-code structure, borrowing, contextual `self`
+capture in escaping closures, richer exception patterns, debug information, compiler selection and flags,
 standard-library linkage, platform support, optimization, broader expression
 and statement lowering, and deterministic constraints beyond the implemented
 numeric subset. Native compiler

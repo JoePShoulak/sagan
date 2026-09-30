@@ -39,7 +39,56 @@ namespace codegen
       std::unordered_map<std::string, const parser::function_declaration *> functions;
       semantic::units::registry unit_registry;
       std::vector<std::string> active_return_types;
+      std::vector<std::unordered_set<std::string>> boxed_scopes;
       bool in_method = false;
+
+      auto open_boxed_scope() -> void { boxed_scopes.emplace_back(); }
+      auto close_boxed_scope() -> void { boxed_scopes.pop_back(); }
+      auto box(const std::string &name) -> void { boxed_scopes.back().insert(name); }
+      auto boxed(const std::string &name) const -> bool
+      {
+        return std::any_of(boxed_scopes.rbegin(), boxed_scopes.rend(), [&](const auto &scope)
+        {
+          return scope.contains(name);
+        });
+      }
+
+      auto function_components(const std::string_view name) const
+          -> std::optional<std::pair<std::vector<std::string>, std::string>>
+      {
+        if (!name.starts_with('(')) return {};
+        int depth = 0;
+        std::size_t close = std::string_view::npos;
+        for (std::size_t index = 0; index < name.size(); ++index)
+        {
+          if (name[index] == '(') ++depth;
+          else if (name[index] == ')' && --depth == 0) { close = index; break; }
+        }
+        if (close == std::string_view::npos || name.substr(close, 4) != ") =>") return {};
+        const std::string_view text = name.substr(1, close - 1);
+        std::vector<std::string> parameters;
+        std::size_t begin = 0;
+        depth = 0;
+        int angle_depth = 0;
+        for (std::size_t index = 0; index <= text.size(); ++index)
+        {
+          if (index < text.size() && text[index] == '(') ++depth;
+          else if (index < text.size() && text[index] == ')') --depth;
+          else if (index < text.size() && text[index] == '<') ++angle_depth;
+          else if (index < text.size() && text[index] == '>') --angle_depth;
+          if (index == text.size() || (text[index] == ',' && depth == 0 && angle_depth == 0))
+          {
+            std::string parameter(text.substr(begin, index - begin));
+            while (!parameter.empty() && parameter.front() == ' ') parameter.erase(parameter.begin());
+            while (!parameter.empty() && parameter.back() == ' ') parameter.pop_back();
+            if (!parameter.empty()) parameters.push_back(std::move(parameter));
+            begin = index + 1;
+          }
+        }
+        std::string result(name.substr(close + 4));
+        while (!result.empty() && result.front() == ' ') result.erase(result.begin());
+        return std::pair{std::move(parameters), std::move(result)};
+      }
 
       auto indentation() const -> std::string
       {
@@ -77,6 +126,16 @@ namespace codegen
         if (name == "Int32") return "std::int32_t";
         if (name == "Int16") return "std::int16_t";
         if (name == "Int8") return "std::int8_t";
+        if (const auto function = function_components(name))
+        {
+          std::string result = "std::function<" + type_name(function->second, range) + "(";
+          for (std::size_t index = 0; index < function->first.size(); ++index)
+          {
+            if (index != 0) result += ", ";
+            result += type_name(function->first[index], range);
+          }
+          return result + ")>";
+        }
         if (const auto measured = semantic::units::parse_measured_type(name, unit_registry, range))
           return type_name(measured->numeric, range, entry);
         if (active_type_parameters.contains(name)) return identifier(name);
@@ -84,6 +143,18 @@ namespace codegen
           return "std::optional<" + type_name(name.substr(9, name.size() - 10), range) + ">";
         const std::size_t generic_open = name.find('<');
         const std::string generic_base = generic_open == std::string::npos ? name : name.substr(0, generic_open);
+        if (generic_base == "Array")
+        {
+          const auto arguments = generic_arguments(name);
+          if (arguments.size() == 1) return "std::vector<" + type_name(arguments.front(), range) + ">";
+        }
+        if (generic_base == "Dictionary")
+        {
+          const auto arguments = generic_arguments(name);
+          if (arguments.size() == 2)
+            return "std::unordered_map<" + type_name(arguments[0], range) + ", " +
+                   type_name(arguments[1], range) + ">";
+        }
         if (class_types.contains(generic_base) || face_types.contains(generic_base))
         {
           std::string concrete = identifier(generic_base);
@@ -384,7 +455,8 @@ namespace codegen
         if (const auto *name = dynamic_cast<const parser::identifier_expression *>(&value))
         {
           if (name->name == "None") return "std::nullopt";
-          return generic_identifier(name->name, value.range);
+          const std::string generated = generic_identifier(name->name, value.range);
+          return boxed(name->name) ? "(*" + generated + ")" : generated;
         }
         if (const auto *literal = dynamic_cast<const parser::literal_expression *>(&value))
         {
@@ -757,16 +829,22 @@ namespace codegen
         }
         if (const auto *lambda = dynamic_cast<const parser::lambda_expression *>(&value))
         {
-          std::string result = "[&](";
+          std::string result = "[=](";
+          open_boxed_scope();
           for (std::size_t index = 0; index < lambda->parameters.size(); ++index)
           {
             if (index != 0) result += ", ";
             const auto &parameter = lambda->parameters[index];
-            result += type(parameter.type_name, value.range) + " " + identifier(parameter.name);
+            result += type(parameter.type_name, value.range) + " " + identifier(parameter.name) + "_value";
+            box(parameter.name);
           }
           const std::string result_type = lambda->return_type.value_or(expression_type(*lambda->body));
-          result += ") -> " + type_name(result_type, value.range) + " { return " +
-                    converted_expression(*lambda->body, result_type) + "; }";
+          result += ") -> " + type_name(result_type, value.range) + " { ";
+          for (const auto &parameter : lambda->parameters)
+            result += "auto " + identifier(parameter.name) + " = std::make_shared<" +
+                      type(parameter.type_name, value.range) + ">(" + identifier(parameter.name) + "_value); ";
+          result += "return " + converted_expression(*lambda->body, result_type) + "; }";
+          close_boxed_scope();
           return result;
         }
         fail("expression is not available in the initial native subset", value.range);
@@ -777,7 +855,9 @@ namespace codegen
       {
         output << "{\n";
         ++depth;
+        open_boxed_scope();
         for (const auto &entry : value.statements) statement(*entry);
+        close_boxed_scope();
         --depth;
         output << indentation() << '}';
       }
@@ -787,20 +867,19 @@ namespace codegen
         output << indentation();
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
+          const std::string checked_type = declaration_type(*declaration);
+          std::string initializer;
           if (declaration->initializer)
           {
-            if (declaration->type_name) output << type(declaration->type_name, declaration->range) << ' ';
-            else output << "auto ";
-            output << identifier(declaration->name) << " = ";
             if (declaration->type_name)
-              output << converted_expression(*declaration->initializer,
-                                             types.declarations.empty() ? *declaration->type_name
-                                                                        : declaration_type(*declaration));
-            else output << expression(*declaration->initializer);
+              initializer = converted_expression(*declaration->initializer, checked_type);
+            else initializer = expression(*declaration->initializer);
           }
-          else
-            output << type(declaration->type_name, declaration->range) << ' ' << identifier(declaration->name);
-          output << ";\n";
+          box(declaration->name);
+          output << "auto " << identifier(declaration->name) << " = std::make_shared<"
+                 << type_name(checked_type, declaration->range) << ">(";
+          if (!initializer.empty()) output << initializer;
+          output << ");\n";
         }
         else if (const auto *expression_value = dynamic_cast<const parser::expression_statement *>(&value))
           output << expression(*expression_value->value) << ";\n";
@@ -855,9 +934,18 @@ namespace codegen
         }
         else if (const auto *loop = dynamic_cast<const parser::for_statement *>(&value))
         {
-          output << "for (auto " << identifier(loop->binding) << " : " << expression(*loop->iterable) << ") ";
-          block(*loop->body);
-          output << "\n";
+          output << "for (auto " << identifier(loop->binding) << "_value : " << expression(*loop->iterable)
+                 << ") {\n";
+          ++depth;
+          open_boxed_scope();
+          box(loop->binding);
+          output << indentation() << "auto " << identifier(loop->binding)
+                 << " = std::make_shared<decltype(" << identifier(loop->binding) << "_value)>("
+                 << identifier(loop->binding) << "_value);\n";
+          for (const auto &entry : loop->body->statements) statement(*entry);
+          close_boxed_scope();
+          --depth;
+          output << indentation() << "}\n";
         }
         else if (const auto *control = dynamic_cast<const parser::loop_control_statement *>(&value))
           output << (control->control_kind == parser::loop_control_statement::kind::break_loop ? "break;\n" :
@@ -925,8 +1013,12 @@ namespace codegen
               {
                 output << "{\n";
                 ++depth;
-                output << indentation() << "auto " << identifier(payload->name) << " = *" << temporary << ";\n";
+                open_boxed_scope();
+                box(payload->name);
+                output << indentation() << "auto " << identifier(payload->name) << " = std::make_shared<"
+                       << type_name(binding_type(*payload), payload->range) << ">(*" << temporary << ");\n";
                 for (const auto &entry : branch.body->statements) statement(*entry);
+                close_boxed_scope();
                 --depth;
                 output << indentation() << "}";
                 output << "\n";
@@ -936,6 +1028,7 @@ namespace codegen
               {
                 output << "{\n";
                 ++depth;
+                open_boxed_scope();
                 const std::size_t generic_open = matched_type.find('<');
                 const std::string matched_base = generic_open == std::string::npos
                                                      ? matched_type : matched_type.substr(0, generic_open);
@@ -944,17 +1037,21 @@ namespace codegen
                 for (std::size_t index = 0; index < call->arguments.size(); ++index)
                 {
                   const auto &binding = dynamic_cast<const parser::identifier_expression &>(*call->arguments[index]);
-                  output << indentation() << "auto " << identifier(binding.name) << " = ";
+                  box(binding.name);
+                  output << indentation() << "auto " << identifier(binding.name) << " = std::make_shared<"
+                         << type_name(binding_type(binding), binding.range) << ">(";
                   if (generic_payload)
                     output << "std::any_cast<" << type_name(binding_type(binding), binding.range) << ">(" << temporary
-                           << ".payload.at(" << index << "));\n";
+                           << ".payload.at(" << index << "))";
                   else if (call->arguments.size() == 1)
-                    output << "std::get<" << enum_case->second.second << ">(" << temporary << ".payload);\n";
+                    output << "std::get<" << enum_case->second.second << ">(" << temporary << ".payload)";
                   else
                     output << "std::get<" << index << ">(std::get<" << enum_case->second.second << ">(" << temporary
-                           << ".payload));\n";
+                           << ".payload))";
+                  output << ");\n";
                 }
                 for (const auto &entry : branch.body->statements) statement(*entry);
+                close_boxed_scope();
                 --depth;
                 output << indentation() << "}\n";
                 continue;
@@ -1033,32 +1130,36 @@ namespace codegen
         {
           if (index != 0) output << ", ";
           output << type(value.parameters[index].type_name, value.range) << ' '
-                 << identifier(value.parameters[index].name);
+                 << identifier(value.parameters[index].name) << "_value";
         }
-        output << ") ";
+        output << ") {\n";
+        ++depth;
+        open_boxed_scope();
+        for (const auto &parameter : value.parameters)
+        {
+          box(parameter.name);
+          output << indentation() << "auto " << identifier(parameter.name) << " = std::make_shared<"
+                 << type(parameter.type_name, value.range) << ">(" << identifier(parameter.name) << "_value);\n";
+        }
         active_return_types.push_back(value.return_type.value_or("Void"));
+        if (entry) output << indentation() << "sagan_initialize_runtime();\n";
         if (value.expression_body)
         {
-          output << "{ ";
-          if (entry) output << "sagan_initialize_runtime(); ";
-          output << "return " << converted_expression(*value.expression_body, active_return_types.back()) << "; }\n\n";
+          output << indentation() << "return "
+                 << converted_expression(*value.expression_body, active_return_types.back()) << ";\n";
+          close_boxed_scope();
+          --depth;
+          output << "}\n\n";
           active_return_types.pop_back();
           active_type_parameters = previous_type_parameters;
           return;
         }
         if (!value.body) fail("function has no executable body", value.range);
-        if (entry)
-        {
-          output << "{\n";
-          ++depth;
-          output << indentation() << "sagan_initialize_runtime();\n";
-          for (const auto &entry_statement : value.body->statements) statement(*entry_statement);
-          if (value.return_type == "Void") output << indentation() << "return 0;\n";
-          --depth;
-          output << indentation() << '}';
-        }
-        else block(*value.body);
-        output << "\n\n";
+        for (const auto &entry_statement : value.body->statements) statement(*entry_statement);
+        if (entry && value.return_type == "Void") output << indentation() << "return 0;\n";
+        close_boxed_scope();
+        --depth;
+        output << "}\n\n";
         active_return_types.pop_back();
         active_type_parameters = previous_type_parameters;
       }
@@ -1089,30 +1190,42 @@ namespace codegen
         {
           if (index != 0) output << ", ";
           output << type(value.parameters[index].type_name, value.range) << ' '
-                 << identifier(value.parameters[index].name);
+                 << identifier(value.parameters[index].name) << "_value";
         }
         output << ") ";
         const bool previous_method = in_method;
         in_method = true;
+        if (!value.expression_body && !value.body)
+        {
+          if (virtual_method)
+          {
+            output << "= 0;\n";
+            in_method = previous_method;
+            active_type_parameters = previous_type_parameters;
+            return;
+          }
+          fail("method has no executable body", value.range);
+        }
         active_return_types.push_back(value.return_type.value_or("Void"));
+        output << "{\n";
+        ++depth;
+        open_boxed_scope();
+        for (const auto &parameter : value.parameters)
+        {
+          box(parameter.name);
+          output << indentation() << "auto " << identifier(parameter.name) << " = std::make_shared<"
+                 << type(parameter.type_name, value.range) << ">(" << identifier(parameter.name) << "_value);\n";
+        }
         if (value.expression_body)
-          output << "{ return " << converted_expression(*value.expression_body, active_return_types.back()) << "; }";
+          output << indentation() << "return "
+                 << converted_expression(*value.expression_body, active_return_types.back()) << ";\n";
         else
         {
-          if (!value.body)
-          {
-            if (virtual_method)
-            {
-              output << "= 0;\n";
-              active_return_types.pop_back();
-              in_method = previous_method;
-              active_type_parameters = previous_type_parameters;
-              return;
-            }
-            fail("method has no executable body", value.range);
-          }
-          block(*value.body);
+          for (const auto &entry_statement : value.body->statements) statement(*entry_statement);
         }
+        close_boxed_scope();
+        --depth;
+        output << indentation() << '}';
         active_return_types.pop_back();
         in_method = previous_method;
         active_type_parameters = previous_type_parameters;
@@ -1412,7 +1525,7 @@ namespace codegen
                     field && field->weak_member)
                   weak_fields[type->name].insert(field->name);
           }
-        output << "// Generated by Sagan.\n#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <tuple>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <variant>\n#include <vector>\n"
+        output << "// Generated by Sagan.\n#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <functional>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <tuple>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <variant>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
                   "#include <windows.h>\n"
                   "#endif\n\n"

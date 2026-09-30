@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.68.1](https://img.shields.io/badge/development-0.68.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.69.0](https://img.shields.io/badge/development-0.69.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -83,8 +83,11 @@ Spherical points expose `.radius`, `.inclination`, and `.azimuth`; spherical
 vectors expose `.magnitude`, `.inclination`, and `.azimuth`. Spherical
 arithmetic and Cartesian conversion are intentionally deferred to the core math
 API so their conventions are explicit rather than silently inferred.
-Typed expression lambdas can be stored, invoked immediately or through a local
-variable, and capture surrounding local state in the executable subset.
+Function types use `(Parameter, ...) => Result`. Typed expression lambdas can
+be stored, passed, returned, or invoked immediately. Captured local variables
+and parameters use shared reference-counted cells, so escaping closures remain
+valid and copies observe the same mutations. Run `make closure-demo` for the
+executable source and output.
 Classes support typed fields, overloaded `new(...)` constructors, default
 zero-argument construction when every field has a default, `self`,
 field mutation, ordinary methods, and `!`-suffixed mutating methods.
@@ -150,8 +153,8 @@ currently measured compiler, semantic-analysis, and CLI coverage.
 - mutable variables by default, with trailing `!` naming mutating methods;
 - reference-counted memory management;
 - native compilation through an initial C++ backend; and
-- cross-platform deterministic simulation as a goal, with its exact contract
-  still to be defined.
+- a deterministic exact-value hypercore contract, with floating-point and
+  future library guarantees specified separately.
 
 The [design philosophy](docs/design/philosophy.md),
 [goals and non-goals](docs/design/goals-and-non-goals.md), and
@@ -222,6 +225,7 @@ make package-demo
 make run-demo
 make geometry-demo
 make units-demo
+make closure-demo
 bin/sagan --capabilities-json
 bin/sagan --diagnostics-json examples/type_error.sagan
 make editor-tooling-demo

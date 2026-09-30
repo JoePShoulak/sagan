@@ -19,7 +19,8 @@ rules that still await semantic and runtime work.
   [classes/interfaces](classes-interfaces-composition.md): settled direction
   with major open semantics.
 - [Exceptions](exceptions.md), [modules](modules.md), and
-  [memory model](memory-model.md): intended models, not implementations.
+  [memory model](memory-model.md): implemented reference-counted objects,
+  weak fields, and escaping closure captures, plus explicitly deferred work.
 
 The lexical and syntax references describe working compiler-front-end behavior;
 type, runtime, and library behavior remains largely design work.

@@ -41,4 +41,5 @@ default. Cyclic face composition is invalid.
 
 **Open questions:** object construction, storage layout, dynamic dispatch,
 value/reference behavior, and whether limited
-implementation inheritance will exist.
+implementation inheritance will exist after 1.0; no implementation-inheritance
+feature is part of the 1.0 hypercore contract.

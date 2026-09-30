@@ -54,7 +54,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test check-windows-runtime coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo units-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test check-windows-runtime coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo units-demo closure-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -151,6 +151,9 @@ geometry-demo: $(TARGET)
 
 units-demo: $(TARGET)
 	bash scripts/units_demo.sh
+
+closure-demo: $(TARGET)
+	bash scripts/closure_demo.sh
 
 editor-tooling-demo: $(TARGET)
 	bash scripts/editor_tooling_demo.sh
