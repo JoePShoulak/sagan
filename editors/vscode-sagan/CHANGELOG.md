@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Add capability-aware extension activation and compiler discovery.
+- Validate the versioned `sagan.language-service/1` response before using compiler tooling.
+- Add **Sagan: Show Tooling Status**, an output channel, and a configurable compiler path.
+- Keep semantic providers disabled until the compiler advertises a language server.
+- Add focused capability parsing and discovery tests.
+
 ## 0.1.2
 
 - Highlight the current `weak` declaration modifier and `??` optional-coalescing operator.

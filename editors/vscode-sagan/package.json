@@ -2,7 +2,7 @@
   "name": "sagan-language",
   "displayName": "Sagan Language",
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "publisher": "sagan-language",
   "icon": "images/sagan-logo.png",
   "repository": {
@@ -13,6 +13,11 @@
   "engines": {
     "vscode": "^1.85.0"
   },
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onLanguage:sagan",
+    "onCommand:sagan.showToolingStatus"
+  ],
   "categories": [
     "Programming Languages"
   ],
@@ -22,7 +27,7 @@
     "syntax-highlighting"
   ],
   "scripts": {
-    "test": "node tests/grammar.test.js",
+    "test": "node tests/run-tests.js",
     "package": "vsce package"
   },
   "devDependencies": {
@@ -31,6 +36,23 @@
     "vscode-textmate": "^9.2.1"
   },
   "contributes": {
+    "commands": [
+      {
+        "command": "sagan.showToolingStatus",
+        "title": "Sagan: Show Tooling Status"
+      }
+    ],
+    "configuration": {
+      "title": "Sagan",
+      "properties": {
+        "sagan.compiler.path": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Absolute path to the Sagan compiler. When empty, the extension checks the workspace bin directory and PATH."
+        }
+      }
+    },
     "languages": [
       {
         "id": "sagan",
