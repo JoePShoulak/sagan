@@ -38,8 +38,8 @@ def main() -> int:
         except (ValueError, yaml.YAMLError) as error:
             failures.append(f"{path.relative_to(ROOT)} has invalid front matter: {error}")
             continue
-        if metadata.get("status") != "publication-ready":
-            failures.append(f"{path.relative_to(ROOT)} is not publication-ready")
+        if metadata.get("status") != "complete":
+            failures.append(f"{path.relative_to(ROOT)} is not complete")
         if metadata.get("publication_ready") is not True:
             failures.append(f"{path.relative_to(ROOT)} has publication_ready != true")
         if metadata.get("verified_in") != version:

@@ -121,10 +121,11 @@ verified_on: null
 verified_by: null
 ```
 
-To confirm a page as accurate and ready for publication, change all five fields together:
+After the primary audit confirms a page as complete, change all five fields
+together:
 
 ```yaml
-status: publication-ready
+status: complete
 publication_ready: true
 verified_in: RELEASE_VERSION
 verified_on: YYYY-MM-DD
@@ -132,13 +133,14 @@ verified_by: Reviewer name
 ```
 
 `bash scripts/docs.sh check` rejects missing, incomplete, contradictory, or stale
-ready-state metadata. In `experimental`, a ready page may be verified for an
+completion metadata. In `experimental`, a complete page may be verified for an
 upcoming semantic release so it can be reviewed before publication. A released
 build accepts only pages verified for that exact release version. Previously
-ready pages must therefore be reviewed and confirmed for each new release before
-they can remain publication-ready in its archive.
+complete pages must therefore be reviewed and confirmed for each new release before
+they can remain complete in its archive.
 
-Use `review-needed` when a draft is substantial enough for review but is not yet confirmed.
+Use `review-needed` only after the primary audit deliberately sends a page to
+Zach. All unaudited pages remain `work-in-progress`.
 
 ## Version publication
 
@@ -154,4 +156,4 @@ a new release version instead.
 
 The [documentation roadmaps](documentation-roadmaps.md) define the expansion
 plan leading into 1.0 and the ordered behavior-confirmation audit used to move
-pages from internal drafts to publication-ready documentation.
+pages from unaudited drafts to complete documentation.

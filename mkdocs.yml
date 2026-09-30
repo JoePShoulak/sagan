@@ -73,8 +73,8 @@ extra:
     provider: mike
   status:
     work-in-progress: Work in progress
-    review-needed: Review needed
-    publication-ready: Publication ready
+    review-needed: Needs review
+    complete: Complete
   documentation:
     version: !ENV [SAGAN_DOCS_VERSION, experimental]
     channel: !ENV [SAGAN_DOCS_CHANNEL, experimental]

@@ -28,13 +28,13 @@ For each stage:
 ### Page outcomes
 
 - **Work in progress:** not yet audited or still being revised.
-- **Publication ready:** confirmed for Sagan 1.0 by the current reviewer.
-- **Review needed:** understandable enough to defer, but reserved for Zach's
+- **Complete:** confirmed for Sagan 1.0 by the current reviewer.
+- **Needs review:** understandable enough to defer, but reserved for Zach's
   focused review.
 
 Only change a page's status after an explicit review decision. A
-publication-ready page records `verified_in: 1.0.0`, the review date, and the
-reviewer's name. A page sent to Zach uses `status: review-needed` and remains
+complete page records `verified_in: 1.0.0`, the review date, and the reviewer's
+name. A page sent to Zach uses `status: review-needed` and remains
 `publication_ready: false` until his questions are resolved.
 
 ## Stage 0 — site experience
@@ -147,7 +147,7 @@ the math, physics, and rendering boundaries.
 
 ## Stage 9 — Zach review and 1.0 freeze
 
-Collect every page marked **Review needed** into a short queue. For each page,
+Collect every page marked **Needs review** into a short queue. For each page,
 provide the disputed rule, a plain-language explanation, representative
 programs, observed behavior, and the decision required. Resolve each item or
 record a precise 1.0 limitation.
@@ -155,7 +155,7 @@ record a precise 1.0 limitation.
 Then:
 
 1. pin the exact Sagan 1.0 source ref and `v1.0.0` tag;
-2. ensure every public 1.0 page is publication-ready for `1.0.0`;
+2. ensure every public 1.0 page is complete for `1.0.0`;
 3. run `bash scripts/docs.sh check` and the release documentation gate;
 4. publish and archive the immutable `1.0.0` documentation version; and
 5. return `experimental` to tracking continued development on `main`.

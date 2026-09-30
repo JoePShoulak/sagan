@@ -10,7 +10,7 @@ from typing import Any
 ALLOWED_STATUSES = {
     "work-in-progress",
     "review-needed",
-    "publication-ready",
+    "complete",
 }
 
 
@@ -39,10 +39,10 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
     documentation = config.extra["documentation"]
     docs_version = documentation["version"]
     channel = documentation["channel"]
-    is_ready = status == "publication-ready"
+    is_ready = status == "complete"
     if publication_ready != is_ready:
         raise ValueError(
-            f"{path}: publication_ready must be true exactly when status is publication-ready"
+            f"{path}: publication_ready must be true exactly when status is complete"
         )
 
     if is_ready:
@@ -52,19 +52,19 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
         )
         if not version_matches and not targets_release:
             raise ValueError(
-                f"{path}: publication-ready pages must be verified_in {docs_version!r}"
+                f"{path}: complete pages must be verified_in {docs_version!r}"
                 " or target a semantic release from the experimental channel"
             )
         if not verified_by or not isinstance(verified_by, str):
-            raise ValueError(f"{path}: publication-ready pages require verified_by")
+            raise ValueError(f"{path}: complete pages require verified_by")
         if not verified_on:
-            raise ValueError(f"{path}: publication-ready pages require verified_on")
+            raise ValueError(f"{path}: complete pages require verified_on")
         try:
             date.fromisoformat(str(verified_on))
         except ValueError as error:
             raise ValueError(f"{path}: verified_on must use YYYY-MM-DD") from error
         notice = (
-            '!!! success "Publication-ready documentation"\n'
+            '!!! success "Complete documentation"\n'
             f"    Confirmed by **{verified_by}** on **{verified_on}** "
             f"for documentation version **{verified_in}**.\n\n"
         )
@@ -73,10 +73,16 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
             raise ValueError(
                 f"{path}: non-ready pages must leave verified fields null"
             )
-        label = "Review needed" if status == "review-needed" else "Work in progress"
+        needs_review = status == "review-needed"
+        label = "Needs review" if needs_review else "Work in progress"
+        explanation = (
+            "This page completed the primary audit but requires Zach's review."
+            if needs_review
+            else "This page has not completed the documentation audit."
+        )
         notice = (
             f'!!! warning "Experimental documentation — {label}"\n'
-            "    This page has not been confirmed as accurate or approved for publication. "
+            f"    {explanation} "
             f"Current documentation version: **{docs_version}**.\n\n"
         )
 

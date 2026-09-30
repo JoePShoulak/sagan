@@ -58,7 +58,7 @@ own public routing, certificates, and the public VIP.
 Publishing a released version is blocked while either condition is true:
 
 - the documentation channel is not `released`; or
-- any Markdown page is not publication-ready and verified for the current
+- any Markdown page is not complete and verified for the current
   documentation version.
 
 The experimental channel fails this gate by design. Check a release candidate
