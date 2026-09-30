@@ -8,9 +8,12 @@ verified_by: null
 ---
 
 # Type system
-Sagan is designed as a strongly and statically typed language.
+Sagan is strongly and statically typed. *Statically typed* means the compiler
+checks types before the program runs. *Strongly typed* means values are not
+silently treated as unrelated types just because their machine representation
+looks similar.
 
-**Settled design:**
+The central rules are:
 
 - implicit conversion is limited to conversions proven lossless;
 - variables are mutable by default;
@@ -19,7 +22,7 @@ Sagan is designed as a strongly and statically typed language.
 - no separate character-literal type is planned; and
 - math types form built-in vocabulary.
 
-**Implemented foundation:** `Int` is the canonical integer spelling. Literals
+`Int` is the canonical integer spelling. Literals
 use the smallest fitting signed width from `Int8` through `Int64`; otherwise
 `Int` defaults to `Int64`. Floating literals and unconstrained `Float` positions
 default to `Float64`, with explicit `Float32` available. Only provably lossless
@@ -57,11 +60,10 @@ point translation, scaling, negation, and context-free conversion between the
 families are rejected. These rules preserve the same lossless component
 widening and checked integer arithmetic as vector operations.
 
-**Implemented for the native numeric subset:** integer arithmetic overflow
+Integer arithmetic overflow
 raises the nominal `RuntimeError.integer_overflow` exception. Other native
 numeric domain failures and collection lookup failures use the corresponding
-`RuntimeError` case. Typed collections and interfaces continue to have
-provisional semantics outside the implemented subset.
+`RuntimeError` case.
 
 Generic enum annotations and inferred top-level generic functions are
 implemented. Generic classes infer invariant type arguments from constructors,
@@ -85,10 +87,9 @@ values convert at declarations, assignments, arguments, and returns; callable
 signatures can therefore require a specific unit. Unit metadata is compile-time
 only, and the C++ backend stores ordinary native numeric and geometry values.
 
-**Open questions:** user-defined member inference, value versus
-reference categories, broader generic semantics, variance,
-compile-time constants, and representation. Deferred cases are currently
-marked `Unknown` by the type model.
+Generic parameters are invariant: `Box<Child>` is not automatically a
+`Box<Parent>`. Variance, borrowing, user-defined implicit conversions, and a
+general compile-time-constant system are deferred.
 
 Annotations must name types. Typed variables may begin uninitialized, but they
 must be definitely assigned before use; compound assignment counts as a read.

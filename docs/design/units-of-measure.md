@@ -9,9 +9,10 @@ verified_by: null
 
 # Native units of measure
 
-This document is the implemented pre-1.0 contract for Sagan's native unit
-system. The compiler front end, native C++ backend, focused self-tests, and
-`make units-demo` exercise the verified slice described here.
+Sagan understands physical units as part of a value's type. This lets the
+compiler reject mistakes such as adding a distance to a duration before the
+program runs. Unit metadata is used for checking and conversion; it does not
+add a separate unit object beside every number at runtime.
 
 ## Syntax
 

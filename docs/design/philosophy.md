@@ -10,7 +10,7 @@ verified_by: null
 # Design philosophy
 ## Simulation first
 
-**Settled design.** Geometry, astrodynamics, physics, scientific computing,
+Geometry, astrodynamics, physics, scientific computing,
 rendering, and interacting entities are central use cases. Vectors, matrices,
 quaternions, coordinates, scientific notation, and large numerical workloads
 belong in the language's normal vocabulary.
@@ -22,27 +22,29 @@ defined.
 
 ## Strong and explicit types
 
-**Settled design.** Sagan minimizes implicit coercion. A conversion is implicit
-only when the implemented checker can prove it lossless. The native executable
+Sagan minimizes implicit conversion. An implicit conversion happens without an
+`as` expression, so Sagan permits one only when the checker can prove it
+lossless. The native executable
 subset raises runtime errors for integer arithmetic overflow and division or
 modulo by zero. Extending those guarantees to future numeric and user-defined
 types remains ongoing work.
 
 ## Composition before inheritance
 
-**Settled design.** Small interfaces are the primary tools for reuse,
+Small interfaces, spelled `face`, are the primary tools for reuse,
 abstraction, and polymorphism. Classes implement and combine interfaces, and
 interfaces may compose other interfaces.
 
-**Open question.** Whether any limited implementation inheritance will exist.
+Sagan does not currently provide implementation inheritance. Code reuse comes
+from face defaults, ordinary functions, and composed objects.
 
 ## Visible mutation and safety
 
-**Settled design.** Variables are mutable by default. A trailing `!` is part of
+Variables are mutable by default. A trailing `!` is part of
 a method name and conventionally identifies a mutating counterpart; it is not an
 effect system.
 
-**Implemented foundation.** Class/face values and escaping closure captures use
+Class and face values and escaping closure captures use
 reference-counted storage; explicit weak class fields break object cycles.
 Parallel execution and unsafe escape hatches are explicitly post-1.0 work.
 Their concurrency and foreign-ownership rules are not part of the 1.0 contract.

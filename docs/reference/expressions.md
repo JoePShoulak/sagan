@@ -8,20 +8,19 @@ verified_by: null
 ---
 
 # Expressions
-The tokenizer recognizes identifiers, literals, grouping and collection
-delimiters, member access, safe access `?.`, calls, spread `...`, assignment
-with value `:=`, `=>`, comparisons, arithmetic, logical words, increment,
-decrement, and compound-assignment tokens.
+An expression produces a value. Literals such as `42`, names such as `answer`,
+calls such as `calculate()`, and arithmetic such as `distance / time` are all
+expressions.
 
 Compound assignments are parsed as statements rather than expressions. Unlike
 the value-producing `:=`, they do not participate in expression precedence or
 chaining.
 
-**Settled design:** `^` means exponentiation; `and`, `or`, `not`, and
+`^` means exponentiation; `and`, `or`, `not`, and
 `!` are logical operators; `? ... ; ...` is the conditional expression; and
 prefix/postfix increment return new/old values respectively.
 
-**Implemented semantics:** `++` and `--` require an assignable numeric operand.
+`++` and `--` require an assignable numeric operand.
 The prefix form mutates before producing its value; the postfix form produces
 the old value and then mutates.
 
@@ -38,7 +37,7 @@ errors for integer and floating-point operands. Compound assignments use the
 same checks. Floating-point remainder follows `fmod` semantics. These failures
 are catchable as the appropriate built-in `RuntimeError` case.
 
-**Implemented native semantics:** anonymous lambdas use
+Anonymous lambdas use
 `fun(parameters) => expression`, with optional parameter and return annotations.
 Function types use `(Parameter, ...) => Result`; `() => Int` is therefore a
 parameterless function returning `Int`. Typed lambdas can be stored, passed,
@@ -53,10 +52,10 @@ closure share its captured state, and multiple closures created in the same
 scope observe mutations to the same captured variable. Untyped lambda
 parameters remain parser/type-model input but are not native-emittable.
 
-Closures that capture a method's contextual `self` are rejected in 1.0 rather
-than being emitted with an unsafe object lifetime. Those lifetime semantics
-remain provisional, as do the rules for spread outside array and dictionary
-literals, safe access, dictionary-key hashability, and assignment expressions.
+Closures that capture a method's contextual `self` are rejected rather than
+being emitted with an unsafe object lifetime. Capturing `self` remains
+deferred. Spread is supported in arrays and dictionaries; it is not a
+general-purpose operator in other expressions.
 
 Numeric and geometry literals accept unit suffixes. A simple suffix is a unit
 name (`10 meter`); a composite suffix is parenthesized
@@ -106,7 +105,7 @@ Payload-bearing enums use the same construction and binding shape:
 payload. Weak class fields use the optional model when read, including through
 safe access and coalescing chains.
 
-**Settled dictionary-spread behavior:** dictionary entries are applied from
+Dictionary entries are applied from
 left to right. When an explicit entry or later spread repeats an existing key,
 the later value replaces the earlier value. Each spread operand is evaluated
 once.
@@ -148,7 +147,7 @@ and points require exactly three components in the order shown. The `s` must be
 adjacent to the delimiter: `s(...)` is a spherical point, while `s (...)` calls
 an ordinary identifier named `s`. Inclination and azimuth are radians.
 
-**Implemented native semantics:** Cartesian and spherical vectors and points
+Cartesian and spherical vectors and points
 retain distinct, fixed-size runtime types. All support construction, zero-based
 indexing, iteration, equality, printing, and string interpolation. Cartesian
 vectors and points additionally support same-family spreading. Spherical
@@ -183,10 +182,10 @@ points, displacement vectors, or both rather than erasing this distinction.
 Spherical values currently support access and storage but no arithmetic; callers
 must not silently mix representations.
 
-Calls and all collection forms permit trailing commas. `...value` creates a
-spread node; later semantic analysis will validate whether its surrounding call
-or collection supports the value being expanded. A spread dictionary entry
-does not use a colon.
+Calls and all collection forms permit trailing commas. `...value` spreads an
+array into an array or a dictionary into a dictionary. A spread dictionary
+entry does not use a colon. Unsupported spread contexts are compile-time
+errors.
 
 At the top level of a vector element, `>` closes the vector. Parentheses make a
 greater-than comparison explicit inside a vector, as in
@@ -216,5 +215,6 @@ Postfix forms chain from left to right. For example,
 `fleet[index]?.navigator.course(origin).magnitude()` first indexes `fleet`,
 safely accesses `navigator`, accesses and calls `course`, then accesses and
 calls `magnitude`.
-Evaluation order, short-circuit behavior, assignability, overload resolution,
-and coercion remain semantic-analysis work.
+`and`, `or`, `??`, and the conditional expression evaluate lazily where their
+result permits skipping a branch. Assignment targets, overloads, and implicit
+conversions are checked before code generation.

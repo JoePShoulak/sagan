@@ -8,12 +8,12 @@ verified_by: null
 ---
 
 # Exceptions
-**Settled design vocabulary:** `hope` starts protected code, `unless`
+Sagan uses four exception words: `hope` starts protected code, `unless`
 introduces a handler, `finally` introduces cleanup, and `scream` raises an
-exception. Exceptions are intended to be the primary error mechanism.
+exception. An exception is a value that interrupts the normal path through a
+function so another block can handle the problem.
 
-**Implemented in the parser, type checker, and C++ backend:** the four words are
-dedicated tokens and produce exception AST nodes. The grammar is:
+The grammar is:
 
 ```text
 statement_body := block | same_line_statement
@@ -47,7 +47,7 @@ body cannot `return`, `scream`, or use `break`/`continue` to control a loop
 outside that cleanup body. Loops wholly inside the cleanup body may use their
 own `break` and `continue` statements.
 
-The built-in nominal `RuntimeError` enum converts native failures into ordinary
+The built-in `RuntimeError` enum converts native failures into ordinary
 Sagan exception values. Its current cases are `integer_overflow`,
 `division_by_zero`, `modulo_by_zero`, `undefined_exponentiation`,
 `negative_integer_exponent`, `index_out_of_bounds`, and `missing_key`.
@@ -57,7 +57,8 @@ hope print(values[values_count])
 unless RuntimeError.index_out_of_bounds print("No such value")
 ```
 
-The same exact type-and-value matching rules apply, so native failures propagate
+*Nominal* means that `RuntimeError` is its own named type rather than merely a
+collection of numbers. The same exact type-and-value matching rules apply, so native failures propagate
 through nested `hope` statements and always run `finally` cleanup. Uncaught
 native failures retain a readable diagnostic. Binding/destructuring handlers,
 declared exception effects, cleanup that itself fails while another exception

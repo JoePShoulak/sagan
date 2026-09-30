@@ -8,16 +8,17 @@ verified_by: null
 ---
 
 # Memory model
-Reference counting is the implemented foundation of the native object model.
+Sagan manages class objects with reference counting. In plain language, the
+runtime tracks how many owning references still point to an object and releases
+the object when that count reaches zero.
 Class instances use shared reference-counted storage. Assigning a class value or
 converting it to a face value preserves the same underlying object, so mutation
 through one reference is visible through the others. Face calls dispatch to the
 concrete class implementation.
 
-This is an initial executable subset, not a complete ownership model. The C++
-backend currently supplies retain/release behavior. Sagan exposes non-owning
-references through class fields declared with `weak let`, but does not yet
-expose borrowing or explicit lifetime operations.
+The generated C++ supplies this retain/release behavior. Sagan exposes
+non-owning references through class fields declared with `weak let`, but does
+not expose borrowing or explicit lifetime operations.
 
 The safe absence model for weak references is executable:
 `Optional<T>`, `Some(value)`, `None`, payload matching, safe `?.` propagation,
@@ -49,11 +50,10 @@ all capturing closures are gone. Function values are written as
 `(Parameter, ...) => Result`. Capturing contextual `self` is rejected in 1.0
 until object-capture lifetime rules are defined.
 
-Reference cycles must currently contain an explicit weak edge to be reclaimed;
-all-strong cycles remain retained. **Open questions:** borrowing, automatic cycle
-detection or collection, destruction order,
-thread interaction, foreign ownership, contextual `self` capture, value
-semantics, and destruction observability beyond the guarantees above.
+Reference cycles must contain an explicit weak edge to be reclaimed; an
+all-strong cycle keeps itself alive. Borrowing, automatic cycle collection,
+foreign ownership, contextual `self` capture, and observable destruction hooks
+are deferred.
 
 The design also intends to prevent concurrent mutation of the same data when
 parallel execution is eventually introduced, but parallel execution itself is

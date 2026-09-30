@@ -8,21 +8,12 @@ verified_by: null
 ---
 
 # Grammar and syntax
-The implementation is authoritative for the current concrete grammar. The
-simplified productions below describe every implemented declaration and
-statement family; the expression precedence table completes the expression
-grammar.
+This page is a compact map of Sagan's grammar. A *production* is a rule showing
+which smaller pieces may appear inside a larger piece. The notation is intended
+as a reference, not as the easiest way to learn the language; the
+[tour](../tour/index.md) teaches the same forms through examples.
 
-**Implemented:** the tokenizer supplies tokens and newline boundaries. The
-parser implements `let` declarations, blocks, assignment and expression
-statements, `if`/`else`, named block-bodied functions with typed parameters and
-return annotations, `for`/`in`, `while`, and `until` loops, loop control,
-returns, yields, braced or same-line `match`/`case`, primary and string expressions, the
-`hope`/`unless`/`finally`/`scream` exception grammar, settled precedence table,
-postfix chains, collection literals, top-level face/class/enum declarations,
-module/import/export declarations, and declaration documentation.
-
-**Concrete conventions:** declarations use words such as `let`, `fun`, `face`,
+Declarations use words such as `let`, `fun`, `face`,
 `class`, and `enum`; braces delimit multi-statement bodies; one-statement
 control-flow bodies may remain on their header line without braces; newlines
 normally terminate statements; `=>` introduces expression bodies; and
@@ -127,16 +118,11 @@ declaration. They are accepted on top-level declarations, face/class methods,
 class fields, local `let` declarations, and enum members. They cannot attach to
 executable statements. Orphaned documentation comments are syntax errors.
 
-**Semantic questions:** validation of returned and yielded values,
-match-pattern binding, type tests,
-destructuring, and exhaustiveness are semantic questions rather than established
-behavior.
-
 The parser currently stops after the first syntax error. Multi-error recovery
 is a future diagnostic enhancement, not an omitted grammar production.
 
-Parser examples may include APIs outside the executable subset. Exception
-statements themselves execute with exact type-and-value handler matching,
-outward propagation, and guaranteed `finally` cleanup.
-The initial semantic pass can validate scopes and names; type analysis and code
-generation remain future stages.
+The compiler validates return values, optional and enum payload patterns,
+exhaustive enum matches, scopes, names, and types before generating C++.
+`yield` is currently syntax-only: it is represented by the parser, but generator
+typing and execution are deferred. General destructuring patterns are also
+deferred.

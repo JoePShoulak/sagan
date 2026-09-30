@@ -9,9 +9,10 @@ verified_by: null
 
 # Determinism
 
-Sagan 1.0 defines a **deterministic hypercore profile**. This is deliberately
-narrower than claiming that every future simulation produces identical bits on
-every machine.
+Sagan defines a **deterministic hypercore profile**. *Deterministic* means that
+the same program, compiler version, configuration, and explicit inputs produce
+the same language-level result. This promise is deliberately narrower than
+claiming that every simulation produces identical bits on every machine.
 
 For identical source, package configuration, explicit program inputs, and Sagan
 compiler version, the following implemented operations have deterministic
@@ -31,7 +32,7 @@ Integer overflow, invalid integer exponentiation, zero division/remainder,
 out-of-range indexing, and missing dictionary keys raise defined nominal
 `RuntimeError` cases instead of inheriting undefined C++ behavior.
 
-The 1.0 deterministic profile does **not** promise cross-platform bit identity
+The deterministic profile does **not** promise cross-platform bit identity
 for floating-point arithmetic, NaN payloads, signed zero, future transcendental
 math, host/compiler diagnostics, filesystem or process behavior, allocation
 addresses, wall-clock timing, or destruction timing. Programs whose result
@@ -41,7 +42,7 @@ Console newline encoding is a host presentation detail; the logical printed
 lines and UTF-8 text are the language result.
 
 Concurrency, random-number sources, clocks, networking, and unsafe/foreign
-interfaces are absent from the 1.0 hypercore. When introduced, each must define
+interfaces are absent from the hypercore. When introduced, each must define
 its own reproducibility contract before it can participate in deterministic
 mode. The core math, physics, and rendering libraries will separately specify
 whether floating operations are bit-exact, implementation-pinned, or governed

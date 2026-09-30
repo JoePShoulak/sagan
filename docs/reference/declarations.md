@@ -8,7 +8,7 @@ verified_by: null
 ---
 
 # Declarations
-**Settled design:** `let` declares mutable variables; `fun` introduces
+Declarations introduce names. `let` declares mutable variables; `fun` introduces
 functions; `face`, `class`, and `enum` introduce named types; and
 `dimension`, `quantity`, `unit`, and `affine unit` introduce compile-time
 measurement metadata. Measurement declarations are checked for duplicate names,
@@ -16,7 +16,7 @@ inconsistent dimensions, unresolved references, and dependency cycles. See the
 [native units contract](../design/units-of-measure.md).
 `module`, `import`, and `export` participate in modular source.
 
-**Implemented syntax:** the parser accepts a single optional leading `module`
+The parser accepts a single optional leading `module`
 declaration, imports with optional `from` and `as` clauses, and standalone
 exports with an optional alias. See [Modules](modules.md) for the accepted
 forms.
@@ -31,15 +31,20 @@ local variables and individual enum members.
 let altitude: Float = 125_000.0
 ```
 
-**Implemented in the parser:** top-level mutable variables, named block-bodied
-functions, faces, classes, and simple enums. Faces accept method signatures and
-default bodies. Classes accept `let` fields and methods. Enums contain
-identifier-only members separated by newlines or commas. The initial executable
-enum subset uses `EnumName.member` to produce nominal values; those values
-support same-enum equality, `match` cases, interpolation, and printing by member
-name.
+Top-level declarations may define mutable variables, functions, faces, classes,
+and enums. Functions may use a block body or a short expression body:
 
-**Implemented native class subset:** class fields require explicit types and may
+```sagan
+fun double(value: Int): Int => value * 2
+```
+
+Faces accept required method signatures and methods with default bodies.
+Classes accept fields, constructors, and methods. Enum members may be plain
+names or may carry typed payloads. A plain enum value is written with its type,
+such as `Direction.north`; payload cases such as `Success(42)` act as
+constructors.
+
+Class fields require explicit types and may
 have default initializers. A class may declare overloaded `new(...)` constructors;
 calling `ClassName(arguments...)` selects exactly one compatible constructor.
 Every field without a declaration-site default must be assigned on every
@@ -69,12 +74,12 @@ type annotations. At least one edge must use `weak let`. A face-typed field must
 be weak because its concrete class target is selected dynamically and cannot be
 proven acyclic. The diagnostic reports the strong field path that forms a cycle.
 
-**Implemented conformance subset:** `is` and `has` are interchangeable and do
+`is` and `has` are interchangeable and do
 not denote inheritance. A class composing a face must satisfy each required
 method with an exact class implementation or unambiguous default. Missing or
 incompatible methods are compile-time errors.
 
-**Implemented face defaults:** an unambiguous default is inherited, an exact
+An unambiguous face default is composed into the class, an exact
 class method overrides it, and competing defaults with the same signature
 require an explicit class override. Defaults may call other requirements from
 their own face through `self`.
@@ -84,8 +89,6 @@ Face names may be used as value, parameter, and return annotations. A class
 value converts to a face only when its declaration explicitly conforms through
 `is` or `has`, including transitive face composition. Calls through the face
 dispatch to the concrete class while retaining shared reference identity.
-
-**Provisional semantics:** broader method-overload ranking and borrowing.
 
 Enum cases may carry one or more typed payload values, such as
 `Success(Int)` or `Position(Float, Float)`. Payload cases act as constructors in
@@ -132,7 +135,7 @@ the same `is Face` constraint syntax and are checked when constructed. A face
 method cannot introduce method-specific parameters because virtual generic
 methods are intentionally unsupported.
 
-**Open questions:** inference requirements, duplicate declarations, scope,
-forward references, variance and face method generics,
-module resolution and visibility, and entry-point forms. These require semantic
-analysis or future language revisions.
+Duplicate declarations, unresolved names, incompatible overloads, invalid
+visibility access, and module export violations are compile-time errors. Generic
+types are invariant. Borrowing, variance, and virtual methods with their own
+method-level generic parameters are not part of the current language.

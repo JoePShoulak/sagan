@@ -9,8 +9,10 @@ verified_by: null
 
 # Lexical specification
 
-Sagan source is UTF-8. Malformed UTF-8 is a lexical error. Tokens retain byte
-spans into the original source.
+Sagan source files use UTF-8. UTF-8 is the text encoding that lets one file
+contain ordinary ASCII, non-English scripts, mathematical symbols, and emoji.
+Malformed UTF-8 is a lexical error. The compiler retains each token's original
+byte range so diagnostics can point back to the source.
 
 ## Identifiers
 
@@ -29,9 +31,11 @@ fun 👩🏽‍🚀(destination) {
 ```
 
 Identifier spellings are normalized to Unicode NFC before keyword lookup and
-later compiler processing. Source spans continue to reference the original
-bytes. Standalone join controls and incomplete emoji ZWJ sequences are invalid.
-ASCII punctuation sequences such as `:)` are not identifiers.
+later compiler processing. In plain language, canonically equivalent Unicode
+spellings are treated as the same name even when their bytes differ. Source
+spans still reference the original bytes. Standalone join controls and
+incomplete emoji ZWJ sequences are invalid. ASCII punctuation sequences such
+as `:)` are not identifiers.
 
 Identifiers are case-sensitive. Names beginning with `__` are reserved for the
 compiler. A trailing `!` may be included in a method identifier as Sagan's
@@ -39,8 +43,8 @@ mutating-counterpart naming convention.
 
 ## Numbers
 
-The initial language supports decimal integers, decimal floating-point values,
-scientific notation, and `_` separators placed strictly between digits.
+Sagan supports decimal integers, decimal floating-point values, scientific
+notation, and `_` separators placed strictly between digits.
 
 ```sagan
 let count = 10_000
@@ -48,8 +52,8 @@ let gravity = 6.674_30e-11
 ```
 
 A decimal point requires a digit on both sides. Consequently `.5`, `5.`,
-`.5e2`, and `5.e2` are lexical errors. Binary, octal, hexadecimal, unit
-numeric type suffixes are not currently supported. A numeric or geometry literal
+`.5e2`, and `5.e2` are lexical errors. Binary, octal, and hexadecimal numeric
+literals are not supported. A numeric or geometry literal
 may be followed by a separately tokenized unit name; the parser, rather than the
 lexer, forms the measured expression.
 
@@ -88,35 +92,10 @@ and or not self is has
 true false inf nan
 ```
 
-## Literals
-
-Decimal integers and floating-point literals support `_` only between digits.
-Floating-point forms may contain a decimal point with digits on both sides and
-an `e` or `E` exponent with optional sign. `.5`, `5.`, malformed
-separators, incomplete exponents, and letters directly following a number are
-not accepted as one valid numeric literal.
-
-Single- and double-quoted strings are recognized. Triple double quotes create
-multiline strings. Non-raw strings process `\\`, `\"`, `\'`, `\n`,
-`\r`, `\t`, `\0`, and `\u{...}`; they tokenize `${...}`
-interpolation, including nested braces. Raw strings begin with `r` and do not
-process escapes or interpolation.
-
-## Comments and whitespace
-
-`//` starts a line comment. Block comments `/* ... */` nest.
-`///` and `/** ... */` produce `DOC_COMMENT`; ordinary comments are
-discarded. Spaces, tabs, form feeds, and vertical tabs are non-significant.
-
-The parser attaches `DOC_COMMENT` tokens to declarations. Documentation
-comments must be followed by a logical newline. Ordinary blank lines are not
-represented in the token stream, so attachment is based on the next declaration
-token rather than the count of physical blank lines.
-
-LF and CRLF each count as one logical newline. Blank and comment-only lines do
-not emit newline tokens. Newlines are suppressed inside parentheses and
-brackets and after a continuation token. Brace and angle-bracket newlines are
-preserved so the parser can interpret them with grammar context.
+Documentation comments must be followed by a logical newline. The parser
+attaches them to the next declaration. Ordinary blank lines are not represented
+in the token stream, so attachment does not depend on the number of physical
+blank lines between the comment and declaration.
 
 ## Punctuation and operators
 
@@ -127,8 +106,8 @@ preserved so the parser can interpret them with grammar context.
 += -= *= /= %= ^=
 ```
 
-Longest valid token wins. Standalone `@` and backticks are errors; Schematic's
-special tag, event, and code-block tokens are not part of Sagan.
+The longest valid token wins, so `>=` is one token rather than `>` followed by
+`=`. Standalone `@` and backticks are errors.
 
 ## Token categories
 

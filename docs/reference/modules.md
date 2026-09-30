@@ -9,6 +9,9 @@ verified_by: null
 
 # Modules and packages
 
+A *module* is one named source file. A *package* is a directory that groups
+modules into one application and records how to build and launch it.
+
 Sagan source files declare their qualified module name and may selectively
 import an exported symbol or bind a whole module as a namespace:
 
@@ -93,8 +96,8 @@ aliases resolve to those identities, and dependencies are emitted before their
 consumers. Namespace access exposes only exported members. Missing/private
 exports and dependency cycles are rejected, including a complete cycle path.
 
-Math will be automatically available. Physics and rendering are first-party
-core libraries that require explicit imports.
+The core math vocabulary is automatically available. Physics and rendering are
+planned first-party libraries that will require explicit imports.
 
 Mutable module-level initialization, external dependencies, package registries,
 version constraints, lockfiles, distribution, and the final import granularity

@@ -13,6 +13,14 @@ Sagan ships a compiler-owned scientific unit catalog. Unit names below are
 source spellings; symbols are documentation metadata and are not alternate
 literal spellings unless explicitly listed as aliases.
 
+For example, write `10 meter`, not `10 m`. You can convert a compatible value
+by assigning it to a typed variable or by using `as`:
+
+```sagan
+let trip: Float64<meter> = 2 kilometer
+let shorter = trip as foot
+```
+
 The catalog follows the BIPM SI Brochure, 9th edition version 4.01, for SI base,
 derived, prefix, and listed non-SI definitions. Selected customary units use
 exact international definitions. Sagan gives plane angle its own static
@@ -20,6 +28,11 @@ dimension—even though SI treats radians as the unit one—because silently mix
 angles with arbitrary ratios is unsafe for simulation code.
 
 ## Dimensions and quantities
+
+A *dimension* describes the physical kind of a value, such as length or time.
+A *quantity* gives a more specific meaning to a combination of dimensions. For
+example, energy and torque have the same dimension exponents, but Sagan keeps
+them separate because they mean different things.
 
 Built-in dimensions are `Length`, `Time`, `Mass`, `ElectricCurrent`,
 `Temperature`, `AmountOfSubstance`, `LuminousIntensity`, and `Angle`.

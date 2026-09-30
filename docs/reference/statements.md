@@ -8,15 +8,15 @@ verified_by: null
 ---
 
 # Statements
-**Settled design:** ordinary statements are newline-terminated rather than
+Statements perform actions. Ordinary statements are newline-terminated rather than
 semicolon-terminated. The tokenizer emits logical newline tokens while
 suppressing continuation newlines in known contexts.
 
-Intended statements include declarations, assignments, expression statements,
+Statements include declarations, assignments, expression statements,
 `if`/`else`, `match`/`case`, `for`/`in`, `while`, `until`,
 `break`, `continue`, `return`, `yield`, and exception constructs.
 
-**Implemented in the parser:** newline-separated blocks, `let` declarations,
+The language supports newline-separated blocks, `let` declarations,
 ordinary `=` and compound `+=`, `-=`, `*=`, `/=`, `%=`, and `^=` assignment
 statements, expression statements inside blocks,
 `if`/`else` including `else if` chains, `for name in expression`, `while`, and
@@ -32,27 +32,27 @@ expression remains a dictionary literal.
 Exception statements use `hope` for the protected block, expression-shaped
 `unless` handler patterns, optional final `finally` cleanup, and `scream
 expression` to raise a value. A `hope` requires at least one handler or cleanup
-clause. Handler meaning, propagation, and cleanup behavior remain semantic and
-runtime questions.
+clause. Handlers are tried in source order, unmatched exceptions propagate
+outward, and `finally` runs during both normal and exceptional exits. See
+[Exceptions](exceptions.md).
 
 At the program root, the parser accepts declarations only. Executable control
 flow, expression statements, and assignment statements belong inside function
-bodies. This preserves Sagan's declaration-only module scope while entry-point
-semantics remain under design.
+bodies. An executable program enters through `fun main()`.
 
-Compound assignment is statement-only, like ordinary `=` reassignment. The
-target and value are retained separately in the AST along with the exact
-operator. Semantic analysis will validate assignability, types, and operator
-support.
+Compound assignment is statement-only, like ordinary `=` reassignment. Its
+target must be assignable, and the result must convert losslessly back into the
+target's type.
 
 `unless` is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.
 
 `yield expression` and bare `yield` are syntactically valid inside function
-bodies. Semantic analysis will determine which functions are generators and
-validate their yielded types; the runtime will define suspension behavior.
+bodies, but generators do not execute yet. Generator typing and suspension are
+deferred.
 
-Enum and optional patterns bind typed payload names, and covering every case is
-recognized as exhaustive. **Open questions:** iterable protocol semantics,
-broader destructuring patterns, generator typing, unreachable-code rules, entry-point
-selection, and the runtime behavior of control transfer.
+Enum and optional patterns bind typed payload names, and covering every enum
+case is recognized as exhaustive. Non-`Void` functions must return on every
+guaranteed path, and code after a guaranteed return is rejected as unreachable.
+Custom iteration protocols, broader destructuring patterns, and generators are
+deferred.
