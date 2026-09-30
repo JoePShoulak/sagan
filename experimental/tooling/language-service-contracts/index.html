@@ -4243,7 +4243,9 @@ versions, identities, UTF boundaries, and non-overlap, then returns proposed
 text without writing. The current formatter is a strict-parse,
 token-preserving indentation pass, not the completed style formatter described
 below. <code>rename_local</code> is the only current refactoring; it rechecks and rebinds
-the proposed source by symbol identity. Other transformations are target
+the proposed source by symbol identity. <code>organize_imports</code> handles only an
+uninterrupted, comment-free top-level import block and rechecks the result.
+Other transformations are target
 contracts and must remain disabled until their proof gates exist.</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">versioned_document_edits</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">document_uri</span><span class="w"> </span><span class="n">uri</span><span class="p">;</span>

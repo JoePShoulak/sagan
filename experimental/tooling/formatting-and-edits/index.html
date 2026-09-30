@@ -3790,13 +3790,14 @@
 command-line formatter is advertised yet. The current library API provides a
 safe, intentionally narrow layout pass and a preview-only edit contract.</p>
 <p><code>format_document</code>, <code>format_range</code>, and <code>format_on_type</code> return versioned edits.
-They currently normalize structural indentation to two spaces per brace depth,
-leaving all other source text alone. Multiline string and comment contents are
-preserved. The formatter requires a strict parse before and after the change and
-verifies that the token kinds and spellings remain identical. It declines
+They currently normalize structural indentation to two spaces per brace depth
+and a small set of unambiguous token gaps: commas, colons, member access,
+calls, assignments, equality, coalescing, and expression arrows. Other
+expression spacing is left alone. Multiline string and comment contents are
+preserved. The formatter requires a strict parse before and after the change
+and verifies that the token kinds and spellings remain identical. It declines
 incomplete or ambiguous input instead of guessing. This is not yet a complete
-style formatter: spacing within expressions, wrapping, import layout, and other
-style choices are not rewritten.</p>
+style formatter: wrapping and broader spacing choices are not rewritten.</p>
 <p>Two spaces are the approved Sagan indentation style for the fuller formatter.</p>
 <p><code>preview_edits</code> checks each document URI, exact version, document identity,
 UTF-8/UTF-16 boundaries, and deterministic non-overlapping ranges before
@@ -3807,8 +3808,15 @@ source binding with an identity-indexed reference set. It validates the new
 identifier and naming convention, refuses existing names, reindexes the
 previewed source, and verifies that every reference still resolves to the one
 renamed declaration. Public, imported, member, and cross-file rename remain
-unavailable. Other Phase 6 refactorings are not yet implemented.</p>
-<p>To see a before/after preview and run the focused safety tests:</p>
+unavailable.</p>
+<p><code>organize_imports</code> sorts one uninterrupted top-of-file block of plain imports.
+It preserves each original line and its line endings, then rechecks the result.
+It refuses comments, blank-line import groups, mixed line endings, interleaved
+declarations, or incomplete source because those cases need stronger ownership
+and semantic proofs. Removing unused imports, adding missing imports, and the
+other Phase 6 refactorings remain unimplemented.</p>
+<p>To see before/after formatting, rename, and import previews and run the focused
+safety tests:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>formatter-demo
 </span></code></pre></div>
 <p>The complete regression suite also runs those tests through <code>bash scripts/test.sh</code>.</p>
