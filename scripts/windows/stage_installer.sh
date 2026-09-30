@@ -29,14 +29,36 @@ cp "$repo_root/editors/vscode-sagan/LICENSE.txt" "$stage_dir/licenses/Sagan-GPL-
 cp "$repo_root/third_party/uni-algo/LICENSE.md" "$stage_dir/licenses/uni-algo-MIT.txt"
 cp "$repo_root/third_party/unicode/LICENSE.txt" "$stage_dir/licenses/Unicode.txt"
 mkdir -p "$stage_dir/licenses/toolchain"
-for license_package in binutils crt gcc-libs headers winpthreads; do
+copy_toolchain_license() {
+  local license_package="$1"
   license_source="$toolchain_root/share/licenses/$license_package"
   if [[ ! -d "$license_source" ]]; then
     echo "The Windows toolchain is missing license material for $license_package." >&2
     exit 1
   fi
   cp -a "$license_source" "$stage_dir/licenses/toolchain/"
+}
+
+for license_package in binutils crt headers winpthreads; do
+  copy_toolchain_license "$license_package"
 done
+
+# MSYS2 GCC 16.2.0-4 split the former gcc-libs payload into libgcc and
+# libstdc++. Accept the legacy directory or require both replacement license
+# directories, so old local installations and current clean CI runners remain
+# redistributable.
+if [[ -d "$toolchain_root/share/licenses/gcc-libs" ]]; then
+  copy_toolchain_license gcc-libs
+else
+  copy_toolchain_license libgcc
+  copy_toolchain_license libstdc++
+fi
+
+# libwinpthread was split from winpthreads in the same packaging generation.
+# Its license is identical in older layouts but must be retained when present.
+if [[ -d "$toolchain_root/share/licenses/libwinpthread" ]]; then
+  copy_toolchain_license libwinpthread
+fi
 
 compiler_target="$("$toolchain_root/bin/g++.exe" -dumpmachine)"
 compiler_version="$("$toolchain_root/bin/g++.exe" -dumpversion)"
