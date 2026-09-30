@@ -3746,11 +3746,20 @@ angular components. Spherical arithmetic and Cartesian conversion are reserved
 for the first core math geometry API after 1.0. All four families have fixed-size
 component storage, frame tracking remains deferred, and future generic APIs must
 preserve the semantic and representation distinctions.</p>
+<p>Late in the pre-1.0 roadmap, investigate units of measure as optional interfaces
+on numeric values. The checkpoint should determine whether unit conformance can
+remain opt-in while still tracking units through arithmetic, conversions, and
+generic code. Reliable unit tracking will be difficult, but the safety and
+scientific-programming payoff could be substantial; this is an investigation,
+not yet a settled language commitment.</p>
 <p>Windows is the initial supported installation platform; macOS and Linux remain
 tracked future targets. The Windows installer foundation now bundles the UCRT64
 compiler used by the C++ backend, places <code>sagan</code> on PATH, supplies location,
 permission, progress, Start-menu, file-association, and uninstall behavior, and
-is built and smoke-tested in CI. An optional <code>[application] mode</code> selects
+is built and smoke-tested in CI. Both installed entry-point executables
+statically link their GCC/C++ startup runtimes, and the smoke test removes
+compiler runtime directories from <code>PATH</code> before exercising the CLI, generated
+program, and Explorer launcher. An optional <code>[application] mode</code> selects
 <code>console</code> or <code>windowed</code> Explorer launch, loose files default to <code>console</code>, and
 context-menu verbs override either choice. Windowed failures retain a local log
 and show a native diagnostic dialog. Release artifacts will
