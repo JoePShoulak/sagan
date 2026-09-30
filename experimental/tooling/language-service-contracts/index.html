@@ -4114,15 +4114,21 @@ future source-edit concern.</p>
 <h2 id="language-queries">Language queries</h2>
 <p>The first concrete query layer is <code>src/language_service/queries.hpp</code>.
 <code>document_queries</code> takes one immutable document snapshot and matching semantic
-index, with an optional workspace index for imports. It returns structured
-results for byte or UTF-16 symbol selection, definitions, references, document
-highlights, face implementations, resolved type, source hover, and hierarchical
-document symbols. A version or document-identity mismatch returns <code>stale</code>;
+index, with an optional workspace index for imports and semantic model for
+lexical completion. It returns structured results for byte or UTF-16 symbol
+selection, definitions, references, document highlights, face implementations,
+resolved type, source hover, hierarchical document symbols, semantic
+classifications, folding regions, and resolved import links. A separate
+workspace query searches indexed declarations. Completion currently offers
+visible lexical symbols and built-ins with a versioned replacement range;
+it does not claim member/context-sensitive or standard-library completion.
+A version or document-identity mismatch returns <code>stale</code>;
 invalid UTF-16 boundaries return <code>incomplete</code>. Its selection ranges come from
 recovering syntax tokens, so names in comments or strings do not masquerade as
 declarations. These library APIs are not yet advertised as LSP features.</p>
-<p><code>language_service</code> accepts a workspace/document snapshot and byte or UTF-16
-position, returning compiler data:</p>
+<p>The following is a target API sketch, not a list of currently implemented
+methods. Eventually <code>language_service</code> will accept a workspace/document
+snapshot and byte or UTF-16 position, returning compiler data:</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">auto</span><span class="w"> </span><span class="n">symbol_at</span><span class="p">(</span><span class="n">position</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">query_result</span><span class="o">&lt;</span><span class="n">symbol</span><span class="o">&gt;</span><span class="p">;</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">definitions</span><span class="p">(</span><span class="n">symbol_id</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">query_result</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">location</span><span class="o">&gt;&gt;</span><span class="p">;</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">auto</span><span class="w"> </span><span class="n">type_definitions</span><span class="p">(</span><span class="n">symbol_id</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">query_result</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">location</span><span class="o">&gt;&gt;</span><span class="p">;</span>
@@ -4138,11 +4144,12 @@ position, returning compiler data:</p>
 </span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="k">auto</span><span class="w"> </span><span class="n">folding_ranges</span><span class="p">(</span><span class="n">document_id</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">query_result</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">source_range</span><span class="o">&gt;&gt;</span><span class="p">;</span>
 </span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="k">auto</span><span class="w"> </span><span class="n">selection_ranges</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">query_result</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">selection_chain</span><span class="o">&gt;&gt;</span><span class="p">;</span>
 </span></code></pre></div>
-<p>Completion records contain symbol kind, label, insertion text, display
-signature, documentation, defining module, filter/sort text, visibility,
-deprecation state, and optional additional import edits. Keyword candidates
-come from parser context; library candidates come from the compiler metadata
-catalog. Capability discovery reports when a catalog or query is unavailable.</p>
+<p>The current <code>completion_item</code> has symbol kind, label, insertion text, detail,
+documentation, source module, filter/sort text, a deprecation flag, and an
+additional-import-edit field. It does not yet populate contextual keyword,
+member, imported, or standard-library candidates. Those remain targets for a
+later parser-context and compiler-metadata catalog. The server must not
+advertise completion until the required context coverage is implemented.</p>
 <h2 id="structured-edits-and-formatting">Structured edits and formatting</h2>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">versioned_document_edits</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">document_uri</span><span class="w"> </span><span class="n">uri</span><span class="p">;</span>

@@ -4085,10 +4085,14 @@ the position-based query and presentation APIs built on these records.</p>
 identifier occurrences from recovering syntax tokens and the semantic index.
 Focused tests cover UTF-16 and byte positions, version mismatch, hover source
 documentation, resolved types, local and imported definitions, references,
-highlights, face implementations, and hierarchical document symbols. The API
-does not yet cover type definitions, signatures, completion, workspace symbols,
-semantic classifications, folding, selection ranges, links, or inlay hints.
-These are not advertised as editor capabilities while LSP transport is absent.</p>
+highlights, face implementations, hierarchical document symbols, semantic
+classifications, workspace symbol search, block/comment/string folding,
+resolved import links, and lexical-scope completion. Completion is deliberately
+limited to visible lexical declarations and built-ins; member/import context,
+keyword validity, named arguments, and the standard-library catalog remain
+unimplemented. The API also lacks type definitions, signatures, selection
+ranges, and inlay hints. None of these library queries are advertised as editor
+capabilities while LSP transport is absent.</p>
 <ul>
 <li>Implement symbol-at-position, hover, resolved types, definition, type
   definition, implementations, references, highlights, and signature help.</li>

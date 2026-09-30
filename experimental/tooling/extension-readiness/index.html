@@ -3760,12 +3760,12 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Completion</td>
 <td>Parser context, semantic scope/type state, module/catalog metadata</td>
-<td><strong>Blocked</strong></td>
+<td><strong>Lexical-scope candidate query available; contextual completion and LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Semantic highlighting</td>
 <td>Stable classification vocabulary and ranges</td>
-<td><strong>Blocked</strong></td>
+<td><strong>Compiler classification query available; LSP semantic-token transport blocked</strong></td>
 </tr>
 <tr>
 <td>Document symbols</td>
@@ -3775,12 +3775,12 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Workspace symbols</td>
 <td>Workspace semantic index</td>
-<td><strong>Compiler index available; query/LSP transport blocked</strong></td>
+<td><strong>Workspace search query available; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Folding</td>
 <td>Recovering lossless syntax tree</td>
-<td><strong>Foundation available; fine-grained block nodes blocked</strong></td>
+<td><strong>Basic syntax/trivia ranges available; precise nested construct ranges and LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Selection ranges</td>
@@ -3790,7 +3790,7 @@ contract is not yet implemented; the extension must not reproduce it.</p>
 <tr>
 <td>Document links</td>
 <td>Resolved import/module targets</td>
-<td><strong>Module targets available; position query/LSP transport blocked</strong></td>
+<td><strong>Resolved import link query available; LSP transport blocked</strong></td>
 </tr>
 <tr>
 <td>Inlay hints</td>
