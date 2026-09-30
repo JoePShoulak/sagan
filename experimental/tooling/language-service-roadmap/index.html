@@ -297,6 +297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -446,6 +450,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3741,15 +3817,16 @@ do not change the service contract.</p>
 <p><strong>Exit:</strong> unsaved changes affect importing modules, old analysis cannot publish,
 and overlay/module invalidation tests pass.</p>
 <h2 id="phase-4-semantic-index-and-stable-identities">Phase 4 — semantic index and stable identities</h2>
-<p><strong>Status: foundation implemented; workspace linking remains.</strong> Analyzer output
+<p><strong>Status: complete.</strong> Analyzer output
 now uses typed symbol kinds, visibility, origin, scope ownership, and opaque
 deterministic <code>sagan-symbol-v1</code> identities instead of public string kinds.
 Strict documents can be converted into a versioned, document-owned semantic
-index with identity-based definition/reference lookup, shadowed-local
-separation, overload separation, stable built-in identities, and a focused
-demo/test. Cross-module export linking, receiver/member resolution, typed
-overload/specialization records, face conformance records, documentation
-association, and recovered-tree semantic indexing still gate Phase 4's exit.</p>
+index with identity-based definition/reference lookup, shadowed-local and
+overload separation, stable built-in identities, documentation, canonical
+types, receiver/member candidates, explicit and inferred specializations, and
+face conformances. The workspace index links selective imports and namespace
+members to exported identities. Recovered trees retain valid declarations
+without weakening strict compilation.</p>
 <ul>
 <li>Replace stringly public symbol records with typed symbol, node, scope, type,
   overload, specialization, conformance, visibility, and origin records.</li>
@@ -3760,6 +3837,8 @@ association, and recovered-tree semantic indexing still gate Phase 4's exit.</p>
 </ul>
 <p><strong>Exit:</strong> identity-based definition/reference tests pass across modules,
 overloads, generics, private members, shadowed locals, faces, and enum cases.</p>
+<p>The exit behavior is exercised by <code>make semantic-index-demo</code>; Phase 5 now owns
+the position-based query and presentation APIs built on these records.</p>
 <h2 id="phase-5-read-only-language-features">Phase 5 — read-only language features</h2>
 <ul>
 <li>Implement symbol-at-position, hover, resolved types, definition, type

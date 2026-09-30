@@ -297,6 +297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -446,6 +450,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3538,10 +3614,9 @@ operations, precision behavior, naming, and organization remain open.</p>
 mathematical facility a language keyword or primitive. The boundary between
 compiler-provided behavior and library-provided behavior must be documented as
 the implementation develops.</p>
-<p>Physical units and coordinate frames are not distinguished by Sagan's initial
-type system. Future library types may model them, but this documentation must
-not claim a particular representation or safety guarantee until one is
-designed and implemented.</p>
+<p>Physical units are distinguished by Sagan's native static type system and flow
+through scalar and geometry arithmetic. Coordinate frames and the unit-aware
+higher math API remain later design work.</p>
 <h2 id="documentation-required-before-release">Documentation required before release</h2>
 <p>The completed section must define the public symbols, accepted value types,
 precision and error behavior, coordinate conventions, examples, performance

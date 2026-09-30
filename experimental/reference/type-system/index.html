@@ -297,6 +297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -446,6 +450,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3399,7 +3475,7 @@
 <li>implicit conversion is limited to conversions proven lossless;</li>
 <li>variables are mutable by default;</li>
 <li>interfaces are central to abstraction and polymorphism;</li>
-<li>physical units and coordinate frames are not distinct in the initial type system;</li>
+<li>physical units are native static type metadata; coordinate frames remain deferred;</li>
 <li>no separate character-literal type is planned; and</li>
 <li>math types form built-in vocabulary.</li>
 </ul>
@@ -3457,6 +3533,13 @@ parameters. Explicit function, method, and constructor arguments are supported.
 Function and class parameters may declare <code>is</code> constraints naming a face;
 specialized face conformance is checked for every inferred or explicit concrete
 argument. Variance remains open.</p>
+<p>Measured scalar types use annotations such as <code>Float64&lt;meter&gt;</code>. Geometry uses
+forms such as <code>Vector3&lt;Float64, meter / second&gt;</code>, normalized internally to a
+measured component type. Dimensions, named quantity identity, concrete scale,
+and affine point/difference category participate in compatibility. Compatible
+values convert at declarations, assignments, arguments, and returns; callable
+signatures can therefore require a specific unit. Unit metadata is compile-time
+only, and the C++ backend stores ordinary native numeric and geometry values.</p>
 <p><strong>Open questions:</strong> user-defined member inference, value versus
 reference categories, broader generic semantics, variance,
 compile-time constants, and representation. Deferred cases are currently

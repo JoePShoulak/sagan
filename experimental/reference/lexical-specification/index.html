@@ -297,6 +297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -446,6 +450,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3695,7 +3771,9 @@ scientific notation, and <code>_</code> separators placed strictly between digit
 </span></code></pre></div>
 <p>A decimal point requires a digit on both sides. Consequently <code>.5</code>, <code>5.</code>,
 <code>.5e2</code>, and <code>5.e2</code> are lexical errors. Binary, octal, hexadecimal, unit
-suffixes, and numeric type suffixes are not currently supported.</p>
+numeric type suffixes are not currently supported. A numeric or geometry literal
+may be followed by a separately tokenized unit name; the parser, rather than the
+lexer, forms the measured expression.</p>
 <h2 id="strings">Strings</h2>
 <p>Single and double quotes create strings. Triple double quotes create multiline
 strings. Non-raw strings support escapes and <code>${...}</code> interpolation; raw
@@ -3716,7 +3794,7 @@ lexical error. Newlines are suppressed inside parentheses and brackets and
 after tokens that leave an expression incomplete. Ambiguous brace and angle
 delimiter contexts are preserved for the parser to interpret.</p>
 <h2 id="keywords">Keywords</h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let weak fun new class face enum
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let weak fun new class face enum dimension quantity unit affine
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>if else match case for in while until break continue return yield
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>import from as module export
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>hope unless finally scream

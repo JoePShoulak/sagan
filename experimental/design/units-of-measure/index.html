@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://sagan.shoulak.org/latest/tour/errors/">
+        <link rel="canonical" href="https://sagan.shoulak.org/latest/design/units-of-measure/">
       
       
-        <link rel="prev" href="../classes-and-interfaces/">
+        <link rel="prev" href="../determinism/">
       
       
-        <link rel="next" href="../../reference/">
+        <link rel="next" href="../../reference/units/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Errors - Sagan Documentation</title>
+        <title>Native units of measure - Sagan Documentation</title>
       
     
     
@@ -86,7 +86,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#errors" class="md-skip">
+        <a href="#native-units-of-measure" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Errors
+              Native units of measure
             
           </span>
         </div>
@@ -280,6 +280,8 @@
       
   
   
+    
+  
   
   
     
@@ -310,15 +312,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../design/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -350,7 +352,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -370,7 +372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../design/philosophy/" class="md-nav__link">
+      <a href="../philosophy/" class="md-nav__link">
         
   
   
@@ -406,7 +408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../design/goals-and-non-goals/" class="md-nav__link">
+      <a href="../goals-and-non-goals/" class="md-nav__link">
         
   
   
@@ -442,7 +444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../design/determinism/" class="md-nav__link">
+      <a href="../determinism/" class="md-nav__link">
         
   
   
@@ -475,10 +477,45 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../design/units-of-measure/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -502,6 +539,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Syntax
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arithmetic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arithmetic
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verified-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verified implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -550,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../design/status/" class="md-nav__link">
+      <a href="../status/" class="md-nav__link">
         
   
   
@@ -786,8 +887,6 @@
       
   
   
-    
-  
   
   
     
@@ -816,15 +915,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../tour/" class="md-nav__link ">
               
   
   
@@ -856,7 +955,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -876,7 +975,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../values-and-variables/" class="md-nav__link">
+      <a href="../../tour/values-and-variables/" class="md-nav__link">
         
   
   
@@ -912,7 +1011,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../functions/" class="md-nav__link">
+      <a href="../../tour/functions/" class="md-nav__link">
         
   
   
@@ -948,7 +1047,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../control-flow/" class="md-nav__link">
+      <a href="../../tour/control-flow/" class="md-nav__link">
         
   
   
@@ -984,7 +1083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../classes-and-interfaces/" class="md-nav__link">
+      <a href="../../tour/classes-and-interfaces/" class="md-nav__link">
         
   
   
@@ -1017,19 +1116,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../tour/errors/" class="md-nav__link">
         
   
   
@@ -1053,7 +1143,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3449,6 +3538,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Syntax
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arithmetic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arithmetic
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verified-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verified implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -3468,36 +3609,107 @@
 <p class="admonition-title">Experimental documentation — Work in progress</p>
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
-<h1 id="errors">Errors</h1>
-<p>Sagan uses distinctive exception keywords:</p>
-<ul>
-<li><code>hope</code> begins protected code;</li>
-<li><code>unless</code> introduces a handler;</li>
-<li><code>finally</code> introduces unconditional cleanup; and</li>
-<li><code>scream</code> raises an exception.</li>
-</ul>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hope {
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  scream "engine offline"
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>} unless "engine offline" {
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  print("Using the backup engine")
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>} finally {
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  print("Attempt complete")
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>}
+<h1 id="native-units-of-measure">Native units of measure</h1>
+<p>This document is the implemented pre-1.0 contract for Sagan's native unit
+system. The compiler front end, native C++ backend, focused self-tests, and
+<code>make units-demo</code> exercise the verified slice described here.</p>
+<h2 id="syntax">Syntax</h2>
+<p>Dimensions, named quantities, linear units, and affine units are top-level
+declarations:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>dimension Length
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>dimension Time
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>quantity Speed = Length / Time
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>unit meter: Length = base {
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  symbol: "m"
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  prefixes: [kilo, centi, milli, micro]
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>}
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>unit hour = 3600 * second {
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  symbol: "h"
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>}
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>affine unit Celsius: Temperature {
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  canonical: Kelvin
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  scale: 1
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  offset: 27315 / 100
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  symbol: "°C"
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>  difference_symbol: "Δ°C"
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>}
 </span></code></pre></div>
-<p><code>hope</code> has a protected block followed by one or more expression-shaped <code>unless</code>
-handlers and an optional final <code>finally</code> block.
-A <code>finally</code>-only <code>hope</code> is also valid. At least one handler or cleanup clause is
-required, and <code>scream</code> requires an expression. Each clause may use braces or a
-same-line statement.</p>
-<p>In the executable subset, the first handler with the same checked type and
-equal value catches the exception. Nonmatching values continue outward to an
-enclosing <code>hope</code>. <code>finally</code> always runs, including during propagation and before
-an early return leaves the protected region.</p>
-<p>Cleanup cannot itself <code>return</code> or <code>scream</code>, and it cannot break or continue an
-enclosing loop. This keeps cleanup deterministic while another exception may
-already be unwinding.</p>
-<p>Handlers do not bind the thrown value yet, and native runtime failures such as
-checked arithmetic errors are not currently catchable as Sagan values.</p>
+<p>Simple unit suffixes are adjacent names. Composite suffixes are parenthesized
+so ordinary division remains unambiguous:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let distance = 10 meter
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>let velocity = &lt;10, 2, 0&gt; (meter / second)
+</span></code></pre></div>
+<p>Unit-bearing scalar and geometry annotations use unit arguments:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let distance: Float64&lt;meter&gt; = 10 kilometer
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>let velocity: Vector3&lt;Float64, meter / second&gt; =
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  &lt;10, 2, 0&gt; (meter / second)
+</span></code></pre></div>
+<p><code>value as unit</code> performs an explicit compatible conversion. Assignment,
+argument passing, and return context may perform the same compatible conversion;
+a future strict mode may narrow those implicit cases.</p>
+<p>Unit-bearing annotations are valid anywhere Sagan accepts a type annotation,
+including function, method, constructor, and lambda parameters and results;
+fields and local bindings; generic arguments; and face requirements. Calls may
+contextually convert compatible concrete units to the parameter unit. Signature
+and face-conformance checking includes dimension, named quantity, concrete unit,
+and affine category, so an incompatible unit is rejected before code generation.</p>
+<p>Affine differences use <code>Delta&lt;Unit&gt;</code>. Greek capital delta (<code>Δ</code>, U+0394) is a
+source-level synonym, so <code>Δ&lt;Celsius&gt;</code> and <code>Delta&lt;Celsius&gt;</code> are identical.</p>
+<h2 id="semantic-model">Semantic model</h2>
+<p>A measured type keeps these independent properties:</p>
+<ul>
+<li>numeric representation;</li>
+<li>canonical dimension exponents;</li>
+<li>optional named quantity identity;</li>
+<li>concrete unit identity and an exact symbolic scale;</li>
+<li>exact symbolic affine offset; and</li>
+<li>unitless, linear, affine-point, or affine-difference category.</li>
+</ul>
+<p>Canonical exponent maps use stable dimension identities and exact integer
+exponents. Scale and offset use reduced rational coefficients plus exact decimal
+and integer powers of π, allowing both decimal scientific constants and angle
+conversion without baking floating approximations into the type model. Statically known
+unit metadata is erased or encoded only in zero-size native type information;
+it is not stored beside every runtime value.</p>
+<p>Named quantity identity is stricter than dimensional equivalence. Unique
+derivations such as <code>Length / Time</code> may infer <code>Speed</code>. An ambiguous result such
+as <code>Force * Length</code> remains an unnamed dimensional value until expected context
+selects <code>Energy</code>, <code>Torque</code>, or another declared quantity. Values already named
+as Energy and Torque are incompatible even though their exponent maps match.</p>
+<h2 id="arithmetic">Arithmetic</h2>
+<p>Linear addition and subtraction require dimensional and quantity compatibility;
+the right operand converts to the left operand's concrete unit. Multiplication,
+division, and integer powers combine and canonicalize exponents. Unitless
+numeric behavior remains unchanged.</p>
+<p>Affine operations are fixed:</p>
+<ul>
+<li>point minus point produces a difference;</li>
+<li>point plus or minus a difference produces a point;</li>
+<li>difference plus or minus difference produces a difference;</li>
+<li>point plus point is invalid;</li>
+<li>difference times a scalar produces a difference; and</li>
+<li>an affine point cannot participate in multiplication or division.</li>
+</ul>
+<p>Absolute conversion uses <code>canonical = value * scale + offset</code>; difference
+conversion ignores the offset. Existing spatial <code>Point</code> and <code>Vector</code> arithmetic
+uses the same affine model while preserving its current geometry rules.</p>
+<h2 id="verified-implementation">Verified implementation</h2>
+<p>The implementation covers all seven SI base dimensions plus an explicit angle
+dimension; common mechanical, electromagnetic, photometric, radiological, and
+chemical quantities; all current SI decimal prefixes; a broad built-in unit
+catalog; scalar and geometry inference; exact compatible conversion; affine
+temperature points and differences; user-defined dimensions, quantities,
+linear/affine units, aliases, and selected prefixes; and unit-constrained
+functions, methods, constructors, lambdas, fields, locals, generics, and faces.
+The complete spelling table is maintained in the
+<a href="../../reference/units/">built-in unit catalog</a>.</p>
+<p>Dynamic runtime units, logarithmic units, strict-mode policy, heterogeneous-unit
+matrices, serialization formats, external unit packages, non-integer dimension
+exponents, and generalized coordinate-frame units are deferred.</p>
 
 
 

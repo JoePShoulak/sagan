@@ -297,6 +297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -446,6 +450,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3395,6 +3471,10 @@
 <h1 id="declarations">Declarations</h1>
 <p><strong>Settled design:</strong> <code>let</code> declares mutable variables; <code>fun</code> introduces
 functions; <code>face</code>, <code>class</code>, and <code>enum</code> introduce named types; and
+<code>dimension</code>, <code>quantity</code>, <code>unit</code>, and <code>affine unit</code> introduce compile-time
+measurement metadata. Measurement declarations are checked for duplicate names,
+inconsistent dimensions, unresolved references, and dependency cycles. See the
+<a href="../../design/units-of-measure/">native units contract</a>.
 <code>module</code>, <code>import</code>, and <code>export</code> participate in modular source.</p>
 <p><strong>Implemented syntax:</strong> the parser accepts a single optional leading <code>module</code>
 declaration, imports with optional <code>from</code> and <code>as</code> clauses, and standalone

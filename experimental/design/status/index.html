@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://sagan.shoulak.org/latest/design/status/">
       
       
-        <link rel="prev" href="../determinism/">
+        <link rel="prev" href="../../reference/units/">
       
       
         <link rel="next" href="../../getting-started/">
@@ -299,6 +299,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -448,6 +452,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3629,6 +3705,11 @@
 <td>direct <code>sagan file.sagan</code>, <code>--run-package</code>, temporary native builds, exit propagation, <code>--emit-cpp</code>, reference-counted classes/faces, exceptions, lambdas, checked arithmetic, collections, dimensions, control flow, demos</td>
 </tr>
 <tr>
+<td>Native units of measure</td>
+<td><strong>Implemented pre-1.0 slice</strong></td>
+<td>static dimensions/quantities/units, affine temperatures, scientific catalog and SI prefixes, callable constraints, custom declarations, erased native representation, <code>make units-demo</code></td>
+</tr>
+<tr>
 <td>Deterministic execution</td>
 <td><strong>Catchable runtime-error foundation implemented</strong></td>
 <td>checked arithmetic and collection lookup failures become nominal <code>RuntimeError</code> values, with focused fixtures and a native demo</td>
@@ -3746,12 +3827,14 @@ angular components. Spherical arithmetic and Cartesian conversion are reserved
 for the first core math geometry API after 1.0. All four families have fixed-size
 component storage, frame tracking remains deferred, and future generic APIs must
 preserve the semantic and representation distinctions.</p>
-<p>Late in the pre-1.0 roadmap, investigate units of measure as optional interfaces
-on numeric values. The checkpoint should determine whether unit conformance can
-remain opt-in while still tracking units through arithmetic, conversions, and
-generic code. Reliable unit tracking will be difficult, but the safety and
-scientific-programming payoff could be substantial; this is an investigation,
-not yet a settled language commitment.</p>
+<p>The pre-1.0 units checkpoint is complete. Units are native compile-time metadata,
+not optional interfaces: dimensions, named quantities, concrete scales, affine
+points/differences, exact conversions, custom declarations, SI prefixes, and a
+scientific catalog are implemented. Unit annotations apply to locals, fields,
+function/method/constructor/lambda parameters and results, generic arguments,
+and face signatures. Generated values retain only their ordinary numeric or
+geometry representation. Dynamic/logarithmic units, uncertainty, fractional
+dimensions, external catalogs, and coordinate frames remain deferred.</p>
 <p>Windows is the initial supported installation platform; macOS and Linux remain
 tracked future targets. The Windows installer foundation now bundles the UCRT64
 compiler used by the C++ backend, places <code>sagan</code> on PATH, supplies location,
@@ -3765,13 +3848,14 @@ context-menu verbs override either choice. Windowed failures retain a local log
 and show a native diagnostic dialog. Release artifacts will
 be published through GitHub's release/package facilities; HP1 may additionally
 host or mirror installer and package data where convenient.</p>
-<p>After 1.0 is declared complete, but before the math, rendering, and physics
-libraries begin, hold a dedicated lifecycle and release-operations review. It
-must settle release cadence and channels, the events that trigger builds,
-testing, signing, publication, documentation promotion, rollback, security and
-support work, and maintenance responsibilities outside day-to-day language
-development. Full-functionality VS Code extension work is planned for the same
-transition and awaits its separate requirements.</p>
+<p>Before 1.0 is declared or published, hold a dedicated lifecycle and
+release-operations review. It must settle release cadence and channels, the
+events that trigger builds, testing, signing, publication, documentation
+promotion, rollback, security and support work, and maintenance responsibilities
+outside day-to-day language development. The resulting policy governs the 1.0
+release itself, so feature-complete implementation alone does not cross the 1.0
+gate. Full-functionality VS Code extension work is paused and is not a 1.0
+release requirement.</p>
 
 
 

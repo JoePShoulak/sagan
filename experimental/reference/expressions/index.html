@@ -297,6 +297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -446,6 +450,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3568,6 +3644,13 @@ parameters remain valid parser/type-model input but are not native-emittable.</p
 <p><strong>Provisional semantics:</strong> escaping closure ownership, function-type annotations,
 and the semantic rules for spread outside array and dictionary literals, safe access, dictionary-key
 hashability, and assignment expressions.</p>
+<p>Numeric and geometry literals accept unit suffixes. A simple suffix is a unit
+name (<code>10 meter</code>); a composite suffix is parenthesized
+(<code>&lt;1.0, 0.0, 0.0&gt; (meter / second)</code>). <code>value as unit</code> explicitly converts a
+compatible value. Assignment, argument, and return contexts convert to their
+declared concrete unit, while incompatible dimensions, named quantities, or
+affine categories are type errors. <code>Delta&lt;Celsius&gt;</code> and <code>Δ&lt;Celsius&gt;</code> both name
+an affine difference.</p>
 <h2 id="optional-values-and-fallback">Optional values and fallback</h2>
 <p><code>Optional&lt;T&gt;</code> is the first implemented parameterized built-in type. <code>Some(value)</code>
 constructs a present optional and <code>None</code> constructs an absent value when an

@@ -297,6 +297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -446,6 +450,78 @@
     
   
     Determinism
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/units-of-measure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Native units of measure
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in unit catalog
   
 
     
@@ -3440,9 +3516,10 @@
 </tbody>
 </table>
 <p>No physics, rendering, or general standard-library API should be inferred from
-the project's intended domains. Physical units and coordinate frames are not
-distinguished by the initial type system; libraries and user-defined types may
-model them.</p>
+the project's intended domains. Physical units are implemented by the language
+type system and available without importing physics; coordinate-frame identity
+remains deferred. The physics library will build on the native unit model rather
+than maintaining a parallel runtime wrapper.</p>
 <p>The high-level core-library structure is decided, but the libraries are not yet
 implemented.</p>
 <table>
