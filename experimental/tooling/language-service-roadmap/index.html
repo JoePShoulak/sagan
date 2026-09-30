@@ -4219,13 +4219,17 @@ uncertain preservation cause a structured refusal rather than a risky edit.
 The explicitly disabled transformations are follow-on work, not advertised
 Phase 6 capabilities.</p>
 <h2 id="phase-7-operations-and-debugger-prerequisites">Phase 7 — operations and debugger prerequisites</h2>
-<p><strong>Status: in progress.</strong> The first compiler-library operation is a synchronous,
-cancellable document check. It returns source identity/version, structured
-diagnostics, an exit status when completed, and ordered progress/diagnostic
-events through both a result and optional observer. This reuses the existing
-compiler check and does not yet provide an asynchronous handle, build/run
-operations, process streams, generated artifacts, or debugger metadata.
-Run <code>make operations-demo</code> to see valid, invalid, and cancelled checks.</p>
+<p><strong>Status: compiler-library exit reached; debugger and editor transport remain
+separate work.</strong> Versioned document checking and native document/project build
+and run operations return ordered progress, captured stdout/stderr, structured
+diagnostics, exit status, retained artifacts, and cancellation state. Native
+operations support unsaved imported-module overlays and reject results made
+stale by dependency changes. Debug and optimized generated C++ carry source
+maps, linked-module origin paths, candidate breakpoint ranges, generated
+function identities, lexical scopes and lifetimes, local value representation
+metadata, conservative expression-evaluation hooks, and a launch plan. Known
+generated-toolchain and uncaught Sagan runtime errors map back to Sagan source.
+Run <code>make operations-demo</code> to see Sagan input and both native results.</p>
 <ul>
 <li>Refactor check/build/run into cancellable structured operations with progress,
   streams, diagnostics, exit states, and generated artifacts.</li>
@@ -4234,8 +4238,12 @@ Run <code>make operations-demo</code> to see valid, invalid, and cancelled check
   exception mapping, and expression-evaluation hooks.</li>
 <li>Add test operations only after an authoritative Sagan test model exists.</li>
 </ul>
-<p><strong>Exit:</strong> generated/toolchain/runtime failures map to Sagan source and debugger
-metadata round-trips in debug and optimized test builds.</p>
+<p><strong>Exit met:</strong> source/error mapping and debugger metadata round-trip in focused
+debug and optimized builds, including an imported overlay. The operations are
+synchronous library calls with cancellation, not asynchronous job handles or
+LSP task requests. There is no test-discovery model, live debugger, DAP server,
+attach contract, or reliable optimized-local evaluation. Breakpoints are
+candidate source locations; native debugger validation remains future work.</p>
 <h2 id="phase-8-language-server-protocol-transport">Phase 8 — Language Server Protocol transport</h2>
 <ul>
 <li>Add a dedicated stdio JSON-RPC/LSP executable.</li>

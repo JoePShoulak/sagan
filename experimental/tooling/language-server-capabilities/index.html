@@ -3922,6 +3922,10 @@ hierarchies, signatures, completion, source/builtin documentation,
 document/workspace symbols, classifications, folding and selection ranges,
 import links, inlay hints and position context. These are compiler-library
 capabilities, not LSP server features. LSP transport remains unavailable.
+The compiler library also provides versioned check and native build/run
+operations for documents and projects, generated C++ source maps, debugger
+metadata, and a native debug launch plan. These do not constitute a live
+debugger or an LSP task server.
 This document defines the guarantees
 the completed Sagan 1.0 server must satisfy and the capability-discovery shape
 clients may rely on. It is not a claim that blocked capabilities work today.</p>
@@ -3968,7 +3972,11 @@ uses the versioned <code>sagan.language-service/1</code> schema and reports:</p>
 <code>"sourceEditsSchema":"sagan-source-edits-v1"</code>. Its C++
 <code>source_edit_capabilities()</code> action list reports which formatting and
 proof-gated edit actions are available and why others are disabled. This is
-not an LSP <code>initialize</code> response: the language server has not been implemented.</p>
+not an LSP <code>initialize</code> response: the language server has not been implemented.
+The same JSON reports <code>sagan-operations-v1</code>, <code>sagan-cpp-source-map-v1</code>, and
+<code>sagan-debug-metadata-v1</code>. Native check/build/run, source maps, debug metadata,
+and launch plans are true; test discovery, attach, and optimized-local
+evaluation are false.</p>
 <p>Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.</p>
 
