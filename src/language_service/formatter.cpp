@@ -3,6 +3,7 @@
 #include "../parser/tokens.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <string_view>
 
 namespace sagan::language_service
@@ -34,6 +35,34 @@ namespace sagan::language_service
         if (before.tokens[i].kind != after.tokens[i].kind ||
             before.tokens[i].source_text != after.tokens[i].source_text) return false;
       return true;
+    }
+
+    auto canonical_gap(const int left, const int right) -> std::optional<std::string_view>
+    {
+      if (left == tokens::NEWLINE || right == tokens::NEWLINE) return {};
+      if (right == tokens::COMMA || right == tokens::COLON || right == tokens::RPAREN ||
+          right == tokens::RBRACKET || left == tokens::LPAREN || left == tokens::LBRACKET)
+        return "";
+      if (left == tokens::COMMA || left == tokens::COLON) return " ";
+      if (left == tokens::DOT || left == tokens::SAFE_DOT || right == tokens::DOT ||
+          right == tokens::SAFE_DOT) return "";
+      if (right == tokens::LPAREN &&
+          (left == tokens::IDENTIFIER || left == tokens::METHOD_IDENTIFIER ||
+           left == tokens::RPAREN || left == tokens::RBRACKET)) return "";
+      if (left == tokens::FAT_ARROW || right == tokens::FAT_ARROW ||
+          left == tokens::EQUAL || right == tokens::EQUAL ||
+          left == tokens::ASSIGN_VALUE || right == tokens::ASSIGN_VALUE ||
+          left == tokens::PLUS_EQUAL || right == tokens::PLUS_EQUAL ||
+          left == tokens::MINUS_EQUAL || right == tokens::MINUS_EQUAL ||
+          left == tokens::STAR_EQUAL || right == tokens::STAR_EQUAL ||
+          left == tokens::SLASH_EQUAL || right == tokens::SLASH_EQUAL ||
+          left == tokens::PERCENT_EQUAL || right == tokens::PERCENT_EQUAL ||
+          left == tokens::CARET_EQUAL || right == tokens::CARET_EQUAL ||
+          left == tokens::EQUAL_EQUAL || right == tokens::EQUAL_EQUAL ||
+          left == tokens::BANG_EQUAL || right == tokens::BANG_EQUAL ||
+          left == tokens::COALESCE || right == tokens::COALESCE)
+        return " ";
+      return {};
     }
 
     auto format_lines(const source::document_snapshot &document, const source::byte_range requested)
@@ -86,6 +115,20 @@ namespace sagan::language_service
           }
         if (line_end == text.size()) break;
         line_begin = line_end + 1;
+      }
+      for (std::size_t i = 1; i < analyzed.value->tokens.size(); ++i)
+      {
+        const auto &left = analyzed.value->tokens[i - 1];
+        const auto &right = analyzed.value->tokens[i];
+        const auto begin = left.range.end;
+        const auto end = right.range.begin;
+        if (begin > end || begin < requested.begin || end > requested.end) continue;
+        const auto gap = text.substr(begin, end - begin);
+        if (!std::all_of(gap.begin(), gap.end(), [](const char byte)
+            { return byte == ' ' || byte == '\t'; })) continue;
+        const auto expected = canonical_gap(left.kind, right.kind);
+        if (expected && gap != *expected)
+          changes.edits.push_back({{document.identity().id, {begin, end}}, std::string(*expected)});
       }
       workspace_edit edit{{std::move(changes)}};
       const auto preview = preview_edits(edit, {&document});

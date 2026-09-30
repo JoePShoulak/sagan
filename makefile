@@ -18,6 +18,7 @@ LIBRARY_SOURCES := \
 	src/language_service/queries.cpp \
 	src/language_service/queries_structure.cpp \
 	src/language_service/refactor.cpp \
+	src/language_service/refactor_imports.cpp \
 	src/language_service/workspace.cpp \
 	src/modules/resolver.cpp \
 	src/parser/ast_render.cpp \

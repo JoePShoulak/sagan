@@ -14,13 +14,14 @@ command-line formatter is advertised yet. The current library API provides a
 safe, intentionally narrow layout pass and a preview-only edit contract.
 
 `format_document`, `format_range`, and `format_on_type` return versioned edits.
-They currently normalize structural indentation to two spaces per brace depth,
-leaving all other source text alone. Multiline string and comment contents are
-preserved. The formatter requires a strict parse before and after the change and
-verifies that the token kinds and spellings remain identical. It declines
+They currently normalize structural indentation to two spaces per brace depth
+and a small set of unambiguous token gaps: commas, colons, member access,
+calls, assignments, equality, coalescing, and expression arrows. Other
+expression spacing is left alone. Multiline string and comment contents are
+preserved. The formatter requires a strict parse before and after the change
+and verifies that the token kinds and spellings remain identical. It declines
 incomplete or ambiguous input instead of guessing. This is not yet a complete
-style formatter: spacing within expressions, wrapping, import layout, and other
-style choices are not rewritten.
+style formatter: wrapping and broader spacing choices are not rewritten.
 
 Two spaces are the approved Sagan indentation style for the fuller formatter.
 
@@ -34,9 +35,17 @@ source binding with an identity-indexed reference set. It validates the new
 identifier and naming convention, refuses existing names, reindexes the
 previewed source, and verifies that every reference still resolves to the one
 renamed declaration. Public, imported, member, and cross-file rename remain
-unavailable. Other Phase 6 refactorings are not yet implemented.
+unavailable.
 
-To see a before/after preview and run the focused safety tests:
+`organize_imports` sorts one uninterrupted top-of-file block of plain imports.
+It preserves each original line and its line endings, then rechecks the result.
+It refuses comments, blank-line import groups, mixed line endings, interleaved
+declarations, or incomplete source because those cases need stronger ownership
+and semantic proofs. Removing unused imports, adding missing imports, and the
+other Phase 6 refactorings remain unimplemented.
+
+To see before/after formatting, rename, and import previews and run the focused
+safety tests:
 
 ```bash
 make formatter-demo

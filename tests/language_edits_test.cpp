@@ -36,6 +36,23 @@ auto main() -> int
   require(idempotent.state == language_service::edit_state::ready &&
               idempotent.edits.documents.front().edits.empty(),
           "formatter was not idempotent");
+  const source::document_snapshot spacing(
+      {{source::document_id{105}, source::document_uri{"untitled:spacing"}, {}}, 1,
+       "fun add( left:Int,right :Int ):Int=>left+right\n"
+       "fun main():Int{\nlet answer=add(1,2)\nreturn answer\n}\n"});
+  const auto spacing_edits = language_service::format_document(spacing);
+  require(spacing_edits.state == language_service::edit_state::ready,
+          "spacing fixture was not safely formatted");
+  const auto spacing_preview = language_service::preview_edits(spacing_edits.edits, {&spacing});
+  require(spacing_preview.state == language_service::edit_state::ready &&
+              spacing_preview.documents.front().text ==
+                  "fun add(left: Int, right: Int): Int => left+right\n"
+                  "fun main(): Int{\n  let answer = add(1, 2)\n  return answer\n}\n",
+          "formatter did not apply its canonical unambiguous token gaps");
+  const source::document_snapshot spacing_again(spacing.identity(), 2,
+                                                 spacing_preview.documents.front().text);
+  require(language_service::format_document(spacing_again).edits.documents.front().edits.empty(),
+          "spacing formatter was not idempotent");
   const auto limited = language_service::format_range(document, {17, 30});
   const auto limited_preview = language_service::preview_edits(limited.edits, {&document});
   require(limited_preview.state == language_service::edit_state::ready &&
@@ -132,8 +149,59 @@ auto main() -> int
   require(language_service::rename_local(newer, indexed.value->index, use, "altitude").state ==
               language_service::edit_state::stale,
           "rename accepted a stale semantic index");
+  const source::document_snapshot imports(
+      {{source::document_id{106}, source::document_uri{"untitled:imports"}, {}}, 1,
+       "module mission\n"
+       "import telemetry.flight as telemetry\n"
+       "import course from guidance\n"
+       "fun main(): Int => 0\n"});
+  const auto organized = language_service::organize_imports(imports);
+  require(organized.state == language_service::edit_state::ready &&
+              organized.edits.documents.front().edits.size() == 1,
+          "plain top-level imports were not organized");
+  const auto organized_preview = language_service::preview_edits(organized.edits, {&imports});
+  require(organized_preview.state == language_service::edit_state::ready &&
+              organized_preview.documents.front().text ==
+                  "module mission\n"
+                  "import course from guidance\n"
+                  "import telemetry.flight as telemetry\n"
+                  "fun main(): Int => 0\n",
+          "import sorting changed declarations or selected the wrong order");
+  const source::document_snapshot imports_again(imports.identity(), 2,
+                                                 organized_preview.documents.front().text);
+  require(language_service::organize_imports(imports_again).edits.documents.front().edits.empty(),
+          "import organization was not idempotent");
+  const source::document_snapshot commented_imports(
+      {{source::document_id{107}, source::document_uri{"untitled:commented-imports"}, {}}, 1,
+       "module mission\n"
+       "import telemetry.flight as telemetry\n"
+       "// This comment belongs to course.\n"
+       "import course from guidance\n"
+       "fun main(): Int => 0\n"});
+  require(language_service::organize_imports(commented_imports).state ==
+              language_service::edit_state::unsupported,
+          "import organizer moved a comment away from its declaration");
+  const source::document_snapshot grouped_imports(
+      {{source::document_id{108}, source::document_uri{"untitled:grouped-imports"}, {}}, 1,
+       "module mission\nimport telemetry.flight as telemetry\n\n"
+       "import course from guidance\nfun main(): Int => 0\n"});
+  require(language_service::organize_imports(grouped_imports).state ==
+              language_service::edit_state::unsupported,
+          "import organizer collapsed a deliberate blank-line grouping");
+  const source::document_snapshot crlf_imports(
+      {{source::document_id{109}, source::document_uri{"untitled:crlf-imports"}, {}}, 1,
+       "module mission\r\nimport telemetry.flight as telemetry\r\n"
+       "import course from guidance\r\nfun main(): Int => 0\r\n"});
+  const auto crlf_organized = language_service::organize_imports(crlf_imports);
+  const auto crlf_preview = language_service::preview_edits(crlf_organized.edits, {&crlf_imports});
+  require(crlf_organized.state == language_service::edit_state::ready &&
+              crlf_preview.state == language_service::edit_state::ready &&
+              crlf_preview.documents.front().text.find("import course from guidance\r\n") !=
+                  std::string::npos,
+          "import organizer did not preserve CRLF line endings");
   std::cout << "Sagan formatting input:\n" << document.text()
             << "\nFormatted preview:\n" << preview.documents.front().text
-            << "\nRenamed preview:\n" << renamed_preview.documents.front().text;
+            << "\nRenamed preview:\n" << renamed_preview.documents.front().text
+            << "\nOrganized imports preview:\n" << organized_preview.documents.front().text;
   return 0;
 }

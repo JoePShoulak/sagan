@@ -224,7 +224,9 @@ versions, identities, UTF boundaries, and non-overlap, then returns proposed
 text without writing. The current formatter is a strict-parse,
 token-preserving indentation pass, not the completed style formatter described
 below. `rename_local` is the only current refactoring; it rechecks and rebinds
-the proposed source by symbol identity. Other transformations are target
+the proposed source by symbol identity. `organize_imports` handles only an
+uninterrupted, comment-free top-level import block and rechecks the result.
+Other transformations are target
 contracts and must remain disabled until their proof gates exist.
 
 ```cpp
