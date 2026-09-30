@@ -2493,6 +2493,8 @@
       
         
       
+        
+      
     
     
     
@@ -2787,6 +2789,42 @@
     
   
     Language-service roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formatting-and-edits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatting and source edits
   
 
     
@@ -4199,6 +4237,14 @@ and external-package candidates require real metadata, not editor-maintained
 lists. The server must not advertise completion until its protocol and
 lifecycle tests pass.</p>
 <h2 id="structured-edits-and-formatting">Structured edits and formatting</h2>
+<p>The first concrete implementation is in <code>src/language_service/edits.hpp</code>,
+<code>formatter.hpp</code>, and <code>refactor.hpp</code>. <code>preview_edits</code> validates exact document
+versions, identities, UTF boundaries, and non-overlap, then returns proposed
+text without writing. The current formatter is a strict-parse,
+token-preserving indentation pass, not the completed style formatter described
+below. <code>rename_local</code> is the only current refactoring; it rechecks and rebinds
+the proposed source by symbol identity. Other transformations are target
+contracts and must remain disabled until their proof gates exist.</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">versioned_document_edits</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">document_uri</span><span class="w"> </span><span class="n">uri</span><span class="p">;</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="n">document_version</span><span class="w"> </span><span class="n">expected_version</span><span class="p">;</span>

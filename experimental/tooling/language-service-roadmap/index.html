@@ -16,7 +16,7 @@
         <link rel="prev" href="../language-service-contracts/">
       
       
-        <link rel="next" href="../extension-readiness/">
+        <link rel="next" href="../formatting-and-edits/">
       
       
         
@@ -2493,6 +2493,8 @@
       
         
       
+        
+      
     
     
     
@@ -2803,6 +2805,42 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formatting-and-edits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatting and source edits
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
     </li>
   
 
@@ -4155,6 +4193,13 @@ until Phase 8 implements and tests transport.</p>
 </ul>
 <p><strong>Exit:</strong> each query has focused source/library tests and deterministic ordering.</p>
 <h2 id="phase-6-formatter-and-safe-source-edits">Phase 6 — formatter and safe source edits</h2>
+<p><strong>Status: in progress.</strong> The library now has a conservative, token-preserving
+two-space indentation pass with document/range/on-type APIs, idempotence and
+preview tests. Versioned multi-document edit validation rejects stale,
+overlapping, or invalid UTF boundaries. Identity-based local rename is offered
+only after a successful semantic recheck and reference-rebinding proof. The
+remaining style rules, public/cross-module rename, and other refactorings below
+are not yet available. See <a href="../formatting-and-edits/">formatting and source edits</a>.</p>
 <ul>
 <li>Implement the deterministic lossless formatter with document/range/on-type
   APIs, golden tests, and idempotence tests.</li>
