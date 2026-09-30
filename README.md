@@ -171,12 +171,12 @@ optional `[application]` manifest section; loose files default to `console`, and
 Explorer supplies per-launch overrides. macOS and Linux remain explicit future
 targets rather than claimed current support. Release artifacts
 should use GitHub Releases and package facilities, with HP1 available as a
-self-hosted distribution or mirror when useful. Immediately after 1.0 is truly
-complete—and before math, rendering, or physics library development—the project
-will hold a dedicated release-lifecycle review covering release cadence,
-channels, automation triggers, signing, publishing, support, rollback, and
-maintenance. Full VS Code extension readiness will be coordinated in the same
-transition period under separately supplied requirements.
+self-hosted distribution or mirror when useful. Before 1.0 is declared or
+published, the project will hold a dedicated release-lifecycle review covering
+release cadence, channels, automation triggers, signing, publishing, support,
+rollback, and maintenance. The resulting policy governs the 1.0 release itself;
+1.0 is not complete merely because the implementation is feature-complete.
+Full VS Code extension work is paused and is not a 1.0 release gate.
 
 The compiler-owned editor-tooling track has begun without changing the held VS
 Code extension. The compiler builds as a reusable static library and exposes

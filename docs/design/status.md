@@ -157,10 +157,11 @@ and show a native diagnostic dialog. Release artifacts will
 be published through GitHub's release/package facilities; HP1 may additionally
 host or mirror installer and package data where convenient.
 
-After 1.0 is declared complete, but before the math, rendering, and physics
-libraries begin, hold a dedicated lifecycle and release-operations review. It
-must settle release cadence and channels, the events that trigger builds,
-testing, signing, publication, documentation promotion, rollback, security and
-support work, and maintenance responsibilities outside day-to-day language
-development. Full-functionality VS Code extension work is planned for the same
-transition and awaits its separate requirements.
+Before 1.0 is declared or published, hold a dedicated lifecycle and
+release-operations review. It must settle release cadence and channels, the
+events that trigger builds, testing, signing, publication, documentation
+promotion, rollback, security and support work, and maintenance responsibilities
+outside day-to-day language development. The resulting policy governs the 1.0
+release itself, so feature-complete implementation alone does not cross the 1.0
+gate. Full-functionality VS Code extension work is paused and is not a 1.0
+release requirement.
