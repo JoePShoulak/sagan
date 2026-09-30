@@ -6,7 +6,7 @@ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-source_file="examples/editor_recovery_demo.sagan"
+source_file="tests/fixtures/syntax/editor_recovery.sagan"
 
 echo "Sagan input (deliberately incomplete):"
 echo "--------------------------------------"

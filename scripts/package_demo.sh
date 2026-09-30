@@ -8,23 +8,23 @@ cd "$repo_root"
 
 echo "Package manifest and sources:"
 echo "-----------------------------"
-cat examples/package_demo/sagan.toml
+cat examples/package/sagan.toml
 while IFS= read -r source; do
   echo
   echo "$source"
   cat "$source"
-done < <(find examples/package_demo/src -type f -name '*.sagan' | sort)
+done < <(find examples/package/src -type f -name '*.sagan' | sort)
 
 echo
 echo "Resolved package graph:"
 echo "-----------------------"
-bin/sagan --package examples/package_demo
+bin/sagan --package examples/package
 
 echo
 echo "Linked native execution:"
 echo "------------------------"
 mkdir -p build/tmp
-bin/sagan --emit-cpp-package examples/package_demo build/package_demo.cpp
+bin/sagan --emit-cpp-package examples/package build/package_demo.cpp
 native_output="build/package_demo"
 if [[ "${OS:-}" == "Windows_NT" ]]; then
   native_output="build/package_demo.exe"

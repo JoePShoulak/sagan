@@ -127,7 +127,7 @@ printf '%s\n' "$version" > "$stage_dir/VERSION"
 
 unset CXX
 "$stage_dir/bin/sagan.exe" --version
-"$stage_dir/bin/sagan.exe" "$repo_root/examples/run_demo.sagan"
+"$stage_dir/bin/sagan.exe" "$repo_root/tests/fixtures/runtime/smoke.sagan"
 
 toolchain_megabytes="$(du -sm "$staged_toolchain" | awk '{print $1}')"
 echo "Staged GCC C++ toolchain size: ${toolchain_megabytes} MiB"

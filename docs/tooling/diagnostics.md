@@ -17,7 +17,7 @@ bounded lexical and top-level syntax recovery and can report multiple errors
 from one document. Capability discovery reports recovery as available.
 
 ```bash
-bin/sagan --diagnostics-json examples/type_error.sagan
+bin/sagan --diagnostics-json tests/fixtures/semantic/type_error.sagan
 bin/sagan --capabilities-json
 ```
 
@@ -44,7 +44,7 @@ comments.
 Run the deliberate error example:
 
 ```bash
-bin/sagan --tokens examples/tokenizer_error.sagan
+bin/sagan --tokens tests/fixtures/syntax/tokenizer_error.sagan
 ```
 
 The diagnostic identifies the invalid source region for `1e`.
@@ -56,7 +56,7 @@ documentation-comment placement, and other established grammar rules. Run the
 complete positive and negative demonstration with:
 
 ```bash
-bash scripts/parser_demo.sh
+bash tests/integration/parser_test.sh
 ```
 
 These errors establish grammatical validity only. Semantic and type failures

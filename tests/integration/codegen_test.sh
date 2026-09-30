@@ -3,7 +3,7 @@ set -euo pipefail
 
 export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
 mkdir -p build/tmp
 repo_tmp_native="$(cygpath -w "$repo_root/build/tmp")"
@@ -13,10 +13,10 @@ export TEMP="$repo_tmp_native"
 
 echo "Sagan input:"
 echo "------------"
-cat examples/execution_demo.sagan
+cat examples/showcase.sagan
 echo
 
-bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
+bin/sagan --emit-cpp examples/showcase.sagan build/execution_demo.cpp
 
 echo
 echo "Generated C++:"
@@ -68,37 +68,37 @@ expect_runtime_error() {
   echo "Confirmed runtime error: $expected_message"
 }
 
-expect_runtime_error examples/execution_exponent_zero_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_exponent_zero_error.sagan \
   "Sagan exponentiation does not define 0 ^ 0"
-expect_runtime_error examples/execution_exponent_negative_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_exponent_negative_error.sagan \
   "Sagan integer exponentiation requires a non-negative exponent"
-expect_runtime_error examples/execution_exponent_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_exponent_overflow_error.sagan \
   "Sagan integer exponentiation overflow"
-expect_runtime_error examples/execution_addition_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_addition_overflow_error.sagan \
   "Sagan integer addition overflow"
-expect_runtime_error examples/execution_subtraction_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_subtraction_overflow_error.sagan \
   "Sagan integer subtraction overflow"
-expect_runtime_error examples/execution_multiplication_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_multiplication_overflow_error.sagan \
   "Sagan integer multiplication overflow"
-expect_runtime_error examples/execution_division_zero_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_division_zero_error.sagan \
   "Sagan division by zero"
-expect_runtime_error examples/execution_division_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_division_overflow_error.sagan \
   "Sagan integer division overflow"
-expect_runtime_error examples/execution_modulo_zero_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_modulo_zero_error.sagan \
   "Sagan modulo by zero"
-expect_runtime_error examples/execution_negation_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_negation_overflow_error.sagan \
   "Sagan integer negation overflow"
-expect_runtime_error examples/execution_increment_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_increment_overflow_error.sagan \
   "Sagan integer addition overflow"
-expect_runtime_error examples/execution_decrement_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_decrement_overflow_error.sagan \
   "Sagan integer subtraction overflow"
-expect_runtime_error examples/execution_float_division_zero_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_float_division_zero_error.sagan \
   "Sagan division by zero"
-expect_runtime_error examples/execution_vector_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_vector_overflow_error.sagan \
   "Sagan integer addition overflow"
-expect_runtime_error examples/execution_vector_division_zero_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_vector_division_zero_error.sagan \
   "Sagan division by zero"
-expect_runtime_error examples/execution_point_overflow_error.sagan \
+expect_runtime_error tests/fixtures/runtime/execution_point_overflow_error.sagan \
   "Sagan integer addition overflow"
 
-echo "Execution demo passed: Sagan executed value exceptions with propagation and guaranteed cleanup, reference-counted face dispatch, private fields and methods, typed new constructors, transitive face composition and defaults, nominal enums, lambdas, dimensioned values, checked arithmetic, collections, control flow, and Unicode output."
+echo "Execution test passed: Sagan executed value exceptions with propagation and guaranteed cleanup, reference-counted face dispatch, private fields and methods, typed new constructors, transitive face composition and defaults, nominal enums, lambdas, dimensioned values, checked arithmetic, collections, control flow, and Unicode output."

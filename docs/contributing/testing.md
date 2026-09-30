@@ -8,67 +8,63 @@ verified_by: null
 ---
 
 # Testing
-Run the complete current compiler check from Git Bash:
+
+Run the complete compiler check from Git Bash:
 
 ```bash
 bash scripts/test.sh
 ```
 
-This performs a clean C++ build, calculates the development version, runs the
-compiled-in tokenizer, parser, renderer, and semantic self-tests; exercises
-every command-line output mode; verifies generated AST files; checks
-representative CLI failures and diagnostics; and checks `--version`.
+This performs a clean C++ build; runs the compiled-in unit tests; exercises the
+CLI, diagnostics, renderers, semantic index, workspace overlays, and source
+mapping; and runs the integration suite against focused Sagan fixtures.
+
+The test material has three distinct homes:
+
+- C++ library and component tests live in `tests/*.cpp`.
+- Sagan source inputs live in `tests/fixtures/`, grouped by compiler phase.
+- End-to-end shell assertions live in `tests/integration/`.
+
+Run only the integration layer with:
+
+```bash
+make integration-test
+```
+
+Human-facing programs belong in `examples/`; they are not substitutes for
+assertions. The curated visual and executable demonstrations are:
+
+```bash
+make run-demo
+make geometry-demo
+make units-demo
+make package-demo
+bash scripts/ast_demo.sh --no-open
+```
 
 ## Coverage
 
-Run an instrumented build from Bash with:
+Run an instrumented build with:
 
 ```bash
 make coverage
 ```
 
-The coverage script performs a clean build with GCC's `--coverage`
-instrumentation and runs the complete front-end suite. If `lcov` is installed,
-the portable report is written to `build/coverage.info`. Instrumented objects
-are always removed when the script exits, including after a failure, so a later
-ordinary build never tries to link coverage objects without the gcov runtime.
+The coverage script uses GCC's `--coverage` instrumentation and runs the full
+suite. When `lcov` is available it writes `build/coverage.info`. Instrumented
+objects are removed even after failure so later ordinary builds do not inherit
+coverage linkage.
 
-`.github/workflows/coverage.yml` repeats this process on Ubuntu for every push
-and pull request, then uploads `build/coverage.info` to Codecov. Authentication
-uses GitHub OIDC rather than a stored `CODECOV_TOKEN`. Codecov upload failures
-fail the coverage job so a missing report cannot appear successful. CI and the
-release workflow also enforce a 90% line-coverage floor with
-`scripts/coverage_threshold.sh`.
+`.github/workflows/coverage.yml` repeats this on Ubuntu for pushes and pull
+requests, uploads the report to Codecov through GitHub OIDC, and enforces the
+repository's line-coverage floor. Coverage shows which implementation paths ran;
+it does not prove that every language rule is correct.
 
-The live Codecov badge is authoritative for the current percentage. The suite
-covers tokenizer lifecycle and defensive invariants; Unicode, emoji, escapes,
-and malformed input; positive and negative parser and semantic cases; every AST
-renderer; CLI success and failure paths; and generated output files.
+## Documentation
 
-Also inspect the full demonstrations and intentional error cases when changing
-the front end:
-
-```bash
-make demo
-bin/sagan --tokens examples/tokenizer_error.sagan
-make parser-demo
-bash scripts/parser_demo.sh
-bash scripts/ast_demo.sh --no-open
-bash scripts/semantic_demo.sh
-bash scripts/type_demo.sh
-bash scripts/entry_demo.sh
-bash scripts/execution_demo.sh
-```
-
-Validate documentation metadata, links, navigation, Markdown, and rendering:
+Validate documentation metadata, links, navigation, Markdown, executable
+examples, and rendering with:
 
 ```bash
 bash scripts/docs.sh check
 ```
-
-The parser suite establishes syntactic correctness for the current grammar. The
-semantic suite covers scopes, names, types, generics, classes, faces, modules,
-units, ownership rules, and control flow. Coverage measures which implementation
-lines the tests execute; it does not by itself prove that every language rule is
-correct. Execution demos additionally prove that representative generated C++
-compiles and runs natively.

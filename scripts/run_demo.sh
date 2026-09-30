@@ -8,17 +8,17 @@ cd "$repo_root"
 
 echo "Sagan source:"
 echo "-------------"
-cat examples/run_demo.sagan
+cat examples/showcase.sagan
 
 echo
-echo "sagan examples/run_demo.sagan"
+echo "sagan examples/showcase.sagan"
 echo "------------------------------"
-bin/sagan examples/run_demo.sagan
+bin/sagan examples/showcase.sagan
 
 echo
-echo "sagan --run-package examples/package_demo"
+echo "sagan --run-package examples/package"
 echo "-----------------------------------------"
-bin/sagan --run-package examples/package_demo
+bin/sagan --run-package examples/package
 
 echo
 echo "Run demo passed: the Sagan CLI compiled and executed a source file and a manifest-backed package."

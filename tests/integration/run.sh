@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$repo_root"
+
+tests=(
+  parser_test.sh
+  semantic_test.sh
+  type_test.sh
+  entry_test.sh
+  module_test.sh
+  codegen_test.sh
+  runtime_test.sh
+  optional_test.sh
+  payload_enum_test.sh
+  generic_sum_test.sh
+  generic_class_test.sh
+  closure_test.sh
+)
+
+for test_script in "${tests[@]}"; do
+  echo
+  echo "==> tests/integration/$test_script"
+  bash "tests/integration/$test_script"
+done
+
+echo
+echo "All Sagan integration tests passed."

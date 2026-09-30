@@ -162,7 +162,7 @@ auto main() -> int
             << "  main: " << main_symbol->id.value << '\n';
 
   const source::disk_source_provider disk;
-  const auto graph = modules::resolve("examples/module_demo/main.sagan", disk);
+  const auto graph = modules::resolve("tests/fixtures/modules/module_demo/main.sagan", disk);
   const auto workspace_index = semantic::build_workspace_index(graph, disk);
   const auto course = workspace_index.exported("guidance", "course");
   if (course.size() != 1) throw std::runtime_error("export alias did not resolve to one declaration");

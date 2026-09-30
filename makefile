@@ -38,8 +38,8 @@ DEPENDENCIES := $(OBJECTS:.o=.d)
 TARGET := bin/$(APPNAME)
 COMPILER_LIBRARY := build/lib/libsagan-compiler.a
 SOURCE_DIAGNOSTICS_TEST := bin/source-diagnostics-test
-WORKSPACE_DEMO := bin/workspace-demo
-SEMANTIC_INDEX_DEMO := bin/semantic-index-demo
+WORKSPACE_TEST := bin/workspace-test
+SEMANTIC_INDEX_TEST := bin/semantic-index-test
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
 BUILD_TMP := build/tmp
@@ -54,7 +54,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test check-windows-runtime coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo units-demo closure-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo run-demo geometry-demo units-demo editor-tooling-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -88,11 +88,11 @@ $(SOURCE_DIAGNOSTICS_TEST): tests/source_diagnostics_test.cpp $(COMPILER_LIBRARY
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
-$(WORKSPACE_DEMO): tests/workspace_demo.cpp $(COMPILER_LIBRARY)
+$(WORKSPACE_TEST): tests/workspace_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
-$(SEMANTIC_INDEX_DEMO): tests/semantic_index_demo.cpp $(COMPILER_LIBRARY)
+$(SEMANTIC_INDEX_TEST): tests/semantic_index_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
@@ -108,15 +108,19 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_DEMO) $(SEMANTIC_INDEX_DEMO)
+test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
 	$(SOURCE_DIAGNOSTICS_TEST)
-	$(WORKSPACE_DEMO)
-	$(SEMANTIC_INDEX_DEMO)
+	$(WORKSPACE_TEST)
+	$(SEMANTIC_INDEX_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
+	bash tests/integration/run.sh
+
+integration-test: $(TARGET)
+	bash tests/integration/run.sh
 
 check-windows-runtime: $(TARGET)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
@@ -124,23 +128,8 @@ check-windows-runtime: $(TARGET)
 coverage:
 	bash scripts/coverage.sh
 
-demo: $(TARGET)
-	$(TARGET) examples/tokenizer_demo.sagan
-
-parser-demo: $(TARGET)
-	$(TARGET) --ast examples/parser_demo.sagan
-
-semantic-demo: $(TARGET)
-	$(TARGET) --semantic examples/semantic_demo.sagan
-
-type-demo: $(TARGET)
-	$(TARGET) --types examples/type_demo.sagan
-
-entry-demo: $(TARGET)
-	$(TARGET) --entry examples/entry_demo.sagan
-
-module-demo: $(TARGET)
-	bash scripts/module_demo.sh
+tokenizer-inspect: $(TARGET)
+	$(TARGET) --tokens tests/fixtures/syntax/tokenizer.sagan
 
 package-demo: $(TARGET)
 	bash scripts/package_demo.sh
@@ -154,45 +143,12 @@ geometry-demo: $(TARGET)
 units-demo: $(TARGET)
 	bash scripts/units_demo.sh
 
-closure-demo: $(TARGET)
-	bash scripts/closure_demo.sh
-
 editor-tooling-demo: $(TARGET)
 	bash scripts/editor_tooling_demo.sh
 
-workspace-demo: $(WORKSPACE_DEMO)
-	$(WORKSPACE_DEMO)
-
-semantic-index-demo: $(SEMANTIC_INDEX_DEMO)
-	$(SEMANTIC_INDEX_DEMO)
-
-execution-demo: $(TARGET)
-	bash scripts/execution_demo.sh
-
-runtime-error-demo: $(TARGET)
-	bash scripts/runtime_error_demo.sh
-
-optional-demo: $(TARGET)
-	bash scripts/optional_demo.sh
-
-weak-demo: $(TARGET)
-	bash scripts/weak_demo.sh
-
-ownership-demo: $(TARGET)
-	bash scripts/ownership_demo.sh
-
-payload-enum-demo: $(TARGET)
-	bash scripts/payload_enum_demo.sh
-
-generic-sum-demo: $(TARGET)
-	bash scripts/generic_sum_demo.sh
-
-generic-class-demo: $(TARGET)
-	bash scripts/generic_class_demo.sh
-
 ast-demo: $(TARGET)
 	@mkdir -p build
-	$(TARGET) --ast-html examples/parser_demo.sagan build/ast-demo.html
+	$(TARGET) --ast-html examples/ast.sagan build/ast-demo.html
 	@echo "Visual AST demo: build/ast-demo.html"
 
 get-version:

@@ -3,12 +3,12 @@ set -euo pipefail
 
 export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
 
 echo "Module sources:"
 echo "---------------"
-for source in examples/module_demo/*.sagan; do
+for source in tests/fixtures/modules/module_demo/*.sagan; do
   echo
   echo "$source"
   cat "$source"
@@ -17,13 +17,13 @@ done
 echo
 echo "Resolved graph:"
 echo "---------------"
-bin/sagan --modules examples/module_demo/main.sagan
+bin/sagan --modules tests/fixtures/modules/module_demo/main.sagan
 
 echo
 echo "Linked native execution:"
 echo "------------------------"
 mkdir -p build/tmp
-bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/module_demo.cpp
+bin/sagan --emit-cpp-modules tests/fixtures/modules/module_demo/main.sagan build/module_demo.cpp
 native_output="build/module_demo"
 if [[ "${OS:-}" == "Windows_NT" ]]; then
   native_output="build/module_demo.exe"
@@ -49,16 +49,16 @@ expect_failure() {
   echo "Confirmed module error: $expected"
 }
 
-expect_failure examples/module_cycle/alpha.sagan "Cyclic module dependency: alpha -> beta -> alpha"
-expect_failure examples/module_export_error/main.sagan "does not export 'missing'"
-expect_failure examples/module_name_error/main.sagan "declares 'wrong_name', expected 'main'"
-expect_failure examples/module_missing/main.sagan "Could not open module"
-expect_failure examples/module_declaration_error/main.sagan "must declare 'module support'"
-expect_failure examples/module_undefined_export_error/main.sagan "exports undefined declaration 'missing'"
-expect_failure examples/module_duplicate_export_error/main.sagan "exports duplicate public name 'value'"
+expect_failure tests/fixtures/modules/module_cycle/alpha.sagan "Cyclic module dependency: alpha -> beta -> alpha"
+expect_failure tests/fixtures/modules/module_export_error/main.sagan "does not export 'missing'"
+expect_failure tests/fixtures/modules/module_name_error/main.sagan "declares 'wrong_name', expected 'main'"
+expect_failure tests/fixtures/modules/module_missing/main.sagan "Could not open module"
+expect_failure tests/fixtures/modules/module_declaration_error/main.sagan "must declare 'module support'"
+expect_failure tests/fixtures/modules/module_undefined_export_error/main.sagan "exports undefined declaration 'missing'"
+expect_failure tests/fixtures/modules/module_duplicate_export_error/main.sagan "exports duplicate public name 'value'"
 
 set +e
-type_output="$(bin/sagan --emit-cpp-modules examples/module_type_error/main.sagan 2>&1)"
+type_output="$(bin/sagan --emit-cpp-modules tests/fixtures/modules/module_type_error/main.sagan 2>&1)"
 type_status=$?
 set -e
 if [[ "$type_status" -eq 0 || "$type_output" != *"No matching overload for 'guidance__calculate'"* ]]; then
@@ -69,7 +69,7 @@ fi
 echo "Confirmed linked type error: imported function rejects String"
 
 set +e
-namespace_output="$(bin/sagan --emit-cpp-modules examples/module_namespace_error/main.sagan 2>&1)"
+namespace_output="$(bin/sagan --emit-cpp-modules tests/fixtures/modules/module_namespace_error/main.sagan 2>&1)"
 namespace_status=$?
 set -e
 if [[ "$namespace_status" -eq 0 || "$namespace_output" != *"Module 'support' does not export 'private_value'"* ]]; then
@@ -79,4 +79,4 @@ if [[ "$namespace_status" -eq 0 || "$namespace_output" != *"Module 'support' doe
 fi
 echo "Confirmed namespace visibility error: private member is inaccessible"
 
-echo "Module demo passed: sibling resolution, transitive dependencies, selective and namespace imports, export visibility, semantic/type linking, native execution, and cycle diagnostics are working."
+echo "Module test passed: sibling resolution, transitive dependencies, selective and namespace imports, export visibility, semantic/type linking, native execution, and cycle diagnostics are working."

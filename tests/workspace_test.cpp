@@ -11,8 +11,8 @@
 auto main() -> int
 {
   using namespace sagan;
-  const auto guidance_path = std::filesystem::absolute("examples/module_demo/guidance.sagan").lexically_normal();
-  const auto entry_path = std::filesystem::absolute("examples/module_demo/main.sagan").lexically_normal();
+  const auto guidance_path = std::filesystem::absolute("tests/fixtures/modules/module_demo/guidance.sagan").lexically_normal();
+  const auto entry_path = std::filesystem::absolute("tests/fixtures/modules/module_demo/main.sagan").lexically_normal();
   const auto guidance = source::identity_from_path(source::document_id{1}, guidance_path);
   auto documents = std::make_shared<source::document_store>();
 

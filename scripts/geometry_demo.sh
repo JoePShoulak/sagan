@@ -8,12 +8,12 @@ cd "$repo_root"
 
 echo "Geometry source:"
 echo "----------------"
-cat examples/geometry_demo.sagan
+cat examples/geometry.sagan
 
 echo
 echo "Native result:"
 echo "--------------"
-bin/sagan examples/geometry_demo.sagan
+bin/sagan examples/geometry.sagan
 
 echo
 echo "Geometry demo passed: points and vectors preserve affine meaning, and spherical points and vectors use native literals."

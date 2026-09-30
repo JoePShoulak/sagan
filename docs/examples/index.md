@@ -9,14 +9,68 @@ verified_by: null
 
 # Examples
 
+The root `examples/` directory is intentionally small. It contains programs
+worth reading, changing, and running by hand. Compiler regression inputs live
+under `tests/fixtures/` instead, where their purpose is explicit and the test
+suite owns them.
+
+## Language showcase
+
+`examples/showcase.sagan` is the broad end-to-end tour. It demonstrates Unicode
+identifiers, collections, control flow, classes and faces, enums, exceptions,
+dimensioned values, physical units, and native execution.
+
+```bash
+make run-demo
+```
+
+The command prints the source and result, then also runs the sample package.
+
+## Geometry
+
+`examples/geometry.sagan` demonstrates the distinction between affine points
+and displacement vectors, plus native Cartesian and spherical literals.
+
+```bash
+make geometry-demo
+```
+
+## Units of measure
+
+`examples/units.sagan` demonstrates conversions, affine temperatures,
+unit-constrained callables, custom units, SI prefixes, and angular units.
+
+```bash
+make units-demo
+```
+
+## Modules and packages
+
+`examples/package/` is a complete manifest-backed project. It uses qualified
+modules in nested source directories and demonstrates package discovery,
+imports, linked C++ generation, and native execution.
+
+```bash
+make package-demo
+```
+
+## Visual AST
+
+`examples/ast.sagan` is a syntax-rich input for Sagan's tree renderers.
+
+```bash
+bash scripts/ast_demo.sh
+```
+
+This writes `build/ast-demo.html` and opens an interactive source-and-tree view
+with zoom and pan controls. Add `--no-open` to generate it without opening a
+browser.
+
 ## Executable documentation examples
 
-Examples in this section are executable programs archived with the
-documentation. The documentation build runs every `.sagan` file under
-`docs/examples/executable/` and requires its output to match the adjacent
-`.stdout` file exactly.
-
-### Hello from Sagan
+Small examples embedded directly in these docs live under
+`docs/examples/executable/`. The documentation check runs each `.sagan` file
+and compares its output with the adjacent `.stdout` file.
 
 ```sagan
 --8<-- "docs/examples/executable/hello.sagan"
@@ -28,315 +82,21 @@ Expected output:
 --8<-- "docs/examples/executable/hello.stdout"
 ```
 
-[Download the Sagan source](executable/hello.sagan) or
-[view the expected output](executable/hello.stdout).
+## Regression fixtures
 
-## Tokenizer demonstration
+`tests/fixtures/` is grouped by compiler responsibility:
 
-`examples/tokenizer_demo.sagan` is the representative source fixture. It
-covers modules and imports, interfaces and classes, function forms, mutating
-method names, typed declarations, numeric separators and scientific notation,
-Cartesian vectors and points plus spherical vectors and points, dictionaries,
-raw and multiline strings, nested
-interpolation, exception keywords, increment, and an emoji identifier.
+- `syntax/` contains tokenizer, parser, and recovery inputs.
+- `semantic/` contains name, type, ownership, generic, and entry-point inputs.
+- `modules/` contains multi-file resolver graphs and failure cases.
+- `runtime/` contains code-generation and runtime behavior inputs.
 
-```bash
-make demo
-```
-
-The file is checked as tokenizer input. It is not an executable program and is
-not evidence of successful parsing, semantic validation, or execution.
-
-## Parser and visual AST demonstration
-
-`examples/parser_demo.sagan` exercises the parser features implemented so far,
-including modules, imports, aliases, exports, precedence, right-associative
-exponentiation and assignment, compound assignment statements, the
-conditional expression, indexing, ordinary and safe member access, function and
-method calls, mutating method names, and deep postfix chains.
-
-`examples/module_error.sagan` demonstrates the focused diagnostic produced when
-a module declaration appears after another top-level declaration.
-
-`examples/compound_assignment_error.sagan` demonstrates a missing right-hand
-value after a compound-assignment operator.
-
-The parser demo includes line and block documentation comments on a module,
-face, class, field, method, function, and local variable.
-`examples/documentation_error.sagan` demonstrates rejection of a documentation
-comment placed before executable control flow.
-
-The success demo also includes a documented enum member and a generator-shaped
-function using `yield`, so both appear in text and interactive visual AST output.
-It also includes ordinary, raw, multiline, and interpolated strings, including
-interpolations containing member access and arithmetic expressions.
-The collection section demonstrates arrays, dictionaries with expression keys,
-Cartesian vectors, points, spreads, trailing commas, and multiline formatting.
-Its control-flow section adds nested blocks, declarations, ordinary assignment,
-expression statements, an `if`/`else if`/`else` chain, all three loop forms,
-`break`, `continue`, both return forms, and `match`/`case` with a fallback inside
-a typed, block-bodied function. It also demonstrates multiple `unless` handlers,
-`scream`, and `finally` cleanup around a protected `hope` block. The native
-execution demo additionally proves exact value matching, outward propagation,
-and cleanup before an early return.
-The top of the fixture demonstrates composed faces, signatures and default
-methods, a class with fields, public and private methods, `self`, and a simple
-enum. It also contains a multiline expression-bodied function and an anonymous
-typed lambda.
+The scripts in `tests/integration/` turn those fixtures into assertions. Run
+them as part of the complete suite with `make test`, or separately with:
 
 ```bash
-bash scripts/parser_demo.sh
-bash scripts/ast_demo.sh
+make integration-test
 ```
 
-The first command prints the successful tree and confirms that every focused
-error fixture fails as intended. Those fixtures cover general parse errors,
-postfix/member access, strings and interpolation, collections, blocks, control
-flow, matching, exceptions, types and declarations, lambdas, module placement,
-compound assignment, and documentation-comment placement. The second opens a
-self-contained page showing the input source beside a colored tree. The page
-supports button and mouse-wheel zoom plus drag-to-pan navigation. Use
-`bash scripts/ast_demo.sh --no-open` to generate `build/ast-demo.html` without
-launching a browser.
-
-## Module-resolution demonstration
-
-`examples/module_demo/` contains a three-file dependency graph with a transitive
-selective import, an export alias, a local import alias, and a whole-module
-namespace import. The demo prints every source file and the dependency-ordered
-graph, then links both import forms, compiles generated C++, calls an exported
-namespace function, accesses an exported namespaced enum, and confirms focused
-cycle, visibility, missing-export, and filename/declaration diagnostics.
-
-```bash
-make module-demo
-```
-
-The demonstration proves module structure, visibility, semantic/type linking,
-whole-module namespace access, and native cross-file execution.
-
-## Package demonstration
-
-`examples/package_demo/` adds a strict `sagan.toml`, a configured entry module,
-and qualified `navigation.guidance` and `telemetry.flight` modules stored in
-matching nested directories. It proves manifest loading, deterministic source
-mapping, transitive imports, package graph inspection, linked C++ generation,
-and native execution.
-
-```bash
-make package-demo
-```
-
-## Direct execution demonstration
-
-`examples/run_demo.sagan` is a compact executable with an emoji-named function.
-The demo passes that file directly to `sagan`, then runs the manifest-backed
-package through `--run-package`, proving native compilation, execution, cleanup,
-Unicode output, and exit-code handling without an external compiler command.
-
-```bash
-make run-demo
-```
-
-## Cartesian and spherical geometry demonstration
-
-`examples/geometry_demo.sagan` treats points as affine locations and vectors as
-displacements. It translates and restores a Cartesian point, subtracts two
-points into a vector, exercises compound translation, and constructs/inspects
-spherical point and vector literals before running natively.
-
-```bash
-make geometry-demo
-```
-
-## Optional-value demonstration
-
-`examples/optional_demo.sagan` demonstrates typed `Optional<T>` values,
-`Some(value)`, `None`, payload-binding matches, safe field and method access,
-lazy `??` fallback, and right-associative fallback chains. The script shows the
-source and generated C++, compiles it, and runs the native result:
-
-```bash
-make optional-demo
-```
-
-## Weak-reference demonstration
-
-`examples/weak_demo.sagan` stores a class value in a `weak let` field, reads it
-while the strong owner is alive, then reads it again after that owner leaves
-scope. The second read produces `None`, and `??` supplies the visible fallback:
-
-```bash
-make weak-demo
-```
-
-## Payload-enum demonstration
-
-`examples/payload_enum_demo.sagan` constructs typed success and failure cases,
-assigns explicit signed 64-bit tags, demonstrates implicit tag continuation,
-binds payloads, mixes them with a payload-free case, and executes an exhaustive
-match through the native tagged-variant representation. The demo also displays
-the generated C++ representation before running it:
-
-```bash
-make payload-enum-demo
-```
-
-## Catchable runtime-error demonstration
-
-`examples/runtime_error_demo.sagan` catches checked integer overflow, division
-by zero, an invalid array index, and a missing dictionary key through built-in
-nominal `RuntimeError` cases. It also proves that `finally` cleanup runs on a
-native failure:
-
-```bash
-make runtime-error-demo
-```
-
-## Ownership demonstration
-
-`make ownership-demo` first runs the live/expired weak-reference example, then
-shows the compiler rejecting a two-class all-strong ownership cycle and naming
-the field path that requires a `weak let` edge:
-
-```bash
-make ownership-demo
-```
-
-## Generic-sum demonstration
-
-`examples/generic_sum_demo.sagan` declares `Result<T, E>` and `identity<T>`.
-It demonstrates call-site function inference, contextual success construction,
-explicit `Result<Int, String>.Failure(...)` qualification, exhaustive payload
-binding, and native execution:
-
-```bash
-make generic-sum-demo
-```
-
-## Generic class and face demonstration
-
-`examples/generic_class_demo.sagan` declares `Box<T>` and the requirement-only
-`Readable<T>` face. It infers class specializations from constructor calls,
-checks fields and methods after substituting `T`, converts `Box<Int8>` to
-`Readable<Int8>`, executes a face default that calls `self.get()`, explicitly
-specializes `Box<Int8>`, `echo<String>`, and a function constrained by
-`T is Readable<Int8>`, mutates the boxed value, and executes the generated
-native program:
-
-```bash
-make generic-class-demo
-```
-
-## Semantic-analysis demonstration
-
-`examples/semantic_demo.sagan` exercises program, type, function, block, and
-branch scopes; built-in and user-defined type names; parameters; local and
-top-level variables; functions; composition; `self`; and resolved references.
-
-```bash
-bash scripts/semantic_demo.sh
-```
-
-The script prints the input's scope/symbol/resolution model, then confirms that
-`examples/semantic_undefined_error.sagan` and
-`examples/semantic_duplicate_error.sagan` fail with focused diagnostics. This
-demonstrates name and scope analysis only; use the type or execution demos for
-later compiler stages.
-
-## Type-checking demonstration
-
-`examples/type_demo.sagan` demonstrates scalar inference, integer-width
-selection, annotations, lossless numeric widening, calls, overloads,
-conditions, returns, homogeneous arrays and dictionaries, indexing, and
-dimensioned Cartesian vector and point literals plus spherical literals.
-
-```bash
-bash scripts/type_demo.sh
-```
-
-The script prints a successful `TypeModel`, then confirms focused failures for
-an incorrect return type, an uninferable variable, heterogeneous collections,
-and an invalid vector component. This is not an execution demo.
-
-## Executable-entry demonstration
-
-`examples/entry_demo.sagan` is a small source fixture shaped like an executable
-program. It has a parameterless `main(): Int`, local arithmetic,
-conditional control flow, and guaranteed returns.
-
-```bash
-bash scripts/entry_demo.sh
-```
-
-The script confirms the valid entry point and demonstrates missing-entry,
-uninitialized-read, and unreachable-statement diagnostics. It still does not
-generate or execute native code.
-
-## Native execution demonstration
-
-`examples/execution_demo.sagan` is the broad end-to-end executable fixture. It
-calls an emoji-named function to compute `40 + 2`, builds and iterates a typed
-countdown array using a spread, reads a checked array index, formats interpolated
-strings,
-constructs a typed dictionary using a spread and later-key override, reads a
-checked key, demonstrates checked powers and prefix/postfix increment values,
-constructs a vector with a spread, constructs a point, prints and indexes
-both dimensioned values, reads and updates named components, iterates the
-vector's components, performs checked vector/scalar arithmetic and compound updates, and mutates state through
-`while` and `until` loops, selects an ordered `match` case with a fallback,
-executes a stored capturing lambda and an immediately invoked lambda, tests the
-result, selects, prints, compares, and matches a nominal enum value, constructs
-a class with defaulted fields, calls an ordinary and a mutating method through
-`self`, routes a public method through a private helper, updates a field, and
-returns success from `main`.
-That class explicitly composes a face which itself composes another face, so the
-same demo exercises transitive compile-time conformance and an inherited default
-that calls another face requirement through `self`, without runtime inheritance.
-Its `match` cases, `for`
-loop, and final `if` branches demonstrate same-line bodies without braces.
-
-```bash
-bash scripts/execution_demo.sh
-```
-
-The script prints the Sagan input, emits and prints C++, compiles it with
-`g++`, runs the native program, displays the program's own `print` output, and
-reports its exit code. It also compiles and runs focused fixtures proving that
-negative integer exponents, `0 ^ 0`, fixed-width integer power overflow,
-checked addition, subtraction, multiplication, division, remainder, negation,
-increment, decrement, vector component overflow, and vector division-by-zero
-failures
-raise runtime errors. Features listed as deferred in the reference—such as
-generator execution and spherical arithmetic—are intentionally absent.
-
-The string error fixture demonstrates the focused diagnostic for an empty
-`${}` interpolation. The collection fixture demonstrates the minimum
-two-element vector rule.
-The block fixture demonstrates the focused diagnostic for a missing closing
-brace. The control-flow fixture demonstrates the diagnostic for `break` outside
-a loop. The match fixture demonstrates that `case else` must be the last branch.
-The exception fixture demonstrates that `scream` requires a value.
-The type fixture demonstrates that class methods require bodies.
-The lambda fixture demonstrates that anonymous functions require `=>` before
-their expression body. Additional fixtures cover a late module declaration, a
-missing compound-assignment value, and a documentation comment before an
-executable statement.
-
-## Intentional lexical error
-
-`examples/tokenizer_error.sagan` contains:
-
-```sagan
-let malformed_number = 1e
-```
-
-```bash
-bin/sagan --tokens examples/tokenizer_error.sagan
-```
-
-The tokenizer rejects it because the exponent has no digits.
-
-When adding examples, say whether they are tokenizer fixtures, intended syntax,
-or eventually executable programs. Never imply execution solely from successful
-tokenization.
+Fixtures are test data, not user-facing examples. A fixture may be deliberately
+invalid and should not be treated as recommended Sagan style.

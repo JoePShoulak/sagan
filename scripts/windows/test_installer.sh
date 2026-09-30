@@ -50,7 +50,7 @@ esac
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
 # This invokes the bundled compiler and then executes the generated program,
 # proving Sagan can add only the child toolchain environment it actually needs.
-PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" "$repo_root/examples/run_demo.sagan"
+PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" "$repo_root/tests/fixtures/runtime/smoke.sagan"
 
 # Simulate a newer installed release and prove the older package is refused.
 # The test owns this current-user installation and restores its metadata before
@@ -74,7 +74,7 @@ PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
 launcher_data="$repo_root/build/installer-launcher-data"
 mkdir -p "$launcher_data"
 PATH="$runtime_isolated_path" LOCALAPPDATA="$(cygpath -w "$launcher_data")" \
-  "$install_dir/bin/sagan-launch.exe" --windowed "$repo_root/examples/run_demo.sagan"
+  "$install_dir/bin/sagan-launch.exe" --windowed "$repo_root/tests/fixtures/runtime/smoke.sagan"
 grep -Fq "Direct Sagan execution: 42" "$launcher_data/Sagan/logs/latest-launch.log"
 MSYS2_ARG_CONV_EXCL='*' reg.exe query 'HKCU\Software\Classes\.sagan' /ve | grep -Fq 'Sagan.Source'
 MSYS2_ARG_CONV_EXCL='*' reg.exe query 'HKCU\Environment' /v Path | grep -Fq "$(cygpath -w "$install_dir/bin")"

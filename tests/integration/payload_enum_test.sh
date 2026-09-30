@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$repo_root"
 
 mkdir -p build build/tmp
@@ -11,9 +13,9 @@ export TEMP="$TMPDIR"
 
 echo "Sagan input:"
 echo "------------"
-sed -n '1,240p' examples/payload_enum_demo.sagan
+sed -n '1,240p' tests/fixtures/runtime/payload_enum.sagan
 
-bin/sagan --emit-cpp examples/payload_enum_demo.sagan build/payload_enum_demo.cpp
+bin/sagan --emit-cpp tests/fixtures/runtime/payload_enum.sagan build/payload_enum_demo.cpp
 
 echo
 echo "Generated tagged-variant excerpts:"
@@ -28,4 +30,4 @@ exit_code=$?
 
 echo
 echo "Native process exit code: $exit_code"
-echo "Payload-enum demo passed: explicit Int64 tags, implicit continuation, typed payloads, and exhaustive matching executed natively."
+echo "Payload-enum test passed: explicit Int64 tags, implicit continuation, typed payloads, and exhaustive matching executed natively."

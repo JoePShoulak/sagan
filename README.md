@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.71.6](https://img.shields.io/badge/development-0.71.6-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.71.7](https://img.shields.io/badge/development-0.71.7-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -140,7 +140,7 @@ bash scripts/ast_demo.sh
 Run a source file directly:
 
 ```bash
-bin/sagan examples/run_demo.sagan
+bin/sagan examples/showcase.sagan
 ```
 
 Then explore the friendly path through the documentation:

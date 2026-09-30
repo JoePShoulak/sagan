@@ -11,7 +11,7 @@ make ast-demo
 
 demo_path="$repo_root/build/ast-demo.html"
 echo
-echo "Input:  examples/parser_demo.sagan"
+echo "Input:  examples/ast.sagan"
 echo "Output: build/ast-demo.html"
 
 if [[ "${1:-}" == "--no-open" ]]; then

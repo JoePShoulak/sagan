@@ -92,21 +92,21 @@ large syntax trees.
 For the repository demonstrations, the concrete forms are:
 
 ```bash
-bin/sagan examples/run_demo.sagan
-bin/sagan --tokens examples/tokenizer_demo.sagan
-bin/sagan --ast examples/parser_demo.sagan
-bin/sagan --ast-dot examples/parser_demo.sagan
-bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
-bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
-bin/sagan --semantic examples/semantic_demo.sagan
-bin/sagan --types examples/type_demo.sagan
-bin/sagan --entry examples/entry_demo.sagan
-bin/sagan --modules examples/module_demo/main.sagan
-bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
-bin/sagan --emit-cpp-modules examples/module_demo/main.sagan build/module_demo.cpp
-bin/sagan --package examples/package_demo
-bin/sagan --emit-cpp-package examples/package_demo build/package_demo.cpp
-bin/sagan --run-package examples/package_demo
+bin/sagan examples/showcase.sagan
+bin/sagan --tokens tests/fixtures/syntax/tokenizer.sagan
+bin/sagan --ast examples/ast.sagan
+bin/sagan --ast-dot examples/ast.sagan
+bin/sagan --ast-svg examples/ast.sagan build/ast.svg
+bin/sagan --ast-html examples/ast.sagan build/ast.html
+bin/sagan --semantic tests/fixtures/semantic/scopes.sagan
+bin/sagan --types tests/fixtures/semantic/types.sagan
+bin/sagan --entry tests/fixtures/semantic/entry.sagan
+bin/sagan --modules tests/fixtures/modules/module_demo/main.sagan
+bin/sagan --emit-cpp examples/showcase.sagan build/execution_demo.cpp
+bin/sagan --emit-cpp-modules tests/fixtures/modules/module_demo/main.sagan build/module_demo.cpp
+bin/sagan --package examples/package
+bin/sagan --emit-cpp-package examples/package build/package_demo.cpp
+bin/sagan --run-package examples/package
 ```
 
 Successful AST output confirms only lexical and syntactic validity. Successful
@@ -122,26 +122,15 @@ limitations listed there.
 ```bash
 make all
 make test
+make integration-test
 make coverage
-make demo
-make parser-demo
+make tokenizer-inspect
 make ast-demo
-make semantic-demo
-make type-demo
-make entry-demo
-make module-demo
 make package-demo
 make run-demo
 make geometry-demo
+make units-demo
 make editor-tooling-demo
-make workspace-demo
-make semantic-index-demo
-make optional-demo
-make weak-demo
-make payload-enum-demo
-make generic-sum-demo
-make generic-class-demo
-make execution-demo
 make get-version
 make clean
 ```
@@ -152,33 +141,21 @@ The wrapper scripts used for the complete local checks are:
 bash scripts/test.sh
 bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
-bash scripts/semantic_demo.sh
-bash scripts/type_demo.sh
-bash scripts/entry_demo.sh
-bash scripts/module_demo.sh
+bash tests/integration/run.sh
 bash scripts/package_demo.sh
 bash scripts/run_demo.sh
 bash scripts/geometry_demo.sh
-bash scripts/optional_demo.sh
-bash scripts/weak_demo.sh
-bash scripts/payload_enum_demo.sh
-bash scripts/generic_sum_demo.sh
-bash scripts/generic_class_demo.sh
-bash scripts/execution_demo.sh
+bash scripts/units_demo.sh
 bash scripts/docs.sh check
 ```
 
-`all` builds `bin/sagan`; `test` runs self-tests; `coverage` performs a clean
-instrumented build and produces LCOV output when `lcov` is installed; `demo` tokenizes the
-repository example; `parser-demo` prints the parser example's AST; `ast-demo`
-writes the visual source-and-tree page to `build/ast-demo.html`; `get-version`
-prints the calculated build identity; `semantic-demo` prints the successful
-semantic model; `type-demo` prints the successful type model; and `clean`
-removes compiler objects and the binary. `entry-demo` validates a successful
-entry point and focused control-flow failures. The test target exercises
-semantic/type/entry/code-generation success plus focused failures.
-`module-demo` prints a three-module dependency graph, executes selective and
-namespace imports, and verifies export visibility, filename, and cycle diagnostics.
+`all` builds `bin/sagan`; `test` runs unit, CLI, and integration tests;
+`integration-test` runs the fixture-driven end-to-end layer; `coverage` performs
+a clean instrumented build and produces LCOV output when `lcov` is installed;
+`tokenizer-inspect` prints tokens for the representative syntax fixture;
+`ast-demo` writes the visual source-and-tree page to `build/ast-demo.html`;
+`get-version` prints the calculated build identity; and `clean` removes compiler
+objects and binaries.
 `package-demo` prints a strict manifest and nested source tree, resolves dotted
 modules, emits C++, compiles it, and runs the resulting native program.
 `run-demo` proves that the compiler driver directly runs a source file and a
@@ -186,30 +163,12 @@ manifest-backed package without an external build script.
 `geometry-demo` executes the affine distinction between points and displacement
 vectors, including translation and point subtraction, then demonstrates native
 `s(...)` spherical points and `s<...>` spherical vectors.
+`units-demo` runs the representative physical-units program.
 `editor-tooling-demo` prints deliberately incomplete source, capability
 discovery, and the recovered structured diagnostics produced for it.
-`workspace-demo` shows an unsaved module overlay changing import resolution,
-then demonstrates dependency cancellation, stale-result rejection, and the
-return to disk contents after close.
-`semantic-index-demo` shows deterministic compiler-owned symbol identities,
-distinct overloads and shadowed locals, stable built-ins, documentation,
-canonical types, generic specializations, receiver members, face conformances,
-safe partial-tree indexing, and cross-module identity-based references.
-`optional-demo` prints its Sagan source and generated C++, then executes typed
-optional construction, payload matching, safe access, and lazy fallback chains.
-`weak-demo` shows a live weak reference resolving to `Some`, lets its strong
-owner leave scope, then shows the expired reference resolving to `None`.
-`payload-enum-demo` constructs typed cases, binds their payloads in an
-exhaustive match, shows the tagged-variant C++ excerpts, and runs the result.
-`generic-sum-demo` infers a top-level `identity<T>` function at its call sites,
-specializes a generic result enum from an expected type and explicit
-`Result<Int, String>.Failure(...)` qualification, then executes both payload matches.
-`generic-class-demo` infers `Box<T>` from constructor arguments, checks typed
-fields and methods, converts it to `Readable<T>`, executes an inherited generic
-face default with virtual `self` dispatch, infers a class method's independent
-`U`, and performs typed mutation through generated C++ templates.
-`execution-demo` shows the Sagan input and generated C++, builds it with `g++`,
-runs it, and reports the native exit code.
+The former feature-specific demos are regression tests under
+`tests/integration/`; their Sagan inputs are organized by compiler phase under
+`tests/fixtures/`.
 
 Development versions have the form
 `MAJOR.MINOR.PATCH+gREVISION[.dirty]`. Conventional Commit markers after the

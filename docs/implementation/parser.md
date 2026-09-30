@@ -74,7 +74,7 @@ The quickest visual demonstration is:
 bash scripts/ast_demo.sh
 ```
 
-It parses the expanded `examples/parser_demo.sagan`, writes
+It parses `examples/ast.sagan`, writes
 `build/ast-demo.html`, and opens
 the page in the default Windows browser. The page embeds its SVG tree and has no
 Graphviz or network dependency. Its controls provide zoom in, zoom out, fit,
@@ -89,8 +89,8 @@ the renderer as their parser slices land.
 Focused diagnostics cover malformed assignments, postfix and member access,
 control flow, declarations and types, string interpolation, collections,
 matching, exceptions, lambdas, modules, documentation-comment placement, and
-other established grammar rules. `bash scripts/parser_demo.sh` runs the broad
-successful fixture and the focused failure fixtures together. Run
+other established grammar rules. `bash tests/integration/parser_test.sh` runs
+the broad successful fixture and focused failure fixtures together. Run
 `make editor-tooling-demo` to see deliberately incomplete source produce
 multiple structured diagnostics and a recovered compiler result.
 

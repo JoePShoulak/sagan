@@ -2348,7 +2348,7 @@ auto main(const int argc, char **argv) -> int
   }
   else if (argc == 1)
   {
-    path = "examples/tokenizer_demo.sagan";
+    path = "tests/fixtures/syntax/tokenizer.sagan";
   }
   else
   {

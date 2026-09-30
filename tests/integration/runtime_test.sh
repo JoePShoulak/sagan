@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$repo_root"
 mkdir -p build build/tmp
 export TMPDIR="$repo_root/build/tmp" TMP="$repo_root/build/tmp" TEMP="$repo_root/build/tmp"
 
 echo "Sagan input:"
 echo "------------"
-sed -n '1,240p' examples/runtime_error_demo.sagan
+sed -n '1,240p' tests/fixtures/runtime/runtime_errors.sagan
 
-bin/sagan --emit-cpp examples/runtime_error_demo.sagan build/runtime_error_demo.cpp
+bin/sagan --emit-cpp tests/fixtures/runtime/runtime_errors.sagan build/runtime_error_demo.cpp
 g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/runtime_error_demo.cpp -o build/runtime_error_demo
 
 echo
@@ -33,4 +35,4 @@ do
 done
 
 echo
-echo "Runtime-error demo passed: native failures became catchable RuntimeError values and finally cleanup ran."
+echo "Runtime-error test passed: native failures became catchable RuntimeError values and finally cleanup ran."

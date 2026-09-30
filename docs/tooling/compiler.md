@@ -22,8 +22,8 @@ runs the entry selected by a package manifest.
 
 ```bash
 make all
-bin/sagan examples/run_demo.sagan
-bin/sagan --tokens examples/tokenizer_demo.sagan
+bin/sagan examples/showcase.sagan
+bin/sagan --tokens tests/fixtures/syntax/tokenizer.sagan
 ```
 
 With only a source path, it validates, generates temporary C++, invokes the
@@ -32,15 +32,15 @@ flags inspect the source without executing it. Lexical and syntax errors produce
 focused, source-located diagnostics.
 
 ```bash
-bin/sagan --ast examples/parser_demo.sagan
-bin/sagan --ast-dot examples/parser_demo.sagan
-bin/sagan --ast-svg examples/parser_demo.sagan build/ast.svg
-bin/sagan --ast-html examples/parser_demo.sagan build/ast.html
-bin/sagan --semantic examples/semantic_demo.sagan
-bin/sagan --types examples/type_demo.sagan
-bin/sagan --entry examples/entry_demo.sagan
-bin/sagan --emit-cpp examples/execution_demo.sagan build/execution_demo.cpp
-bin/sagan --run-package examples/package_demo
+bin/sagan --ast examples/ast.sagan
+bin/sagan --ast-dot examples/ast.sagan
+bin/sagan --ast-svg examples/ast.sagan build/ast.svg
+bin/sagan --ast-html examples/ast.sagan build/ast.html
+bin/sagan --semantic tests/fixtures/semantic/scopes.sagan
+bin/sagan --types tests/fixtures/semantic/types.sagan
+bin/sagan --entry tests/fixtures/semantic/entry.sagan
+bin/sagan --emit-cpp examples/showcase.sagan build/execution_demo.cpp
+bin/sagan --run-package examples/package
 ```
 
 The HTML output is self-contained and supports button or mouse-wheel zoom and

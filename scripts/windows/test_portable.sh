@@ -30,6 +30,6 @@ fi
 
 runtime_isolated_path="/usr/bin:/bin:/c/Windows/System32:/c/Windows"
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
-PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" "$repo_root/examples/run_demo.sagan"
+PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" "$repo_root/tests/fixtures/runtime/smoke.sagan"
 
 echo "Portable Windows archive checksum, layout, isolated CLI, compilation, and execution tests passed."

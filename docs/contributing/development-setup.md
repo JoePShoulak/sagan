@@ -23,9 +23,9 @@ prints the current version.
 Useful commands:
 
 ```bash
-make demo
+make tokenizer-inspect
 make get-version
-bin/sagan --tokens examples/tokenizer_error.sagan
+bin/sagan --tokens tests/fixtures/syntax/tokenizer_error.sagan
 ```
 
 For documentation:

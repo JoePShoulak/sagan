@@ -115,7 +115,7 @@ without weakening strict compilation.
 **Exit:** identity-based definition/reference tests pass across modules,
 overloads, generics, private members, shadowed locals, faces, and enum cases.
 
-The exit behavior is exercised by `make semantic-index-demo`; Phase 5 now owns
+The exit behavior is exercised by the semantic-index coverage in `make test`; Phase 5 now owns
 the position-based query and presentation APIs built on these records.
 
 ## Phase 5 — read-only language features

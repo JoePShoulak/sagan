@@ -77,8 +77,8 @@ application, especially when selecting windowed launch behavior.
 Inspect or compile a package with:
 
 ```bash
-bin/sagan --package examples/package_demo
-bin/sagan --emit-cpp-package examples/package_demo build/package.cpp
+bin/sagan --package examples/package
+bin/sagan --emit-cpp-package examples/package build/package.cpp
 make package-demo
 ```
 

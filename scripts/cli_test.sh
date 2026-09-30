@@ -62,26 +62,26 @@ expect_failure() {
   echo "[PASS] $name"
 }
 
-expect_output "default tokenizer input" "tokenizer: examples/tokenizer_demo.sagan" "$binary"
+expect_output "default tokenizer input" "tokenizer: tests/fixtures/syntax/tokenizer.sagan" "$binary"
 expect_output "version output" "Sagan " "$binary" --version
 expect_output "language-service capability discovery" '"schema":"sagan.language-service/1"' \
   "$binary" --capabilities-json
-expect_output "explicit tokenizer input" "KWD_LET" "$binary" --tokens examples/tokenizer_demo.sagan
+expect_output "explicit tokenizer input" "KWD_LET" "$binary" --tokens tests/fixtures/syntax/tokenizer.sagan
 printf '%s\n' 'let escaped = "\r\t\0"' > "$work_dir/escaped.sagan"
 expect_output "escaped token text" '\r\t\0' "$binary" --tokens "$work_dir/escaped.sagan"
-expect_output "text AST output" "Program" "$binary" --ast examples/parser_demo.sagan
-expect_output "DOT AST output" "digraph SaganAST" "$binary" --ast-dot examples/parser_demo.sagan
+expect_output "text AST output" "Program" "$binary" --ast examples/ast.sagan
+expect_output "DOT AST output" "digraph SaganAST" "$binary" --ast-dot examples/ast.sagan
 expect_output "semantic model output" "SemanticModel" \
-  "$binary" --semantic examples/semantic_demo.sagan
+  "$binary" --semantic tests/fixtures/semantic/scopes.sagan
 expect_output "type model output" "TypeModel" \
-  "$binary" --types examples/type_demo.sagan
+  "$binary" --types tests/fixtures/semantic/types.sagan
 expect_output "structured diagnostic success" '"state":"complete","diagnostics":[]' \
-  "$binary" --diagnostics-json examples/semantic_demo.sagan
+  "$binary" --diagnostics-json tests/fixtures/semantic/scopes.sagan
 expect_failure "structured lexical diagnostic" 1 '"code":"SAG-LEX-0001"' \
-  "$binary" --diagnostics-json examples/tokenizer_error.sagan
+  "$binary" --diagnostics-json tests/fixtures/syntax/tokenizer_error.sagan
 expect_failure "structured syntax diagnostic" 1 '"code":"SAG-SYN-0001"' \
-  "$binary" --diagnostics-json examples/parser_error.sagan
-recovery_output="$($binary --diagnostics-json examples/editor_recovery_demo.sagan 2>&1 || true)"
+  "$binary" --diagnostics-json tests/fixtures/syntax/parser_error.sagan
+recovery_output="$($binary --diagnostics-json tests/fixtures/syntax/editor_recovery.sagan 2>&1 || true)"
 recovery_count="$(grep -o '"code":"SAG-SYN-0001"' <<<"$recovery_output" | wc -l | tr -d ' ')"
 [[ "$recovery_count" -eq 2 ]] || {
   echo "[FAIL] recovered structured diagnostics: expected 2 syntax diagnostics, got $recovery_count" >&2
@@ -91,56 +91,56 @@ recovery_count="$(grep -o '"code":"SAG-SYN-0001"' <<<"$recovery_output" | wc -l 
 grep -Fq '"state":"recovered"' <<<"$recovery_output"
 echo "[PASS] recovered structured diagnostics"
 expect_failure "structured type diagnostic" 1 '"code":"SAG-TYP-0001"' \
-  "$binary" --diagnostics-json examples/type_error.sagan
+  "$binary" --diagnostics-json tests/fixtures/semantic/type_error.sagan
 expect_output "weak ownership cycle type model" "TypeModel" \
-  "$binary" --types examples/type_weak_ownership_cycle.sagan
+  "$binary" --types tests/fixtures/semantic/type_weak_ownership_cycle.sagan
 expect_output "entry-point validation" "executable entry point is valid" \
-  "$binary" --entry examples/entry_demo.sagan
+  "$binary" --entry tests/fixtures/semantic/entry.sagan
 expect_output "module graph resolution" "Import(course from guidance as calculate_course)" \
-  "$binary" --modules examples/module_demo/main.sagan
+  "$binary" --modules tests/fixtures/modules/module_demo/main.sagan
 expect_output "linked module C++ output" "Cross-module answer" \
-  "$binary" --emit-cpp-modules examples/module_demo/main.sagan
+  "$binary" --emit-cpp-modules tests/fixtures/modules/module_demo/main.sagan
 expect_output "package graph resolution" "Package(mission-control 0.1.0)" \
-  "$binary" --package examples/package_demo
+  "$binary" --package examples/package
 expect_output "package application mode" "ApplicationMode(console)" \
-  "$binary" --package examples/package_demo
+  "$binary" --package examples/package
 expect_output "package application mode query" "console" \
-  "$binary" --application-mode examples/package_demo
+  "$binary" --application-mode examples/package
 expect_output "loose source application mode default" "console" \
-  "$binary" --application-mode examples/run_demo.sagan
+  "$binary" --application-mode tests/fixtures/runtime/smoke.sagan
 expect_output "package auto-discovery from entry" "Package(mission-control 0.1.0)" \
-  "$binary" --modules examples/package_demo/src/main.sagan
+  "$binary" --modules examples/package/src/main.sagan
 expect_output "package manifest path resolution" "Module(navigation.guidance" \
-  "$binary" --package examples/package_demo/sagan.toml
+  "$binary" --package examples/package/sagan.toml
 expect_output "linked package C++ output" "Package answer" \
-  "$binary" --emit-cpp-package examples/package_demo
+  "$binary" --emit-cpp-package examples/package
 expect_output "package C++ output file" "Wrote linked generated C++" \
-  "$binary" --emit-cpp-package examples/package_demo "$work_dir/package.cpp"
+  "$binary" --emit-cpp-package examples/package "$work_dir/package.cpp"
 g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$work_dir/package.cpp" -o "$work_dir/package"
 package_output="$($work_dir/package)"
 grep -Fq "Package answer: 42" <<<"$package_output"
 grep -Fq "Package signal: nominal" <<<"$package_output"
 expect_output "direct Sagan execution" "The answer from" \
-  "$binary" examples/execution_demo.sagan
+  "$binary" examples/showcase.sagan
 expect_output "direct package execution" "Package answer: 42" \
-  "$binary" --run-package examples/package_demo
+  "$binary" --run-package examples/package
 expect_output "Cartesian and spherical geometry execution" "Spherical vector: s<2, 0.25, 0.75>" \
-  "$binary" examples/geometry_demo.sagan
+  "$binary" examples/geometry.sagan
 expect_output "package entry execution with import linking" "Package answer: 42" \
-  "$binary" examples/package_demo/src/main.sagan
+  "$binary" examples/package/src/main.sagan
 printf '%s\n' 'fun main(): Int {' '  print("exit seven")' '  return 7' '}' > "$work_dir/exit-seven.sagan"
 expect_failure "native exit-code propagation" 7 "exit seven" \
   "$binary" "$work_dir/exit-seven.sagan"
 expect_failure "native compiler failure" 1 "Native C++ compilation failed with exit code 1" \
-  env CXX=false "$binary" examples/entry_demo.sagan
+  env CXX=false "$binary" tests/fixtures/semantic/entry.sagan
 expect_output "C++ output" "Generated by Sagan" \
-  "$binary" --emit-cpp examples/execution_demo.sagan
+  "$binary" --emit-cpp examples/showcase.sagan
 expect_output "C++ output file" "Wrote generated C++" \
-  "$binary" --emit-cpp examples/execution_demo.sagan "$work_dir/generated.cpp"
+  "$binary" --emit-cpp examples/showcase.sagan "$work_dir/generated.cpp"
 expect_output "runtime-error C++ output file" "Wrote generated C++" \
-  "$binary" --emit-cpp examples/runtime_error_demo.sagan "$work_dir/runtime-error.cpp"
+  "$binary" --emit-cpp tests/fixtures/runtime/runtime_errors.sagan "$work_dir/runtime-error.cpp"
 expect_output "generic C++ output file" "Wrote generated C++" \
-  "$binary" --emit-cpp examples/generic_sum_demo.sagan "$work_dir/generics.cpp"
+  "$binary" --emit-cpp tests/fixtures/runtime/generic_sum.sagan "$work_dir/generics.cpp"
 grep -Fq "template <typename sagan_54>" "$work_dir/generics.cpp"
 grep -Fq "sagan_526573756c74::Tag::sagan_4661696c757265" "$work_dir/generics.cpp"
 g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$work_dir/generics.cpp" -o "$work_dir/generics"
@@ -148,7 +148,7 @@ generic_output="$($work_dir/generics)"
 grep -Fq "Result: 42" <<<"$generic_output"
 grep -Fq "Error: guidance unavailable" <<<"$generic_output"
 expect_output "generic class C++ output file" "Wrote generated C++" \
-  "$binary" --emit-cpp examples/generic_class_demo.sagan "$work_dir/generic-class.cpp"
+  "$binary" --emit-cpp tests/fixtures/runtime/generic_class.sagan "$work_dir/generic-class.cpp"
 grep -Fq "template <typename sagan_54>" "$work_dir/generic-class.cpp"
 grep -Fq "std::make_shared<sagan_426f78<std::int8_t>>" "$work_dir/generic-class.cpp"
 g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$work_dir/generic-class.cpp" -o "$work_dir/generic-class"
@@ -214,61 +214,61 @@ grep -Fq "sagan_index(" "$work_dir/runtime-error.cpp"
 grep -Fq "sagan_dictionary_at(" "$work_dir/runtime-error.cpp"
 
 expect_output "SVG AST file" "Wrote SVG AST" \
-  "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/parser.svg"
+  "$binary" --ast-svg examples/ast.sagan "$work_dir/parser.svg"
 grep -Fq "<svg" "$work_dir/parser.svg"
 
 expect_output "HTML AST file" "Wrote visual AST demo" \
-  "$binary" --ast-html examples/parser_demo.sagan "$work_dir/parser.html"
+  "$binary" --ast-html examples/ast.sagan "$work_dir/parser.html"
 grep -Fq "Input source" "$work_dir/parser.html"
 
 expect_failure "invalid arguments" 2 "usage: sagan" "$binary" --ast one.sagan extra.sagan
 expect_failure "missing input file" 1 "Could not open" "$binary" "$work_dir/missing.sagan"
-expect_failure "lexical diagnostic" 1 "lexical error at" "$binary" --tokens examples/tokenizer_error.sagan
-expect_failure "syntax diagnostic" 1 "syntax error at" "$binary" --ast examples/parser_error.sagan
+expect_failure "lexical diagnostic" 1 "lexical error at" "$binary" --tokens tests/fixtures/syntax/tokenizer_error.sagan
+expect_failure "syntax diagnostic" 1 "syntax error at" "$binary" --ast tests/fixtures/syntax/parser_error.sagan
 expect_failure "undefined-name semantic diagnostic" 1 "Undefined name 'missing_value'" \
-  "$binary" --semantic examples/semantic_undefined_error.sagan
+  "$binary" --semantic tests/fixtures/semantic/semantic_undefined_error.sagan
 expect_failure "duplicate-name semantic diagnostic" 1 "Duplicate declaration of 'repeated'" \
-  "$binary" --semantic examples/semantic_duplicate_error.sagan
+  "$binary" --semantic tests/fixtures/semantic/semantic_duplicate_error.sagan
 expect_failure "type diagnostic" 1 "Function return requires Bool, but received Int" \
-  "$binary" --types examples/type_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_error.sagan
 expect_failure "uninferred variable diagnostic" 1 "requires a type annotation or initializer" \
-  "$binary" --types examples/type_uninferred_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_uninferred_error.sagan
 expect_failure "heterogeneous array diagnostic" 1 "Array elements have incompatible types" \
-  "$binary" --types examples/type_array_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_array_error.sagan
 expect_failure "heterogeneous dictionary diagnostic" 1 "Dictionary values have incompatible types" \
-  "$binary" --types examples/type_dictionary_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_dictionary_error.sagan
 expect_failure "vector component diagnostic" 1 "Vector components must be numeric" \
-  "$binary" --types examples/type_vector_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_vector_error.sagan
 expect_failure "annotation type diagnostic" 1 "does not name a type" \
-  "$binary" --types examples/type_annotation_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_annotation_error.sagan
 expect_failure "definite return diagnostic" 1 "may reach the end without returning Int64" \
-  "$binary" --types examples/type_return_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_return_error.sagan
 expect_failure "missing entry-point diagnostic" 1 "requires a 'main' entry point" \
-  "$binary" --entry examples/entry_missing_error.sagan
+  "$binary" --entry tests/fixtures/semantic/entry_missing_error.sagan
 expect_failure "uninitialized variable diagnostic" 1 "is used before initialization" \
-  "$binary" --types examples/type_uninitialized_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_uninitialized_error.sagan
 expect_failure "unreachable statement diagnostic" 1 "Unreachable statement" \
-  "$binary" --types examples/type_unreachable_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_unreachable_error.sagan
 expect_failure "module cycle diagnostic" 1 "Cyclic module dependency: alpha -> beta -> alpha" \
-  "$binary" --modules examples/module_cycle/alpha.sagan
+  "$binary" --modules tests/fixtures/modules/module_cycle/alpha.sagan
 expect_failure "missing module export diagnostic" 1 "does not export 'missing'" \
-  "$binary" --modules examples/module_export_error/main.sagan
+  "$binary" --modules tests/fixtures/modules/module_export_error/main.sagan
 expect_failure "module name diagnostic" 1 "declares 'wrong_name', expected 'main'" \
-  "$binary" --modules examples/module_name_error/main.sagan
+  "$binary" --modules tests/fixtures/modules/module_name_error/main.sagan
 expect_failure "missing module file diagnostic" 1 "Could not open module" \
-  "$binary" --modules examples/module_missing/main.sagan
+  "$binary" --modules tests/fixtures/modules/module_missing/main.sagan
 expect_failure "missing module declaration diagnostic" 1 "must declare 'module support'" \
-  "$binary" --modules examples/module_declaration_error/main.sagan
+  "$binary" --modules tests/fixtures/modules/module_declaration_error/main.sagan
 expect_failure "undefined module export diagnostic" 1 "exports undefined declaration 'missing'" \
-  "$binary" --modules examples/module_undefined_export_error/main.sagan
+  "$binary" --modules tests/fixtures/modules/module_undefined_export_error/main.sagan
 expect_failure "duplicate module export diagnostic" 1 "exports duplicate public name 'value'" \
-  "$binary" --modules examples/module_duplicate_export_error/main.sagan
+  "$binary" --modules tests/fixtures/modules/module_duplicate_export_error/main.sagan
 expect_failure "module extension diagnostic" 1 "must use the .sagan extension" \
   "$binary" --modules README.md
 expect_failure "linked module type diagnostic" 1 "No matching overload for 'guidance__calculate'" \
-  "$binary" --emit-cpp-modules examples/module_type_error/main.sagan
+  "$binary" --emit-cpp-modules tests/fixtures/modules/module_type_error/main.sagan
 expect_failure "module namespace visibility diagnostic" 1 "Module 'support' does not export 'private_value'" \
-  "$binary" --emit-cpp-modules examples/module_namespace_error/main.sagan
+  "$binary" --emit-cpp-modules tests/fixtures/modules/module_namespace_error/main.sagan
 mkdir -p "$work_dir/no-package" "$work_dir/package-invalid/src" "$work_dir/package-missing-entry/src" \
   "$work_dir/package-errors/src"
 printf '%s\n' '[package]' 'name = "invalid"' 'version = "one"' 'source = "src"' 'entry = "main"' \
@@ -336,54 +336,54 @@ printf '%s\n' 'fun main(): Int => 0' > "$work_dir/package-errors/src/main.sagan"
 expect_failure "package entry declaration diagnostic" 1 "must declare 'module main'" \
   "$binary" --package "$work_dir/package-errors"
 expect_failure "optional coalescing type diagnostic" 1 "Left operand of ?? must be Optional" \
-  "$binary" --types examples/type_optional_coalesce_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_optional_coalesce_error.sagan
 expect_failure "Some arity diagnostic" 1 "Some expects exactly one value" \
-  "$binary" --types examples/type_some_arity_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_some_arity_error.sagan
 expect_failure "safe access requires Optional diagnostic" 1 "Safe member access requires Optional" \
-  "$binary" --types examples/type_safe_access_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_safe_access_error.sagan
 expect_failure "optional pattern subject diagnostic" 1 "Some pattern requires an Optional subject" \
-  "$binary" --types examples/type_optional_pattern_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_optional_pattern_error.sagan
 expect_failure "weak field type diagnostic" 1 "Weak field 'value' requires a class or face type" \
-  "$binary" --types examples/type_weak_scalar_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_weak_scalar_error.sagan
 expect_failure "weak field initializer diagnostic" 1 "Weak field 'target' starts empty" \
-  "$binary" --types examples/type_weak_initializer_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_weak_initializer_error.sagan
 expect_failure "strong ownership cycle diagnostic" 1 "Strong ownership cycle requires an explicit weak field edge" \
-  "$binary" --types examples/type_strong_ownership_cycle_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_strong_ownership_cycle_error.sagan
 expect_failure "nested strong ownership cycle diagnostic" 1 "Strong ownership cycle requires an explicit weak field edge" \
-  "$binary" --types examples/type_nested_strong_ownership_cycle_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_nested_strong_ownership_cycle_error.sagan
 expect_failure "strong face field diagnostic" 1 "cannot use dynamic face type 'Observable'; declare it with weak let" \
-  "$binary" --types examples/type_strong_face_field_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_strong_face_field_error.sagan
 expect_failure "payload enum arity diagnostic" 1 "Enum case 'Success' expects 1 payload value" \
-  "$binary" --types examples/type_payload_enum_arity_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_payload_enum_arity_error.sagan
 expect_failure "payload enum match diagnostic" 1 "Enum case 'Message' belongs to Signal" \
-  "$binary" --types examples/type_payload_enum_match_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_payload_enum_match_error.sagan
 expect_failure "duplicate enum numeric value diagnostic" 1 "cannot share numeric value 201" \
-  "$binary" --types examples/type_enum_duplicate_numeric_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_enum_duplicate_numeric_error.sagan
 expect_failure "implicit enum numeric overflow diagnostic" 1 "would overflow Int64" \
-  "$binary" --types examples/type_enum_numeric_overflow_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_enum_numeric_overflow_error.sagan
 expect_failure "explicit enum numeric range diagnostic" 1 "outside the supported Int64 range" \
-  "$binary" --types examples/type_enum_numeric_range_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_enum_numeric_range_error.sagan
 expect_failure "runtime error member diagnostic" 1 "Enum 'RuntimeError' has no member 'not_a_runtime_error'" \
-  "$binary" --types examples/type_runtime_error_member_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_runtime_error_member_error.sagan
 expect_failure "generic sum context diagnostic" 1 "Cannot infer every generic argument" \
-  "$binary" --types examples/type_generic_sum_context_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_sum_context_error.sagan
 expect_failure "generic function inference diagnostic" 1 "No matching overload for 'missing'" \
-  "$binary" --types examples/type_generic_function_inference_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_function_inference_error.sagan
 expect_failure "qualified generic enum payload diagnostic" 1 "Enum case payload requires String" \
-  "$binary" --types examples/type_generic_qualified_payload_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_qualified_payload_error.sagan
 expect_failure "generic class constructor diagnostic" 1 "No matching constructor for 'Box'" \
-  "$binary" --types examples/type_generic_class_constructor_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_class_constructor_error.sagan
 expect_failure "generic class inference diagnostic" 1 "Cannot infer every generic argument for class 'Marker'" \
-  "$binary" --types examples/type_generic_class_inference_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_class_inference_error.sagan
 expect_failure "generic face specialization diagnostic" 1 "Variable initializer requires Readable<String>, but received Box<Int8>" \
-  "$binary" --types examples/type_generic_face_assignment_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_face_assignment_error.sagan
 expect_failure "generic method inference diagnostic" 1 "Cannot infer every generic argument for called method" \
-  "$binary" --types examples/type_generic_method_inference_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_method_inference_error.sagan
 expect_failure "generic face method syntax diagnostic" 1 "Generic face methods are not supported" \
-  "$binary" --ast examples/generic_face_method_error.sagan
+  "$binary" --ast tests/fixtures/semantic/generic_face_method_error.sagan
 expect_failure "generic face constraint diagnostic" 1 "does not satisfy face constraint Readable<Int8>" \
-  "$binary" --types examples/type_generic_constraint_error.sagan
+  "$binary" --types tests/fixtures/semantic/type_generic_constraint_error.sagan
 expect_failure "unwritable output" 1 "Could not write" \
-  "$binary" --ast-svg examples/parser_demo.sagan "$work_dir/missing/output.svg"
+  "$binary" --ast-svg examples/ast.sagan "$work_dir/missing/output.svg"
 
 echo "All command-line integration tests passed."
