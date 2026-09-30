@@ -23,6 +23,7 @@ LIBRARY_SOURCES := \
 	src/parser/tokens.cpp \
 	src/parser/unicode.cpp \
 	src/semantic/analyzer.cpp \
+	src/semantic/index.cpp \
 	src/semantic/type_checker.cpp \
 	src/source/provider.cpp \
 	src/source/source.cpp \
@@ -36,6 +37,7 @@ TARGET := bin/$(APPNAME)
 COMPILER_LIBRARY := build/lib/libsagan-compiler.a
 SOURCE_DIAGNOSTICS_TEST := bin/source-diagnostics-test
 WORKSPACE_DEMO := bin/workspace-demo
+SEMANTIC_INDEX_DEMO := bin/semantic-index-demo
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
 BUILD_TMP := build/tmp
@@ -46,7 +48,7 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo editor-tooling-demo workspace-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -83,6 +85,10 @@ $(WORKSPACE_DEMO): tests/workspace_demo.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
+$(SEMANTIC_INDEX_DEMO): tests/semantic_index_demo.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+
 obj/%.o: src/%.cpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
@@ -95,9 +101,10 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_DEMO)
+test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_DEMO) $(SEMANTIC_INDEX_DEMO)
 	$(SOURCE_DIAGNOSTICS_TEST)
 	$(WORKSPACE_DEMO)
+	$(SEMANTIC_INDEX_DEMO)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
 
@@ -136,6 +143,9 @@ editor-tooling-demo: $(TARGET)
 
 workspace-demo: $(WORKSPACE_DEMO)
 	$(WORKSPACE_DEMO)
+
+semantic-index-demo: $(SEMANTIC_INDEX_DEMO)
+	$(SEMANTIC_INDEX_DEMO)
 
 execution-demo: $(TARGET)
 	bash scripts/execution_demo.sh

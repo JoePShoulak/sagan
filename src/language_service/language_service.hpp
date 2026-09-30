@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../diagnostics/diagnostic.hpp"
+#include "../semantic/index.hpp"
 #include "../source/source.hpp"
 
 #include <cstddef>
@@ -23,6 +24,12 @@ namespace sagan::language_service
     std::size_t typed_expression_count{};
   };
 
+  struct semantic_snapshot
+  {
+    semantic::semantic_model model;
+    semantic::semantic_index index;
+  };
+
   struct capabilities
   {
     std::string_view schema;
@@ -32,6 +39,7 @@ namespace sagan::language_service
     bool cancellation;
     bool recovery;
     bool document_overlays;
+    bool semantic_index;
     bool language_server;
   };
 
@@ -44,5 +52,8 @@ namespace sagan::language_service
   auto analyze_document(const source::document_snapshot &document, check_options options = {},
                         diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<check_summary>;
+  auto index_document(const source::document_snapshot &document,
+                      diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<semantic_snapshot>;
 }
 

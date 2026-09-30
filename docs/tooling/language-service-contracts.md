@@ -145,6 +145,14 @@ not a pointer, display name, or source-vector index. Local identities are stable
 for the lifetime of a compatible document snapshot. Cross-snapshot rebinding is
 explicit and may fail after an incompatible edit.
 
+The implemented foundation serializes identities as `sagan-symbol-v1:<hex>`
+and exposes typed symbol kind, visibility, origin, declaring scope, document,
+declaration range, and identity-based references. Built-ins use a canonical
+`sagan/core` identity namespace, so their IDs do not vary by source document.
+Source declaration keys currently incorporate the package/module identity and
+stable lexical-scope path. Cross-module linking and explicit cross-snapshot
+rebinding are the next Phase 4 layers.
+
 ## Language queries
 
 `language_service` accepts a workspace/document snapshot and byte or UTF-16

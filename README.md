@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.64.0](https://img.shields.io/badge/development-0.64.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.65.0](https://img.shields.io/badge/development-0.65.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -183,7 +183,12 @@ open/change/save/close overlays, and module imports resolve unsaved buffers
 before disk files. Workspace analysis caches current results, invalidates
 transitive dependents, cancels obsolete requests, and rejects stale
 publication. Semantic queries, formatting, refactoring, and LSP transport
-remain capability-disabled until their roadmap phases land.
+remain capability-disabled until their roadmap phases land. The semantic layer
+now assigns deterministic opaque identities to source, imported, built-in, and
+generated symbols; distinguishes typed symbol kinds, visibility, and origin;
+and exposes a reusable per-document declaration/reference index. This is the
+identity foundation for definition, references, navigation, and safe edits,
+while cross-module member linking and user-facing queries remain forthcoming.
 
 ## Build and explore
 
@@ -200,6 +205,7 @@ bin/sagan --capabilities-json
 bin/sagan --diagnostics-json examples/type_error.sagan
 make editor-tooling-demo
 make workspace-demo
+make semantic-index-demo
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 make ownership-demo

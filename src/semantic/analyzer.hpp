@@ -4,15 +4,53 @@
 
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace semantic
 {
+  struct symbol_id
+  {
+    std::string value;
+
+    auto operator==(const symbol_id &) const -> bool = default;
+  };
+
+  enum class symbol_kind
+  {
+    module,
+    imported_namespace,
+    variable,
+    parameter,
+    loop_binding,
+    match_binding,
+    function,
+    constructor,
+    type,
+    type_parameter,
+    field,
+    method,
+    enum_case,
+    enum_constructor,
+    self_value,
+    builtin_type,
+    builtin_value,
+  };
+
+  enum class symbol_visibility { public_access, private_access };
+  enum class symbol_origin { source, imported, builtin, generated };
+
+  auto name(symbol_kind value) -> std::string_view;
+
   struct symbol
   {
+    symbol_id id;
     std::string name;
-    std::string kind;
+    symbol_kind kind;
+    symbol_visibility visibility;
+    symbol_origin origin;
     parser::span declaration;
+    std::size_t scope_id;
   };
 
   struct resolution
@@ -20,6 +58,7 @@ namespace semantic
     std::string name;
     parser::span use;
     parser::span declaration;
+    symbol_id target;
   };
 
   struct scope
@@ -38,5 +77,11 @@ namespace semantic
     auto print(std::ostream &stream) const -> void;
   };
 
-  auto analyze(const parser::program &tree) -> semantic_model;
+  struct analysis_identity
+  {
+    std::string package{"local"};
+    std::string module{"main"};
+  };
+
+  auto analyze(const parser::program &tree, analysis_identity identity = {}) -> semantic_model;
 }

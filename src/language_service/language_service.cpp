@@ -37,11 +37,17 @@ namespace sagan::language_service
       return diagnostics::analysis_result<check_summary>{
           diagnostics::result_state::cancelled, {}, {}, document.version()};
     }
+
+    auto cancelled_index(const source::document_snapshot &document)
+      -> diagnostics::analysis_result<semantic_snapshot>
+    {
+      return {diagnostics::result_state::cancelled, {}, {}, document.version()};
+    }
   }
 
   auto supported_capabilities() -> capabilities
   {
-    return capabilities{diagnostics::schema_version, true, true, true, true, true, true, false};
+    return capabilities{diagnostics::schema_version, true, true, true, true, true, true, true, false};
   }
 
   auto capabilities_json() -> std::string
@@ -56,6 +62,7 @@ namespace sagan::language_service
            << ",\"cancellation\":" << boolean(value.cancellation)
            << ",\"recovery\":" << boolean(value.recovery)
            << ",\"documentOverlays\":" << boolean(value.document_overlays)
+           << ",\"semanticIndex\":" << boolean(value.semantic_index)
            << ",\"languageServer\":" << boolean(value.language_server) << "}}\n";
     return output.str();
   }
@@ -141,6 +148,46 @@ namespace sagan::language_service
           syntax_result.state, summary, std::move(syntax_result.diagnostics), document.version()};
     }
     return check_document(document, options, cancellation);
+  }
+
+  auto index_document(const source::document_snapshot &document,
+                      const diagnostics::cancellation_token cancellation)
+    -> diagnostics::analysis_result<semantic_snapshot>
+  {
+    diagnostics::phase active_phase = diagnostics::phase::lexical;
+    try
+    {
+      if (cancellation.is_cancelled()) return cancelled_index(document);
+      parser::tokenizer lexer(parser::programText{std::string(document.text())}, get_token);
+      std::vector<parser::token> tokens;
+      while (auto next = lexer.next())
+      {
+        tokens.push_back(std::move(*next));
+        if (cancellation.is_cancelled()) return cancelled_index(document);
+      }
+      active_phase = diagnostics::phase::syntax;
+      parser::syntax_parser syntax(std::move(tokens));
+      const auto tree = syntax.parse();
+      if (cancellation.is_cancelled()) return cancelled_index(document);
+      active_phase = diagnostics::phase::semantic;
+      const auto module = document.identity().canonical_path
+                              ? document.identity().canonical_path->generic_string()
+                              : document.identity().uri.value;
+      auto model = semantic::analyze(tree, semantic::analysis_identity{"local", module});
+      auto index = semantic::build_index(document, model);
+      return {diagnostics::result_state::complete,
+              semantic_snapshot{std::move(model), std::move(index)}, {}, document.version()};
+    }
+    catch (const parser::parse_error &error)
+    {
+      return {diagnostics::result_state::incomplete, {},
+              {make_diagnostic(document, active_phase, error.range, error.what())}, document.version()};
+    }
+    catch (const semantic::semantic_error &error)
+    {
+      return {diagnostics::result_state::incomplete, {},
+              {make_diagnostic(document, active_phase, error.range, error.what())}, document.version()};
+    }
   }
 }
 

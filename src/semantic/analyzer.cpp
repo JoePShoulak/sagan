@@ -3,8 +3,10 @@
 #include "semantic_error.hpp"
 
 #include <algorithm>
+#include <iomanip>
 #include <limits>
 #include <optional>
+#include <sstream>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
@@ -19,7 +21,29 @@ namespace semantic
     {
       semantic_model model;
       std::vector<std::unordered_map<std::string, std::vector<std::size_t>>> names;
+      std::vector<std::string> scope_keys{"program"};
+      analysis_identity identity_;
       std::size_t current_scope = 0;
+
+      auto make_id(const std::string_view declared_name, const symbol_kind kind,
+                   const symbol_origin origin, const std::size_t ordinal) const -> symbol_id
+      {
+        const std::string package = origin == symbol_origin::builtin ? "sagan" : identity_.package;
+        const std::string module = origin == symbol_origin::builtin ? "core" : identity_.module;
+        const std::string scope = origin == symbol_origin::builtin ? "builtins" : scope_keys[current_scope];
+        const std::string key = "sagan-symbol-v1|" + package + "|" + module + "|" +
+                                scope + "|" + std::string(name(kind)) + "|" +
+                                std::string(declared_name) + "|" + std::to_string(ordinal);
+        std::uint64_t hash = 14695981039346656037ULL;
+        for (const unsigned char byte : key)
+        {
+          hash ^= byte;
+          hash *= 1099511628211ULL;
+        }
+        std::ostringstream encoded;
+        encoded << "sagan-symbol-v1:" << std::hex << std::setfill('0') << std::setw(16) << hash;
+        return {encoded.str()};
+      }
 
       auto open_scope(std::string label) -> std::size_t
       {
@@ -27,6 +51,7 @@ namespace semantic
         const std::size_t id = model.scopes.size();
         model.scopes.push_back(scope{id, parent, std::move(label), {}});
         names.emplace_back();
+        scope_keys.push_back(scope_keys[parent] + "/" + std::to_string(id));
         current_scope = id;
         return parent;
       }
@@ -36,20 +61,29 @@ namespace semantic
         current_scope = parent;
       }
 
-      auto declare(std::string name, std::string kind, const parser::span range) -> void
+      auto declare(std::string declared_name, const symbol_kind kind, const parser::span range,
+                   const symbol_visibility visibility = symbol_visibility::public_access,
+                   const symbol_origin origin = symbol_origin::source) -> void
       {
-        auto &entries = names[current_scope][name];
+        auto &entries = names[current_scope][declared_name];
         if (!entries.empty())
         {
           const symbol &existing = model.scopes[current_scope].symbols[entries.front()];
-          const bool overload = existing.kind == "function" && kind == "function";
+          const auto callable = [](const symbol_kind value)
+          {
+            return value == symbol_kind::function || value == symbol_kind::method ||
+                   value == symbol_kind::constructor || value == symbol_kind::enum_constructor;
+          };
+          const bool overload = callable(existing.kind) && callable(kind);
           if (!overload)
           {
-            throw semantic_error("Duplicate declaration of '" + name + "' in the same scope", range);
+            throw semantic_error("Duplicate declaration of '" + declared_name + "' in the same scope", range);
           }
         }
+        const symbol_id id = make_id(declared_name, kind, origin, entries.size());
         entries.push_back(model.scopes[current_scope].symbols.size());
-        model.scopes[current_scope].symbols.push_back(symbol{std::move(name), std::move(kind), range});
+        model.scopes[current_scope].symbols.push_back(symbol{id, std::move(declared_name), kind, visibility,
+                                                             origin, range, current_scope});
       }
 
       auto find(const std::string &name) const -> std::optional<symbol>
@@ -74,7 +108,7 @@ namespace semantic
         {
           throw semantic_error("Undefined name '" + name + "'", range);
         }
-        model.resolutions.push_back(resolution{name, range, declaration->declaration});
+        model.resolutions.push_back(resolution{name, range, declaration->declaration, declaration->id});
       }
 
       auto resolve_type(const std::optional<std::string> &name, const parser::span range) -> void
@@ -88,12 +122,13 @@ namespace semantic
           {
             throw semantic_error("Undefined type '" + base + "'", range);
           }
-          if (declaration->kind != "type" && declaration->kind != "builtin type" &&
-              declaration->kind != "type parameter" && declaration->kind != "import")
+          if (declaration->kind != symbol_kind::type && declaration->kind != symbol_kind::builtin_type &&
+              declaration->kind != symbol_kind::type_parameter &&
+              declaration->kind != symbol_kind::imported_namespace)
           {
             throw semantic_error("'" + base + "' does not name a type", range);
           }
-          model.resolutions.push_back(resolution{base, range, declaration->declaration});
+          model.resolutions.push_back(resolution{base, range, declaration->declaration, declaration->id});
           if (open != std::string::npos)
           {
             if (!name->ends_with('>')) throw semantic_error("Malformed type annotation '" + *name + "'", range);
@@ -147,18 +182,27 @@ namespace semantic
       {
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
-          declare(declaration->name, "variable", declaration->range);
+          declare(declaration->name,
+                  current_scope == 0 ? symbol_kind::variable : symbol_kind::field,
+                  declaration->range,
+                  declaration->private_member ? symbol_visibility::private_access
+                                              : symbol_visibility::public_access);
         }
         else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&value))
         {
-          declare(function->name, "function", function->range);
+          declare(function->name, function->constructor_member ? symbol_kind::constructor
+                                                                : (current_scope == 0 ? symbol_kind::function
+                                                                                      : symbol_kind::method),
+                  function->range,
+                  function->private_member ? symbol_visibility::private_access
+                                           : symbol_visibility::public_access);
         }
         else if (const auto *type = dynamic_cast<const parser::type_declaration *>(&value))
         {
-          declare(type->name, "type", type->range);
+          declare(type->name, symbol_kind::type, type->range);
           if (type->type_kind == parser::type_declaration::kind::enum_type)
             for (const auto &member : type->enum_members)
-              if (!member.payload_types.empty()) declare(member.name, "enum constructor", member.range);
+              if (!member.payload_types.empty()) declare(member.name, symbol_kind::enum_constructor, member.range);
         }
         else if (const auto *imported = dynamic_cast<const parser::import_declaration *>(&value))
         {
@@ -166,7 +210,8 @@ namespace semantic
           const std::string fallback = separator == std::string::npos
                                            ? imported->imported_name
                                            : imported->imported_name.substr(separator + 1);
-          declare(imported->alias.value_or(fallback), "import", imported->range);
+          declare(imported->alias.value_or(fallback), symbol_kind::imported_namespace, imported->range,
+                  symbol_visibility::public_access, symbol_origin::imported);
         }
       }
 
@@ -250,7 +295,7 @@ namespace semantic
           for (const auto &parameter : lambda->parameters)
           {
             resolve_type(parameter.type_name, lambda->range);
-            declare(parameter.name, "parameter", lambda->range);
+            declare(parameter.name, symbol_kind::parameter, lambda->range);
           }
           resolve_type(lambda->return_type, lambda->range);
           expression(*lambda->body);
@@ -279,12 +324,12 @@ namespace semantic
       {
         const std::size_t parent = open_scope("function " + value.name);
         for (const auto &parameter : value.type_parameters)
-          declare(parameter, "type parameter", value.range);
+          declare(parameter, symbol_kind::type_parameter, value.range);
         for (const auto &constraint : value.type_constraints) resolve_type(constraint, value.range);
         for (const auto &parameter : value.parameters)
         {
           resolve_type(parameter.type_name, value.range);
-          declare(parameter.name, "parameter", value.range);
+          declare(parameter.name, symbol_kind::parameter, value.range);
         }
         resolve_type(value.return_type, value.range);
         if (value.body) block(*value.body, "function body");
@@ -296,7 +341,7 @@ namespace semantic
       {
         const std::size_t parent = open_scope("type " + value.name);
         for (const auto &parameter : value.type_parameters)
-          declare(parameter, "type parameter", value.range);
+          declare(parameter, symbol_kind::type_parameter, value.range);
         for (const auto &constraint : value.type_constraints) resolve_type(constraint, value.range);
         for (const auto &interface_name : value.composed_interfaces)
         {
@@ -305,12 +350,13 @@ namespace semantic
         if (value.type_kind == parser::type_declaration::kind::class_type ||
             value.type_kind == parser::type_declaration::kind::interface_type)
         {
-          declare("self", "self", value.range);
+          declare("self", symbol_kind::self_value, value.range, symbol_visibility::public_access,
+                  symbol_origin::generated);
         }
         for (const auto &member : value.members) predeclare(*member);
         for (const auto &member : value.enum_members)
         {
-          declare(member.name, "enum member", member.range);
+          declare(member.name, symbol_kind::enum_case, member.range);
           for (const auto &payload : member.payload_types)
             resolve_type(std::optional<std::string>{payload}, member.range);
         }
@@ -324,7 +370,9 @@ namespace semantic
         {
           resolve_type(declaration->type_name, declaration->range);
           if (declaration->initializer) expression(*declaration->initializer);
-          if (!already_declared) declare(declaration->name, "variable", declaration->range);
+          if (!already_declared) declare(declaration->name, symbol_kind::variable, declaration->range,
+                                         declaration->private_member ? symbol_visibility::private_access
+                                                                     : symbol_visibility::public_access);
         }
         else if (const auto *expression_statement = dynamic_cast<const parser::expression_statement *>(&value))
         {
@@ -354,7 +402,7 @@ namespace semantic
         {
           expression(*loop->iterable);
           const std::size_t parent = open_scope("for loop");
-          declare(loop->binding, "loop binding", loop->range);
+          declare(loop->binding, symbol_kind::loop_binding, loop->range);
           for (const auto &entry : loop->body->statements) statement(*entry, false);
           close_scope(parent);
         }
@@ -390,7 +438,7 @@ namespace semantic
               for (const auto &argument : call->arguments)
               {
                 const auto &binding = dynamic_cast<const parser::identifier_expression &>(*argument);
-                declare(binding.name, "match binding", binding.range);
+                declare(binding.name, symbol_kind::match_binding, binding.range);
               }
             }
             for (const auto &entry : branch.body->statements) statement(*entry, false);
@@ -426,7 +474,7 @@ namespace semantic
       }
 
     public:
-      analysis()
+      explicit analysis(analysis_identity identity) : identity_(std::move(identity))
       {
         model.scopes.push_back(scope{0, no_parent, "program", {}});
         names.emplace_back();
@@ -434,11 +482,15 @@ namespace semantic
                                                "Int", "Int8", "Int16", "Int32", "Int64", "Optional", "RuntimeError", "String",
                                                "Point", "SphericalPoint", "SphericalVector", "Vector", "Void"})
         {
-          declare(std::string(builtin), "builtin type", parser::span{0, 0});
+          declare(std::string(builtin), symbol_kind::builtin_type, parser::span{0, 0},
+                  symbol_visibility::public_access, symbol_origin::builtin);
         }
-        declare("print", "function", parser::span{0, 0});
-        declare("Some", "function", parser::span{0, 0});
-        declare("None", "builtin value", parser::span{0, 0});
+        declare("print", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin);
+        declare("Some", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin);
+        declare("None", symbol_kind::builtin_value, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin);
       }
 
       auto run(const parser::program &tree) -> semantic_model
@@ -448,6 +500,31 @@ namespace semantic
         return std::move(model);
       }
     };
+  }
+
+  auto name(const symbol_kind value) -> std::string_view
+  {
+    switch (value)
+    {
+    case symbol_kind::module: return "module";
+    case symbol_kind::imported_namespace: return "import";
+    case symbol_kind::variable: return "variable";
+    case symbol_kind::parameter: return "parameter";
+    case symbol_kind::loop_binding: return "loop binding";
+    case symbol_kind::match_binding: return "match binding";
+    case symbol_kind::function: return "function";
+    case symbol_kind::constructor: return "constructor";
+    case symbol_kind::type: return "type";
+    case symbol_kind::type_parameter: return "type parameter";
+    case symbol_kind::field: return "field";
+    case symbol_kind::method: return "method";
+    case symbol_kind::enum_case: return "enum member";
+    case symbol_kind::enum_constructor: return "enum constructor";
+    case symbol_kind::self_value: return "self";
+    case symbol_kind::builtin_type: return "builtin type";
+    case symbol_kind::builtin_value: return "builtin value";
+    }
+    return "unknown";
   }
 
   auto semantic_model::print(std::ostream &stream) const -> void
@@ -460,7 +537,7 @@ namespace semantic
       stream << ")\n";
       for (const auto &declared : entry.symbols)
       {
-        stream << "    Symbol(" << declared.kind << " " << declared.name << " @ "
+        stream << "    Symbol(" << name(declared.kind) << " " << declared.name << " @ "
                << declared.declaration.begin << ".." << declared.declaration.end << ")\n";
       }
     }
@@ -472,8 +549,8 @@ namespace semantic
     }
   }
 
-  auto analyze(const parser::program &tree) -> semantic_model
+  auto analyze(const parser::program &tree, analysis_identity identity) -> semantic_model
   {
-    return analysis().run(tree);
+    return analysis(std::move(identity)).run(tree);
   }
 }
