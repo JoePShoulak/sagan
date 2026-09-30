@@ -201,7 +201,7 @@ namespace sagan::syntax
     if (!reported.empty() && options.recover)
     {
       std::vector<parser::statement_ref> recovered_statements;
-      for (const auto [begin, end] : declaration_chunks(parser_tokens, document.text()))
+      for (const auto &[begin, end] : declaration_chunks(parser_tokens, document.text()))
       {
         if (reported.size() >= options.maximum_diagnostics || cancellation.is_cancelled()) break;
         std::vector<parser::token> chunk(parser_tokens.begin() + static_cast<std::ptrdiff_t>(begin),
