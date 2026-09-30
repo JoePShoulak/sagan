@@ -37,7 +37,35 @@ namespace sagan::language_service
       return true;
     }
 
-    auto canonical_gap(const int left, const int right) -> std::optional<std::string_view>
+    auto protected_space(const syntax::syntax_document &syntax, const source::byte_offset offset) -> bool
+    {
+      const auto inside = [offset](const source::byte_range range)
+      { return range.begin < offset && offset < range.end; };
+      for (const auto &token : syntax.tokens)
+      {
+        if ((token.kind == tokens::STRING || token.kind == tokens::STRING_BEGIN ||
+             token.kind == tokens::STRING_SEGMENT || token.kind == tokens::STRING_END ||
+             token.kind == tokens::DOC_COMMENT) && inside(token.range)) return true;
+        for (const auto &trivia : token.leading_trivia)
+          if (trivia.kind != syntax::trivia_kind::whitespace && inside(trivia.range)) return true;
+      }
+      for (const auto &trivia : syntax.trailing_trivia)
+        if (trivia.kind != syntax::trivia_kind::whitespace && inside(trivia.range)) return true;
+      return false;
+    }
+
+    auto ends_expression(const int kind) -> bool
+    {
+      return kind == tokens::IDENTIFIER || kind == tokens::METHOD_IDENTIFIER ||
+             kind == tokens::INTEGER || kind == tokens::FLOAT || kind == tokens::STRING ||
+             kind == tokens::STRING_END || kind == tokens::RPAREN || kind == tokens::RBRACKET ||
+             kind == tokens::RBRACE || kind == tokens::RANGLE ||
+             kind == tokens::KWD_TRUE || kind == tokens::KWD_FALSE ||
+             kind == tokens::KWD_INF || kind == tokens::KWD_NAN || kind == tokens::KWD_SELF;
+    }
+
+    auto canonical_gap(const int prior, const int left, const int right)
+      -> std::optional<std::string_view>
     {
       if (left == tokens::NEWLINE || right == tokens::NEWLINE) return {};
       if (right == tokens::COMMA || right == tokens::COLON || right == tokens::RPAREN ||
@@ -49,6 +77,31 @@ namespace sagan::language_service
       if (right == tokens::LPAREN &&
           (left == tokens::IDENTIFIER || left == tokens::METHOD_IDENTIFIER ||
            left == tokens::RPAREN || left == tokens::RBRACKET)) return "";
+      if ((left == tokens::PLUS || left == tokens::MINUS) && ends_expression(prior)) return " ";
+      if (right == tokens::PLUS || right == tokens::MINUS)
+      {
+        if (ends_expression(left) || left == tokens::EQUAL || left == tokens::ASSIGN_VALUE ||
+            left == tokens::FAT_ARROW || left == tokens::COMMA || left == tokens::COLON ||
+            left == tokens::KWD_RETURN || left == tokens::KWD_YIELD ||
+            left == tokens::KWD_SCREAM || left == tokens::KWD_AND ||
+            left == tokens::KWD_OR) return " ";
+        if (left == tokens::LPAREN || left == tokens::LBRACKET) return "";
+        return {};
+      }
+      if (left == tokens::PLUS || left == tokens::MINUS) return "";
+      if (left == tokens::STAR || right == tokens::STAR ||
+          left == tokens::SLASH || right == tokens::SLASH ||
+          left == tokens::PERCENT || right == tokens::PERCENT ||
+          left == tokens::CARET || right == tokens::CARET ||
+          left == tokens::KWD_AND || right == tokens::KWD_AND ||
+          left == tokens::KWD_OR || right == tokens::KWD_OR ||
+          left == tokens::KWD_IN || right == tokens::KWD_IN ||
+          left == tokens::KWD_IS || right == tokens::KWD_IS ||
+          left == tokens::KWD_HAS || right == tokens::KWD_HAS ||
+          left == tokens::KWD_NOT) return " ";
+      if (right == tokens::LBRACE &&
+          (ends_expression(left) || left == tokens::KWD_ELSE ||
+           left == tokens::KWD_FINALLY)) return " ";
       if (left == tokens::FAT_ARROW || right == tokens::FAT_ARROW ||
           left == tokens::EQUAL || right == tokens::EQUAL ||
           left == tokens::ASSIGN_VALUE || right == tokens::ASSIGN_VALUE ||
@@ -76,6 +129,7 @@ namespace sagan::language_service
         return {edit_state::unsupported, "Incomplete source cannot be safely formatted", {}};
       const auto text = document.text();
       versioned_document_edits changes{document.identity().uri, document.version(), {}};
+      std::vector<source::byte_range> selected_lines;
       std::size_t line_begin = 0;
       int depth = 0;
       while (line_begin < text.size())
@@ -89,6 +143,9 @@ namespace sagan::language_service
         const bool protected_content = protected_line(*analyzed.value,
                                                        static_cast<source::byte_offset>(line_begin));
         const bool selected = line_begin < requested.end && line_end >= requested.begin;
+        if (selected)
+          selected_lines.push_back({static_cast<source::byte_offset>(line_begin),
+                                    static_cast<source::byte_offset>(content_end)});
         int line_depth = depth;
         const auto first_token = std::find_if(analyzed.value->tokens.begin(), analyzed.value->tokens.end(),
                                               [&](const auto &token)
@@ -107,6 +164,18 @@ namespace sagan::language_service
                                       {static_cast<source::byte_offset>(line_begin),
                                        static_cast<source::byte_offset>(content_begin)}}, indentation});
         }
+        if (selected && !protected_content)
+        {
+          auto trailing_begin = content_end;
+          while (trailing_begin > line_begin &&
+                 (text[trailing_begin - 1] == ' ' || text[trailing_begin - 1] == '\t'))
+            --trailing_begin;
+          if (trailing_begin < content_end &&
+              !protected_space(*analyzed.value, static_cast<source::byte_offset>(trailing_begin)))
+            changes.edits.push_back({{document.identity().id,
+                                      {static_cast<source::byte_offset>(trailing_begin),
+                                       static_cast<source::byte_offset>(content_end)}}, ""});
+        }
         for (const auto &token : analyzed.value->tokens)
           if (token.range.begin >= line_begin && token.range.begin < line_end)
           {
@@ -122,11 +191,14 @@ namespace sagan::language_service
         const auto &right = analyzed.value->tokens[i];
         const auto begin = left.range.end;
         const auto end = right.range.begin;
-        if (begin > end || begin < requested.begin || end > requested.end) continue;
+        if (begin > end ||
+            !std::any_of(selected_lines.begin(), selected_lines.end(), [&](const auto &line)
+                         { return line.begin <= begin && end <= line.end; })) continue;
         const auto gap = text.substr(begin, end - begin);
         if (!std::all_of(gap.begin(), gap.end(), [](const char byte)
             { return byte == ' ' || byte == '\t'; })) continue;
-        const auto expected = canonical_gap(left.kind, right.kind);
+        const auto prior = i >= 2 ? analyzed.value->tokens[i - 2].kind : tokens::UNKNOWN;
+        const auto expected = canonical_gap(prior, left.kind, right.kind);
         if (expected && gap != *expected)
           changes.edits.push_back({{document.identity().id, {begin, end}}, std::string(*expected)});
       }

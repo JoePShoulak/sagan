@@ -18,6 +18,9 @@ LIBRARY_SOURCES := \
 	src/language_service/queries.cpp \
 	src/language_service/queries_structure.cpp \
 	src/language_service/refactor.cpp \
+	src/language_service/refactor_add_import.cpp \
+	src/language_service/refactor_capabilities.cpp \
+	src/language_service/refactor_fixes.cpp \
 	src/language_service/refactor_imports.cpp \
 	src/language_service/workspace.cpp \
 	src/modules/resolver.cpp \

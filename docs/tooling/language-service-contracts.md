@@ -218,16 +218,21 @@ lifecycle tests pass.
 
 ## Structured edits and formatting
 
-The first concrete implementation is in `src/language_service/edits.hpp`,
-`formatter.hpp`, and `refactor.hpp`. `preview_edits` validates exact document
-versions, identities, UTF boundaries, and non-overlap, then returns proposed
-text without writing. The current formatter is a strict-parse,
-token-preserving indentation pass, not the completed style formatter described
-below. `rename_local` is the only current refactoring; it rechecks and rebinds
-the proposed source by symbol identity. `organize_imports` handles only an
-uninterrupted, comment-free top-level import block and rechecks the result.
-Other transformations are target
-contracts and must remain disabled until their proof gates exist.
+The implementation is in `src/language_service/edits.hpp`, `formatter.hpp`,
+and `refactor.hpp`. `preview_edits` validates exact document versions,
+identities, UTF boundaries, and non-overlap, then returns proposed text without
+writing. The strict-parse formatter applies token-preserving two-space
+indentation, canonical proven gaps, and safe trailing-whitespace cleanup; it
+preserves existing line breaks and declines ambiguous or incomplete source.
+`rename_local` rechecks and rebinds proposed source by symbol identity.
+`organize_imports` handles only an uninterrupted, comment-free top-level
+import block. `add_missing_import` uses an exact public workspace symbol ID,
+then validates the new binding. `plan_diagnostic_fix` accepts only a
+compiler-issued fix for the exact document version and rechecks its preview.
+`source_edit_capabilities()` is the authoritative action list, including
+unavailability reasons; its `sagan-source-edits-v1` schema is exposed by
+`capabilities_json`. Other transformations stay disabled until their proof
+gates exist.
 
 ```cpp
 struct versioned_document_edits {
@@ -243,8 +248,9 @@ struct workspace_edit {
 ```
 
 Edits are sorted, deterministic, non-overlapping, previewable, and validated
-against exact document versions. Rename and refactoring operate on symbol IDs,
-then rerun conflict, visibility, and type checks before returning an edit.
+against exact document versions. Each available transformation performs its
+applicable syntax, binding, and type proof before returning an edit; unsupported
+transformations must not be inferred from this shared edit structure.
 
 Formatting is a reusable library operation with whole-document, range, and
 on-type entry points. It consumes a lossless syntax tree, preserves comments,

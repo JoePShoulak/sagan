@@ -1,5 +1,6 @@
 #include "language_service.hpp"
 #include "documentation.hpp"
+#include "refactor.hpp"
 
 #include "../parser/lex.hpp"
 #include "../parser/parse_error.hpp"
@@ -20,6 +21,26 @@ namespace sagan::language_service
 {
   namespace
   {
+    auto attach_closing_brace_fix(const source::document_snapshot &document,
+                                  diagnostics::diagnostic &diagnostic) -> void
+    {
+      if (diagnostic.owner != diagnostics::phase::syntax ||
+          (diagnostic.message != "Expected '}' after the block" &&
+           diagnostic.message != "Expected '}' after the type body" &&
+           diagnostic.message != "Expected '}' after the match cases")) return;
+      const auto text = document.text();
+      const std::string newline = text.find("\r\n") == std::string_view::npos ? "\n" : "\r\n";
+      const bool ends_in_newline = !text.empty() && text.back() == '\n';
+      const std::string insertion = (ends_in_newline ? "" : newline) + "}" + newline;
+      const source::document_snapshot trial(document.identity(), document.version(),
+                                            std::string(text) + insertion);
+      const auto parsed = syntax::analyze(trial, {.recover = false});
+      if (!parsed.value || !parsed.value->strict_ast) return;
+      const auto at = static_cast<source::byte_offset>(text.size());
+      diagnostic.fixes.push_back({"Insert missing '}'",
+                                  {{{document.identity().id, {at, at}}, insertion}}});
+    }
+
     auto make_diagnostic(const source::document_snapshot &document, const diagnostics::phase owner,
                          const parser::span range, const std::string &message) -> diagnostics::diagnostic
     {
@@ -27,9 +48,11 @@ namespace sagan::language_service
       const auto begin = static_cast<source::byte_offset>(std::clamp(range.begin, 0, text_size));
       const auto end = static_cast<source::byte_offset>(
           std::clamp(range.end, static_cast<int>(begin), text_size));
-      return diagnostics::diagnostic{
+      auto diagnostic = diagnostics::diagnostic{
           std::string(diagnostics::default_code(owner)), diagnostics::severity::error, owner,
           source::source_range{document.identity().id, source::byte_range{begin, end}}, message, {}, {}, {}};
+      attach_closing_brace_fix(document, diagnostic);
+      return diagnostic;
     }
 
     auto cancelled(const source::document_snapshot &document)
@@ -57,7 +80,8 @@ namespace sagan::language_service
     const auto boolean = [](const bool enabled) { return enabled ? "true" : "false"; };
     std::ostringstream output;
     output << "{\"schema\":\"" << value.schema << "\",\"documentationCatalog\":\""
-           << documentation_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
+           << documentation_schema_version << "\",\"sourceEditsSchema\":\""
+           << source_edits_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
            << "\"capabilities\":{\"strictDocumentCheck\":" << boolean(value.strict_document_check)
            << ",\"structuredDiagnostics\":" << boolean(value.structured_diagnostics)
            << ",\"utf16Positions\":" << boolean(value.utf16_positions)
@@ -139,6 +163,8 @@ namespace sagan::language_service
       return cancelled(document);
     if (syntax_result.state != diagnostics::result_state::complete)
     {
+      for (auto &diagnostic : syntax_result.diagnostics)
+        attach_closing_brace_fix(document, diagnostic);
       check_summary summary;
       if (syntax_result.value)
       {

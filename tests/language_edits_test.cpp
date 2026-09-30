@@ -2,7 +2,10 @@
 #include "../src/language_service/formatter.hpp"
 #include "../src/language_service/refactor.hpp"
 #include "../src/language_service/language_service.hpp"
+#include "../src/modules/resolver.hpp"
+#include "../src/source/provider.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <iostream>
@@ -18,6 +21,20 @@ namespace
 auto main() -> int
 {
   using namespace sagan;
+  const auto actions = language_service::source_edit_capabilities();
+  const auto action = [&](std::string_view name)
+  {
+    return std::find_if(actions.begin(), actions.end(), [&](const auto &candidate)
+                        { return candidate.action == name; });
+  };
+  require(language_service::source_edits_schema_version == "sagan-source-edits-v1" &&
+              action("format.document") != actions.end() && action("format.document")->available &&
+              action("diagnostic.fix") != actions.end() && action("diagnostic.fix")->available &&
+              action("imports.add") != actions.end() && action("imports.add")->available &&
+              action("rename.workspace") != actions.end() && !action("rename.workspace")->available &&
+              !action("rename.workspace")->limitation.empty() &&
+              action("extract.function") != actions.end() && !action("extract.function")->available,
+          "source-edit capability contract advertised an unsafe action or omitted a safe action");
   const source::document_snapshot document(
       {{source::document_id{101}, source::document_uri{"untitled:edit"}, {}}, 7,
        "fun main(): Int {\nlet value = 2\nreturn value\n}\n"});
@@ -46,13 +63,34 @@ auto main() -> int
   const auto spacing_preview = language_service::preview_edits(spacing_edits.edits, {&spacing});
   require(spacing_preview.state == language_service::edit_state::ready &&
               spacing_preview.documents.front().text ==
-                  "fun add(left: Int, right: Int): Int => left+right\n"
-                  "fun main(): Int{\n  let answer = add(1, 2)\n  return answer\n}\n",
+                  "fun add(left: Int, right: Int): Int => left + right\n"
+                  "fun main(): Int {\n  let answer = add(1, 2)\n  return answer\n}\n",
           "formatter did not apply its canonical unambiguous token gaps");
   const source::document_snapshot spacing_again(spacing.identity(), 2,
                                                  spacing_preview.documents.front().text);
   require(language_service::format_document(spacing_again).edits.documents.front().edits.empty(),
           "spacing formatter was not idempotent");
+  const auto spacing_range = language_service::format_range(
+      spacing, {static_cast<source::byte_offset>(spacing.text().find("left:Int")),
+                static_cast<source::byte_offset>(spacing.text().find("left:Int") + 1)});
+  const auto spacing_range_preview = language_service::preview_edits(spacing_range.edits, {&spacing});
+  require(spacing_range_preview.state == language_service::edit_state::ready &&
+              spacing_range_preview.documents.front().text.starts_with(
+                  "fun add(left: Int, right: Int): Int => left + right\n") &&
+              spacing_range_preview.documents.front().text.find("let answer=add(1,2)") !=
+                  std::string::npos,
+          "range formatting failed to normalize one selected line or changed another");
+  const source::document_snapshot whitespace(
+      {{source::document_id{110}, source::document_uri{"untitled:whitespace"}, {}}, 1,
+       "fun main(): Int {\nlet value=-2  \n// keep comment spaces  \nreturn value\n}\n"});
+  const auto whitespace_format = language_service::format_document(whitespace);
+  const auto whitespace_preview = language_service::preview_edits(whitespace_format.edits, {&whitespace});
+  require(whitespace_format.state == language_service::edit_state::ready &&
+              whitespace_preview.state == language_service::edit_state::ready &&
+              whitespace_preview.documents.front().text ==
+                  "fun main(): Int {\n  let value = -2\n  // keep comment spaces  \n"
+                  "  return value\n}\n",
+          "formatter failed unary spacing or removed comment content");
   const auto limited = language_service::format_range(document, {17, 30});
   const auto limited_preview = language_service::preview_edits(limited.edits, {&document});
   require(limited_preview.state == language_service::edit_state::ready &&
@@ -73,6 +111,25 @@ auto main() -> int
   require(language_service::format_document(incomplete).state ==
               language_service::edit_state::unsupported,
           "formatter modified incomplete source");
+  const source::document_snapshot missing_brace(
+      {{source::document_id{111}, source::document_uri{"untitled:missing-brace"}, {}}, 3,
+       "fun main(): Int {\n  return 0\n"});
+  const auto missing_brace_diagnostic = language_service::analyze_document(missing_brace);
+  require(missing_brace_diagnostic.diagnostics.size() == 1 &&
+              missing_brace_diagnostic.diagnostics.front().fixes.size() == 1,
+          "compiler did not offer its proven missing-brace fix");
+  const auto brace_fix = language_service::plan_diagnostic_fix(missing_brace,
+                                                                missing_brace_diagnostic, 0, 0);
+  const auto brace_preview = language_service::preview_edits(brace_fix.edits, {&missing_brace});
+  require(brace_fix.state == language_service::edit_state::ready &&
+              brace_preview.state == language_service::edit_state::ready &&
+              brace_preview.documents.front().text == "fun main(): Int {\n  return 0\n}\n",
+          "diagnostic quick fix did not produce a valid source preview");
+  const source::document_snapshot stale_brace(missing_brace.identity(), 4,
+                                               std::string(missing_brace.text()));
+  require(language_service::plan_diagnostic_fix(stale_brace, missing_brace_diagnostic, 0, 0).state ==
+              language_service::edit_state::stale,
+          "diagnostic quick fix accepted an obsolete document version");
   const source::document_snapshot comment(
       {{source::document_id{103}, source::document_uri{"untitled:comment"}, {}}, 1,
        "fun main(): Int {\n/* first\n   second */\nreturn 0\n}\n"});
@@ -188,6 +245,32 @@ auto main() -> int
   require(language_service::organize_imports(grouped_imports).state ==
               language_service::edit_state::unsupported,
           "import organizer collapsed a deliberate blank-line grouping");
+  const source::disk_source_provider disk;
+  const auto graph = modules::resolve("tests/fixtures/modules/module_demo/main.sagan", disk);
+  const auto workspace_index = semantic::build_workspace_index(graph, disk);
+  const auto exports = workspace_index.exported_symbols();
+  const auto course = std::find_if(exports.begin(), exports.end(), [](const auto &entry)
+  { return entry.module == "guidance" && entry.public_name == "course"; });
+  require(course != exports.end() && course->targets.size() == 1,
+          "workspace fixture did not expose one public course symbol");
+  const source::document_snapshot needs_import(
+      {{source::document_id{112}, source::document_uri{"untitled:needs-import"}, {}}, 1,
+       "module scratch\nfun main(): Int => 0\n"});
+  const auto added = language_service::add_missing_import(needs_import, workspace_index,
+                                                            course->targets.front());
+  const auto added_preview = language_service::preview_edits(added.edits, {&needs_import});
+  require(added.state == language_service::edit_state::ready &&
+              added_preview.state == language_service::edit_state::ready &&
+              added_preview.documents.front().text ==
+                  "module scratch\nimport course from guidance\nfun main(): Int => 0\n",
+          "identity-based missing import did not use the selected public export");
+  const source::document_snapshot import_conflict(
+      {{source::document_id{113}, source::document_uri{"untitled:import-conflict"}, {}}, 1,
+       "module scratch\nfun course(): Int => 0\nfun main(): Int => 0\n"});
+  require(language_service::add_missing_import(import_conflict, workspace_index,
+                                                course->targets.front()).state ==
+              language_service::edit_state::conflict,
+          "add-import action accepted a colliding local declaration");
   const source::document_snapshot crlf_imports(
       {{source::document_id{109}, source::document_uri{"untitled:crlf-imports"}, {}}, 1,
        "module mission\r\nimport telemetry.flight as telemetry\r\n"
@@ -202,6 +285,8 @@ auto main() -> int
   std::cout << "Sagan formatting input:\n" << document.text()
             << "\nFormatted preview:\n" << preview.documents.front().text
             << "\nRenamed preview:\n" << renamed_preview.documents.front().text
-            << "\nOrganized imports preview:\n" << organized_preview.documents.front().text;
+            << "\nOrganized imports preview:\n" << organized_preview.documents.front().text
+            << "\nAdded import preview:\n" << added_preview.documents.front().text
+            << "\nMissing brace quick-fix preview:\n" << brace_preview.documents.front().text;
   return 0;
 }

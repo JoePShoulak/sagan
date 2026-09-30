@@ -159,15 +159,18 @@ until Phase 8 implements and tests transport.
 
 ## Phase 6 — formatter and safe source edits
 
-**Status: in progress.** The library now has a conservative, token-preserving
-two-space indentation and conservative token-gap formatter with
-document/range/on-type APIs, golden, idempotence, and preview tests. Versioned
-multi-document edit validation rejects stale,
-overlapping, or invalid UTF boundaries. Identity-based local rename is offered
-only after a successful semantic recheck and reference-rebinding proof.
-Comment-free top-of-file import blocks can be organized and rechecked; ambiguous
-trivia causes refusal. The remaining style rules, public/cross-module rename,
-and other refactorings below are not yet available. See
+**Status: complete for the safety-gated Phase 6 scope.** The strict-parse,
+token-preserving two-space formatter handles document/range/on-type requests,
+tested token-gap rules, and trailing horizontal whitespace, with golden and
+idempotence tests. It deliberately preserves line breaks and ambiguous gaps.
+Versioned multi-document edit validation rejects stale, overlapping, or invalid
+UTF boundaries. Identity-based local rename requires semantic recheck and
+reference-rebinding proof. Comment-free top-of-file import blocks can be
+organized; exact public workspace symbols can be imported with collision and
+binding checks. Compiler-issued diagnostic fixes are version-gated and
+rechecked. Capability discovery names available actions and explicit refusals.
+Public/cross-module rename, unused-import removal, face synthesis, and
+extraction remain disabled until their safety analyses exist. See
 [formatting and source edits](formatting-and-edits.md).
 
 - Implement the deterministic lossless formatter with document/range/on-type
@@ -177,8 +180,10 @@ and other refactorings below are not yet available. See
   generation, diagnostic fixes, extract-variable, and extract-function only as
   their safety analyses become complete.
 
-**Exit:** no edit is offered through textual name matching; conflicts or
+**Exit met:** no edit is offered through textual name matching; conflicts or
 uncertain preservation cause a structured refusal rather than a risky edit.
+The explicitly disabled transformations are follow-on work, not advertised
+Phase 6 capabilities.
 
 ## Phase 7 — operations and debugger prerequisites
 
