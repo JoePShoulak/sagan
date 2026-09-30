@@ -90,6 +90,7 @@ nav:
   - Home: index.md
   - Learn:
       - Start here: getting-started/index.md
+      - Downloads: getting-started/downloads.md
       - Install Sagan: getting-started/installation.md
       - Write your first program: getting-started/first-program.md
       - Use an editor: getting-started/editor-support.md

@@ -10,8 +10,9 @@ verified_by: null
 # Self-hosting
 
 The canonical URL is `https://sagan.shoulak.org/`. HP1 serves released
-documentation archives plus the continuously updated `experimental` version
-through an independently managed public route.
+documentation archives, the continuously updated `experimental` version, and
+a verified stable-release mirror at `/downloads/` through an independently
+managed public route.
 
 ## Hermes ecosystem route
 
@@ -37,6 +38,12 @@ own public routing, certificates, and the public VIP.
 - `deploy/hp1/sagan-docs` starts, stops, and inspects the user-owned process.
 - `deploy/hp1/install-user.sh` atomically installs a staged release and adds a
   user crontab entry so it starts after reboot.
+- `deploy/releases/mirror.sh` verifies one immutable GitHub release and rebuilds
+  the public download catalog.
+- `deploy/releases/sync.sh` reconciles every published stable GitHub release
+  into the HP1 mirror.
+- `deploy/releases/index.py` creates `/downloads/index.html` and the
+  machine-readable `/downloads/releases.json` catalog.
 - `deploy/frontdoor/sagan.shoulak.org.conf` is the Apache route to integrate
   into the Frontdoor project on both peers.
 - `scripts/docs_versions.sh` publishes `experimental` or an approved immutable
@@ -91,9 +98,11 @@ On HP1 itself, the CI runner uses the local-only route:
 bash deploy/hosting/update.sh hp1-local
 ```
 
-That command packages the generated `docs-site` branch, atomically advances the
-origin's `current` deployment symlink, restarts the unprivileged server, and verifies its
-loopback health endpoint. The lower-level local installer refuses to run unless
+That command first reconciles stable GitHub releases, packages the generated
+`docs-site` branch, atomically advances the origin's `current` deployment
+symlink, exposes the verified mirror through that snapshot's `/downloads/`
+symlink, restarts the unprivileged server, and verifies its loopback health
+endpoint. The lower-level local installer refuses to run unless
 the deployment wrapper supplies its explicit safety flag. The origin launcher
 also removes GitHub's job-tracking marker from the long-lived server process so
 the runner does not clean it up when the deployment job finishes.
@@ -116,8 +125,8 @@ and its documentation are approved:
 3. allow the release gate to create that immutable version, move `latest`, and
    set `latest` as the site-root default;
 4. allow the HP1 job to install the complete versioned site atomically; and
-5. verify the root, `latest`, the numbered release, and `experimental` through
-   the origin and public route.
+5. verify the root, `latest`, the numbered release, `experimental`, and
+   `/downloads/` through the origin and public route.
 
 Versioned files can be installed on HP1 without system privileges. DNS,
 certificate issuance, and Frontdoor changes remain separate hosting steps.
@@ -199,3 +208,11 @@ Each snapshot contains every documentation version present in `docs-site` at
 deployment time. If a rollback is needed, point
 `~/.local/share/sagan-docs/current` at a known-good snapshot and restart the
 server. Do not rerun the public-route deployment for an origin-only problem.
+
+Mirrored binaries live separately under `~/.local/share/sagan-releases/vVERSION`
+so documentation snapshot rotation cannot remove them. The `latest` symlink
+tracks the highest mirrored stable semantic version. A mirror run never
+replaces an existing version directory; publish a new Sagan version to correct
+an asset. Published SHA-256 files are verified. For legacy releases that lack
+one, HP1 generates and serves its own checksum without modifying the downloaded
+asset.

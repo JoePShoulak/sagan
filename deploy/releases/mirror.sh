@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 1 || ! "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "usage: bash deploy/releases/mirror.sh vMAJOR.MINOR.PATCH" >&2
+if [[ $# -ne 1 || ! "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[1-9][0-9]*)?$ ]]; then
+  echo "usage: bash deploy/releases/mirror.sh vMAJOR.MINOR.PATCH[-rc.NUMBER]" >&2
   exit 2
 fi
 command -v gh >/dev/null 2>&1 || { echo "GitHub CLI is required." >&2; exit 1; }
@@ -11,9 +11,26 @@ tag="$1"
 release_root="${SAGAN_RELEASE_MIRROR_ROOT:-$HOME/.local/share/sagan-releases}"
 destination="$release_root/$tag"
 mkdir -p "$release_root"
+exec 9>"$release_root/.mirror.lock"
+flock 9
+
+publish_index() {
+  local latest
+  local -a stable_tags=()
+  mapfile -t stable_tags < <(
+    find "$release_root" -mindepth 1 -maxdepth 1 -type d -name 'v*.*.*' -printf '%f\n' \
+      | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V
+  )
+  if [[ ${#stable_tags[@]} -gt 0 ]]; then
+    latest="${stable_tags[${#stable_tags[@]} - 1]}"
+    ln -sfn "$latest" "$release_root/latest"
+  fi
+  python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/index.py" --root "$release_root"
+}
 
 if [[ -d "$destination" ]]; then
   echo "The immutable HP1 mirror already contains $tag; leaving it unchanged."
+  publish_index
   exit 0
 fi
 
@@ -27,9 +44,23 @@ cleanup() {
 trap cleanup EXIT
 
 gh release download "$tag" --repo JoePShoulak/sagan --dir "$staging"
-(cd "$staging" && sha256sum -c ./*.sha256)
+(
+  cd "$staging"
+  shopt -s nullglob
+  checksums=(./*.sha256)
+  if [[ ${#checksums[@]} -gt 0 ]]; then
+    sha256sum -c "${checksums[@]}"
+  else
+    assets=(./*)
+    [[ ${#assets[@]} -gt 0 ]] || { echo "GitHub release $tag has no downloadable assets." >&2; exit 1; }
+    for asset in "${assets[@]}"; do
+      sha256sum "$(basename "$asset")" >"$(basename "$asset").sha256"
+    done
+    echo "Generated mirror-side SHA-256 files for legacy release $tag."
+  fi
+)
 
 mv "$staging" "$destination"
 trap - EXIT
-ln -sfn "$tag" "$release_root/latest"
+publish_index
 echo "Mirrored and verified $tag at $destination"

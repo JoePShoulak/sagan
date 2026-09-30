@@ -37,7 +37,8 @@ case "${1:-}" in
   stage-hp1)
     bash "$0" package-versioned
     ssh hp1 'install -d -m 0755 sagan-docs-staging'
-    scp "$archive" deploy/hp1/server.py deploy/hp1/sagan-docs deploy/hp1/install-user.sh hp1:sagan-docs-staging/
+    scp "$archive" deploy/hp1/server.py deploy/hp1/sagan-docs deploy/hp1/install-user.sh \
+      deploy/releases/index.py hp1:sagan-docs-staging/
     echo "Staged the versioned site in hp1:~/sagan-docs-staging."
     echo "Install it without sudo: ssh hp1 'cd sagan-docs-staging && bash install-user.sh'"
     ;;
@@ -49,7 +50,8 @@ case "${1:-}" in
     bash "$0" package-versioned
     staging_dir="$(mktemp -d)"
     trap 'rm -rf "$staging_dir"' EXIT
-    cp "$archive" deploy/hp1/server.py deploy/hp1/sagan-docs deploy/hp1/install-user.sh "$staging_dir/"
+    cp "$archive" deploy/hp1/server.py deploy/hp1/sagan-docs deploy/hp1/install-user.sh \
+      deploy/releases/index.py "$staging_dir/"
     cd "$staging_dir"
     bash install-user.sh
     ;;

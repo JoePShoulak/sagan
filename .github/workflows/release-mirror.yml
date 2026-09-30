@@ -1,0 +1,30 @@
+name: Release mirror
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    name: Mirror published releases to HP1
+    runs-on:
+      - self-hosted
+      - sagan-docs-hp1
+    environment: documentation
+    timeout-minutes: 15
+    concurrency:
+      group: sagan-release-mirror-hp1
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          clean: true
+      - name: Synchronize published stable and preview releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash deploy/releases/sync.sh

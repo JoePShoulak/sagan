@@ -112,6 +112,7 @@ test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TE
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
+	bash scripts/release_mirror_test.sh
 	$(SOURCE_DIAGNOSTICS_TEST)
 	$(WORKSPACE_TEST)
 	$(SEMANTIC_INDEX_TEST)

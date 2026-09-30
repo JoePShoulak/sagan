@@ -107,6 +107,8 @@ jobs:
       - self-hosted
       - sagan-docs-hp1
     environment: documentation
+    permissions:
+      contents: read
     timeout-minutes: 15
     concurrency:
       group: sagan-docs-hp1
@@ -120,6 +122,11 @@ jobs:
 
       - name: Set up documentation environment
         run: bash scripts/docs.sh setup
+
+      - name: Synchronize stable release mirror
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash deploy/releases/sync.sh
 
       - name: Install origin release locally
         run: bash deploy/hosting/update.sh hp1-local
