@@ -3114,6 +3114,8 @@
       
         
       
+        
+      
     
     
     
@@ -3296,6 +3298,42 @@
     
   
     Release lifecycle
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/ecosystem-release-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem release readiness
   
 
     
@@ -3717,13 +3755,26 @@ replaces the current one.</p>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>altitude = altitude + 500.0
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>altitude += 500.0
 </span></code></pre></div>
+<p>Use <code>const</code> when the name should never be assigned again:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>const DISTANCE = 100 meter
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>const TIME = 20 second
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>const SPEED = DISTANCE / TIME
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>print(SPEED)
+</span></code></pre></div>
+<p>The name must use ASCII <code>SCREAMING_SNAKE_CASE</code>. <code>const</code> is the rule that makes
+it immutable; uppercase letters alone do not. Sagan rejects <code>let SPEED = 5</code>
+so a mutable variable cannot look like a constant. <code>const</code> requires a value
+immediately. It stops reassignment and direct mutation through that name,
+including <code>SPEED += ...</code>, <code>VALUES[0] = ...</code>, and mutating <code>!</code> methods. It does
+not deeply freeze a referenced object shared with a mutable alias, and it does
+not promise that the value is evaluated at compile time.</p>
 <p>The parser supports <code>=</code>, <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>, <code>%=</code>, and <code>^=</code> reassignment
 statements inside function bodies. <code>^=</code> uses Sagan's exponentiation operator;
 there are no initial bitwise operators.</p>
 <p>Numbers may use decimal integers, decimal floating point, scientific notation,
 and separators between digits:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let entities = 10_000
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>let gravity = 6.674_30e-11
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let entities = 10_000
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>let gravity = 6.674_30e-11
 </span></code></pre></div>
 <p>The checker infers scalar values, enforces compatible
 annotations and assignments, selects the smallest fitting signed integer width,

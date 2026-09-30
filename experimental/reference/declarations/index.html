@@ -3112,6 +3112,8 @@
       
         
       
+        
+      
     
     
     
@@ -3294,6 +3296,42 @@
     
   
     Release lifecycle
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/ecosystem-release-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem release readiness
   
 
     
@@ -3708,7 +3746,8 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="declarations">Declarations</h1>
-<p>Declarations introduce names. <code>let</code> declares mutable variables; <code>fun</code> introduces
+<p>Declarations introduce names. <code>let</code> declares mutable variables; <code>const</code>
+declares immutable bindings; <code>fun</code> introduces
 functions; <code>face</code>, <code>class</code>, and <code>enum</code> introduce named types; and
 <code>dimension</code>, <code>quantity</code>, <code>unit</code>, and <code>affine unit</code> introduce compile-time
 measurement metadata. Measurement declarations are checked for duplicate names,
@@ -3721,11 +3760,25 @@ exports with an optional alias. See <a href="../modules/">Modules</a> for the ac
 forms.</p>
 <p><code>///</code> and <code>/** ... */</code> documentation comments attach to the declaration that
 immediately follows them. The AST preserves each comment separately with its
-source span and text. Supported targets are modules, imports, exports, <code>let</code>,
+source span and text. Supported targets are modules, imports, exports, <code>let</code>, <code>const</code>,
 <code>fun</code>, <code>face</code>, <code>class</code>, and <code>enum</code> declarations, including fields, methods, and
 local variables and individual enum members.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let altitude: Float = 125_000.0
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>const MAX_RETRIES: Int = 5
 </span></code></pre></div>
+<p><code>const</code> always requires an initializer and an ASCII <code>SCREAMING_SNAKE_CASE</code>
+name (<code>[A-Z][A-Z0-9_]*</code>). The keyword creates the immutable binding;
+capitalization alone never does. Consequently <code>let MAX_RETRIES = 5</code> is an
+error, not a constant. Constants may infer a type or use an annotation and may
+be local, module-level, exported, or imported. Reassignment, increment,
+compound assignment, indexed or field mutation rooted at the constant, and a
+mutating <code>!</code> method call through it are rejected. A mutable alias to the same
+referenced object can still mutate that object: this is a const view, not a
+transitive deep freeze or general compile-time expression evaluator.
+The compiler exposes the same naming check for future rename tooling; an
+editor must not offer a rename that would give a constant a lowercase name or
+a mutable variable the reserved constant spelling. A full rename operation is
+not implemented yet.</p>
 <p>Top-level declarations may define mutable variables, functions, faces, classes,
 and enums. Functions may use a block body or a short expression body:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>fun double(value: Int): Int =&gt; value * 2
@@ -3737,6 +3790,9 @@ such as <code>Direction.north</code>; payload cases such as <code>Success(42)</c
 constructors.</p>
 <p>Class fields require explicit types and may
 have default initializers. A class may declare overloaded <code>new(...)</code> constructors;
+<code>const</code> fields require an explicit type and a declaration-site initializer.
+Constructor-only initialization of const fields is deferred; a const field
+cannot be assigned again, even in <code>new</code>.
 calling <code>ClassName(arguments...)</code> selects exactly one compatible constructor.
 Every field without a declaration-site default must be assigned on every
 constructor path. With no declared constructor, <code>ClassName()</code> is available only

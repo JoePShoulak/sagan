@@ -3245,6 +3245,8 @@
       
         
       
+        
+      
     
     
     
@@ -3427,6 +3429,42 @@
     
   
     Release lifecycle
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/ecosystem-release-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem release readiness
   
 
     
@@ -3962,6 +4000,11 @@ as <code>:)</code> are not identifiers.</p>
 <p>Identifiers are case-sensitive. Names beginning with <code>__</code> are reserved for the
 compiler. A trailing <code>!</code> may be included in a method identifier as Sagan's
 mutating-counterpart naming convention.</p>
+<p><code>const</code> is a keyword, not an identifier. A constant's name is deliberately
+stricter than an ordinary identifier: it must match ASCII
+<code>[A-Z][A-Z0-9_]*</code>. Unicode and emoji remain valid for ordinary Sagan names,
+but do not yet have a capitalization rule for constants. A <code>let</code> name matching
+this reserved form is rejected rather than silently becoming a constant.</p>
 <h2 id="numbers">Numbers</h2>
 <p>Sagan supports decimal integers, decimal floating-point values, scientific
 notation, and <code>_</code> separators placed strictly between digits.</p>
@@ -3993,7 +4036,7 @@ lexical error. Newlines are suppressed inside parentheses and brackets and
 after tokens that leave an expression incomplete. Ambiguous brace and angle
 delimiter contexts are preserved for the parser to interpret.</p>
 <h2 id="keywords">Keywords</h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let weak fun new class face enum dimension quantity unit affine
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let const weak fun new class face enum dimension quantity unit affine
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>if else match case for in while until break continue return yield
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>import from as module export
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>hope unless finally scream

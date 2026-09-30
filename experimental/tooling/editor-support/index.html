@@ -3112,6 +3112,8 @@
       
         
       
+        
+      
     
     
     
@@ -3294,6 +3296,42 @@
     
   
     Release lifecycle
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/ecosystem-release-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem release readiness
   
 
     
@@ -3710,9 +3748,10 @@
 <h1 id="editor-support">Editor support</h1>
 <p>The version 0.2.0 VS Code extension in <code>editors/vscode-sagan/</code> associates
 <code>.sagan</code> files with the language and provides a tokenizer-aligned Sagan TextMate
-grammar. It covers declarations, keywords, types, literals, operators,
-punctuation, comments, strings and nested interpolation, Unicode identifiers,
-private members, and mutating method names.</p>
+grammar. It covers declarations (including explicit <code>const</code> and visibly invalid
+<code>let ALL_CAPS</code> names), keywords, types, literals, operators, punctuation,
+comments, strings and nested interpolation, Unicode identifiers, private
+members, and mutating method names.</p>
 <p>It also discovers a Sagan compiler, validates the versioned
 <code>sagan.language-service/1</code> capability response, and exposes <strong>Sagan: Show
 Tooling Status</strong> without enabling capabilities the compiler does not advertise.</p>

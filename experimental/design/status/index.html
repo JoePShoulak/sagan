@@ -3223,6 +3223,8 @@
       
         
       
+        
+      
     
     
     
@@ -3405,6 +3407,42 @@
     
   
     Release lifecycle
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/ecosystem-release-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem release readiness
   
 
     
@@ -3953,6 +3991,11 @@ audit; it does not mean every listed compiler feature is unfinished.</p>
 <td>static dimensions/quantities/units, affine temperatures, scientific catalog and SI prefixes, callable constraints, custom declarations, erased native representation, <code>make units-demo</code></td>
 </tr>
 <tr>
+<td>Explicit constants</td>
+<td><strong>Implemented as immutable bindings</strong></td>
+<td><code>const</code> plus ASCII SCREAMING_SNAKE_CASE, const-view mutation checks, class fields with declaration initializers, native execution and editor grammar tests; general compile-time evaluation deferred</td>
+</tr>
+<tr>
 <td>Deterministic execution</td>
 <td><strong>1.0 hypercore contract settled</strong></td>
 <td>exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded</td>
@@ -3964,11 +4007,14 @@ audit; it does not mean every listed compiler feature is unfinished.</p>
 </tr>
 <tr>
 <td>Editor-tooling foundation</td>
-<td><strong>Phases 0–4 implemented; work paused</strong></td>
-<td>reusable compiler archive, source identity/UTF-16 positions, diagnostics, recovery, overlays, invalidation, cancellation, stable semantic identities and indexes</td>
+<td><strong>Read-only query work resumed</strong></td>
+<td>reusable compiler archive, source identity/UTF-16 positions, diagnostics, recovery, overlays, invalidation, cancellation, stable semantic identities and indexes; no LSP server yet</td>
 </tr>
 </tbody>
 </table>
+<p>Every release is a coordinated ecosystem freeze: compiler/language, included
+libraries, documentation, and extension must agree and pass together. See the
+<a href="../../contributing/ecosystem-release-readiness/">ecosystem release checklist</a>.</p>
 <h2 id="tokenizer-verification">Tokenizer verification</h2>
 <p>The tokenizer build verifies Unicode 17 XID and emoji identifiers, malformed
 UTF-8 rejection, NFC normalization, every current keyword and operator,
@@ -4114,8 +4160,9 @@ machine evidence and the project owner approves the protected publication
 environment. GitHub Releases is canonical, HP1 is a non-blocking verified
 mirror, artifacts and versioned documentation are immutable, and only the
 latest stable release receives best-effort support. Signing credentials and the
-final clean-machine run remain external 1.0 release gates. Full-functionality
-VS Code extension work is paused and is not a 1.0 release requirement.</p>
+final clean-machine run remain external 1.0 release gates.
+Full-functionality VS Code extension work has resumed; matching extension
+tests and compiler capabilities are part of every release gate.</p>
 
 
 

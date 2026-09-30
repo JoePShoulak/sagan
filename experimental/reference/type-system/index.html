@@ -3112,6 +3112,8 @@
       
         
       
+        
+      
     
     
     
@@ -3294,6 +3296,42 @@
     
   
     Release lifecycle
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/ecosystem-release-readiness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem release readiness
   
 
     
@@ -3783,7 +3821,9 @@ signatures can therefore require a specific unit. Unit metadata is compile-time
 only, and the C++ backend stores ordinary native numeric and geometry values.</p>
 <p>Generic parameters are invariant: <code>Box&lt;Child&gt;</code> is not automatically a
 <code>Box&lt;Parent&gt;</code>. Variance, borrowing, user-defined implicit conversions, and a
-general compile-time-constant system are deferred.</p>
+general compile-time evaluation of <code>const</code> expressions remain deferred.
+<code>const</code> currently means a type-checked immutable binding and const view,
+not a compile-time value or a deep-frozen object graph.</p>
 <p>Annotations must name types. Typed variables may begin uninitialized, but they
 must be definitely assigned before use; compound assignment counts as a read.
 Non-<code>Void</code> functions must return along every guaranteed path, and statements
