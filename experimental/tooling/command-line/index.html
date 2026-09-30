@@ -3205,6 +3205,7 @@
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>bin/sagan<span class="w"> </span>--emit-cpp-modules<span class="w"> </span>path/to/main.sagan<span class="w"> </span>build/program.cpp
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>path/to/package<span class="w"> </span>build/program.cpp
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>bin/sagan<span class="w"> </span>--run-package<span class="w"> </span>path/to/package
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>bin/sagan<span class="w"> </span>--application-mode<span class="w"> </span>path/to/source-or-package
 </span></code></pre></div>
 <p>With no valid source path, the program reports command usage or a file error.
 With a source path and no mode flag, Sagan performs the implemented front-end
@@ -3234,9 +3235,18 @@ C++.
 from the package manifest's configured entry module.
 <code>--run-package</code> performs those package checks, compiles temporary C++, runs the
 configured entry, and returns its exit code.
+<code>--application-mode</code> prints <code>console</code> or <code>windowed</code>. It reads the named package
+manifest or discovers the nearest manifest for a source file; a loose file
+prints <code>console</code>.
 <code>--emit-cpp</code> performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.</p>
+<p>On Windows, <code>sagan-launch.exe</code> is the File Explorer dispatcher. Double-clicking
+a <code>.sagan</code> file obeys its package's application mode. Explorer also exposes
+<strong>Run in Terminal</strong> and <strong>Run Without Terminal</strong> overrides. Console launches
+pause before closing so output remains readable. Windowed launches redirect
+diagnostics to <code>%LOCALAPPDATA%\Sagan\logs\latest-launch.log</code> and display a native
+error dialog when execution fails.</p>
 <p>The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across
 large syntax trees.</p>

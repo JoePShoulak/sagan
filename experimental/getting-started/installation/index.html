@@ -676,6 +676,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#windows-installer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows installer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3132,6 +3143,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#windows-installer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows installer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3164,23 +3186,51 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="installation">Installation</h1>
+<h2 id="windows-installer">Windows installer</h2>
+<p>Windows x64 is the initial supported installation platform. The generated Inno
+Setup installer provides per-user or administrator-selected installation,
+location and task selection, progress, Start-menu and PATH integration, clean
+uninstallation, a <code>.sagan</code> file association, and Explorer launch overrides. It
+bundles the UCRT64 compiler toolchain used by the current C++ backend, so an
+installed copy does not require a separate MSYS2 or <code>g++</code> installation.</p>
+<p>After installation, open a new terminal and run:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sagan<span class="w"> </span>--version
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sagan<span class="w"> </span>path/to/program.sagan
+</span></code></pre></div>
+<p>Double-clicking a loose <code>.sagan</code> file opens a terminal by default. A package may
+select terminal-free launch behavior in <code>sagan.toml</code>:</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[application]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"windowed"</span>
+</span></code></pre></div>
+<p>Use <code>mode = "console"</code> to select a terminal explicitly. Explorer's <strong>Run in
+Terminal</strong> and <strong>Run Without Terminal</strong> actions override the configured choice
+for one launch. Windowed failures are recorded at
+<code>%LOCALAPPDATA%\Sagan\logs\latest-launch.log</code> and reported with a native dialog.</p>
+<p>Windows installer artifacts are built and smoke-tested by the Windows Installer
+workflow. macOS and Linux installers remain planned targets; their future
+support must preserve this manifest contract without pretending they are
+currently supported.</p>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>Development is currently documented for <strong>Git Bash on Windows</strong> with an
+<p>Building Sagan from source is currently documented for <strong>Git Bash on Windows</strong> with an
 <strong>MSYS2 UCRT64</strong> C++ toolchain. The build uses C++23 and expects <code>g++</code>,
 <code>make</code>, <code>bash</code>, and <code>cygpath</code>.</p>
 <p>From the repository root:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bash<span class="w"> </span>scripts/test.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bash<span class="w"> </span>scripts/test.sh
 </span></code></pre></div>
 <p>That script adds the UCRT64 and Unix tool directories to <code>PATH</code>, creates a
 repository-local temporary directory, performs a clean build, prints the
 Git-derived version, runs the tokenizer, parser, renderer, and CLI test suites,
 and verifies <code>--version</code>.</p>
 <p>To build without running the test script:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>all
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>all
 </span></code></pre></div>
 <p>The resulting executable is <code>bin/sagan</code>.</p>
+<p>Build the Windows installer locally with Inno Setup 6 installed:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bash<span class="w"> </span>scripts/windows/build_installer.sh
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>bash<span class="w"> </span>scripts/windows/test_installer.sh
+</span></code></pre></div>
 <p>For documentation tooling, install Python 3 and run:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>setup
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>setup
 </span></code></pre></div>
 <p>The documentation virtual environment and generated site live under the ignored
 <code>build/</code> directory.</p>
