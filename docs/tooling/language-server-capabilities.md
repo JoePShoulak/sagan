@@ -1,0 +1,62 @@
+---
+title: Language-server capabilities
+status: work-in-progress
+publication_ready: false
+verified_in: null
+verified_on: null
+verified_by: null
+---
+
+# Language-server capabilities
+
+Sagan does not yet ship a language server. This document defines the guarantees
+the completed Sagan 1.0 server must satisfy and the capability-discovery shape
+clients may rely on. It is not a claim that blocked capabilities work today.
+
+## Baseline guarantees
+
+The completed server will:
+
+- speak Language Server Protocol over stdio without non-protocol stdout;
+- identify its compiler, language, service-schema, project-model, and available
+  metadata-catalog versions during initialization;
+- use UTF-16 LSP positions while retaining exact UTF-8 byte ranges internally;
+- analyze unsaved, versioned overlays across multiple open files;
+- reject stale edits and suppress results older than the current document;
+- report partial, recovered, cancelled, stale, and complete states honestly;
+- publish stable coded diagnostics with related locations and fixes;
+- negotiate and advertise only implemented capabilities;
+- obtain syntax, semantics, formatting, project, build, and documentation data
+  exclusively from reusable Sagan compiler libraries; and
+- remain deterministic for identical workspace snapshots and configuration.
+
+## Target Sagan 1.0 capabilities
+
+After the roadmap gates pass, the server guarantees synchronization,
+diagnostics, hover, definition, type definition, implementations, references,
+highlights, signature help, completion, semantic tokens, document/workspace
+symbols, folding, selection ranges, import links, inlay hints, rename, type and
+call hierarchies, code actions, formatting, and required file notifications.
+
+Individual refactorings are advertised only when their safety proof is
+implemented. Test discovery is advertised only after Sagan defines a language
+or project test model. Debug Adapter Protocol support is separate; the language
+server may expose debug metadata discovery but does not claim to be a debugger.
+
+## Capability discovery
+
+In addition to normal LSP initialization, Sagan-specific experimental metadata
+uses the versioned `sagan.language-service/1` schema and reports:
+
+- supported position encodings;
+- strict and recovery analysis support;
+- source, standard-library, and package documentation catalogs;
+- formatter and refactoring action IDs;
+- check/build/run/test operation availability;
+- source-map and debugger-metadata availability;
+- cancellation and incremental synchronization modes; and
+- explicit unavailability reasons for compiler features not present in a build.
+
+Clients must treat missing or false capabilities as unavailable. They must not
+fill a missing compiler capability with duplicated language logic.
+

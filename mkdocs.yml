@@ -127,6 +127,11 @@ nav:
       - Diagnostics: tooling/diagnostics.md
       - C++ backend: tooling/cpp-backend.md
       - Editor support: tooling/editor-support.md
+      - Language-service audit: tooling/language-service-audit.md
+      - Language-service contracts: tooling/language-service-contracts.md
+      - Language-service roadmap: tooling/language-service-roadmap.md
+      - Editor feature readiness: tooling/extension-readiness.md
+      - Language-server capabilities: tooling/language-server-capabilities.md
   - Implementation:
       - implementation/index.md
       - Architecture: implementation/architecture.md
