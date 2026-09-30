@@ -3800,6 +3800,9 @@ public type, solver, or runtime behavior is established by this page.</p>
 same mathematical and simulation vocabulary as the language. Unlike math, it
 will require an explicit import so programs that do not need physics do not
 incur its dependencies or runtime costs.</p>
+<p>Native units are already a language feature; they do not require importing the
+physics library. The library will use those checked units rather than inventing
+a second unit system.</p>
 <h2 id="intended-role">Intended role</h2>
 <p>The library will eventually provide the supported physical-modeling facilities
 for Sagan simulations. Its exact scope and subdivision must be decided from

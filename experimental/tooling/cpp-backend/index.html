@@ -3670,14 +3670,14 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="c-backend">C++ backend</h1>
-<p><strong>Status: initial executable subset implemented.</strong></p>
 <p><code>bin/sagan --emit-cpp</code> emits C++ for the checked executable subset. Passing a
 source path directly compiles and runs it, while <code>--run-package</code> does the same
 for a manifest-backed package. The backend includes checked
 numeric helpers, collections, dimensioned values, reference-counted classes,
 weak class fields with optional reads,
 native face interfaces, and runtime face dispatch. Windows is exercised by the
-local demo and Linux by CI; broader platform guarantees remain future work.</p>
+local demo and Linux by CI. Windows x64 is the supported distribution target;
+other packaged platforms remain future work.</p>
 <p>The driver uses <code>CXX</code> when set and otherwise invokes <code>g++</code>. <code>SAGAN_CXXFLAGS</code>
 may replace its strict C++23 development flags. Generated source and binaries
 live in a per-run temporary directory and are removed afterward; Sagan also

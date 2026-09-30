@@ -3672,13 +3672,16 @@
 <h1 id="editor-support">Editor support</h1>
 <p>The repository contains an early VS Code extension under
 <code>editors/vscode-sagan/</code> and a packaged <code>.vsix</code> file.</p>
-<p><strong>Implemented:</strong> version 0.1.0 associates <code>.sagan</code> files with Sagan and uses a
+<p>Version 0.1.0 associates <code>.sagan</code> files with Sagan and uses a
 tokenizer-aligned TextMate grammar for declarations, keywords, literals,
 operators, punctuation, comments, strings and interpolation, Unicode
 identifiers, private members, and mutating method names.</p>
-<p>This is lexical coloring only. There is no language
-server, IntelliSense, parser-backed validation, formatting engine, refactoring,
-or semantic highlighting.</p>
+<p>This is lexical coloring only: it colors text according to token-shaped
+patterns. There is no language server, IntelliSense, parser-backed validation,
+formatting engine, refactoring, or semantic highlighting yet. The compiler now
+contains reusable document, diagnostic, workspace, and semantic-index
+foundations for those later features, so the extension will not need to
+reimplement Sagan's rules.</p>
 <p>Run the extension in an Extension Development Host with <code>F5</code>, or package it from
 <code>editors/vscode-sagan/</code> with <code>npx --yes @vscode/vsce package</code> and install the
 resulting VSIX. Treat coloring as an editing aid, not as proof that a construct

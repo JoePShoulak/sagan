@@ -3682,8 +3682,10 @@ hover information, go-to-definition, formatter, refactoring, or semantic
 diagnostics. The extension should be evaluated as basic syntax coloring only.
 See <a href="../../getting-started/editor-support/">getting-started editor support</a> for
 installation.</p>
-<p>Compiler-owned editor infrastructure is being prepared separately from the
-extension. Track the <a href="../extension-readiness/">editor feature readiness checklist</a>
+<p>Compiler-owned editor infrastructure is being built separately from the
+extension. Source snapshots, diagnostics, recovering syntax, workspace
+overlays, and stable semantic identities are available; position-based queries
+and LSP transport are not. Track the <a href="../extension-readiness/">editor feature readiness checklist</a>
 and <a href="../language-server-capabilities/">language-server capability contract</a>.
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.</p>

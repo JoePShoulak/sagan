@@ -4338,8 +4338,8 @@ top-level variables; functions; composition; <code>self</code>; and resolved ref
 <p>The script prints the input's scope/symbol/resolution model, then confirms that
 <code>examples/semantic_undefined_error.sagan</code> and
 <code>examples/semantic_duplicate_error.sagan</code> fail with focused diagnostics. This
-demonstrates the first semantic pass only; it does not type-check or execute the
-source.</p>
+demonstrates name and scope analysis only; use the type or execution demos for
+later compiler stages.</p>
 <h2 id="type-checking-demonstration">Type-checking demonstration</h2>
 <p><code>examples/type_demo.sagan</code> demonstrates scalar inference, integer-width
 selection, annotations, lossless numeric widening, calls, overloads,
@@ -4349,11 +4349,10 @@ dimensioned Cartesian vector and point literals plus spherical literals.</p>
 </span></code></pre></div>
 <p>The script prints a successful <code>TypeModel</code>, then confirms focused failures for
 an incorrect return type, an uninferable variable, heterogeneous collections,
-and an invalid vector component. This is not an execution demo, and <code>Unknown</code>
-still marks deferred member and user-defined-type semantics.</p>
+and an invalid vector component. This is not an execution demo.</p>
 <h2 id="executable-entry-demonstration">Executable-entry demonstration</h2>
-<p><code>examples/entry_demo.sagan</code> is the first source fixture shaped like an
-executable program. It has a parameterless <code>main(): Int</code>, local arithmetic,
+<p><code>examples/entry_demo.sagan</code> is a small source fixture shaped like an executable
+program. It has a parameterless <code>main(): Int</code>, local arithmetic,
 conditional control flow, and guaranteed returns.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>bash<span class="w"> </span>scripts/entry_demo.sh
 </span></code></pre></div>
@@ -4361,7 +4360,7 @@ conditional control flow, and guaranteed returns.</p>
 uninitialized-read, and unreachable-statement diagnostics. It still does not
 generate or execute native code.</p>
 <h2 id="native-execution-demonstration">Native execution demonstration</h2>
-<p><code>examples/execution_demo.sagan</code> is the first end-to-end executable fixture. It
+<p><code>examples/execution_demo.sagan</code> is the broad end-to-end executable fixture. It
 calls an emoji-named function to compute <code>40 + 2</code>, builds and iterates a typed
 countdown array using a spread, reads a checked array index, formats interpolated
 strings,
@@ -4390,8 +4389,8 @@ negative integer exponents, <code>0 ^ 0</code>, fixed-width integer power overfl
 checked addition, subtraction, multiplication, division, remainder, negation,
 increment, decrement, vector component overflow, and vector division-by-zero
 failures
-raise runtime errors. This demonstrates only the documented initial backend
-subset, not the entire parsed language.</p>
+raise runtime errors. Features listed as deferred in the reference—such as
+generator execution and spherical arithmetic—are intentionally absent.</p>
 <p>The string error fixture demonstrates the focused diagnostic for an empty
 <code>${}</code> interpolation. The collection fixture demonstrates the minimum
 two-element vector rule.

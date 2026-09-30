@@ -3669,11 +3669,14 @@
 <li>Bash scripts for compiler tests and documentation;</li>
 <li>semantic analysis, type checking, C++ generation, and direct native execution;</li>
 <li>package/module discovery and a self-contained Windows installer;</li>
+<li>a reusable compiler library, recovering document analysis, workspace
+  overlays, and a compiler-owned semantic index for future editor features;</li>
 <li>an early VS Code syntax-highlighting extension; and</li>
 <li>MkDocs and Mike for experimental and released versioned documentation.</li>
 </ul>
-<p>There is no package registry, formatter, debugger integration, language server,
-REPL, or reusable editor-facing language-service layer yet. The
+<p>There is no package registry, formatter, debugger integration, Language Server
+Protocol server, or REPL yet. The reusable language-service foundation exists,
+but position-based queries and editor protocol transport are still future work. The
 <a href="language-service-audit/">readiness audit</a>, <a href="language-service-contracts/">proposed contracts</a>,
 <a href="language-service-roadmap/">implementation roadmap</a>, and
 <a href="extension-readiness/">extension readiness checklist</a> define the work needed

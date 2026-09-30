@@ -3753,8 +3753,8 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bash<span class="w"> </span>scripts/test.sh
 </span></code></pre></div>
 <p>The test script expects <code>make</code>, <code>g++</code>, and <code>cygpath</code>, builds with C++23
-warnings enabled as errors, runs tokenizer self-tests, and prints the current
-version.</p>
+warnings enabled as errors, runs the complete compiler and CLI test suite, and
+prints the current version.</p>
 <p>Useful commands:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>demo
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>make<span class="w"> </span>get-version
@@ -3782,8 +3782,8 @@ treating every working build as an official release.</p>
 <p>The version source is regenerated on every build. Use <code>fix:</code> for a patch,
 <code>feat:</code> for a minor change, and <code>!</code> or a <code>BREAKING CHANGE:</code> footer for a major
 change. See the <a href="../versioning/">versioning workflow</a> for badge preparation and
-verification. Public release tags and source-compatibility guarantees will be
-specified before the first release.</p>
+verification. Public releases follow the signed-tag and compatibility rules in
+the <a href="../release-lifecycle/">release lifecycle</a>.</p>
 
 
 

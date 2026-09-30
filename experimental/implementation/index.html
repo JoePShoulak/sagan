@@ -3662,23 +3662,22 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="implementation">Implementation</h1>
-<p>The present executable implements the syntactic front end and initial semantic
-pass of a future compiler:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>UTF-8 source -&gt; tokenizer -&gt; parser -&gt; AST -&gt; name analysis -&gt; type checking -&gt; initial C++ emission
+<p>The compiler implements the full path from source text to a native executable:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>UTF-8 source -&gt; tokenizer -&gt; parser -&gt; AST -&gt; name analysis -&gt; type checking -&gt; C++ emission
 </span></code></pre></div>
-<p>The initial executable path is:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>validated subset -&gt; generated C++ -&gt; g++ (demo script) -&gt; native executable
+<p>The executable path is:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>validated program -&gt; generated C++ -&gt; g++ -&gt; native executable
 </span></code></pre></div>
-<p>This path is operational for the documented minimal subset. Read about the <a href="architecture/">architecture</a>,
+<p>This path is operational for the documented language. Read about the <a href="architecture/">architecture</a>,
 <a href="tokenizer/">tokenizer</a>, <a href="parser/">parser</a>, and
 <a href="schematic-foundations/">Schematic-derived foundations</a>. The
-<a href="semantic-analysis/">semantic analyzer</a> page records the implemented first
-pass and its next boundary. The <a href="code-generation/">code generator</a> records
-the supported initial native subset and its deliberate limitations.</p>
-<p>The implemented semantic subset is now sufficient to validate the shape and
-control-flow safety of a small executable program. The first C++ emission slice
-is complete; widening backend coverage and integrating runtime facilities are
-the next pipeline stage.</p>
+<a href="semantic-analysis/">semantic analyzer</a> page explains name, type, and
+control-flow checking. The <a href="code-generation/">code generator</a> records the
+native backend and its deliberate limitations.</p>
+<p>Editor-facing analysis reuses the same compiler logic through immutable source
+snapshots, recovering syntax, unsaved overlays, structured diagnostics, and a
+semantic index. Position-based queries, formatting, safe edits, build/debug
+contracts, and Language Server Protocol transport remain separate later work.</p>
 
 
 

@@ -3769,7 +3769,6 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="parser">Parser</h1>
-<p><strong>Status: complete for the current syntax specification.</strong></p>
 <p>The strict parser consumes the token stream and constructs typed,
 ownership-safe Sagan syntax trees with source-spanned diagnostics. The separate
 compiler-owned <code>src/syntax</code> layer wraps it for editor workloads, retaining
@@ -3778,7 +3777,7 @@ after malformed or incomplete input.</p>
 <h2 id="implemented-slices">Implemented slices</h2>
 <ul>
 <li>Programs and newline-separated declarations</li>
-<li><code>let</code> declarations with optional simple type annotations and initializers</li>
+<li><code>let</code> declarations with optional type annotations and initializers</li>
 <li>Identifier, numeric, Boolean, and grouped primary expressions</li>
 <li>Prefix and postfix operators</li>
 <li>Calls with zero or more arguments</li>
@@ -3811,7 +3810,8 @@ after malformed or incomplete input.</p>
 <li><code>hope</code>/<code>unless</code>/<code>finally</code> exception regions and value-bearing <code>scream</code></li>
 <li><code>face</code> signatures and default methods, plus <code>is</code>/<code>has</code> composition lists</li>
 <li><code>class</code> fields, methods, leading-dot private methods, and <code>self</code></li>
-<li>Simple newline- or comma-separated <code>enum</code> members</li>
+<li>Newline- or comma-separated enum members, including typed payloads and
+  explicit numeric tags</li>
 <li>Documentation comments on individual enum members</li>
 <li>Named block- or expression-bodied functions with optional annotations</li>
 <li>Anonymous expression-bodied lambdas with optional annotations</li>

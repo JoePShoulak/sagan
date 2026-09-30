@@ -3789,10 +3789,11 @@ the front end:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
 </span></code></pre></div>
 <p>The parser suite establishes syntactic correctness for the current grammar. The
-semantic suite establishes the implemented scope, name-resolution, and initial
-scalar/function type rules. Coverage does not establish deferred type
-relationships or full runtime behavior. The execution demo does establish that
-the current minimal generated C++ compiles and runs natively.</p>
+semantic suite covers scopes, names, types, generics, classes, faces, modules,
+units, ownership rules, and control flow. Coverage measures which implementation
+lines the tests execute; it does not by itself prove that every language rule is
+correct. Execution demos additionally prove that representative generated C++
+compiles and runs natively.</p>
 
 
 

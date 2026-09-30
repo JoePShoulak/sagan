@@ -3670,7 +3670,7 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="diagnostics">Diagnostics</h1>
-<p><strong>Implemented tooling foundation:</strong> diagnostics have a compiler-owned
+<p>Diagnostics have a compiler-owned
 structured form with schema <code>sagan.language-service/1</code>, stable phase codes,
 severity, owning phase, byte and UTF-16 ranges, message, related-location, note,
 and fix containers. Terminal text and JSON are separate renderers. Strict batch
@@ -3690,7 +3690,7 @@ practical; they never make malformed source valid for strict compilation.</p>
 the resulting structured diagnostics:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>editor-tooling-demo
 </span></code></pre></div>
-<p><strong>Implemented:</strong> lexical failures use <code>parser::parse_error</code> with source spans
+<p>Lexical failures use <code>parser::parse_error</code> with source spans
 and focused messages. Current examples include malformed numeric literals,
 invalid digit separators, incomplete scientific exponents, unknown characters,
 unknown or malformed escapes, and unterminated strings, interpolation, or block
@@ -3699,7 +3699,7 @@ comments.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bin/sagan<span class="w"> </span>--tokens<span class="w"> </span>examples/tokenizer_error.sagan
 </span></code></pre></div>
 <p>The diagnostic identifies the invalid source region for <code>1e</code>.</p>
-<p><strong>Implemented:</strong> the parser produces focused syntax diagnostics for malformed
+<p>The parser produces focused syntax diagnostics for malformed
 assignments and member access, misplaced or incomplete declarations, invalid
 control flow, malformed interpolation and collections, exception constructs,
 documentation-comment placement, and other established grammar rules. Run the

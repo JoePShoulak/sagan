@@ -3945,9 +3945,11 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="language-service-contracts">Language-service contracts</h1>
-<p>These proposed C++ contracts precede large implementation changes. Names may
-receive mechanical refinement, but their ownership boundaries and invariants
-are the editor-integration contract.</p>
+<p>These C++ contracts guide editor-tooling implementation. The source,
+diagnostic, recovering-syntax, workspace, and semantic-index foundations are
+implemented; later sections also describe APIs that remain on the roadmap.
+Names may receive mechanical refinement, but their ownership boundaries and
+invariants are the editor-integration contract.</p>
 <h2 id="library-boundaries">Library boundaries</h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sagan-source       immutable snapshots, URI/path identity, line index, edits
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sagan-diagnostics  structured diagnostics, fixes, result states, rendering
