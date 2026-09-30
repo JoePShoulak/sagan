@@ -5,6 +5,7 @@
 #include "../source/source.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -28,6 +29,7 @@ namespace sagan::language_service
   {
     semantic::semantic_model model;
     semantic::semantic_index index;
+    std::optional<semantic::type_model> types;
   };
 
   struct capabilities

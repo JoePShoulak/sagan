@@ -173,6 +173,10 @@ classifications, folding regions, and resolved import links. A separate
 workspace query searches indexed declarations. Completion currently offers
 visible lexical symbols and built-ins with a versioned replacement range;
 it does not claim member/context-sensitive or standard-library completion.
+Strict type-checked snapshots also retain resolved call metadata so
+`signature_help` can report parameter/result types and the active argument,
+including nested calls. It does not yet provide parameter names, alternate
+overloads, documentation, or recovery for incomplete calls.
 A version or document-identity mismatch returns `stale`;
 invalid UTF-16 boundaries return `incomplete`. Its selection ranges come from
 recovering syntax tokens, so names in comments or strings do not masquerade as

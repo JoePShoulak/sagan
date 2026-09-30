@@ -38,6 +38,7 @@ namespace semantic
   struct resolved_call
   {
     parser::span range;
+    int callee_end{};
     std::vector<std::string> parameter_types;
     std::string result_type;
   };

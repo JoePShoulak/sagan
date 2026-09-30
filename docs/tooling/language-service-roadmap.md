@@ -129,8 +129,11 @@ classifications, workspace symbol search, block/comment/string folding,
 resolved import links, and lexical-scope completion. Completion is deliberately
 limited to visible lexical declarations and built-ins; member/import context,
 keyword validity, named arguments, and the standard-library catalog remain
-unimplemented. The API also lacks type definitions, signatures, selection
-ranges, and inlay hints. None of these library queries are advertised as editor
+unimplemented. Resolved-call signature information now reports the selected
+argument and compiler-resolved parameter/result types for valid strict source;
+parameter names, overload alternatives, documentation, and incomplete-call
+recovery remain to do. The API also lacks type definitions, selection ranges,
+and inlay hints. None of these library queries are advertised as editor
 capabilities while LSP transport is absent.
 
 - Implement symbol-at-position, hover, resolved types, definition, type

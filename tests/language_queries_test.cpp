@@ -39,7 +39,7 @@ auto main() -> int
   const auto indexed = language_service::index_document(document);
   require(indexed.value.has_value(), "source did not produce a semantic index");
   const language_service::document_queries query(document, indexed.value->index, nullptr,
-                                                  &indexed.value->model);
+                                                  &indexed.value->model, &*indexed.value->types);
 
   const auto emoji_use = at(text, "🚀(41)");
   const auto selected = query.symbol_at(emoji_use);
@@ -96,15 +96,29 @@ auto main() -> int
               rocket_completion.value->front().label == "🚀" &&
               rocket_completion.value->front().replacement.bytes.begin == emoji_use,
           "emoji prefix completion did not preserve the replacement range");
+  const auto rocket_signature = query.signature_help(emoji_use + std::string("🚀(").size());
+  require(rocket_signature.value && rocket_signature.value->active_parameter == 0 &&
+              rocket_signature.value->parameter_types.size() == 1 &&
+              rocket_signature.value->result_type == "Int64" &&
+              rocket_signature.value->label.find("🚀(") == 0,
+          "resolved call signature was not available inside its argument list");
+  require(!query.signature_help(at(text, "return value")).value,
+          "signature help appeared outside a call");
   const auto no_model = language_service::document_queries(document, indexed.value->index);
   require(no_model.completions(emoji_use).state == diagnostics::result_state::incomplete,
           "completion without scope metadata silently returned an empty list");
+  require(no_model.signature_help(emoji_use).state == diagnostics::result_state::incomplete,
+          "signature help without resolved calls silently returned an empty result");
 
   const source::document_snapshot changed(document.identity(), 5, text);
   const language_service::document_queries stale(changed, indexed.value->index);
   require(stale.symbol_at(emoji_use).state == diagnostics::result_state::stale &&
               stale.document_symbols().state == diagnostics::result_state::stale,
           "old index was used for a newer document");
+  const language_service::document_queries stale_signature(changed, indexed.value->index, nullptr,
+                                                            &indexed.value->model, &*indexed.value->types);
+  require(stale_signature.signature_help(emoji_use).state == diagnostics::result_state::stale,
+          "signature help accepted resolved calls from an older document version");
 
   const std::string composition =
       "face Readable { fun read(): Int }\n"
@@ -154,6 +168,29 @@ auto main() -> int
               std::none_of(before_declaration.value->begin(), before_declaration.value->end(),
                            [](const auto &item) { return item.label == "altitude"; }),
           "completion exposed a local before its declaration");
+
+  const std::string nested_calls =
+      "fun twice(value: Int): Int => value + value\n"
+      "fun add(left: Int, right: Int): Int => left + right\n"
+      "fun main(): Int => add(twice(20), 2)\n";
+  const source::document_snapshot nested_document(
+      source::document_identity{source::document_id{83}, source::document_uri{"untitled:nested-calls"}, {}},
+      2, nested_calls);
+  const auto nested_index = language_service::index_document(nested_document);
+  require(nested_index.value && nested_index.value->types,
+          "nested call fixture did not retain resolved call metadata");
+  const language_service::document_queries nested_query(nested_document, nested_index.value->index,
+                                                          nullptr, &nested_index.value->model,
+                                                          &*nested_index.value->types);
+  const auto inner_signature = nested_query.signature_help(at(nested_calls, "twice(20)") + 7);
+  require(inner_signature.value && inner_signature.value->label.starts_with("twice(") &&
+              inner_signature.value->active_parameter == 0,
+          "signature help did not choose the innermost call");
+  const auto second_signature = nested_query.signature_help(at(nested_calls, ", 2)") + 2);
+  require(second_signature.value && second_signature.value->label.starts_with("add(") &&
+              second_signature.value->active_parameter == 1 &&
+              second_signature.value->parameter_types.size() == 2,
+          "signature help did not track the second argument of the outer call");
 
   const source::disk_source_provider disk;
   const auto graph = modules::resolve("tests/fixtures/modules/module_demo/main.sagan", disk);

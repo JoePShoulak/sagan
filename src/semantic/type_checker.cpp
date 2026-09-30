@@ -1454,7 +1454,8 @@ namespace semantic
                 }
                 require(!viable.empty(), "No matching constructor for '" + constructed.base + "'", value.range);
                 require(viable.size() == 1, "Ambiguous constructor for '" + constructed.base + "'", value.range);
-                model.calls.push_back(resolved_call{value.range, viable.front().first.parameters, constructed.base});
+                model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                    viable.front().first.parameters, constructed.base});
                 type_arguments = std::move(viable.front().second);
               }
               require(std::none_of(type_arguments.begin(), type_arguments.end(), [](const auto &type)
@@ -1528,7 +1529,8 @@ namespace semantic
             require(!viable.empty(), "No matching overload for '" + requested.base + "'", value.range);
             require(viable.size() == 1, "Ambiguous overload for '" + requested.base + "'", value.range);
             static_cast<void>(record(*call->callee, "Function"));
-            model.calls.push_back(resolved_call{value.range, viable.front().parameters, viable.front().result});
+            model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                viable.front().parameters, viable.front().result});
             return record(value, viable.front().result);
           }
           static_cast<void>(expression(*call->callee));
@@ -1573,7 +1575,8 @@ namespace semantic
           for (std::size_t index = 0; index < arguments.size(); ++index)
             require_compatible(instantiated.parameters[index], arguments[index], call->arguments[index]->range,
                                "Callable argument");
-          model.calls.push_back(resolved_call{value.range, instantiated.parameters, instantiated.result});
+          model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                              instantiated.parameters, instantiated.result});
           return record(value, instantiated.result);
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))

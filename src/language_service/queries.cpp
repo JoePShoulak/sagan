@@ -57,8 +57,9 @@ namespace sagan::language_service
   document_queries::document_queries(const source::document_snapshot &document,
                                      const semantic::semantic_index &index,
                                      const semantic::workspace_semantic_index *workspace,
-                                     const semantic::semantic_model *model)
-      : document_(document), index_(index), workspace_(workspace), model_(model)
+                                     const semantic::semantic_model *model,
+                                     const semantic::type_model *types)
+      : document_(document), index_(index), workspace_(workspace), model_(model), types_(types)
   {
     auto analyzed = syntax::analyze(document);
     if (analyzed.value)
@@ -471,6 +472,75 @@ namespace sagan::language_service
     });
     return result<std::vector<completion_item>>(document_.version(), diagnostics::result_state::complete,
                                                 std::move(values));
+  }
+
+  auto document_queries::signature_help(const source::byte_offset offset) const
+    -> diagnostics::analysis_result<signature_information>
+  {
+    if (document_.version() != index_.version() || document_.identity().id != index_.document().id)
+      return result<signature_information>(document_.version(), diagnostics::result_state::stale);
+    if (!document_.to_utf16(offset) || !types_)
+      return result<signature_information>(document_.version(), diagnostics::result_state::incomplete);
+
+    const semantic::resolved_call *selected = nullptr;
+    for (const auto &call : types_->calls)
+    {
+      if (call.range.begin < 0 || call.callee_end < call.range.begin ||
+          static_cast<std::size_t>(call.callee_end) > offset ||
+          offset >= static_cast<std::size_t>(call.range.end)) continue;
+      if (!selected || call.range.end - call.range.begin < selected->range.end - selected->range.begin)
+        selected = &call;
+    }
+    if (!selected)
+      return result<signature_information>(document_.version(), diagnostics::result_state::complete);
+
+    const syntax::lossless_token *opening = nullptr;
+    for (const auto &token : tokens_)
+      if (token.kind == tokens::LPAREN &&
+          token.range.begin >= static_cast<std::size_t>(selected->callee_end) &&
+          token.range.end <= static_cast<std::size_t>(selected->range.end))
+      {
+        opening = &token;
+        break;
+      }
+    if (!opening || offset < opening->range.end)
+      return result<signature_information>(document_.version(), diagnostics::result_state::complete);
+
+    std::size_t active_parameter = 0;
+    int parentheses = 1;
+    int brackets = 0;
+    int braces = 0;
+    for (const auto &token : tokens_)
+    {
+      if (token.range.begin < opening->range.end) continue;
+      if (token.range.begin >= offset) break;
+      if (token.kind == tokens::LPAREN) ++parentheses;
+      else if (token.kind == tokens::RPAREN) --parentheses;
+      else if (token.kind == tokens::LBRACKET) ++brackets;
+      else if (token.kind == tokens::RBRACKET) --brackets;
+      else if (token.kind == tokens::LBRACE) ++braces;
+      else if (token.kind == tokens::RBRACE) --braces;
+      else if (token.kind == tokens::COMMA && parentheses == 1 && brackets == 0 && braces == 0)
+        ++active_parameter;
+      if (parentheses <= 0) break;
+    }
+    std::string label = std::string(document_.text().substr(
+        static_cast<std::size_t>(selected->range.begin),
+        static_cast<std::size_t>(selected->callee_end - selected->range.begin)));
+    label += "(";
+    for (std::size_t i = 0; i < selected->parameter_types.size(); ++i)
+    {
+      if (i > 0) label += ", ";
+      label += selected->parameter_types[i];
+    }
+    label += "): " + selected->result_type;
+    return result<signature_information>(
+        document_.version(), diagnostics::result_state::complete,
+        signature_information{{document_.identity().id,
+                               {static_cast<source::byte_offset>(selected->range.begin),
+                                static_cast<source::byte_offset>(selected->range.end)}},
+                              std::move(label), selected->parameter_types, selected->result_type,
+                              active_parameter});
   }
 
   auto search_workspace_symbols(const semantic::workspace_semantic_index &workspace,

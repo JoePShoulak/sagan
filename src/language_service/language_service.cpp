@@ -177,7 +177,7 @@ namespace sagan::language_service
       if (!recovered) type_model = semantic::check_types(tree);
       auto index = semantic::build_index(document, model, type_model ? &*type_model : nullptr);
       return {recovered ? diagnostics::result_state::recovered : diagnostics::result_state::complete,
-              semantic_snapshot{std::move(model), std::move(index)},
+              semantic_snapshot{std::move(model), std::move(index), std::move(type_model)},
               std::move(syntax_result.diagnostics), document.version()};
     }
     catch (const parser::parse_error &error)

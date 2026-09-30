@@ -84,6 +84,15 @@ namespace sagan::language_service
     std::vector<source::text_edit> additional_import_edits;
   };
 
+  struct signature_information
+  {
+    source::source_range call;
+    std::string label;
+    std::vector<std::string> parameter_types;
+    std::string result_type;
+    std::size_t active_parameter{};
+  };
+
   // These queries consume one immutable analysis result. A caller must never
   // combine an index with a newer editor buffer: a mismatch returns stale.
   class document_queries
@@ -92,6 +101,7 @@ namespace sagan::language_service
     const semantic::semantic_index &index_;
     const semantic::workspace_semantic_index *workspace_;
     const semantic::semantic_model *model_;
+    const semantic::type_model *types_;
     std::vector<syntax::lossless_token> tokens_;
     std::vector<syntax::trivia> trailing_trivia_;
     std::unique_ptr<parser::program> tree_;
@@ -101,7 +111,8 @@ namespace sagan::language_service
   public:
     document_queries(const source::document_snapshot &document, const semantic::semantic_index &index,
                      const semantic::workspace_semantic_index *workspace = nullptr,
-                     const semantic::semantic_model *model = nullptr);
+                     const semantic::semantic_model *model = nullptr,
+                     const semantic::type_model *types = nullptr);
 
     auto symbol_at(source::byte_offset offset) const -> diagnostics::analysis_result<symbol_occurrence>;
     auto symbol_at(source::utf16_position position) const -> diagnostics::analysis_result<symbol_occurrence>;
@@ -122,6 +133,8 @@ namespace sagan::language_service
     auto import_links() const -> diagnostics::analysis_result<std::vector<document_link>>;
     auto completions(source::byte_offset offset) const
       -> diagnostics::analysis_result<std::vector<completion_item>>;
+    auto signature_help(source::byte_offset offset) const
+      -> diagnostics::analysis_result<signature_information>;
   };
 
   auto search_workspace_symbols(const semantic::workspace_semantic_index &workspace,

@@ -21,7 +21,7 @@ contract is not yet implemented; the extension must not reproduce it.
 | Go to definition/type definition | Stable symbols and indexed locations | **Definition query available; type definition and LSP transport blocked** |
 | Implementations/conformances | Face/class conformance index | **Face implementation query available; LSP transport blocked** |
 | References/highlights | Identity-based workspace reference index | **Position queries available; LSP transport blocked** |
-| Signature help | Resolved overload/signature query | **Blocked** |
+| Signature help | Resolved overload/signature query | **Resolved strict-call type/active-argument query available; names, overload choices, incomplete calls, and LSP transport blocked** |
 | Completion | Parser context, semantic scope/type state, module/catalog metadata | **Lexical-scope candidate query available; contextual completion and LSP transport blocked** |
 | Semantic highlighting | Stable classification vocabulary and ranges | **Compiler classification query available; LSP semantic-token transport blocked** |
 | Document symbols | Hierarchical declaration index | **Hierarchy query available; LSP transport blocked** |
