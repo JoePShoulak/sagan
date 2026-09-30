@@ -147,7 +147,10 @@ Windows is the initial supported installation platform; macOS and Linux remain
 tracked future targets. The Windows installer foundation now bundles the UCRT64
 compiler used by the C++ backend, places `sagan` on PATH, supplies location,
 permission, progress, Start-menu, file-association, and uninstall behavior, and
-is built and smoke-tested in CI. An optional `[application] mode` selects
+is built and smoke-tested in CI. Both installed entry-point executables
+statically link their GCC/C++ startup runtimes, and the smoke test removes
+compiler runtime directories from `PATH` before exercising the CLI, generated
+program, and Explorer launcher. An optional `[application] mode` selects
 `console` or `windowed` Explorer launch, loose files default to `console`, and
 context-menu verbs override either choice. Windowed failures retain a local log
 and show a native diagnostic dialog. Release artifacts will

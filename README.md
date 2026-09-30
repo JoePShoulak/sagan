@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.66.0](https://img.shields.io/badge/development-0.66.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.66.1](https://img.shields.io/badge/development-0.66.1-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -164,7 +164,9 @@ substantial. This remains an investigation rather than a settled commitment.
 Windows is the initial supported installation platform. The Windows installer
 foundation bundles the UCRT64 backend toolchain, configures PATH, supplies
 normal location/permission/progress/uninstall behavior, and registers `.sagan`
-files. Packages choose `console` or `windowed` Explorer behavior through an
+files. The compiler and Explorer launcher statically link the GCC/C++ support
+needed to start, so installed commands do not depend on MSYS2 runtime DLLs being
+present on the user's PATH. Packages choose `console` or `windowed` Explorer behavior through an
 optional `[application]` manifest section; loose files default to `console`, and
 Explorer supplies per-launch overrides. macOS and Linux remain explicit future
 targets rather than claimed current support. Release artifacts

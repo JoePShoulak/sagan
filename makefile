@@ -43,8 +43,10 @@ WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
 BUILD_TMP := build/tmp
 ifeq ($(OS),Windows_NT)
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
+WINDOWS_RUNTIME_LDFLAGS := -static -static-libgcc -static-libstdc++
 else
 BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
+WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
@@ -63,7 +65,8 @@ $(WINDOWS_LAUNCHER_RESOURCE): packaging/windows/sagan.rc packaging/windows/sagan
 
 $(WINDOWS_LAUNCHER): src/launcher/windows_launcher.cpp $(WINDOWS_LAUNCHER_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(WINDOWS_LAUNCHER_RESOURCE) -o $@ -mwindows -municode -lshell32
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(WINDOWS_LAUNCHER_RESOURCE) -o $@ \
+		$(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS) -mwindows -municode -lshell32
 else
 windows-launcher:
 	@echo "The Explorer launcher is built only on Windows."
@@ -75,7 +78,7 @@ $(COMPILER_LIBRARY): $(LIBRARY_OBJECTS)
 
 $(TARGET): $(CLI_OBJECTS) $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CLI_OBJECTS) $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CLI_OBJECTS) $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(SOURCE_DIAGNOSTICS_TEST): tests/source_diagnostics_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)

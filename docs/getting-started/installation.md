@@ -16,6 +16,12 @@ location and task selection, progress, Start-menu and PATH integration, clean
 uninstallation, a `.sagan` file association, and Explorer launch overrides. It
 bundles the UCRT64 compiler toolchain used by the current C++ backend, so an
 installed copy does not require a separate MSYS2 or `g++` installation.
+The installed `sagan.exe` and `sagan-launch.exe` statically link their GCC and
+C++ runtime support, including the MinGW threading runtime. They therefore
+start normally from a terminal or File Explorer without requiring MSYS2's
+`libgcc_s_seh-1.dll`, `libstdc++-6.dll`, or `libwinpthread-1.dll` on the user's
+`PATH`. The bundled toolchain remains available internally for
+compiling generated C++ programs.
 
 After installation, open a new terminal and run:
 
@@ -73,6 +79,13 @@ Build the Windows installer locally with Inno Setup 6 installed:
 bash scripts/windows/build_installer.sh
 bash scripts/windows/test_installer.sh
 ```
+
+The smoke test installs into an isolated directory and deliberately removes
+all UCRT64/MinGW runtime directories from `PATH`. It verifies direct CLI
+startup, compilation and execution of a generated program, windowed Explorer
+dispatch through `sagan-launch.exe`, file association, PATH registration, and
+clean uninstallation. This prevents a developer or CI MSYS2 installation from
+masking missing runtime dependencies in the packaged executables.
 
 For documentation tooling, install Python 3 and run:
 
