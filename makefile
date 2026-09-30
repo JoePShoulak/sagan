@@ -15,6 +15,7 @@ LIBRARY_SOURCES := \
 	src/language_service/edits.cpp \
 	src/language_service/formatter.cpp \
 	src/language_service/language_service.cpp \
+	src/language_service/operations.cpp \
 	src/language_service/queries.cpp \
 	src/language_service/queries_structure.cpp \
 	src/language_service/refactor.cpp \
@@ -52,6 +53,7 @@ WORKSPACE_TEST := bin/workspace-test
 SEMANTIC_INDEX_TEST := bin/semantic-index-test
 LANGUAGE_QUERIES_TEST := bin/language-queries-test
 LANGUAGE_EDITS_TEST := bin/language-edits-test
+OPERATIONS_TEST := bin/operations-test
 CONSTANTS_TEST := bin/constants-test
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
@@ -67,7 +69,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo run-demo geometry-demo units-demo editor-tooling-demo formatter-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo run-demo geometry-demo units-demo editor-tooling-demo formatter-demo operations-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -117,6 +119,10 @@ $(LANGUAGE_EDITS_TEST): tests/language_edits_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
+$(OPERATIONS_TEST): tests/operations_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+
 $(CONSTANTS_TEST): tests/constants_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
@@ -133,7 +139,7 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(CONSTANTS_TEST)
+test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(CONSTANTS_TEST)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
@@ -143,6 +149,7 @@ test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TE
 	$(SEMANTIC_INDEX_TEST)
 	$(LANGUAGE_QUERIES_TEST)
 	$(LANGUAGE_EDITS_TEST)
+	$(OPERATIONS_TEST)
 	$(CONSTANTS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
@@ -177,6 +184,9 @@ editor-tooling-demo: $(TARGET)
 
 formatter-demo: $(LANGUAGE_EDITS_TEST)
 	$(LANGUAGE_EDITS_TEST)
+
+operations-demo: $(OPERATIONS_TEST)
+	$(OPERATIONS_TEST)
 
 ast-demo: $(TARGET)
 	@mkdir -p build

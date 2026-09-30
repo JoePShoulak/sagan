@@ -187,6 +187,14 @@ Phase 6 capabilities.
 
 ## Phase 7 — operations and debugger prerequisites
 
+**Status: in progress.** The first compiler-library operation is a synchronous,
+cancellable document check. It returns source identity/version, structured
+diagnostics, an exit status when completed, and ordered progress/diagnostic
+events through both a result and optional observer. This reuses the existing
+compiler check and does not yet provide an asynchronous handle, build/run
+operations, process streams, generated artifacts, or debugger metadata.
+Run `make operations-demo` to see valid, invalid, and cancelled checks.
+
 - Refactor check/build/run into cancellable structured operations with progress,
   streams, diagnostics, exit states, and generated artifacts.
 - Add source maps, valid breakpoint locations, generated function/symbol IDs,

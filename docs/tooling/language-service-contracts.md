@@ -270,10 +270,20 @@ Editors must not carry a parallel list.
 
 ## Operations and debugger metadata
 
-Check, build, run, and eventually test operations return an operation handle,
+The target contract is for check, build, run, and eventually test operations to
+return an operation handle,
 progress events, ordered stdout/stderr events, structured diagnostics, exit
 status, cancellation outcome, and produced artifacts. Test discovery remains
 unsupported until the language supplies an authoritative test model.
+
+The first implemented slice is `run_check_operation` in `operations.hpp`.
+`sagan-operations-v1` is reported by `capabilities_json`. A check currently
+runs synchronously over an immutable document snapshot, emits ordered
+start/progress/diagnostic/finish events to an optional observer, and returns
+the same events plus identity, analyzed version, summary, diagnostics, and
+exit status. A cancelled check has no exit status. This calls the existing
+`check_document` path; it does not spawn a process or alter files. Build/run,
+streaming, asynchronous handles, and artifacts remain future Phase 7 work.
 
 Code generation emits a versioned source map connecting generated ranges and
 function identities to Sagan source ranges and symbols. Debug metadata records

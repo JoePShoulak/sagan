@@ -1,5 +1,6 @@
 #include "language_service.hpp"
 #include "documentation.hpp"
+#include "operations.hpp"
 #include "refactor.hpp"
 
 #include "../parser/lex.hpp"
@@ -81,7 +82,8 @@ namespace sagan::language_service
     std::ostringstream output;
     output << "{\"schema\":\"" << value.schema << "\",\"documentationCatalog\":\""
            << documentation_schema_version << "\",\"sourceEditsSchema\":\""
-           << source_edits_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
+           << source_edits_schema_version << "\",\"operationsSchema\":\""
+           << operations_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
            << "\"capabilities\":{\"strictDocumentCheck\":" << boolean(value.strict_document_check)
            << ",\"structuredDiagnostics\":" << boolean(value.structured_diagnostics)
            << ",\"utf16Positions\":" << boolean(value.utf16_positions)
