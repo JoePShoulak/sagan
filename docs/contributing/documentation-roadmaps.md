@@ -164,6 +164,31 @@ An audit record should contain the page, compiler revision, documentation
 version, reviewer, date, commands run, decision, open questions, and linked
 issues or design decisions.
 
+### Stage 0 — approve the documentation experience
+
+Before confirming individual language claims, review the documentation site as
+a product. Check the overall visual design, typography, color palettes,
+responsive behavior, navigation, search, version selector, status markers,
+page banners, code presentation, and accessibility. Review representative pages
+on desktop and mobile rather than judging the home page alone.
+
+Confirm the information architecture at the same time: decide whether the
+selected top-level sections and individual pages belong on the site, whether
+anything important is missing or unnecessarily separate, and whether each
+page's intended content and depth are appropriate. Use representative overview,
+tutorial, reference, example, implementation, and contributor pages to approve
+the recurring page structure before substantial polishing makes it expensive
+to change.
+
+Record approved site-wide conventions and page-selection decisions in the
+documentation workflow or an appropriate design decision. Treat unresolved
+visual, structural, navigation, or content-scope concerns as blockers for the
+later page-by-page audit.
+
+**Approval question:** do you like and agree with the site's general design,
+formatting, navigation, page selection, and intended content well enough to use
+them as the foundation for the remaining documentation audit?
+
 ### Stage 1 — orientation and the supported workflow
 
 Review Home, Getting started, installation, the first program, command-line
