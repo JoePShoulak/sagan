@@ -4219,6 +4219,13 @@ uncertain preservation cause a structured refusal rather than a risky edit.
 The explicitly disabled transformations are follow-on work, not advertised
 Phase 6 capabilities.</p>
 <h2 id="phase-7-operations-and-debugger-prerequisites">Phase 7 — operations and debugger prerequisites</h2>
+<p><strong>Status: in progress.</strong> The first compiler-library operation is a synchronous,
+cancellable document check. It returns source identity/version, structured
+diagnostics, an exit status when completed, and ordered progress/diagnostic
+events through both a result and optional observer. This reuses the existing
+compiler check and does not yet provide an asynchronous handle, build/run
+operations, process streams, generated artifacts, or debugger metadata.
+Run <code>make operations-demo</code> to see valid, invalid, and cancelled checks.</p>
 <ul>
 <li>Refactor check/build/run into cancellable structured operations with progress,
   streams, diagnostics, exit states, and generated artifacts.</li>
