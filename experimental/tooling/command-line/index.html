@@ -3602,14 +3602,15 @@ Generated C++ supports only the initial executable subset documented under
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>make<span class="w"> </span>run-demo
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>make<span class="w"> </span>geometry-demo
 </span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>make<span class="w"> </span>editor-tooling-demo
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>make<span class="w"> </span>optional-demo
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>make<span class="w"> </span>weak-demo
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>make<span class="w"> </span>payload-enum-demo
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>make<span class="w"> </span>generic-sum-demo
-</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>make<span class="w"> </span>generic-class-demo
-</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>make<span class="w"> </span>execution-demo
-</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>make<span class="w"> </span>get-version
-</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>make<span class="w"> </span>clean
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>make<span class="w"> </span>workspace-demo
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>make<span class="w"> </span>optional-demo
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>make<span class="w"> </span>weak-demo
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>make<span class="w"> </span>payload-enum-demo
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>make<span class="w"> </span>generic-sum-demo
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>make<span class="w"> </span>generic-class-demo
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>make<span class="w"> </span>execution-demo
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>make<span class="w"> </span>get-version
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>make<span class="w"> </span>clean
 </span></code></pre></div>
 <p>The wrapper scripts used for the complete local checks are:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>scripts/test.sh
@@ -3650,6 +3651,9 @@ vectors, including translation and point subtraction, then demonstrates native
 <code>s(...)</code> spherical points and <code>s&lt;...&gt;</code> spherical vectors.
 <code>editor-tooling-demo</code> prints deliberately incomplete source, capability
 discovery, and the recovered structured diagnostics produced for it.
+<code>workspace-demo</code> shows an unsaved module overlay changing import resolution,
+then demonstrates dependency cancellation, stale-result rejection, and the
+return to disk contents after close.
 <code>optional-demo</code> prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 <code>weak-demo</code> shows a live weak reference resolving to <code>Some</code>, lets its strong

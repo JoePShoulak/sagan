@@ -3721,6 +3721,15 @@ recovery remain future refinements for position queries.</p>
 <p><strong>Exit:</strong> arbitrary and partially typed UTF-8 input cannot crash; a useful
 partial tree and bounded diagnostic set are produced where practical.</p>
 <h2 id="phase-3-document-store-and-workspace-overlays">Phase 3 — document store and workspace overlays</h2>
+<p><strong>Status: foundation implemented.</strong> Thread-safe disk and overlay providers now
+support open/change/save/close, monotonic versions, validated UTF-8 byte edits,
+multiple simultaneous buffers, and overlay-first module resolution. Workspace
+state caches current results, tracks dependencies, invalidates transitive
+dependents conservatively on source changes, cancels superseded requests, and
+turns obsolete completions into <code>stale</code> results. Project manifests remain disk
+configuration; every Sagan module source read uses the provider. Export-surface
+fingerprints and finer local-only invalidation are deferred optimizations that
+do not change the service contract.</p>
 <ul>
 <li>Introduce disk and overlay <code>source_provider</code> implementations.</li>
 <li>Implement open/change/save/close with monotonic versions and validated edits.</li>

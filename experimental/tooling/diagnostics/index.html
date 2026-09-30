@@ -3405,9 +3405,10 @@ from one document. Capability discovery reports recovery as available.</p>
 </span></code></pre></div>
 <p>The reusable checker accepts immutable document snapshots and returns
 <code>complete</code>, <code>incomplete</code>, <code>recovered</code>, or <code>cancelled</code> with the analyzed document
-version. <code>stale</code> is reserved for the document-overlay phase. Recovered results
-include a partial top-level AST where practical; they never make malformed
-source valid for strict compilation.</p>
+version. Workspace analysis produces <code>stale</code> when a document or dependency
+changes before an older result can publish, and suppresses that result's value
+and diagnostics. Recovered results include a partial top-level AST where
+practical; they never make malformed source valid for strict compilation.</p>
 <p>Run the recovery demonstration, which prints deliberately incomplete Sagan and
 the resulting structured diagnostics:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>editor-tooling-demo
