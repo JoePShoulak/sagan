@@ -29,6 +29,7 @@ bin/sagan --emit-cpp path/to/source.sagan build/program.cpp
 bin/sagan --emit-cpp-modules path/to/main.sagan build/program.cpp
 bin/sagan --emit-cpp-package path/to/package build/program.cpp
 bin/sagan --run-package path/to/package
+bin/sagan --application-mode path/to/source-or-package
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -60,9 +61,19 @@ C++.
 from the package manifest's configured entry module.
 `--run-package` performs those package checks, compiles temporary C++, runs the
 configured entry, and returns its exit code.
+`--application-mode` prints `console` or `windowed`. It reads the named package
+manifest or discovers the nearest manifest for a source file; a loose file
+prints `console`.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
+
+On Windows, `sagan-launch.exe` is the File Explorer dispatcher. Double-clicking
+a `.sagan` file obeys its package's application mode. Explorer also exposes
+**Run in Terminal** and **Run Without Terminal** overrides. Console launches
+pause before closing so output remains readable. Windowed launches redirect
+diagnostics to `%LOCALAPPDATA%\Sagan\logs\latest-launch.log` and display a native
+error dialog when execution fails.
 
 The generated HTML viewer offers zoom-in, zoom-out, fit, and 100% controls.
 Mouse-wheel zoom follows the pointer, and the tree can be dragged to pan across

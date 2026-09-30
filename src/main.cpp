@@ -22,8 +22,28 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <limits>
+#endif
+
 namespace
 {
+#ifdef _WIN32
+  class console_pause final
+  {
+    bool enabled;
+
+  public:
+    explicit console_pause(const bool should_pause) : enabled(should_pause) {}
+    ~console_pause()
+    {
+      if (!enabled) return;
+      std::cout << "\nPress Enter to close this Sagan program..." << std::flush;
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+  };
+#endif
+
   struct unsupported_expression final : parser::expression
   {
     using expression::expression;
@@ -2124,11 +2144,13 @@ auto main(const int argc, char **argv) -> int
     emit_cpp_modules,
     emit_cpp_package,
     run_package,
+    application_mode,
   };
 
   output_mode mode = output_mode::tokens;
   std::string path;
   std::string output_path;
+  bool pause_after_run = false;
   if (argc == 3 && std::string(argv[1]) == "--ast")
   {
     mode = output_mode::ast_text;
@@ -2204,6 +2226,18 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::run_package;
     path = argv[2];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--application-mode")
+  {
+    mode = output_mode::application_mode;
+    path = argv[2];
+  }
+  else if (argc == 3 && (std::string(argv[1]) == "--launch-console" ||
+                         std::string(argv[1]) == "--launch-windowed"))
+  {
+    mode = output_mode::run;
+    path = argv[2];
+    pause_after_run = std::string(argv[1]) == "--launch-console";
+  }
   else if (argc == 2)
   {
     mode = output_mode::run;
@@ -2219,12 +2253,27 @@ auto main(const int argc, char **argv) -> int
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
                  "--entry FILE | --modules FILE | --package PATH | --emit-cpp FILE [OUTPUT] | "
                  "--emit-cpp-modules FILE [OUTPUT] | --emit-cpp-package PATH [OUTPUT] | "
-                 "--run-package PATH | FILE]\n";
+                 "--run-package PATH | --application-mode PATH | FILE]\n";
     return 2;
   }
+#ifdef _WIN32
+  const console_pause pause(pause_after_run);
+#else
+  static_cast<void>(pause_after_run);
+#endif
   const bool ast_mode = mode != output_mode::tokens;
   try
   {
+    if (mode == output_mode::application_mode)
+    {
+      std::optional<modules::package_manifest> package;
+      if (std::filesystem::is_directory(path) || std::filesystem::path(path).filename() == "sagan.toml")
+        package = modules::load_package(path);
+      else package = modules::discover_package(path);
+      std::cout << modules::application_mode_name(package ? package->mode : modules::application_mode::console)
+                << '\n';
+      return 0;
+    }
     if (mode == output_mode::modules)
     {
       const auto graph = modules::resolve(path);
@@ -2302,7 +2351,7 @@ auto main(const int argc, char **argv) -> int
         {
           return dynamic_cast<const parser::import_declaration *>(entry.get()) != nullptr;
         });
-        if (has_imports)
+        if (has_imports || modules::discover_package(path).has_value())
         {
           const auto linked = modules::link(path);
           static_cast<void>(semantic::analyze(linked));

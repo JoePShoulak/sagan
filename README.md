@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.60.0](https://img.shields.io/badge/development-0.60.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.61.0](https://img.shields.io/badge/development-0.61.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -156,12 +156,13 @@ cost. Cartesian/spherical conversion will be the first geometry contract taken
 up with core math after 1.0. Math, rendering, and physics
 library work remains paused until the hypercore and installation work are complete.
 
-The 1.0 readiness roadmap also includes professional installers for Windows,
-macOS, and Linux; interactive install-location, permissions, progress, and
-uninstall experiences; command-line installation paths; `sagan file.sagan`
-availability through normal shell setup; and native `.sagan` file associations.
-The visible-terminal versus background launch behavior for double-clicked source
-files remains a deliberate design decision for that milestone. Release artifacts
+Windows is the initial supported installation platform. The Windows installer
+foundation bundles the UCRT64 backend toolchain, configures PATH, supplies
+normal location/permission/progress/uninstall behavior, and registers `.sagan`
+files. Packages choose `console` or `windowed` Explorer behavior through an
+optional `[application]` manifest section; loose files default to `console`, and
+Explorer supplies per-launch overrides. macOS and Linux remain explicit future
+targets rather than claimed current support. Release artifacts
 should use GitHub Releases and package facilities, with HP1 available as a
 self-hosted distribution or mirror when useful. Immediately after 1.0 is truly
 complete—and before math, rendering, or physics library development—the project
@@ -195,6 +196,8 @@ bash scripts/ast_demo.sh
 bash scripts/ast_demo.sh --no-open
 make coverage
 bash scripts/docs.sh check
+bash scripts/windows/build_installer.sh
+bash scripts/windows/test_installer.sh
 ```
 
 Useful compiler commands include:

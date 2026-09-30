@@ -135,13 +135,14 @@ for the first core math geometry API after 1.0. All four families have fixed-siz
 component storage, frame tracking remains deferred, and future generic APIs must
 preserve the semantic and representation distinctions.
 
-The 1.0 release must also provide professional graphical installers for Windows,
-macOS, and Linux, plus platform-appropriate command-line installation. The
-installed toolchain must place `sagan` on the user's command path, support
-`sagan file.sagan`, provide normal install-location, permission, progress, and
-uninstall behavior, and register `.sagan` files for native double-click launch.
-Whether that launch opens a visible terminal or uses another execution surface
-is intentionally deferred until installer design begins. Release artifacts will
+Windows is the initial supported installation platform; macOS and Linux remain
+tracked future targets. The Windows installer foundation now bundles the UCRT64
+compiler used by the C++ backend, places `sagan` on PATH, supplies location,
+permission, progress, Start-menu, file-association, and uninstall behavior, and
+is built and smoke-tested in CI. An optional `[application] mode` selects
+`console` or `windowed` Explorer launch, loose files default to `console`, and
+context-menu verbs override either choice. Windowed failures retain a local log
+and show a native diagnostic dialog. Release artifacts will
 be published through GitHub's release/package facilities; HP1 may additionally
 host or mirror installer and package data where convenient.
 

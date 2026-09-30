@@ -83,6 +83,12 @@ expect_output "linked module C++ output" "Cross-module answer" \
   "$binary" --emit-cpp-modules examples/module_demo/main.sagan
 expect_output "package graph resolution" "Package(mission-control 0.1.0)" \
   "$binary" --package examples/package_demo
+expect_output "package application mode" "ApplicationMode(console)" \
+  "$binary" --package examples/package_demo
+expect_output "package application mode query" "console" \
+  "$binary" --application-mode examples/package_demo
+expect_output "loose source application mode default" "console" \
+  "$binary" --application-mode examples/run_demo.sagan
 expect_output "package auto-discovery from entry" "Package(mission-control 0.1.0)" \
   "$binary" --modules examples/package_demo/src/main.sagan
 expect_output "package manifest path resolution" "Module(navigation.guidance" \
@@ -274,6 +280,18 @@ expect_failure "unquoted package value diagnostic" 1 "must be a quoted string" \
 write_manifest '[package]' 'license = "GPL-3.0"'
 expect_failure "unknown package key diagnostic" 1 "Unknown package manifest key 'license'" \
   "$binary" --package "$work_dir/package-errors"
+write_manifest '[package]' 'name = "valid"' 'version = "1.0.0"' 'source = "src"' 'entry = "main"' \
+  '[application]' 'mode = "windowed"'
+expect_output "windowed package application mode" "windowed" \
+  "$binary" --application-mode "$work_dir/package-errors"
+write_manifest '[package]' 'name = "valid"' 'version = "1.0.0"' 'source = "src"' 'entry = "main"' \
+  '[application]' 'mode = "silent"'
+expect_failure "invalid application mode diagnostic" 1 "Application mode must be 'console' or 'windowed'" \
+  "$binary" --application-mode "$work_dir/package-errors"
+write_manifest '[package]' 'name = "valid"' 'version = "1.0.0"' 'source = "src"' 'entry = "main"' \
+  '[application]' 'theme = "dark"'
+expect_failure "unknown application key diagnostic" 1 "Unknown package manifest key 'theme'" \
+  "$binary" --application-mode "$work_dir/package-errors"
 write_manifest '[package]' 'name = "valid"' 'name = "duplicate"'
 expect_failure "duplicate package key diagnostic" 1 "Duplicate package manifest key 'name'" \
   "$binary" --package "$work_dir/package-errors"

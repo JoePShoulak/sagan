@@ -12,6 +12,8 @@
 
 #ifndef _WIN32
 #include <sys/wait.h>
+#else
+#include <windows.h>
 #endif
 
 namespace driver
@@ -132,6 +134,19 @@ namespace driver
 #endif
       }
     };
+
+#ifdef _WIN32
+    auto installed_compiler() -> std::optional<std::filesystem::path>
+    {
+      std::vector<wchar_t> buffer(32768);
+      const DWORD length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+      if (length == 0 || length == buffer.size()) return {};
+      const auto executable = std::filesystem::path(std::wstring(buffer.data(), length));
+      const auto candidate = executable.parent_path().parent_path() / "toolchain" / "ucrt64" / "bin" / "g++.exe";
+      if (std::filesystem::is_regular_file(candidate)) return candidate;
+      return {};
+    }
+#endif
   }
 
   auto compile_and_run(const std::string &generated_cpp) -> int
@@ -154,12 +169,30 @@ namespace driver
     const environment_override tmp("TMP", temporary_path);
     const environment_override temp("TEMP", temporary_path);
 
-    const std::string compiler = environment_value("CXX").empty() ? "g++" : environment_value("CXX");
+    std::string compiler = environment_value("CXX");
+    std::optional<environment_override> bundled_path;
+    if (compiler.empty())
+    {
+#ifdef _WIN32
+      if (const auto bundled = installed_compiler())
+      {
+        compiler = bundled->string();
+        const std::string existing_path = environment_value("PATH");
+        bundled_path.emplace("PATH", bundled->parent_path().string() + ";" + existing_path);
+      }
+      else
+#endif
+        compiler = "g++";
+    }
     const std::string flags = environment_value("SAGAN_CXXFLAGS").empty()
                                   ? "-std=c++23 -Wall -Wextra -Wpedantic -Werror"
                                   : environment_value("SAGAN_CXXFLAGS");
-    const std::string compile_command = compiler + " " + flags + " " + shell_quote(source.string()) +
-                                        " -o " + shell_quote(executable.string());
+    const bool quote_compiler = compiler.find_first_of(" \\/") != std::string::npos;
+    std::string compile_command = (quote_compiler ? shell_quote(compiler) : compiler) + " " + flags + " " +
+                                  shell_quote(source.string()) + " -o " + shell_quote(executable.string());
+#ifdef _WIN32
+    if (quote_compiler) compile_command = '"' + compile_command + '"';
+#endif
     const int compile_status = exit_code(std::system(compile_command.c_str()));
     if (compile_status != 0)
       throw std::runtime_error("Native C++ compilation failed with exit code " + std::to_string(compile_status));

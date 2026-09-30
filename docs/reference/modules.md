@@ -39,9 +39,18 @@ name = "mission-control"
 version = "0.1.0"
 source = "src"
 entry = "main"
+
+[application]
+mode = "console"
 ```
 
-All four quoted-string fields are required. The package version uses
+All four `[package]` quoted-string fields are required. `[application]` is
+optional. Its `mode` may be `"console"` or `"windowed"`; omission defaults to
+`"console"`. Console applications show and preserve terminal output when
+launched from Explorer. Windowed applications launch without a terminal, while
+startup failures are written to Sagan's local diagnostic log and shown in a
+native error dialog. Rendering imports do not select the application mode.
+The package version uses
 `MAJOR.MINOR.PATCH`. `source` must name an existing directory contained by the
 package root. `entry` is a qualified module name and maps to a source path by
 replacing dots with directory separators and adding `.sagan`:
@@ -57,6 +66,10 @@ Imports use the same deterministic mapping and cannot search outside the
 package source root. Unknown manifest sections or keys, duplicate keys,
 malformed values, invalid package names or versions, missing source roots, and
 missing entries are errors.
+
+Loose `.sagan` files do not require a manifest. They use loose-module resolution
+and the safe `console` launch default. A manifest is recommended for a named
+application, especially when selecting windowed launch behavior.
 
 Inspect or compile a package with:
 

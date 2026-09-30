@@ -27,6 +27,8 @@ OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 OBJECTS += obj/version.o
 DEPENDENCIES := $(OBJECTS:.o=.d)
 TARGET := bin/$(APPNAME)
+WINDOWS_LAUNCHER := bin/sagan-launch.exe
+WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
 BUILD_TMP := build/tmp
 ifeq ($(OS),Windows_NT)
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
@@ -35,9 +37,24 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
+
+ifeq ($(OS),Windows_NT)
+windows-launcher: $(WINDOWS_LAUNCHER)
+
+$(WINDOWS_LAUNCHER_RESOURCE): packaging/windows/sagan.rc packaging/windows/sagan.ico
+	@mkdir -p $(dir $@)
+	windres -I packaging/windows $< -O coff -o $@
+
+$(WINDOWS_LAUNCHER): src/launcher/windows_launcher.cpp $(WINDOWS_LAUNCHER_RESOURCE)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(WINDOWS_LAUNCHER_RESOURCE) -o $@ -mwindows -municode -lshell32
+else
+windows-launcher:
+	@echo "The Explorer launcher is built only on Windows."
+endif
 
 $(TARGET): $(OBJECTS)
 	@mkdir -p $(dir $@) $(BUILD_TMP)

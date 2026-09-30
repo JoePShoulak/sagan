@@ -87,7 +87,8 @@ namespace modules
     {
       const auto absolute_manifest = std::filesystem::absolute(manifest_path).lexically_normal();
       std::istringstream input(read_file(absolute_manifest));
-      std::unordered_map<std::string, std::string> values;
+      std::unordered_map<std::string, std::string> package_values;
+      std::unordered_map<std::string, std::string> application_values;
       std::string section;
       std::string line;
       std::size_t line_number = 0;
@@ -101,39 +102,51 @@ namespace modules
         if (line.front() == '[' && line.back() == ']')
         {
           section = trim(line.substr(1, line.size() - 2));
-          if (section != "package")
+          if (section != "package" && section != "application")
             throw std::runtime_error("Unknown package manifest section '[" + section + "]'");
           continue;
         }
-        if (section != "package")
-          throw std::runtime_error("Package manifest values must appear under [package]");
+        if (section.empty())
+          throw std::runtime_error("Package manifest values must appear under [package] or [application]");
         const std::size_t equals = line.find('=');
         if (equals == std::string::npos)
           throw std::runtime_error("Invalid package manifest line " + std::to_string(line_number));
         const std::string key = trim(line.substr(0, equals));
-        if (key != "name" && key != "version" && key != "source" && key != "entry")
+        const bool package_key = section == "package" &&
+                                 (key == "name" || key == "version" || key == "source" || key == "entry");
+        const bool application_key = section == "application" && key == "mode";
+        if (!package_key && !application_key)
           throw std::runtime_error("Unknown package manifest key '" + key + "'");
+        auto &values = section == "package" ? package_values : application_values;
         if (!values.emplace(key, quoted_value(trim(line.substr(equals + 1)), key)).second)
           throw std::runtime_error("Duplicate package manifest key '" + key + "'");
       }
       for (const std::string_view required : {"name", "version", "source", "entry"})
-        if (!values.contains(std::string(required)))
+        if (!package_values.contains(std::string(required)))
           throw std::runtime_error("Package manifest is missing required key '" + std::string(required) + "'");
-      if (!std::regex_match(values.at("name"), std::regex{"[A-Za-z][A-Za-z0-9_-]*"}))
+      if (!std::regex_match(package_values.at("name"), std::regex{"[A-Za-z][A-Za-z0-9_-]*"}))
         throw std::runtime_error("Package name must begin with a letter and contain only letters, digits, '_' or '-'");
-      if (!std::regex_match(values.at("version"), std::regex{"[0-9]+\\.[0-9]+\\.[0-9]+"}))
+      if (!std::regex_match(package_values.at("version"), std::regex{"[0-9]+\\.[0-9]+\\.[0-9]+"}))
         throw std::runtime_error("Package version must use MAJOR.MINOR.PATCH");
-      if (!std::regex_match(values.at("entry"), std::regex{"[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*"}))
+      if (!std::regex_match(package_values.at("entry"), std::regex{"[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*"}))
         throw std::runtime_error("Package entry must be a qualified module name");
+      application_mode mode = application_mode::console;
+      if (application_values.contains("mode"))
+      {
+        const std::string &configured = application_values.at("mode");
+        if (configured == "windowed") mode = application_mode::windowed;
+        else if (configured != "console")
+          throw std::runtime_error("Application mode must be 'console' or 'windowed'");
+      }
       const auto package_root = absolute_manifest.parent_path();
-      const auto source_root = std::filesystem::absolute(package_root / values.at("source")).lexically_normal();
+      const auto source_root = std::filesystem::absolute(package_root / package_values.at("source")).lexically_normal();
       const auto relative_source = source_root.lexically_relative(package_root);
       if (relative_source.empty() || (!relative_source.empty() && *relative_source.begin() == ".."))
         throw std::runtime_error("Package source directory must stay inside the package root");
       if (!std::filesystem::is_directory(source_root))
         throw std::runtime_error("Package source directory does not exist: " + source_root.string());
-      return package_manifest{values.at("name"), values.at("version"), absolute_manifest,
-                              package_root, source_root, values.at("entry")};
+      return package_manifest{package_values.at("name"), package_values.at("version"), absolute_manifest,
+                              package_root, source_root, package_values.at("entry"), mode};
     }
 
     auto discover_manifest(std::filesystem::path path) -> std::optional<package_manifest>
@@ -565,12 +578,18 @@ namespace modules
     }
   }
 
+  auto application_mode_name(const application_mode mode) -> std::string_view
+  {
+    return mode == application_mode::windowed ? "windowed" : "console";
+  }
+
   auto module_graph::print(std::ostream &stream) const -> void
   {
     stream << "ModuleGraph\n";
     if (package)
       stream << "  Package(" << package->name << " " << package->version << ")\n"
-             << "  Manifest(" << package->manifest_path.string() << ")\n";
+             << "  Manifest(" << package->manifest_path.string() << ")\n"
+             << "  ApplicationMode(" << application_mode_name(package->mode) << ")\n";
     stream << "  SourceRoot(" << source_root.string() << ")\n  Entry(" << entry_path.string() << ")\n";
     for (const auto &module : modules)
     {
@@ -609,6 +628,11 @@ namespace modules
     if (!std::filesystem::is_regular_file(manifest))
       throw std::runtime_error("Could not find package manifest '" + manifest.string() + "'");
     return manifest_from_file(manifest);
+  }
+
+  auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>
+  {
+    return discover_manifest(entry_path);
   }
 
   auto resolve_package(const std::filesystem::path &package_path) -> module_graph
