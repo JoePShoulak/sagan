@@ -7,56 +7,56 @@ verified_on: null
 verified_by: null
 ---
 
-# First program
-The repository includes `examples/tokenizer_demo.sagan`, which exercises
-keywords, interfaces, classes, numbers, collections, strings, interpolation,
-exception vocabulary, and an emoji identifier.
+# Write your first program
 
-Build and tokenize it:
+Create a file named `hello.sagan` with this program:
+
+```sagan
+--8<-- "docs/examples/executable/hello.sagan"
+```
+
+Every executable starts in a function named `main`. Here, `main` returns an
+`Int`: `0` tells the operating system that the program succeeded. `print`
+writes one line of text.
+
+Run an installed compiler from Git Bash:
+
+```bash
+sagan hello.sagan
+```
+
+When working inside the Sagan repository, use the locally built compiler:
 
 ```bash
 make all
-make demo
+bin/sagan hello.sagan
 ```
 
-To run another executable file:
+The result is:
+
+```text
+--8<-- "docs/examples/executable/hello.stdout"
+```
+
+This example is not just illustrative: the documentation build runs the
+archived source and compares its output with the text above.
+
+## See what the compiler understood
+
+You can inspect the same source at different stages:
 
 ```bash
-bin/sagan path/to/program.sagan
+bin/sagan --tokens hello.sagan
+bin/sagan --ast hello.sagan
+bin/sagan --symbols hello.sagan
+bin/sagan --types hello.sagan
+bin/sagan --emit-cpp hello.sagan build/hello.cpp
 ```
 
-To inspect its token stream without executing it:
+Tokens are the smallest pieces of source, such as `fun`, `main`, and `(`. The
+AST is the **abstract syntax tree**: a structured view of how those pieces form
+declarations and expressions. Symbols show declared names and scopes. Type
+checking confirms that operations use compatible values. `--emit-cpp` lets you
+inspect the generated C++ without running it.
 
-```bash
-bin/sagan --tokens path/to/program.sagan
-```
-
-!!! warning "Tokenizer example, not executable Sagan"
-    This particular demo is a broad lexical fixture. The repository also has a
-    complete parser for the current syntax specification and an expanding
-    semantically checked native subset. Successful tokenization or parsing
-    alone does not prove that a construct is in that executable subset; use the
-    execution demo below for runnable coverage.
-
-Inspect the parser demonstration as a text tree or interactive HTML tree:
-
-```bash
-bin/sagan --ast examples/parser_demo.sagan
-bash scripts/ast_demo.sh --no-open
-```
-
-To print, compile, and run the current executable showcase—including value
-exceptions, propagation, and guaranteed cleanup—run:
-
-```bash
-make execution-demo
-```
-
-To see a deliberate lexical failure:
-
-```bash
-bin/sagan --tokens examples/tokenizer_error.sagan
-```
-
-That file contains `1e`, which fails because scientific notation requires
-exponent digits.
+Next, continue with [Values and variables](../tour/values-and-variables.md).

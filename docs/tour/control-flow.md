@@ -8,8 +8,9 @@ verified_by: null
 ---
 
 # Control flow
-The parser implements `if`, `else`, `for`, `in`, `while`, `until`, `break`,
-`continue`, `return`, `yield`, `match`, and `case`.
+Control flow decides which statement runs next. Sagan implements `if`/`else`,
+`for`/`in`, `while`, `until`, `break`, `continue`, `return`, and `match`/`case`.
+The parser also reserves `yield` for future generators.
 
 ```sagan
 for item in items {
@@ -56,8 +57,9 @@ fun telemetry_samples(samples) {
 }
 ```
 
-Generator typing, suspension, and iteration behavior remain semantic and
-runtime work.
+`yield` can be parsed and represented in the syntax tree, but generator typing,
+suspension, execution, and iteration are not implemented. Do not use it in an
+executable program yet.
 
 A match statement contains one or more cases. Single-statement cases can use
 the same compact form:
@@ -76,11 +78,12 @@ match simulation.status {
 }
 ```
 
-`case else` is optional, unique, and must be last. The parser accepts
-expression-shaped case patterns. Whether an identifier denotes a value, binds a
-new name, or participates in destructuring will be decided by semantic analysis.
+`case else` is optional, unique, and must be last. Value patterns compare with
+the match subject. Enum cases may match nominal values, and payload-enum cases
+may bind their contained values. Covering every case of an enum makes the match
+exhaustive without `case else`.
 
-**Settled design:** `and`, `or`, `not`, and `!` provide logical operations.
+`and`, `or`, `not`, and `!` provide logical operations.
 A conditional expression uses `?` and `;`:
 
 ```sagan
@@ -91,6 +94,6 @@ Newlines normally terminate statements; `;` is not an ordinary statement
 terminator. The tokenizer already suppresses newlines inside parentheses and
 brackets and after tokens that leave an expression incomplete.
 
-**Provisional design:** match-pattern meaning and exhaustiveness, iteration
-protocols, yield semantics, unreachable-code analysis, and the runtime meaning
-of returned values.
+The checker rejects unreachable statements after unconditional control
+transfer. Custom iteration protocols and executable `yield` semantics remain
+future work.

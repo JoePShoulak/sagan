@@ -8,15 +8,21 @@ verified_by: null
 ---
 
 # Getting started
-The current executable provides tokenizer and parser demonstrations, not a
-complete Sagan compiler. It can print tokens or parse supported source into
-text, DOT, SVG, and interactive HTML syntax trees.
 
-1. Complete the [installation](installation.md) prerequisites.
-2. Build and test the current front end.
-3. Run the [first program](first-program.md) through the token dumper and parser.
-4. Optionally install the early [VS Code extension](editor-support.md).
+This path takes you from no Sagan installation to a running native program.
 
-!!! note
-    Parsing successfully proves that the input follows the current grammar. It
-    does not prove that names resolve, types agree, or runtime behavior exists.
+1. [Install Sagan](installation.md) on Windows x64, or build it from source.
+2. [Write your first program](first-program.md) and run it from Git Bash.
+3. Follow the [language tour](../tour/index.md) to learn the main features.
+4. Optionally install the early [VS Code extension](editor-support.md) for
+   syntax coloring.
+
+The simplest command is:
+
+```bash
+sagan program.sagan
+```
+
+Sagan reads the file, checks it, generates C++, compiles that C++, and runs the
+resulting native program. If a lexical, syntax, name, type, module, or package
+error is found, Sagan reports it before native compilation.

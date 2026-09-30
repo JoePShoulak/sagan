@@ -8,8 +8,9 @@ verified_by: null
 ---
 
 # Values and variables
-**Settled design:** `let` declares a variable, variables are mutable by default,
-and `=` is used for initialization and reassignment.
+`let` gives a value a name. Variables are mutable by default, which means the
+program may assign them a new value later. `=` supplies the first value or
+replaces the current one.
 
 ```sagan
 let altitude: Float = 125_000.0
@@ -29,16 +30,18 @@ let entities = 10_000
 let gravity = 6.674_30e-11
 ```
 
-**Implemented semantics:** the checker infers scalar values, enforces compatible
+The checker infers scalar values, enforces compatible
 annotations and assignments, selects the smallest fitting signed integer width,
 defaults floating literals to `Float64`, and permits only provably lossless
 widening. `Int` and `Float` default to 64-bit widths when no initializer supplies
 a narrower inference. A declaration must provide an annotation, initializer, or
 both.
 
-Arrays infer one homogeneous element type; dictionaries infer homogeneous key
-and value types; and Cartesian/spherical vectors and points infer a numeric
-component type and dimension. Empty arrays/dictionaries await generic annotation syntax. Native
+Arrays infer one homogeneous element type, so one array does not silently mix
+unrelated kinds of values. Dictionaries similarly infer one key type and one
+value type. Cartesian and spherical vectors and points infer a numeric
+component type and dimension. Empty arrays and dictionaries need an explicit
+generic type because there is no element from which to infer one. Native
 construction, indexing, iteration, spreads, and display are implemented;
 checked vector addition, subtraction, negation, and scalar scaling are also
 implemented. Points are affine locations: vectors translate them, and

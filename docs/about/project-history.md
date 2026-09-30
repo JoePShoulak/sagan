@@ -8,39 +8,24 @@ verified_by: null
 ---
 
 # Project history
+
 Sagan began from Zachary Westerman's
 [Schematic](https://github.com/ZacharyWesterman/schematic), a work-in-progress
-compiler for a node-based language. Schematic provided the initial build
-structure and foundations for tokenizer state, spans, diagnostics, generators,
-parser utilities, and AST support.
+compiler for a node-based language. Schematic supplied early build structure and
+foundations for source spans, diagnostics, parser utilities, syntax trees, and
+code-generation helpers.
 
-The inherited node-language token table and lexer have since been replaced by
-Sagan's initial token vocabulary and tokenizer. Some supporting source files
-still descend from Schematic and must retain appropriate attribution and
-licensing treatment.
+Sagan replaced Schematic's node-language tokens and lexer with its own Unicode
+syntax, then grew a parser, semantic analyzer, type checker, module and package
+resolver, C++ backend, runtime behavior, installer, and editor-tooling APIs.
+Some supporting code still descends from Schematic and remains subject to its
+GPLv3 license and attribution requirements.
 
-Development currently proceeds through five broad stages:
+One playful idea also survived: the compiler knows its development version from
+Git history. Sagan extends that idea with Conventional Commits, semantic-version
+impact, the abbreviated revision, and dirty-worktree reporting. This makes the
+version shown by a build traceable to the source that produced it.
 
-1. language definition — sufficiently defined for early implementation;
-2. tokenizer — complete for the current lexical specification;
-3. parser and syntax tree — complete for the current syntax specification;
-4. semantic analysis — executable-subset type and control-flow validation implemented; and
-5. C++ code generation — initial native subset implemented, including
-   reference-counted face dispatch and value exception propagation with
-   guaranteed cleanup.
-
-The module pipeline has additionally begun with deterministic sibling-file
-resolution, export validation, dependency ordering, cycle detection, isolated
-semantic/type linking, selective and namespace imports, and native cross-module
-execution.
-
-See the [implementation overview](../implementation/index.md) for the present
-boundary between working code and intended architecture. Among the ideas
-inherited from Schematic is dynamic in-app version numbering: Schematic
-constructs a major and minor version manually and derives its patch number from
-the commits after a chosen cutoff commit.
-
-Sagan retains that playful, traceable connection between the compiler and its
-Git history while adding Conventional Commit declarations for semantic-version
-impact, the exact abbreviated revision, dirty-worktree reporting, and
-unconditional build-time regeneration to prevent stale version information.
+The detailed sequence of implementation milestones belongs in Git history and
+the [Project Development](../contributing/index.md) material. The learner-facing
+documentation describes the language as it works now.

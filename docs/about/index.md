@@ -8,15 +8,20 @@ verified_by: null
 ---
 
 # About Sagan
-Sagan expands to **Simulation Architecture for Geometry, Astrodynamics, and
-Numerics**. It is intended to make mathematical and simulation-heavy programs
-natural to express without abandoning explicit types, predictable behavior, or
-practical native performance.
 
-Sagan remains an experimental language. The tokenizer and parser are complete
-for the current lexical and syntax specifications. Semantic analysis, the
-runtime, standard-library implementations, and the C++ backend remain future
-work.
+Sagan is a strongly typed, native programming language built for simulation.
+Its name expands to **Simulation Architecture for Geometry, Astrodynamics, and
+Numerics**.
 
-See [project history](project-history.md), [license and attribution](license-and-attribution.md),
-and the current [design status](../design/status.md).
+“Strongly typed” means the compiler checks which kinds of values an operation
+can use before the program runs. “Native” means Sagan currently translates a
+checked program to C++ and uses a C++ compiler to create a normal executable.
+The goal is to make simulation code pleasant to read without hiding important
+units, types, mutation, or failure behavior.
+
+Sagan began from Zachary Westerman's Schematic compiler and retains the required
+attribution and GPLv3 licensing. Read the short [project history](project-history.md)
+or the detailed [license and attribution](license-and-attribution.md).
+
+For the language itself, begin with [Getting Started](../getting-started/index.md).
+For current implementation boundaries, see [Project status](../design/status.md).

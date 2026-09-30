@@ -13,38 +13,41 @@ verified_by: null
   <img src="assets/images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="240">
 </p>
 
-Sagan is an experimental, strongly typed programming language for geometry,
-astrodynamics, numerical work, and real-time simulation.
+Sagan is a strongly typed programming language for geometry, astrodynamics,
+numerical work, and real-time simulation. A Sagan program is checked, translated
+to C++, compiled, and run as a native program.
 
-!!! info "Current implementation"
-    The repository contains a complete **tokenizer and parser** for the current
-    specifications, an executable-subset semantic/type checker, and an initial
-    C++ backend. It executes collections, classes, private state, constructors,
-    reference-counted face values, dynamic dispatch, and the documented control-flow
-    and numeric subset through the native demo.
+You do not need to understand compilers or language design to begin. Start with
+[Install Sagan](getting-started/installation.md), then [write and run your first
+program](getting-started/first-program.md). The [language tour](tour/index.md)
+builds from variables and functions to classes, composition, and errors.
 
-## Where to begin
+## Choose what you need
 
-- [Getting started](getting-started/index.md) explains how to build, test, and
-  run the tokenizer and parser demonstrations.
-- [Language tour](tour/index.md) introduces the intended language while clearly
-  separating parsed syntax from unresolved semantics.
-- [Lexical specification](reference/lexical-specification.md) records the
-  tokenizer's implemented UTF-8, Unicode, literal, comment, and operator rules.
-- [Project status](design/status.md) separates implemented behavior, settled
-  design, provisional design, planned work, and open questions.
-- [Implementation](implementation/index.md) describes the compiler roadmap and
-  current source layout.
-- [Documentation roadmaps](contributing/documentation-roadmaps.md) define the
-  post-1.0 expansion and ordered language-confirmation process.
+- **I want to learn Sagan.** Follow [Getting Started](getting-started/index.md)
+  and then the [language tour](tour/index.md).
+- **I need to look up a rule.** Use the [language reference](reference/index.md).
+- **I want runnable examples.** Visit the [examples](examples/index.md); archived
+  documentation examples are executed during every documentation build.
+- **I want to understand a design choice.** Read
+  [Why Sagan works this way](design/index.md).
+- **I want to work on Sagan itself.** Open [Project Development](contributing/index.md)
+  and the [implementation overview](implementation/index.md).
 
-## Documentation maturity
+## What works today
 
-This is the **experimental** documentation selected from the current repository.
-Pages are work-in-progress unless their banner explicitly says they are
-publication-ready. Content being present does not mean it has completed review.
+The compiler tokenizes, parses, resolves, type-checks, generates C++, and runs
+the implemented Sagan language. That includes modules and packages, functions
+and closures, collections, classes and faces, reference-counted objects,
+optionals, enums and payload enums, generics, exceptions and catchable runtime
+errors, geometry values, and native units of measure.
 
-The version selector also exposes archived documentation for each published
-Sagan release. The site root defaults to the newest released documentation;
-choose **experimental** when working from a clone of the live repository or
-when contributing to the project.
+The math library beyond the built-in language foundation, rendering, physics,
+the full language server, and non-Windows installers are later work. Pages say
+clearly when they describe those planned areas.
+
+## Documentation status
+
+This is the **experimental** documentation from the current repository. Every
+page remains work in progress until the project owner audits it. A page may be
+accurate and tested without yet being approved for the frozen 1.0 archive.

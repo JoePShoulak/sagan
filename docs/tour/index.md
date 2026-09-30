@@ -8,13 +8,16 @@ verified_by: null
 ---
 
 # Language tour
-This tour introduces the **intended Sagan language**, not an executable
-tutorial. The tokenizer and parser recognize the documented current syntax,
-and the first semantic pass resolves scopes and names, but type-checking and
-execution are not implemented.
 
-Follow the tour through [values and variables](values-and-variables.md),
-[functions](functions.md), [classes and interfaces](classes-and-interfaces.md),
-[control flow](control-flow.md), and [errors](errors.md). The
-[language reference](../reference/index.md) tracks which details are settled,
-provisional, or open.
+The tour teaches the implemented language in a useful order. Each page explains
+what a feature does, shows its syntax, and calls out important consequences.
+
+1. [Values and variables](values-and-variables.md)
+2. [Functions and closures](functions.md)
+3. [Control flow](control-flow.md)
+4. [Classes, faces, and composition](classes-and-interfaces.md)
+5. [Errors and cleanup](errors.md)
+
+You can stop after any page and write ordinary programs with what you have
+learned. Use the [language reference](../reference/index.md) when you need the
+complete rule or an edge case.

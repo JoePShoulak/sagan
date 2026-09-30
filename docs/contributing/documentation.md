@@ -9,6 +9,45 @@ verified_by: null
 
 # Documentation workflow
 
+## Writing for humans first
+
+Sagan's documentation is also its main teaching tool. Assume the reader can
+program a little but has never designed a language and does not yet know why a
+feature matters. A page should help that reader use the feature before asking
+them to understand its compiler terminology.
+
+Use these rules throughout the site:
+
+- introduce one idea at a time and build on ideas already explained;
+- name the formal term, then immediately explain it in ordinary language;
+- show the smallest useful Sagan example before giving edge cases;
+- explain what the example does and, when useful, what it prints;
+- use short executable snippets on reference pages and longer progressive
+  programs in Getting Started and the tour;
+- explain the practical consequences of major choices such as composition,
+  ownership, exceptions, units, coordinates, and determinism;
+- define unfamiliar words instead of assuming language-design knowledge;
+- clearly distinguish implemented behavior from planned libraries or tooling;
+- keep design history, open questions, and contributor procedure under Project
+  Development rather than interrupting the learning path; and
+- prefer direct sentences and concrete examples over compressed jargon.
+
+Broad pages group related concepts under descriptive headings. Getting Started
+and the tour are meant to be read in order. Reference pages should also work on
+their own when someone arrives from search.
+
+All pages remain work in progress until the project owner audits them. A Codex
+content pass may correct, expand, and test a page, but it must leave this front
+matter unchanged:
+
+```yaml
+status: work-in-progress
+publication_ready: false
+verified_in: null
+verified_on: null
+verified_by: null
+```
+
 ## Local commands
 
 ```bash
@@ -67,7 +106,7 @@ release build supplies its immutable Sagan version through
 `SAGAN_DOCS_VERSION` and sets `SAGAN_DOCS_CHANNEL=released`. Published versions
 use the corresponding Sagan release number.
 
-Mike stores each released version beside `experimental` and provides the
+`mike` stores each released version beside `experimental` and provides the
 version selector. The `latest` alias and the site root point to the newest
 released documentation. Before the first release exists, the site root may
 temporarily point to `experimental`.

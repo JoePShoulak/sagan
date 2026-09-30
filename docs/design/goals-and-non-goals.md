@@ -8,30 +8,35 @@ verified_by: null
 ---
 
 # Goals and non-goals
-## Goals
 
-**Settled design goals:**
+## What Sagan is trying to do
 
-- make geometry, astrodynamics, numerical work, physics, and rendering natural;
-- provide strong static typing with limited lossless implicit conversion;
-- favor interface-based composition over deep inheritance hierarchies;
-- produce native programs initially by translating validated Sagan to C++;
-- target Windows, Linux, and macOS;
-- make mutation visible in APIs through naming conventions; and
-- pursue repeatable simulation results across supported platforms.
+Sagan aims to:
 
-## Initial non-goals
+- make geometry, units, astrodynamics, numerical work, physics, and rendering
+  natural to express;
+- catch incompatible types and units before a program runs;
+- favor small composable interfaces, called `face`s, over deep class trees;
+- make mutation recognizable without forcing every value to be immutable;
+- produce native programs by translating checked Sagan to C++;
+- give exact core operations predictable, documented behavior; and
+- grow into a practical simulation platform without forcing physics or
+  rendering into small command-line programs.
 
-- parallel execution;
-- bitwise operators;
-- binary, octal, hexadecimal, or numeric-suffix literals;
-- encoding coordinate frames in the initial type system;
-- requiring physics or rendering in lightweight programs;
-- C or C++ interoperability in the first compiler; and
-- optimizing before the parser, semantics, and runtime contracts are established.
+## What 1.0 deliberately does not try to do
 
-## Boundaries still moving
+The initial language does not provide parallel execution, bitwise operators,
+binary/octal/hexadecimal literals, coordinate-frame types, direct C or C++
+interoperability, or cross-platform installers. Physics and rendering are not
+automatically included.
 
-Concrete core-library APIs, package resolution, type inference, generics,
-runtime representation, reference-count cycle handling, optimization, ABI
-details, and deterministic numeric guarantees remain unsettled.
+Sagan also does not promise that floating-point simulations produce identical
+bits on every processor. The narrower guarantee is explained in
+[Determinism](determinism.md).
+
+## What comes after the language core
+
+Math is the always-available core library. Rendering and physics will be
+closely integrated but explicitly imported. Their APIs, coordinate-frame model,
+and numerical tolerances will be designed after the language release rather
+than guessed in advance.

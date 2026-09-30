@@ -88,28 +88,27 @@ exclude_docs: |
 
 nav:
   - Home: index.md
-  - Design:
-      - design/index.md
-      - Philosophy: design/philosophy.md
-      - Goals and non-goals: design/goals-and-non-goals.md
-      - Determinism: design/determinism.md
-      - Native units of measure: design/units-of-measure.md
-      - Built-in unit catalog: reference/units.md
-      - Documentation status: design/status.md
-  - Getting started:
-      - getting-started/index.md
-      - Installation: getting-started/installation.md
-      - First program: getting-started/first-program.md
-      - Editor support: getting-started/editor-support.md
-  - Language tour:
-      - tour/index.md
-      - Values and variables: tour/values-and-variables.md
-      - Functions: tour/functions.md
-      - Control flow: tour/control-flow.md
-      - Classes and interfaces: tour/classes-and-interfaces.md
-      - Errors: tour/errors.md
-  - Language reference:
-      - reference/index.md
+  - Learn:
+      - Start here: getting-started/index.md
+      - Install Sagan: getting-started/installation.md
+      - Write your first program: getting-started/first-program.md
+      - Use an editor: getting-started/editor-support.md
+      - Language tour:
+          - Tour overview: tour/index.md
+          - Values and variables: tour/values-and-variables.md
+          - Functions: tour/functions.md
+          - Control flow: tour/control-flow.md
+          - Classes and interfaces: tour/classes-and-interfaces.md
+          - Errors: tour/errors.md
+      - Runnable examples: examples/index.md
+      - Why Sagan works this way:
+          - Design overview: design/index.md
+          - Philosophy: design/philosophy.md
+          - Goals and non-goals: design/goals-and-non-goals.md
+          - Determinism: design/determinism.md
+          - Native units of measure: design/units-of-measure.md
+  - Reference:
+      - Language reference: reference/index.md
       - Lexical specification: reference/lexical-specification.md
       - Grammar and syntax: reference/grammar.md
       - Declarations: reference/declarations.md
@@ -120,53 +119,56 @@ nav:
       - Exceptions: reference/exceptions.md
       - Modules: reference/modules.md
       - Memory model: reference/memory-model.md
-  - Standard library:
-      - standard-library/index.md
-      - Math: standard-library/math.md
-      - Physics: standard-library/physics.md
-      - Rendering: standard-library/rendering.md
-      - Status: standard-library/status.md
-  - Compiler and tooling:
-      - tooling/index.md
+      - Built-in unit catalog: reference/units.md
+      - Core libraries:
+          - Overview: standard-library/index.md
+          - Math: standard-library/math.md
+          - Physics: standard-library/physics.md
+          - Rendering: standard-library/rendering.md
+          - Implementation status: standard-library/status.md
+  - Tools:
+      - Tooling overview: tooling/index.md
       - Compiler: tooling/compiler.md
       - Command line: tooling/command-line.md
       - Diagnostics: tooling/diagnostics.md
       - C++ backend: tooling/cpp-backend.md
       - Editor support: tooling/editor-support.md
-      - Language-service audit: tooling/language-service-audit.md
-      - Language-service contracts: tooling/language-service-contracts.md
-      - Language-service roadmap: tooling/language-service-roadmap.md
-      - Editor feature readiness: tooling/extension-readiness.md
-      - Language-server capabilities: tooling/language-server-capabilities.md
-  - Implementation:
-      - implementation/index.md
-      - Architecture: implementation/architecture.md
-      - Tokenizer: implementation/tokenizer.md
-      - Parser: implementation/parser.md
-      - Semantic analysis: implementation/semantic-analysis.md
-      - Code generation: implementation/code-generation.md
-      - Schematic-derived foundations: implementation/schematic-foundations.md
-  - Design decisions:
-      - decisions/index.md
-      - Decision template: decisions/template.md
-  - RFCs:
-      - rfcs/index.md
-      - RFC template: rfcs/template.md
-      - Proposed: rfcs/proposed/index.md
-      - Accepted: rfcs/accepted/index.md
-      - Rejected: rfcs/rejected/index.md
-  - Examples: examples/index.md
-  - Contributing:
-      - contributing/index.md
-      - Development setup: contributing/development-setup.md
-      - Versioning: contributing/versioning.md
-      - Windows installer release gate: contributing/windows-installer-release.md
-      - Release lifecycle: contributing/release-lifecycle.md
-      - Documentation workflow: contributing/documentation.md
-      - Documentation roadmaps: contributing/documentation-roadmaps.md
-      - Self-hosting: contributing/hosting.md
-      - Testing: contributing/testing.md
-      - Licensing and attribution: contributing/licensing-and-attribution.md
+  - Project development:
+      - Current implementation status: design/status.md
+      - Compiler implementation:
+          - Overview: implementation/index.md
+          - Architecture: implementation/architecture.md
+          - Tokenizer: implementation/tokenizer.md
+          - Parser: implementation/parser.md
+          - Semantic analysis: implementation/semantic-analysis.md
+          - Code generation: implementation/code-generation.md
+          - Schematic-derived foundations: implementation/schematic-foundations.md
+      - Editor-tooling internals:
+          - Language-service audit: tooling/language-service-audit.md
+          - Language-service contracts: tooling/language-service-contracts.md
+          - Language-service roadmap: tooling/language-service-roadmap.md
+          - Editor feature readiness: tooling/extension-readiness.md
+          - Language-server capabilities: tooling/language-server-capabilities.md
+      - Design decisions:
+          - Overview: decisions/index.md
+          - Decision template: decisions/template.md
+      - RFCs:
+          - Overview: rfcs/index.md
+          - RFC template: rfcs/template.md
+          - Proposed: rfcs/proposed/index.md
+          - Accepted: rfcs/accepted/index.md
+          - Rejected: rfcs/rejected/index.md
+      - Contributing:
+          - Overview: contributing/index.md
+          - Development setup: contributing/development-setup.md
+          - Versioning: contributing/versioning.md
+          - Windows installer release gate: contributing/windows-installer-release.md
+          - Release lifecycle: contributing/release-lifecycle.md
+          - Documentation workflow: contributing/documentation.md
+          - Documentation roadmaps: contributing/documentation-roadmaps.md
+          - Self-hosting: contributing/hosting.md
+          - Testing: contributing/testing.md
+          - Licensing and attribution: contributing/licensing-and-attribution.md
   - About:
       - about/index.md
       - Project history: about/project-history.md

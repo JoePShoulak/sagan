@@ -40,5 +40,19 @@ Cleanup cannot itself `return` or `scream`, and it cannot break or continue an
 enclosing loop. This keeps cleanup deterministic while another exception may
 already be unwinding.
 
-Handlers do not bind the thrown value yet, and native runtime failures such as
-checked arithmetic errors are not currently catchable as Sagan values.
+Native failures are catchable values from the built-in `RuntimeError` enum. For
+example, checked integer overflow can be handled without terminating the
+program:
+
+```sagan
+hope {
+  let maximum: Int8 = 127
+  maximum += 1
+} unless RuntimeError.integer_overflow {
+  print("The value was too large for Int8")
+}
+```
+
+Other cases cover division or modulo by zero, invalid integer exponentiation,
+out-of-range indexes, and missing dictionary keys. Handlers match values; they
+do not yet introduce a new binding for an arbitrary thrown value.

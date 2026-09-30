@@ -8,8 +8,10 @@ verified_by: null
 ---
 
 # Functions
-**Settled design:** functions use `fun`, may have typed parameters and return
-types, and may be overloaded by parameter types.
+Functions use `fun`. Parameters may declare the type of value they accept, and
+the annotation after `:` says what the function returns. More than one function
+may share a name when their parameter types distinguish them; this is called
+**overloading**.
 
 ```sagan
 fun distance(a: Vector, b: Vector): Float {
@@ -34,20 +36,18 @@ a distinct method-identifier token:
 vector.normalize!()
 ```
 
-!!! note "Implementation status"
-    Named, block-bodied functions with optional parameter and return type
-    annotations parse into the AST. Named functions, interface defaults, and
-    class methods may instead use `=> expression`. Anonymous lambdas accept
-    typed parameters and an optional return annotation. The initial checker
-    validates scalar parameters and returns and selects compatible overloads.
-    Typed expression lambdas execute, can be stored in explicitly annotated
-    function values, passed to higher-order functions, returned from functions,
-    and called immediately or through variables and parameters. Captured locals
-    and parameters use shared reference-counted cells, preserving mutation and
-    lifetime when a closure escapes. Run `make closure-demo` for an executable
-    example.
+Named functions, face defaults, and class methods may use either a block or
+`=> expression`. Anonymous functions are called **lambdas**. A typed lambda can
+be stored in a variable, passed to another function, returned, or called
+immediately. A function that accepts or returns another function is often called
+a **higher-order function**.
+
+When a lambda uses a surrounding local variable, it **captures** that variable.
+Sagan stores captured locals in shared reference-counted cells, so mutation and
+lifetime still behave correctly after the original function returns. Run
+`make closure-demo` for the larger executable demonstration.
 
 Lambdas that refer to a method's contextual `self` are rejected in 1.0; the
-required object-lifetime semantics remain deferred. Other provisional areas
-include multiple returns, destructuring, variadic parameters, yielding, and
-broader inference rules.
+required object-lifetime semantics remain deferred. Multiple returns,
+destructuring, variadic parameters, and executable generator semantics for
+`yield` are not part of the current language.

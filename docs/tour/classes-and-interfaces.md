@@ -8,9 +8,10 @@ verified_by: null
 ---
 
 # Classes and interfaces
-**Settled design:** Sagan favors small, composable interfaces over inheritance
-hierarchies. `face` introduces an interface and `class` introduces a class.
-`is` and `has` are intended as interchangeable conformance words.
+Sagan favors small, composable interfaces over inheritance hierarchies. An
+interface describes behavior without choosing how it is stored. Sagan calls an
+interface a `face`; `class` introduces stored objects. `is` and `has` are
+interchangeable words for declaring that a class or face provides other faces.
 
 ```sagan
 face Renderable {
@@ -44,7 +45,7 @@ enum GuidanceStatus {
 }
 ```
 
-**Implemented in the parser:** a `face` contains method signatures or
+A `face` contains method signatures or
 block-bodied default methods. A `class` contains `let` fields and block-bodied
 methods. `is` and `has` introduce interchangeable comma-separated composition
 lists on faces and classes. `self` parses as the current-object expression, and
@@ -61,7 +62,7 @@ to their declaring class and may be called by its other methods; outside calls
 are rejected. Constructor overload selection uses the same lossless argument
 compatibility rules as function calls, and every non-defaulted field must be
 assigned on every constructor path. Constructors cannot return. Payload-bearing
-enums construct and execute; explicit numeric enum values are not implemented. Faces
+enums and explicit signed `Int64` enum values construct and execute. Faces
 participate in semantic checking: a class using either `is` or `has` must satisfy
 every required method with an exact class implementation or default. This is
 structural conformance attached to an explicit
@@ -79,7 +80,6 @@ Weak class fields use `weak let`, start empty, accept a strong class or face
 value, and return `Optional<T>` when read. Use them to break ownership cycles;
 expired targets read as `None`.
 
-**Open questions:** explicit enum values, automatic handling of
-all-strong reference cycles or borrowing, and whether limited
-implementation inheritance will exist after 1.0; it is explicitly outside the
-1.0 hypercore contract.
+All-strong reference cycles are not collected automatically; use `weak let` for
+the back edge of an ownership relationship. Borrowing and implementation
+inheritance are outside the 1.0 language.
