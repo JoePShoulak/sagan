@@ -67,7 +67,12 @@ jobs:
           install: >-
             git
             make
+            mingw-w64-ucrt-x86_64-binutils
+            mingw-w64-ucrt-x86_64-crt
             mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-gcc-libs
+            mingw-w64-ucrt-x86_64-headers
+            mingw-w64-ucrt-x86_64-winpthreads
             zip
             unzip
       - name: Run compiler and CLI tests
@@ -119,7 +124,12 @@ jobs:
           install: >-
             git
             make
+            mingw-w64-ucrt-x86_64-binutils
+            mingw-w64-ucrt-x86_64-crt
             mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-gcc-libs
+            mingw-w64-ucrt-x86_64-headers
+            mingw-w64-ucrt-x86_64-winpthreads
             zip
             unzip
       - name: Install Inno Setup
