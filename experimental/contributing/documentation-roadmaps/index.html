@@ -2930,6 +2930,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#stage-0-approve-the-documentation-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0 — approve the documentation experience
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stage-1-orientation-and-the-supported-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3503,6 +3514,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#stage-0-approve-the-documentation-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 0 — approve the documentation experience
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stage-1-orientation-and-the-supported-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3814,6 +3836,26 @@ pages as confirmed. A later discovery may reopen an earlier stage.</p>
 <p>An audit record should contain the page, compiler revision, documentation
 version, reviewer, date, commands run, decision, open questions, and linked
 issues or design decisions.</p>
+<h3 id="stage-0-approve-the-documentation-experience">Stage 0 — approve the documentation experience</h3>
+<p>Before confirming individual language claims, review the documentation site as
+a product. Check the overall visual design, typography, color palettes,
+responsive behavior, navigation, search, version selector, status markers,
+page banners, code presentation, and accessibility. Review representative pages
+on desktop and mobile rather than judging the home page alone.</p>
+<p>Confirm the information architecture at the same time: decide whether the
+selected top-level sections and individual pages belong on the site, whether
+anything important is missing or unnecessarily separate, and whether each
+page's intended content and depth are appropriate. Use representative overview,
+tutorial, reference, example, implementation, and contributor pages to approve
+the recurring page structure before substantial polishing makes it expensive
+to change.</p>
+<p>Record approved site-wide conventions and page-selection decisions in the
+documentation workflow or an appropriate design decision. Treat unresolved
+visual, structural, navigation, or content-scope concerns as blockers for the
+later page-by-page audit.</p>
+<p><strong>Approval question:</strong> do you like and agree with the site's general design,
+formatting, navigation, page selection, and intended content well enough to use
+them as the foundation for the remaining documentation audit?</p>
 <h3 id="stage-1-orientation-and-the-supported-workflow">Stage 1 — orientation and the supported workflow</h3>
 <p>Review Home, Getting started, installation, the first program, command-line
 usage, and editor support. Confirm that a clean user can install prerequisites,
@@ -3834,8 +3876,10 @@ pleasant enough to guarantee for 1.0?</p>
 <h3 id="stage-3-fundamental-values-and-expressions">Stage 3 — fundamental values and expressions</h3>
 <p>Review scalar values, variables, mutability, assignment, precedence,
 evaluation order, calls, member access, safe access, indexing, collections,
-coordinates, vectors, and basic conversions. Keep disputed coordinate meaning
-open for the final expert stage even if its surface syntax is confirmed here.</p>
+points, vectors, Cartesian/spherical representation, and basic conversions.
+Keep the geometry model visible for final expert verification: points are affine
+locations, vectors are displacements, point/vector conversion requires an
+origin rather than a cast, and Cartesian/spherical conversion is explicit.</p>
 <p><strong>Approval question:</strong> do ordinary expressions read and behave the way you
 expect before advanced typing is involved?</p>
 <h3 id="stage-4-declarations-functions-and-control-flow">Stage 4 — declarations, functions, and control flow</h3>
@@ -3890,7 +3934,8 @@ resources and reference lifetimes.</p>
 as normal paths?</p>
 <h3 id="stage-11-numerical-and-simulation-guarantees">Stage 11 — numerical and simulation guarantees</h3>
 <p>Review checked arithmetic, overflow, floating-point behavior, dimensions,
-coordinates versus vectors, deterministic execution, platform differences,
+points versus vectors, Cartesian versus spherical representation,
+deterministic execution, platform differences,
 math availability, and the boundaries of physics and rendering. Confirm exact
 guarantees rather than aspirations.</p>
 <p><strong>Approval question:</strong> are Sagan's simulation-focused promises both useful and
@@ -3899,7 +3944,8 @@ honest about their limits?</p>
 <p>Reserve the most coupled or controversial subjects for a focused review after
 the preceding behavior is concrete:</p>
 <ul>
-<li>coordinate and vector separation, arithmetic, conversions, and generic use;</li>
+<li>point and vector separation, arithmetic, conversions, and generic use;</li>
+<li>spherical conventions, Cartesian conversion, and reference-frame policy;</li>
 <li>interface composition, default conflicts, conformance, dispatch, and whether
   any implementation inheritance belongs in Sagan;</li>
 <li>generic constraints, method-specific generics, explicit type arguments, and

@@ -3361,7 +3361,8 @@ renderers, CLI behavior, and defensive invariants.</p>
 <p>The parser currently verifies <code>let</code> declarations, core primary expressions,
 the settled operator-precedence table, chained calls/indexing/member access,
 ordinary and safe access, mutating method calls, ordinary/raw/multiline/
-interpolated strings, and array/dictionary/vector/coordinate expressions with
+interpolated strings, and array/dictionary/Cartesian-vector/point expressions
+with spreads plus exactly three-dimensional spherical-vector/point literals with
 spreads and trailing commas. Text, DOT, SVG, and interactive HTML tree renderers
 cover every implemented AST node. Blocks, same-line single-statement bodies,
 ordinary and compound assignment, expression statements, and
@@ -3426,14 +3427,16 @@ dependencies and distribution, and the concrete math, physics, and rendering API
 remain unresolved. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.</p>
 <h2 id="required-pre-10-design-checkpoints">Required pre-1.0 design checkpoints</h2>
-<p>Before declaring the hypercore language stable, reevaluate whether coordinates
-should remain a distinct type from vectors. The decision must explicitly cover
-their mathematical meaning, valid arithmetic (<code>coordinate - coordinate</code>,
-<code>coordinate + vector</code>, and invalid <code>coordinate + coordinate</code>), component access,
-conversion rules, generic algorithms, runtime representation, and whether type
-separation prevents meaningful simulation errors without creating unnecessary
-friction. This review must happen before work begins on math, rendering, or
-physics libraries.</p>
+<p>The geometry checkpoint is complete: locations are named <code>Point</code> and remain
+affine values distinct from displacement <code>Vector</code> values. Point-vector
+translation and point subtraction are implemented; point addition and
+context-free point/vector conversion are rejected. Cartesian values use ordinary
+<code>(...)</code> and <code>&lt;...&gt;</code> literals. Exactly three-dimensional spherical points and
+vectors use adjacent <code>s(...)</code> and <code>s&lt;...&gt;</code> literals, radians, and named radial/
+angular components. Spherical arithmetic and Cartesian conversion are reserved
+for the first core math geometry API after 1.0. All four families have fixed-size
+component storage, frame tracking remains deferred, and future generic APIs must
+preserve the semantic and representation distinctions.</p>
 <p>The 1.0 release must also provide professional graphical installers for Windows,
 macOS, and Linux, plus platform-appropriate command-line installation. The
 installed toolchain must place <code>sagan</code> on the user's command path, support

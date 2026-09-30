@@ -3313,15 +3313,22 @@ interpolate; <code>${literal_text}</code> in the raw example is ordinary text.</
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>let metadata = {"name": "Voyager", active_key: true, ...defaults,}
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>let direction = &lt;1.0, 0.0, 0.0,&gt;
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>let position = (100.0, 200.0, 300.0,)
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>let radial_direction = s&lt;2.0, 0.5, 1.0&gt;
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>let radial_position = s(100.0, 0.5, 1.0)
 </span></code></pre></div>
 <p>Arrays and dictionaries may be empty. Dictionary keys accept any expression;
-semantic analysis will determine whether a key's type is hashable. Vectors and
-coordinates require at least two elements, so <code>&lt;&gt;</code>, <code>&lt;1&gt;</code>, and <code>(1,)</code> are
-syntax errors. <code>(value)</code> remains a grouped expression.</p>
-<p><strong>Implemented native semantics:</strong> vectors and coordinates retain distinct,
-fixed-size runtime types. Both support construction, same-family spreading,
-zero-based indexing, iteration, equality, printing, and string interpolation.
-Invalid array, vector, or coordinate indices raise
+semantic analysis will determine whether a key's type is hashable. Cartesian
+vectors and points require at least two elements, so <code>&lt;&gt;</code>, <code>&lt;1&gt;</code>, and <code>(1,)</code>
+are syntax errors. <code>(value)</code> remains a grouped expression. Spherical vectors
+and points require exactly three components in the order shown. The <code>s</code> must be
+adjacent to the delimiter: <code>s(...)</code> is a spherical point, while <code>s (...)</code> calls
+an ordinary identifier named <code>s</code>. Inclination and azimuth are radians.</p>
+<p><strong>Implemented native semantics:</strong> Cartesian and spherical vectors and points
+retain distinct, fixed-size runtime types. All support construction, zero-based
+indexing, iteration, equality, printing, and string interpolation. Cartesian
+vectors and points additionally support same-family spreading. Spherical
+literals reject spreads so their three-component representation stays explicit.
+Invalid array, vector, or point indices raise
 <code>RuntimeError.index_out_of_bounds</code>; absent dictionary keys raise
 <code>RuntimeError.missing_key</code>.
 Vectors of equal dimension support <code>+</code>, <code>-</code>, unary <code>+</code>/<code>-</code>, equality, scalar
@@ -3329,9 +3336,26 @@ Vectors of equal dimension support <code>+</code>, <code>-</code>, unary <code>+
 are also supported. <code>.x</code>, <code>.y</code>, <code>.z</code>, and <code>.w</code> read or mutate components when
 the value's dimension contains that component; requesting a component outside
 the dimension is a compile-time error. Component arithmetic retains the scalar
-overflow and zero-divisor checks. Vector-vector multiplication and ordered comparison are
-undefined rather than implicitly meaning dot, cross, component multiplication,
-or lexicographic ordering. Coordinate arithmetic remains future math work.</p>
+overflow and zero-divisor checks. Cartesian points are affine locations: <code>point +
+vector</code> and <code>point - vector</code> translate a point and produce a point;
+<code>point - point</code> produces the displacement vector. Their dimensions
+must agree, and component types widen only when the scalar conversion is
+lossless. <code>point + point</code>, <code>vector + point</code>, point scaling,
+and point negation are invalid. Vector-vector multiplication and ordered
+comparison are undefined rather than implicitly meaning dot, cross, component
+multiplication, or lexicographic ordering.</p>
+<p>There is no implicit or context-free explicit conversion between points and
+vectors: converting a point into a displacement requires an origin, and
+converting a displacement into a point requires applying it to an origin.
+Cartesian/spherical conversion is also explicit and is reserved for the first
+core math geometry API after 1.0; it is not implemented in the hypercore.
+Points and vectors use separate fixed-size wrappers with the same component
+storage cost. Coordinate frames are not yet tracked, so values of the same
+family, dimension, and compatible component type may interact regardless of
+their conceptual frame. Future generic math APIs must state whether they accept
+points, displacement vectors, or both rather than erasing this distinction.
+Spherical values currently support access and storage but no arithmetic; callers
+must not silently mix representations.</p>
 <p>Calls and all collection forms permit trailing commas. <code>...value</code> creates a
 spread node; later semantic analysis will validate whether its surrounding call
 or collection supports the value being expanded. A spread dictionary entry

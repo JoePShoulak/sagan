@@ -3110,12 +3110,17 @@ widening. <code>Int</code> and <code>Float</code> default to 64-bit widths when 
 a narrower inference. A declaration must provide an annotation, initializer, or
 both.</p>
 <p>Arrays infer one homogeneous element type; dictionaries infer homogeneous key
-and value types; and vectors and coordinates infer a numeric component type and
-dimension. Empty arrays/dictionaries await generic annotation syntax. Native
+and value types; and Cartesian/spherical vectors and points infer a numeric
+component type and dimension. Empty arrays/dictionaries await generic annotation syntax. Native
 construction, indexing, iteration, spreads, and display are implemented;
 checked vector addition, subtraction, negation, and scalar scaling are also
-implemented. Dimension-checked <code>.x</code>, <code>.y</code>, <code>.z</code>, and <code>.w</code> component reads and
-updates work for vectors and coordinates. Physical units and
+implemented. Points are affine locations: vectors translate them, and
+subtracting two points yields the displacement vector. Dimension-checked
+<code>.x</code>, <code>.y</code>, <code>.z</code>, and <code>.w</code> component reads and
+updates work for Cartesian vectors and points. Three-dimensional spherical
+values use <code>s&lt;magnitude, inclination, azimuth&gt;</code> and
+<code>s(radius, inclination, azimuth)</code>, with radians and representation-specific
+named members. Physical units and
 coordinate frames are deliberately not distinguished by the initial type system.</p>
 
 

@@ -3099,8 +3099,8 @@ duplicate declarations or undefined names with source locations.</p>
 rejected. Function and lambda parameters, local declarations, loop variables,
 type members, enum members, imports, exports, composition references, and
 <code>self</code> participate in the current traversal. Built-in type symbols currently
-include <code>Bool</code>, <code>Coordinate</code>, <code>Float</code>, <code>Float32</code>, <code>Float64</code>, <code>Frame</code>, <code>Int</code>,
-<code>String</code>, <code>Vector</code>, and <code>Void</code>.</p>
+include <code>Bool</code>, <code>Float</code>, <code>Float32</code>, <code>Float64</code>, <code>Frame</code>, <code>Int</code>, <code>Point</code>,
+<code>SphericalPoint</code>, <code>SphericalVector</code>, <code>String</code>, <code>Vector</code>, and <code>Void</code>.</p>
 <p>Name collection deliberately remains separate from type and control-flow
 checking. Top-level names are collected before bodies are visited, permitting
 forward and self references. Later checking establishes overload signatures,
@@ -3123,9 +3123,10 @@ valid.</p>
 <p>Array literals infer one losslessly widened element type, dictionary literals
 infer homogeneous key and value types, and indexing returns the stored type.
 Their empty forms are rejected until explicit generic annotations exist.
-Vectors and coordinates require numeric components and carry dimension plus
-component type, such as <code>Vector3&lt;Float64&gt;</code>; compatibility requires equal
-dimensions and lossless component widening.</p>
+Vectors and points require numeric components and carry dimension plus component
+type, such as <code>Vector3&lt;Float64&gt;</code> or <code>Point3&lt;Float64&gt;</code>; compatibility requires
+equal dimensions and lossless component widening. Spherical forms are distinct
+three-dimensional families with radial/angular named components.</p>
 <p>Dimensioned <code>.x</code>, <code>.y</code>, <code>.z</code>, and <code>.w</code> members resolve to their component type
 when present. Typed expression lambdas retain parameter and result signatures
 through local bindings; stored and immediate calls validate arity and lossless

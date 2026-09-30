@@ -3109,20 +3109,32 @@ initializer.</p>
 <p>Array literals infer invariant <code>Array&lt;Element&gt;</code> types, while dictionary literals
 infer <code>Dictionary&lt;Key, Value&gt;</code> with homogeneous keys and values. Spreads must
 provide compatible collections. Empty arrays and dictionaries cannot yet be
-checked because contextual collection construction is not implemented. Vector and
-coordinate literals infer their dimension and common numeric component type,
-for example <code>Vector3&lt;Float64&gt;</code>; dimensions must match for compatibility.
-The native backend preserves the vector-versus-coordinate distinction and the
+checked because contextual collection construction is not implemented. Cartesian
+vector and point literals infer their dimension and common numeric component
+type, for example <code>Vector3&lt;Float64&gt;</code> and <code>Point3&lt;Float64&gt;</code>; dimensions must
+match for compatibility. Three-component spherical literals infer
+<code>SphericalVector3&lt;Component&gt;</code> or <code>SphericalPoint3&lt;Component&gt;</code>.
+The native backend preserves the vector-versus-point and representation distinctions and the
 inferred dimension and component type. Generic dimensioned annotations are not
 yet available in source code.
-Named <code>.x</code>, <code>.y</code>, <code>.z</code>, and <code>.w</code> access has the inferred component type and is
+Named <code>.x</code>, <code>.y</code>, <code>.z</code>, and <code>.w</code> access on Cartesian values has the inferred component type and is
 accepted only when the dimension contains that component. These members are
 assignable and compound assignment preserves the normal lossless-conversion
 rules.
+Spherical points instead expose <code>.radius</code>, <code>.inclination</code>, and <code>.azimuth</code>;
+spherical vectors expose <code>.magnitude</code>, <code>.inclination</code>, and <code>.azimuth</code>. Angles
+are radians. Spherical arithmetic and Cartesian conversion are not yet
+implemented and will be defined with the core math geometry API after 1.0.
 Vector arithmetic requires equal dimensions and infers the lossless common
 component type. Scalar multiplication and division likewise widen the component
 type when necessary; compound assignment rejects a result that cannot be stored
-losslessly in its target vector.</p>
+losslessly in its target vector.
+Points are affine locations, while vectors are directions or displacements.
+Translating a point by a same-dimension vector returns a point;
+subtracting points returns a vector. Point addition, vector-first
+point translation, scaling, negation, and context-free conversion between the
+families are rejected. These rules preserve the same lossless component
+widening and checked integer arithmetic as vector operations.</p>
 <p><strong>Implemented for the native numeric subset:</strong> integer arithmetic overflow
 raises the nominal <code>RuntimeError.integer_overflow</code> exception. Other native
 numeric domain failures and collection lookup failures use the corresponding
