@@ -3092,6 +3092,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#executable-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executable examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documentation-version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3469,6 +3480,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#executable-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executable examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documentation-version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3518,6 +3540,27 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>bash<span class="w"> </span>scripts/docs_versions_test.sh
 </span></code></pre></div>
+<h2 id="executable-examples">Executable examples</h2>
+<p>Executable documentation examples live under <code>docs/examples/executable/</code> so
+their source and expected output are retained in every published documentation
+archive. Each <code>NAME.sagan</code> program must have a same-named <code>NAME.stdout</code> file
+containing its exact expected standard output. Programs must exit successfully
+and must not require interactive input.</p>
+<p><code>bash scripts/docs.sh check</code> builds the current Sagan compiler, runs every
+archived executable example, and compares its output exactly after normalizing
+platform line endings before building the site. A missing expected-output
+file, an orphaned output file, a nonzero
+exit status, output on standard error, or any output difference fails the
+documentation build. Do not paste a second, independently maintained copy of
+an executable example into a page; use the snippets extension to display the
+archived source directly.</p>
+<p>Add a new example with this layout:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docs/examples/executable/example-name.sagan
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>docs/examples/executable/example-name.stdout
+</span></code></pre></div>
+<p>Then run:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
+</span></code></pre></div>
 <p>The unreleased documentation channel is named <strong>experimental</strong>. It is useful to
 project contributors and to anyone building from a clone of the live repository.
 Documentation changes on pull requests are validated on a GitHub-hosted runner.
@@ -3538,18 +3581,18 @@ version selector. The <code>latest</code> alias and the site root point to the n
 released documentation. Before the first release exists, the site root may
 temporarily point to <code>experimental</code>.</p>
 <p>Every page starts with this metadata:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">work-in-progress</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">work-in-progress</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 </span></code></pre></div>
 <p>To confirm a page as accurate and ready for publication, change all five fields together:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">publication-ready</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RELEASE_VERSION</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">YYYY-MM-DD</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reviewer name</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">publication-ready</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RELEASE_VERSION</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">YYYY-MM-DD</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reviewer name</span>
 </span></code></pre></div>
 <p><code>bash scripts/docs.sh check</code> rejects missing, incomplete, contradictory, or stale
 ready-state metadata. In <code>experimental</code>, a ready page may be verified for an

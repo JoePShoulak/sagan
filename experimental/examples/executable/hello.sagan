@@ -1,0 +1,4 @@
+fun main(): Int {
+  print("Hello from Sagan!")
+  return 0
+}
