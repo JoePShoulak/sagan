@@ -24,8 +24,8 @@ verified_by: null
 
 - parallel execution;
 - bitwise operators;
-- binary, octal, hexadecimal, numeric-suffix, or unit-suffix literals;
-- encoding physical units or coordinate frames in the initial type system;
+- binary, octal, hexadecimal, or numeric-suffix literals;
+- encoding coordinate frames in the initial type system;
 - requiring physics or rendering in lightweight programs;
 - C or C++ interoperability in the first compiler; and
 - optimizing before the parser, semantics, and runtime contracts are established.

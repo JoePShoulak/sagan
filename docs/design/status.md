@@ -20,6 +20,7 @@ verified_by: null
 | Runtime and memory model | **Reference ownership model implemented** | shared reference-counted class/face values, dynamic dispatch, explicit `weak let` fields, compile-time rejection of all-strong declaration cycles and strong face fields, optional weak reads, payload matching, safe `?.`, and lazy `??` |
 | Standard/core libraries | **Model settled; APIs open** | math is automatic; physics and rendering are explicit first-party imports |
 | C++ code generation and execution | **Initial executable subset implemented** | direct `sagan file.sagan`, `--run-package`, temporary native builds, exit propagation, `--emit-cpp`, reference-counted classes/faces, exceptions, lambdas, checked arithmetic, collections, dimensions, control flow, demos |
+| Native units of measure | **Implemented pre-1.0 slice** | static dimensions/quantities/units, affine temperatures, scientific catalog and SI prefixes, callable constraints, custom declarations, erased native representation, `make units-demo` |
 | Deterministic execution | **Catchable runtime-error foundation implemented** | checked arithmetic and collection lookup failures become nominal `RuntimeError` values, with focused fixtures and a native demo |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
 | Editor-tooling foundation | **Phase 0–3 foundation implemented** | reusable compiler archive, source identity/UTF-16 positions, structured diagnostics, lossless recovery, thread-safe versioned overlays, overlay-aware module resolution, cached workspace analysis, dependency invalidation, cancellation/stale-result gates, demos |
@@ -136,12 +137,14 @@ for the first core math geometry API after 1.0. All four families have fixed-siz
 component storage, frame tracking remains deferred, and future generic APIs must
 preserve the semantic and representation distinctions.
 
-Late in the pre-1.0 roadmap, investigate units of measure as optional interfaces
-on numeric values. The checkpoint should determine whether unit conformance can
-remain opt-in while still tracking units through arithmetic, conversions, and
-generic code. Reliable unit tracking will be difficult, but the safety and
-scientific-programming payoff could be substantial; this is an investigation,
-not yet a settled language commitment.
+The pre-1.0 units checkpoint is complete. Units are native compile-time metadata,
+not optional interfaces: dimensions, named quantities, concrete scales, affine
+points/differences, exact conversions, custom declarations, SI prefixes, and a
+scientific catalog are implemented. Unit annotations apply to locals, fields,
+function/method/constructor/lambda parameters and results, generic arguments,
+and face signatures. Generated values retain only their ordinary numeric or
+geometry representation. Dynamic/logarithmic units, uncertainty, fractional
+dimensions, external catalogs, and coordinate frames remain deferred.
 
 Windows is the initial supported installation platform; macOS and Linux remain
 tracked future targets. The Windows installer foundation now bundles the UCRT64

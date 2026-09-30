@@ -68,6 +68,13 @@ namespace parser
         }
         return std::make_unique<visual_node>(visual_node{kind + "\n" + literal->spelling, "literal"});
       }
+      if (const auto *measured = dynamic_cast<const measured_expression *>(&value))
+      {
+        auto result = std::make_unique<visual_node>(visual_node{
+            std::string(measured->conversion ? "Convert\n" : "Measure\n") + measured->unit, "type"});
+        result->children.push_back(make_expression_node(*measured->value));
+        return result;
+      }
       if (const auto *grouping = dynamic_cast<const grouping_expression *>(&value))
       {
         auto result = std::make_unique<visual_node>(visual_node{"Group", "expression"});
@@ -451,6 +458,28 @@ namespace parser
           }
           node->children.push_back(std::move(member_node));
         }
+        return node;
+      }
+      if (const auto *measurement = dynamic_cast<const measurement_declaration *>(&value))
+      {
+        const char *kind = measurement->declaration_kind == measurement_declaration::kind::dimension
+                               ? "Dimension"
+                           : measurement->declaration_kind == measurement_declaration::kind::quantity
+                               ? "Quantity"
+                           : measurement->declaration_kind == measurement_declaration::kind::affine_unit
+                               ? "Affine unit"
+                               : "Unit";
+        auto node = std::make_unique<visual_node>(visual_node{std::string(kind) + "\n" + measurement->name,
+                                                              "declaration"});
+        if (measurement->declared_dimension)
+          node->children.push_back(std::make_unique<visual_node>(
+              visual_node{"Dimension\n" + *measurement->declared_dimension, "type"}));
+        if (measurement->definition)
+          node->children.push_back(std::make_unique<visual_node>(
+              visual_node{"Definition\n" + *measurement->definition, "expression"}));
+        for (const auto &[property, property_value] : measurement->properties)
+          node->children.push_back(std::make_unique<visual_node>(
+              visual_node{"Property\n" + property + ": " + property_value, "declaration"}));
         return node;
       }
       if (const auto *module = dynamic_cast<const module_declaration *>(&value))

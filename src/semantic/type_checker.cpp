@@ -1,6 +1,7 @@
 #include "type_checker.hpp"
 
 #include "semantic_error.hpp"
+#include "units.hpp"
 
 #include <algorithm>
 #include <array>
@@ -168,7 +169,8 @@ namespace semantic
 
     auto is_numeric(const std::string_view type) -> bool
     {
-      return type.starts_with("Int") || type.starts_with("Float");
+      return type.find('<') == std::string_view::npos &&
+             (type.starts_with("Int") || type.starts_with("Float"));
     }
 
     auto integer_width(const std::string_view type) -> int
@@ -280,6 +282,7 @@ namespace semantic
       std::unordered_map<std::string, std::vector<std::string>> generic_enums;
       std::optional<std::string> expected_expression;
       std::optional<std::string> active_class;
+      units::registry unit_registry;
 
       auto open_scope() -> void
       {
@@ -353,6 +356,12 @@ namespace semantic
       auto compatible(const std::string_view expected, const std::string_view actual) const -> bool
       {
         if (is_unknown(expected) || is_unknown(actual) || expected == actual) return true;
+        const auto expected_measured = units::parse_measured_type(expected, unit_registry, {});
+        const auto actual_measured = units::parse_measured_type(actual, unit_registry, {});
+        if (expected_measured || actual_measured)
+          return expected_measured && actual_measured &&
+                 units::compatible(expected_measured->unit, actual_measured->unit) &&
+                 compatible(expected_measured->numeric, actual_measured->numeric);
         if (const auto expected_value = optional_element(expected))
         {
           if (actual == "None") return true;
@@ -424,6 +433,15 @@ namespace semantic
         if (is_unknown(left)) return right;
         if (is_unknown(right)) return left;
         if (left == right) return left;
+        const auto left_measured = units::parse_measured_type(left, unit_registry, range);
+        const auto right_measured = units::parse_measured_type(right, unit_registry, range);
+        if ((left_measured || right_measured) && !dimensioned(left) && !dimensioned(right))
+        {
+          require(left_measured && right_measured && units::compatible(left_measured->unit, right_measured->unit),
+                  std::string(context) + " have incompatible units " + left + " and " + right, range);
+          return units::format_type(common_type(left_measured->numeric, right_measured->numeric, range, context),
+                                    left_measured->unit);
+        }
         const int left_width = integer_width(left);
         const int right_width = integer_width(right);
         if (left_width >= 0 && right_width >= 0)
@@ -457,6 +475,56 @@ namespace semantic
                            const parser::span range) const -> std::string
       {
         if (is_unknown(left) || is_unknown(right)) return std::string(unknown_type);
+        const auto left_measured = units::parse_measured_type(left, unit_registry, range);
+        const auto right_measured = units::parse_measured_type(right, unit_registry, range);
+        if ((left_measured || right_measured) && !dimensioned(left) && !dimensioned(right))
+        {
+          if (operation == "+" || operation == "-")
+          {
+            require(left_measured && right_measured &&
+                        left_measured->unit.dimension == right_measured->unit.dimension &&
+                        (!left_measured->unit.quantity || !right_measured->unit.quantity ||
+                         left_measured->unit.quantity == right_measured->unit.quantity),
+                    "Operator '" + operation + "' requires compatible units, but received " + left + " and " + right,
+                    range);
+            const auto left_kind = left_measured->unit.kind;
+            const auto right_kind = right_measured->unit.kind;
+            auto result_unit = left_measured->unit;
+            if (left_kind == units::category::affine_point && right_kind == units::category::affine_point)
+            {
+              require(operation == "-", "Absolute affine points cannot be added", range);
+              result_unit = units::difference_of(result_unit);
+            }
+            else if (left_kind == units::category::affine_point)
+              require(right_kind == units::category::affine_difference,
+                      "Affine points may only add or subtract differences", range);
+            else
+              require(left_kind == right_kind, "Affine points and differences are not interchangeable", range);
+            return units::format_type(common_type(left_measured->numeric, right_measured->numeric, range,
+                                                  "Measured operands"), result_unit);
+          }
+          require(operation == "*" || operation == "/",
+                  "Operator '" + operation + "' is not defined for measured values", range);
+          if (left_measured && right_measured)
+          {
+            try
+            {
+              return units::format_type(common_type(left_measured->numeric, right_measured->numeric, range,
+                                                    "Measured operands"),
+                                        units::combine(left_measured->unit, right_measured->unit,
+                                                       operation.front(), unit_registry));
+            }
+            catch (const std::domain_error &error) { require(false, error.what(), range); }
+          }
+          const auto &measured = left_measured ? *left_measured : *right_measured;
+          const std::string &plain = left_measured ? right : left;
+          require(is_numeric(plain), "Measured values may only scale by numeric values", range);
+          require(measured.unit.kind != units::category::affine_point,
+                  "Absolute affine points cannot be multiplied or divided", range);
+          require(left_measured || operation == "*", "A scalar cannot be divided by a measured value", range);
+          return units::format_type(common_type(measured.numeric, plain, range, "Measured scalar operands"),
+                                    measured.unit);
+        }
         const auto left_dimensioned = dimensioned(left);
         const auto right_dimensioned = dimensioned(right);
         if (!left_dimensioned && !right_dimensioned)
@@ -489,6 +557,15 @@ namespace semantic
         if (operation == "*" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
           return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
                  common_type(left_dimensioned->component, right, range, "Vector scalar operands") + ">";
+        if ((operation == "*" || operation == "/") && left_dimensioned &&
+            left_dimensioned->family == "Vector" &&
+            units::parse_measured_type(right, unit_registry, range))
+          return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
+                 arithmetic_type(operation, left_dimensioned->component, right, range) + ">";
+        if (operation == "*" && right_dimensioned && right_dimensioned->family == "Vector" &&
+            units::parse_measured_type(left, unit_registry, range))
+          return "Vector" + std::to_string(right_dimensioned->dimensions) + "<" +
+                 arithmetic_type(operation, left, right_dimensioned->component, range) + ">";
         if (operation == "*" && right_dimensioned && right_dimensioned->family == "Vector" && is_numeric(left))
           return "Vector" + std::to_string(right_dimensioned->dimensions) + "<" +
                  common_type(left, right_dimensioned->component, range, "Vector scalar operands") + ">";
@@ -549,6 +626,14 @@ namespace semantic
         const auto generic = generic_instance(*name);
         if (!generic.arguments.empty())
         {
+          if ((generic.base.starts_with("Vector") || generic.base.starts_with("Point") ||
+               generic.base.starts_with("SphericalVector") || generic.base.starts_with("SphericalPoint")) &&
+              generic.arguments.size() == 2)
+          {
+            const auto numeric = fixed_annotation(std::optional<std::string>{generic.arguments[0]});
+            const auto unit = unit_registry.resolve(generic.arguments[1], {});
+            return generic.base + '<' + units::format_type(numeric, unit) + '>';
+          }
           std::string result = generic.base + '<';
           for (std::size_t index = 0; index < generic.arguments.size(); ++index)
           {
@@ -936,6 +1021,35 @@ namespace semantic
                                        : "Bool";
           return record(value, type);
         }
+        if (const auto *measured = dynamic_cast<const parser::measured_expression *>(&value))
+        {
+          const std::string source = expression(*measured->value);
+          const auto target_unit = unit_registry.resolve(measured->unit, measured->range);
+          if (const auto shaped = dimensioned(source))
+          {
+            if (measured->conversion)
+            {
+              const auto component = units::parse_measured_type(shaped->component, unit_registry, measured->range);
+              require(component && units::compatible(target_unit, component->unit),
+                      "Conversion requires compatible units", measured->range);
+              return record(value, shaped->family + std::to_string(shaped->dimensions) + "<" +
+                                   units::format_type(component->numeric, target_unit) + ">");
+            }
+            require(is_numeric(shaped->component), "A unit suffix requires unitless numeric components",
+                    measured->range);
+            return record(value, shaped->family + std::to_string(shaped->dimensions) + "<" +
+                                 units::format_type(shaped->component, target_unit) + ">");
+          }
+          if (measured->conversion)
+          {
+            const auto source_unit = units::parse_measured_type(source, unit_registry, measured->range);
+            require(source_unit && units::compatible(target_unit, source_unit->unit),
+                    "Conversion requires compatible units", measured->range);
+            return record(value, units::format_type(source_unit->numeric, target_unit));
+          }
+          require(is_numeric(source), "A unit suffix requires a unitless numeric value", measured->range);
+          return record(value, units::format_type(source, target_unit));
+        }
         if (dynamic_cast<const parser::string_expression *>(&value))
         {
           const auto &string = static_cast<const parser::string_expression &>(value);
@@ -1200,6 +1314,7 @@ namespace semantic
                 }
                 require(!viable.empty(), "No matching constructor for '" + constructed.base + "'", value.range);
                 require(viable.size() == 1, "Ambiguous constructor for '" + constructed.base + "'", value.range);
+                model.calls.push_back(resolved_call{value.range, viable.front().first.parameters, constructed.base});
                 type_arguments = std::move(viable.front().second);
               }
               require(std::none_of(type_arguments.begin(), type_arguments.end(), [](const auto &type)
@@ -1273,6 +1388,7 @@ namespace semantic
             require(!viable.empty(), "No matching overload for '" + requested.base + "'", value.range);
             require(viable.size() == 1, "Ambiguous overload for '" + requested.base + "'", value.range);
             static_cast<void>(record(*call->callee, "Function"));
+            model.calls.push_back(resolved_call{value.range, viable.front().parameters, viable.front().result});
             return record(value, viable.front().result);
           }
           static_cast<void>(expression(*call->callee));
@@ -1317,6 +1433,7 @@ namespace semantic
           for (std::size_t index = 0; index < arguments.size(); ++index)
             require_compatible(instantiated.parameters[index], arguments[index], call->arguments[index]->range,
                                "Callable argument");
+          model.calls.push_back(resolved_call{value.range, instantiated.parameters, instantiated.result});
           return record(value, instantiated.result);
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
@@ -1578,7 +1695,7 @@ namespace semantic
         {
           const auto *matches = find(identifier->name);
           require(matches && !matches->empty(), "Undefined name '" + identifier->name + "'", value.range);
-          return matches->front().type;
+          return record(value, matches->front().type);
         }
         if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
         {
@@ -2103,6 +2220,7 @@ namespace semantic
     public:
       auto run(const parser::program &tree) -> type_model
       {
+        unit_registry.add_program(tree);
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}, {}}});
         add_binding("None", binding{"None", {}});
         add_binding("RuntimeError", binding{"Type", {}});

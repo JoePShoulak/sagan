@@ -39,10 +39,9 @@ mathematical facility a language keyword or primitive. The boundary between
 compiler-provided behavior and library-provided behavior must be documented as
 the implementation develops.
 
-Physical units and coordinate frames are not distinguished by Sagan's initial
-type system. Future library types may model them, but this documentation must
-not claim a particular representation or safety guarantee until one is
-designed and implemented.
+Physical units are distinguished by Sagan's native static type system and flow
+through scalar and geometry arithmetic. Coordinate frames and the unit-aware
+higher math API remain later design work.
 
 ## Documentation required before release
 

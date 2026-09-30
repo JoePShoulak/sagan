@@ -19,9 +19,10 @@ verified_by: null
 | Basic output intrinsic | Provisional | `print(value)` implemented for the native subset |
 
 No physics, rendering, or general standard-library API should be inferred from
-the project's intended domains. Physical units and coordinate frames are not
-distinguished by the initial type system; libraries and user-defined types may
-model them.
+the project's intended domains. Physical units are implemented by the language
+type system and available without importing physics; coordinate-frame identity
+remains deferred. The physics library will build on the native unit model rather
+than maintaining a parallel runtime wrapper.
 
 The high-level core-library structure is decided, but the libraries are not yet
 implemented.

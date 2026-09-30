@@ -167,7 +167,15 @@ namespace semantic
         {
           const std::size_t open = name->find('<');
           const std::string base = open == std::string::npos ? *name : name->substr(0, open);
-          const auto declaration = find(base);
+          std::string lookup = base;
+          for (const std::string_view family : {std::string_view{"SphericalVector"},
+                                                std::string_view{"SphericalPoint"},
+                                                std::string_view{"Vector"}, std::string_view{"Point"}})
+            if (lookup.starts_with(family) && lookup.size() > family.size() &&
+                std::all_of(lookup.begin() + static_cast<std::ptrdiff_t>(family.size()), lookup.end(),
+                            [](const unsigned char value) { return value >= '0' && value <= '9'; }))
+              lookup = family;
+          const auto declaration = find(lookup);
           if (!declaration)
           {
             if (tolerant_) return;
@@ -180,12 +188,16 @@ namespace semantic
             if (tolerant_) return;
             throw semantic_error("'" + base + "' does not name a type", range);
           }
-          model.resolutions.push_back(resolution{base, range, declaration->declaration, declaration->id, kind});
+          model.resolutions.push_back(resolution{lookup, range, declaration->declaration, declaration->id, kind});
           if (open != std::string::npos)
           {
             if (!name->ends_with('>')) throw semantic_error("Malformed type annotation '" + *name + "'", range);
             const std::string arguments = name->substr(open + 1, name->size() - open - 2);
+            const bool measured_scalar = lookup.starts_with("Int") || lookup.starts_with("Float");
+            const bool dimensioned_type = lookup == "Vector" || lookup == "Point" ||
+                                          lookup == "SphericalVector" || lookup == "SphericalPoint";
             std::size_t begin = 0;
+            std::size_t argument_index = 0;
             int depth = 0;
             for (std::size_t index = 0; index <= arguments.size(); ++index)
             {
@@ -195,8 +207,10 @@ namespace semantic
               {
                 std::string argument = arguments.substr(begin, index - begin);
                 while (!argument.empty() && argument.front() == ' ') argument.erase(argument.begin());
-                resolve_type(std::optional<std::string>{argument}, range);
+                if (!measured_scalar && (!dimensioned_type || argument_index == 0))
+                  resolve_type(std::optional<std::string>{argument}, range);
                 begin = index + 1;
+                ++argument_index;
               }
             }
           }
@@ -277,6 +291,16 @@ namespace semantic
                   symbol_visibility::public_access, symbol_origin::imported,
                   documentation(imported->documentation));
         }
+        else if (const auto *measurement = dynamic_cast<const parser::measurement_declaration *>(&value))
+        {
+          const auto kind = measurement->declaration_kind == parser::measurement_declaration::kind::dimension
+                                ? symbol_kind::dimension
+                            : measurement->declaration_kind == parser::measurement_declaration::kind::quantity
+                                ? symbol_kind::quantity
+                                : symbol_kind::unit;
+          declare(measurement->name, kind, measurement->range, symbol_visibility::public_access,
+                  symbol_origin::source, documentation(measurement->documentation));
+        }
       }
 
       auto expression(const parser::expression &value) -> void
@@ -290,6 +314,10 @@ namespace semantic
         else if (const auto *grouping = dynamic_cast<const parser::grouping_expression *>(&value))
         {
           expression(*grouping->value);
+        }
+        else if (const auto *measured = dynamic_cast<const parser::measured_expression *>(&value))
+        {
+          expression(*measured->value);
         }
         else if (const auto *unary = dynamic_cast<const parser::unary_expression *>(&value))
         {
@@ -541,6 +569,10 @@ namespace semantic
         {
           type(*type_declaration);
         }
+        else if (dynamic_cast<const parser::measurement_declaration *>(&value))
+        {
+          // Validated by the unit registry in the type checker.
+        }
         else if (const auto *exported = dynamic_cast<const parser::export_declaration *>(&value))
         {
           resolve_name(exported->exported_name, exported->range, reference_kind::export_reference);
@@ -591,6 +623,9 @@ namespace semantic
     case symbol_kind::constructor: return "constructor";
     case symbol_kind::type: return "type";
     case symbol_kind::type_parameter: return "type parameter";
+    case symbol_kind::dimension: return "dimension";
+    case symbol_kind::quantity: return "quantity";
+    case symbol_kind::unit: return "unit";
     case symbol_kind::field: return "field";
     case symbol_kind::method: return "method";
     case symbol_kind::enum_case: return "enum member";

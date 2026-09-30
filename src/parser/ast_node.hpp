@@ -6,6 +6,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace parser
@@ -56,6 +57,17 @@ namespace parser
     double numeric_value;
 
     literal_expression(span source_range, kind type, std::string source_spelling, double value);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct measured_expression final : expression
+  {
+    expression_ref value;
+    std::string unit;
+    bool conversion;
+
+    measured_expression(span source_range, expression_ref measured_value,
+                        std::string unit_expression, bool is_conversion);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
@@ -449,6 +461,23 @@ namespace parser
                      std::vector<std::string> interfaces,
                      std::vector<statement_ref> declared_members,
                      std::vector<enum_member> declared_enum_members);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
+  struct measurement_declaration final : statement
+  {
+    enum class kind { dimension, quantity, linear_unit, affine_unit };
+
+    kind declaration_kind;
+    std::string name;
+    std::optional<std::string> declared_dimension;
+    std::optional<std::string> definition;
+    std::vector<std::pair<std::string, std::string>> properties;
+
+    measurement_declaration(span source_range, kind type, std::string identifier,
+                            std::optional<std::string> dimension,
+                            std::optional<std::string> unit_definition,
+                            std::vector<std::pair<std::string, std::string>> declared_properties);
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 

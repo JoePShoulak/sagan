@@ -78,7 +78,7 @@ equality, and compound forms. Vector-vector multiplication is deliberately not
 assigned an implicit dot, cross, or component-wise meaning. Points support
 checked translation by vectors and subtraction into displacement vectors;
 point addition and direction-first translation are rejected. Explicit generic
-annotations for dimensioned values are not implemented. Both dimensioned
+annotations for dimensioned values and physical units are implemented. Both dimensioned
 families provide `.x`, `.y`, `.z`, and `.w` component access where their
 dimension permits it; components are assignable because variables are mutable
 by default.

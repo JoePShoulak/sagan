@@ -127,6 +127,23 @@ namespace parser
       {
         declaration = parse_type_declaration(type_declaration::kind::enum_type);
       }
+      else if (match(tokens::KWD_DIMENSION))
+      {
+        declaration = parse_measurement_declaration(measurement_declaration::kind::dimension);
+      }
+      else if (match(tokens::KWD_QUANTITY))
+      {
+        declaration = parse_measurement_declaration(measurement_declaration::kind::quantity);
+      }
+      else if (match(tokens::KWD_UNIT))
+      {
+        declaration = parse_measurement_declaration(measurement_declaration::kind::linear_unit);
+      }
+      else if (match(tokens::KWD_AFFINE))
+      {
+        expect(tokens::KWD_UNIT, "'unit' after 'affine'");
+        declaration = parse_measurement_declaration(measurement_declaration::kind::affine_unit);
+      }
       else if (match(tokens::KWD_MODULE))
       {
         if (seen_module)
@@ -479,6 +496,90 @@ namespace parser
                                               std::move(members), std::move(enum_members));
   }
 
+  auto syntax_parser::parse_unit_expression(const bool allow_composite) -> std::string
+  {
+    const auto factor = [&]() -> std::string
+    {
+      if (match(tokens::IDENTIFIER))
+      {
+        std::string result = previous().text;
+        if ((result == "Delta" || result == "Δ") && match(tokens::LANGLE))
+        {
+          result = "Delta<" + parse_unit_expression(true);
+          expect(tokens::RANGLE, "'>' after the delta unit");
+          result += '>';
+        }
+        return result;
+      }
+      if (match(tokens::INTEGER) || match(tokens::FLOAT)) return previous().text;
+      if (allow_composite && match(tokens::LPAREN))
+      {
+        std::string result = "(" + parse_unit_expression(true);
+        expect(tokens::RPAREN, "')' after the unit expression");
+        return result + ')';
+      }
+      throw parse_error("Expected a unit name or scale factor", at_end() ? previous().range : peek()->range);
+    };
+
+    std::string result = factor();
+    if (match(tokens::CARET))
+    {
+      const bool negative = match(tokens::MINUS);
+      const token &exponent = expect(tokens::INTEGER, "an integer unit exponent");
+      result += '^' + std::string(negative ? "-" : "") + exponent.text;
+    }
+    while (allow_composite && (match(tokens::STAR) || match(tokens::SLASH)))
+    {
+      const std::string operation = previous().text;
+      result += ' ' + operation + ' ' + factor();
+      if (match(tokens::CARET))
+      {
+        const bool negative = match(tokens::MINUS);
+        const token &exponent = expect(tokens::INTEGER, "an integer unit exponent");
+        result += '^' + std::string(negative ? "-" : "") + exponent.text;
+      }
+    }
+    return result;
+  }
+
+  auto syntax_parser::parse_measurement_declaration(const measurement_declaration::kind type) -> statement_ref
+  {
+    const token keyword = previous();
+    const token &name = expect(tokens::IDENTIFIER, "a measurement name");
+    std::optional<std::string> dimension;
+    std::optional<std::string> definition;
+    if (match(tokens::COLON)) dimension = expect(tokens::IDENTIFIER, "a dimension name after ':'").text;
+    if (match(tokens::EQUAL)) definition = parse_unit_expression(true);
+    if ((type == measurement_declaration::kind::quantity || type == measurement_declaration::kind::linear_unit) &&
+        !definition)
+      throw parse_error("This measurement declaration requires a definition after '='", name.range);
+
+    std::vector<std::pair<std::string, std::string>> properties;
+    int end = previous().range.end;
+    if (match(tokens::LBRACE))
+    {
+      skip_newlines();
+      while (!check(tokens::RBRACE))
+      {
+        const token &property = expect(tokens::IDENTIFIER, "a unit property name");
+        expect(tokens::COLON, "':' after the unit property name");
+        std::string value;
+        while (!at_end() && !check(tokens::NEWLINE) && !check(tokens::RBRACE))
+        {
+          if (!value.empty()) value += ' ';
+          value += advance().text;
+        }
+        if (value.empty()) throw parse_error("A unit property requires a value", property.range);
+        properties.emplace_back(property.text, std::move(value));
+        skip_newlines();
+      }
+      end = expect(tokens::RBRACE, "'}' after unit properties").range.end;
+    }
+    return std::make_unique<measurement_declaration>(span{keyword.range.begin, end}, type, name.text,
+                                                      std::move(dimension), std::move(definition),
+                                                      std::move(properties));
+  }
+
   auto syntax_parser::parse_module_declaration() -> statement_ref
   {
     const token &keyword = previous();
@@ -771,15 +872,30 @@ namespace parser
   auto syntax_parser::parse_type_annotation(const std::string &description) -> std::string
   {
     std::string result = expect(tokens::IDENTIFIER, description).text;
-    if (!match(tokens::LANGLE)) return result;
-    result += '<';
-    do
+    if (result == "Δ") result = "Delta";
+    if (match(tokens::LANGLE))
     {
-      if (result.back() != '<') result += ", ";
-      result += parse_type_annotation("a type argument");
-    } while (match(tokens::COMMA));
-    expect(tokens::RANGLE, "'>' after type arguments");
-    return result + '>';
+      result += '<';
+      do
+      {
+        if (result.back() != '<') result += ", ";
+        result += parse_type_annotation("a type argument");
+      } while (match(tokens::COMMA));
+      expect(tokens::RANGLE, "'>' after type arguments");
+      result += '>';
+    }
+    while (match(tokens::STAR) || match(tokens::SLASH))
+    {
+      const std::string operation = previous().text;
+      result += ' ' + operation + ' ' + expect(tokens::IDENTIFIER, "a unit name").text;
+      if (match(tokens::CARET))
+      {
+        const bool negative = match(tokens::MINUS);
+        result += '^' + std::string(negative ? "-" : "") +
+                  expect(tokens::INTEGER, "an integer unit exponent").text;
+      }
+    }
+    return result;
   }
 
   auto syntax_parser::parse_nested_expression() -> expression_ref
@@ -952,6 +1068,39 @@ namespace parser
     auto value = parse_primary();
     while (!at_end())
     {
+      const bool unit_attachable = dynamic_cast<literal_expression *>(value.get()) != nullptr ||
+                                   dynamic_cast<collection_expression *>(value.get()) != nullptr;
+      if (unit_attachable && check(tokens::IDENTIFIER) &&
+          (current + 1 >= input.size() || input[current + 1].id != tokens::LPAREN))
+      {
+        const int begin = value->range.begin;
+        std::string unit = parse_unit_expression(false);
+        const int end = previous().range.end;
+        value = std::make_unique<measured_expression>(span{begin, end}, std::move(value),
+                                                      std::move(unit), false);
+        continue;
+      }
+      if (unit_attachable && check(tokens::LPAREN) && value->range.end < peek()->range.begin)
+      {
+        const int begin = value->range.begin;
+        advance();
+        std::string unit = parse_unit_expression(true);
+        const int end = expect(tokens::RPAREN, "')' after the composite unit suffix").range.end;
+        value = std::make_unique<measured_expression>(span{begin, end}, std::move(value),
+                                                      std::move(unit), false);
+        continue;
+      }
+      if (match(tokens::KWD_AS))
+      {
+        const int begin = value->range.begin;
+        const bool parenthesized = match(tokens::LPAREN);
+        std::string unit = parse_unit_expression(parenthesized);
+        if (parenthesized) expect(tokens::RPAREN, "')' after the conversion unit");
+        const int end = previous().range.end;
+        value = std::make_unique<measured_expression>(span{begin, end}, std::move(value),
+                                                      std::move(unit), true);
+        continue;
+      }
       if (match(tokens::LPAREN))
       {
         std::vector<expression_ref> arguments;
@@ -1159,7 +1308,7 @@ namespace parser
     std::optional<std::string> return_type;
     if (match(tokens::COLON))
     {
-      return_type = expect(tokens::IDENTIFIER, "a lambda return type after ':'").text;
+      return_type = parse_type_annotation("a lambda return type after ':'");
     }
     expect(tokens::FAT_ARROW, "'=>' before the lambda expression");
     auto body = parse_expression();

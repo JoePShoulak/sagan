@@ -15,7 +15,7 @@ Sagan is designed as a strongly and statically typed language.
 - implicit conversion is limited to conversions proven lossless;
 - variables are mutable by default;
 - interfaces are central to abstraction and polymorphism;
-- physical units and coordinate frames are not distinct in the initial type system;
+- physical units are native static type metadata; coordinate frames remain deferred;
 - no separate character-literal type is planned; and
 - math types form built-in vocabulary.
 
@@ -76,6 +76,14 @@ parameters. Explicit function, method, and constructor arguments are supported.
 Function and class parameters may declare `is` constraints naming a face;
 specialized face conformance is checked for every inferred or explicit concrete
 argument. Variance remains open.
+
+Measured scalar types use annotations such as `Float64<meter>`. Geometry uses
+forms such as `Vector3<Float64, meter / second>`, normalized internally to a
+measured component type. Dimensions, named quantity identity, concrete scale,
+and affine point/difference category participate in compatibility. Compatible
+values convert at declarations, assignments, arguments, and returns; callable
+signatures can therefore require a specific unit. Unit metadata is compile-time
+only, and the C++ backend stores ordinary native numeric and geometry values.
 
 **Open questions:** user-defined member inference, value versus
 reference categories, broader generic semantics, variance,

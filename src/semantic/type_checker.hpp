@@ -35,12 +35,20 @@ namespace semantic
     std::vector<std::string> arguments;
   };
 
+  struct resolved_call
+  {
+    parser::span range;
+    std::vector<std::string> parameter_types;
+    std::string result_type;
+  };
+
   struct type_model
   {
     std::vector<typed_declaration> declarations;
     std::vector<typed_expression> expressions;
     std::vector<resolved_member> members;
     std::vector<inferred_specialization> inferred_specializations;
+    std::vector<resolved_call> calls;
 
     auto print(std::ostream &stream) const -> void;
   };

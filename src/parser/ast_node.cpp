@@ -71,6 +71,20 @@ namespace parser
     stream << name << spelling << ")\n";
   }
 
+  measured_expression::measured_expression(const span source_range, expression_ref measured_value,
+                                             std::string unit_expression, const bool is_conversion)
+      : expression(source_range), value(std::move(measured_value)), unit(std::move(unit_expression)),
+        conversion(is_conversion)
+  {
+  }
+
+  auto measured_expression::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << (conversion ? "Convert(" : "Measure(") << unit << ")\n";
+    value->print(stream, indent + 2);
+  }
+
   grouping_expression::grouping_expression(const span source_range, expression_ref grouped_value)
       : expression(source_range), value(std::move(grouped_value))
   {
@@ -696,6 +710,35 @@ namespace parser
         write_indent(stream, indent + 4);
         stream << "Documentation(\"" << escaped_string_text(comment.text) << "\")\n";
       }
+    }
+  }
+
+  measurement_declaration::measurement_declaration(
+      const span source_range, const kind type, std::string identifier,
+      std::optional<std::string> dimension, std::optional<std::string> unit_definition,
+      std::vector<std::pair<std::string, std::string>> declared_properties)
+      : statement(source_range), declaration_kind(type), name(std::move(identifier)),
+        declared_dimension(std::move(dimension)), definition(std::move(unit_definition)),
+        properties(std::move(declared_properties))
+  {
+  }
+
+  auto measurement_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    const char *kind_name = declaration_kind == kind::dimension ? "Dimension"
+                            : declaration_kind == kind::quantity ? "Quantity"
+                            : declaration_kind == kind::affine_unit ? "AffineUnit"
+                                                                    : "Unit";
+    stream << kind_name << "(" << name;
+    if (declared_dimension) stream << ": " << *declared_dimension;
+    if (definition) stream << " = " << *definition;
+    stream << ")\n";
+    print_documentation(stream, indent + 2);
+    for (const auto &[property, value] : properties)
+    {
+      write_indent(stream, indent + 2);
+      stream << "Property(" << property << ": " << value << ")\n";
     }
   }
 

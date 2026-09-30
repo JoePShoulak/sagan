@@ -10,6 +10,10 @@ verified_by: null
 # Declarations
 **Settled design:** `let` declares mutable variables; `fun` introduces
 functions; `face`, `class`, and `enum` introduce named types; and
+`dimension`, `quantity`, `unit`, and `affine unit` introduce compile-time
+measurement metadata. Measurement declarations are checked for duplicate names,
+inconsistent dimensions, unresolved references, and dependency cycles. See the
+[native units contract](../design/units-of-measure.md).
 `module`, `import`, and `export` participate in modular source.
 
 **Implemented syntax:** the parser accepts a single optional leading `module`

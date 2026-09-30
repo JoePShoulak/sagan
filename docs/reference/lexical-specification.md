@@ -49,7 +49,9 @@ let gravity = 6.674_30e-11
 
 A decimal point requires a digit on both sides. Consequently `.5`, `5.`,
 `.5e2`, and `5.e2` are lexical errors. Binary, octal, hexadecimal, unit
-suffixes, and numeric type suffixes are not currently supported.
+numeric type suffixes are not currently supported. A numeric or geometry literal
+may be followed by a separately tokenized unit name; the parser, rather than the
+lexer, forms the measured expression.
 
 ## Strings
 
@@ -78,7 +80,7 @@ delimiter contexts are preserved for the parser to interpret.
 ## Keywords
 
 ```text
-let weak fun new class face enum
+let weak fun new class face enum dimension quantity unit affine
 if else match case for in while until break continue return yield
 import from as module export
 hope unless finally scream

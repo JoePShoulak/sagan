@@ -93,6 +93,8 @@ nav:
       - Philosophy: design/philosophy.md
       - Goals and non-goals: design/goals-and-non-goals.md
       - Determinism: design/determinism.md
+      - Native units of measure: design/units-of-measure.md
+      - Built-in unit catalog: reference/units.md
       - Documentation status: design/status.md
   - Getting started:
       - getting-started/index.md

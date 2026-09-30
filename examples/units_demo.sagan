@@ -1,0 +1,44 @@
+fun travel(distance: Float64<meter>, duration: Float64<second>): Float64<meter / second> =>
+  distance / duration
+
+dimension Currency
+unit credit: Currency = base {
+  symbol: "cr"
+  prefixes: [kilo, milli]
+  aliases: [token]
+}
+
+class Ruler {
+  let length: Float64<meter>
+  new(length: Float64<meter>) { self.length = length }
+  fun half(value: Float64<meter>): Float64<meter> => value / 2
+}
+
+fun main(): Int {
+  let distance: Float64<meter> = 1 kilometer
+  let duration = 2 second
+  let speed = travel(distance, duration)
+  let velocity = <10.0, 2.0, 0.0> (meter / second)
+  let displacement = velocity * duration
+  let origin = (0.0, 0.0, 0.0) meter
+  let destination = origin + displacement
+  let room = 20.0 Celsius
+  let change = 5.0 Δ<Celsius>
+  let warmer = room + change
+  let interval = warmer - 10.0 Celsius
+  let ruler = Ruler(1 kilometer)
+  let normalize = fun(value: Float64<meter>): Float64<meter> => value
+  let constrained = ruler.half(normalize(1 kilometer))
+  let budget: Float64<credit> = 2 kilocredit
+  let orbital_angle: Float64<radian> = 180 degree
+
+  print(distance)
+  print(speed)
+  print(destination)
+  print(warmer as Fahrenheit)
+  print(interval as Delta<Fahrenheit>)
+  print(constrained)
+  print(budget)
+  print(orbital_angle)
+  return 0
+}

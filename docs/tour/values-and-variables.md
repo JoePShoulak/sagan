@@ -47,5 +47,5 @@ subtracting two points yields the displacement vector. Dimension-checked
 updates work for Cartesian vectors and points. Three-dimensional spherical
 values use `s<magnitude, inclination, azimuth>` and
 `s(radius, inclination, azimuth)`, with radians and representation-specific
-named members. Physical units and
-coordinate frames are deliberately not distinguished by the initial type system.
+named members. Physical units are native static metadata and may annotate scalar
+or geometry values; coordinate frames are deliberately deferred.

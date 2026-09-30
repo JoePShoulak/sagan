@@ -576,9 +576,10 @@ namespace
 
     passed &= expect_ids(
         "complete keyword vocabulary",
-        "let weak fun new class face enum if else match case for in while until break continue return yield "
+        "let weak fun new class face enum dimension quantity unit affine if else match case for in while until break continue return yield "
         "import from as module export hope unless finally scream and or not self is has true false inf nan\n",
         {tokens::KWD_LET, tokens::KWD_WEAK, tokens::KWD_FUN, tokens::KWD_NEW, tokens::KWD_CLASS, tokens::KWD_FACE, tokens::KWD_ENUM,
+         tokens::KWD_DIMENSION, tokens::KWD_QUANTITY, tokens::KWD_UNIT, tokens::KWD_AFFINE,
          tokens::KWD_IF, tokens::KWD_ELSE, tokens::KWD_MATCH, tokens::KWD_CASE, tokens::KWD_FOR,
          tokens::KWD_IN, tokens::KWD_WHILE, tokens::KWD_UNTIL, tokens::KWD_BREAK, tokens::KWD_CONTINUE,
          tokens::KWD_RETURN, tokens::KWD_YIELD, tokens::KWD_IMPORT, tokens::KWD_FROM, tokens::KWD_AS,
@@ -1942,6 +1943,55 @@ namespace
                                 "  let apply = fun(value: Int): Int => value\n"
                                 "  return apply(true)\n}\n",
                                 "No matching overload for 'apply'");
+    passed &= expect_type_model(
+        "native units and scientific catalog",
+        "let distance: Float64<meter> = 1 kilometer\n"
+        "let angle: Float64<radian> = 180 degree\n"
+        "let pressure: Float64<pascal> = 1 standardAtmosphere\n"
+        "let energy: Float64<joule> = 1 kilowattHour\n"
+        "let field: Float64<tesla> = 1 gauss\n"
+        "let photon: Float64<joule> = 1 electronvolt\n",
+        {"distance: Float64<meter>", "angle: Float64<radian>", "pressure: Float64<pascal>",
+         "energy: Float64<joule>", "field: Float64<tesla>", "photon: Float64<joule>"});
+    passed &= expect_type_model(
+        "unit constrained callables",
+        "class Ruler {\n"
+        "  new(length: Float64<meter>) {}\n"
+        "  fun half(value: Float64<meter>): Float64<meter> => value / 2\n"
+        "}\n"
+        "fun identity(value: Float64<meter>): Float64<meter> => value\n"
+        "fun valid(): Float64<meter> {\n"
+        "  let ruler = Ruler(1 kilometer)\n"
+        "  let lambda = fun(value: Float64<meter>): Float64<meter> => value\n"
+        "  return ruler.half(lambda(identity(1 kilometer)))\n"
+        "}\n",
+        {"length: Float64<meter>", "value: Float64<meter>", "Float64<meter> @"});
+    passed &= expect_type_model(
+        "custom units prefixes aliases and affine declarations",
+        "dimension Currency\n"
+        "unit credit: Currency = base {\n"
+        "  symbol: cr\n"
+        "  prefixes: [kilo, milli]\n"
+        "  aliases: [token]\n"
+        "}\n"
+        "affine unit Rankine: Temperature {\n"
+        "  canonical: Kelvin\n"
+        "  scale: 5 / 9\n"
+        "  offset: 0\n"
+        "}\n"
+        "let budget: Float64<credit> = 2 kilocredit\n"
+        "let alias: Float64<credit> = 1 token\n"
+        "let temperature: Float64<Kelvin> = 540 Rankine\n",
+        {"budget: Float64<credit>", "alias: Float64<credit>", "temperature: Float64<Kelvin>"});
+    passed &= expect_type_error("unit dimension mismatch",
+                                "let invalid: Float64<meter> = 1 second\n",
+                                "Variable initializer requires Float64<meter>");
+    passed &= expect_type_error("affine points cannot be added",
+                                "let invalid = 20 Celsius + 10 Celsius\n",
+                                "cannot be added");
+    passed &= expect_type_error("measurement declaration cycle",
+                                "unit alphaUnit = betaUnit\nunit betaUnit = alphaUnit\nlet value = 1 alphaUnit\n",
+                                "Cyclic or unresolved measurement declaration");
     passed &= expect_type_error("class default construction rejects arguments",
                                 "class Probe {\n  let value: Int = 0\n}\n"
                                 "fun invalid(): Int {\n  let probe = Probe(1)\n  return 0\n}\n",

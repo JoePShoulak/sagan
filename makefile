@@ -26,6 +26,7 @@ LIBRARY_SOURCES := \
 	src/semantic/index.cpp \
 	src/semantic/workspace_index.cpp \
 	src/semantic/type_checker.cpp \
+	src/semantic/units.cpp \
 	src/source/provider.cpp \
 	src/source/source.cpp \
 	src/syntax/syntax.cpp
@@ -51,7 +52,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo units-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -141,6 +142,9 @@ run-demo: $(TARGET)
 
 geometry-demo: $(TARGET)
 	bash scripts/geometry_demo.sh
+
+units-demo: $(TARGET)
+	bash scripts/units_demo.sh
 
 editor-tooling-demo: $(TARGET)
 	bash scripts/editor_tooling_demo.sh

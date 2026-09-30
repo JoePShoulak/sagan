@@ -50,6 +50,14 @@ parameters remain valid parser/type-model input but are not native-emittable.
 and the semantic rules for spread outside array and dictionary literals, safe access, dictionary-key
 hashability, and assignment expressions.
 
+Numeric and geometry literals accept unit suffixes. A simple suffix is a unit
+name (`10 meter`); a composite suffix is parenthesized
+(`<1.0, 0.0, 0.0> (meter / second)`). `value as unit` explicitly converts a
+compatible value. Assignment, argument, and return contexts convert to their
+declared concrete unit, while incompatible dimensions, named quantities, or
+affine categories are type errors. `Delta<Celsius>` and `Δ<Celsius>` both name
+an affine difference.
+
 ## Optional values and fallback
 
 `Optional<T>` is the first implemented parameterized built-in type. `Some(value)`

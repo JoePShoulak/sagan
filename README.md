@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.67.0](https://img.shields.io/badge/development-0.67.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.68.0](https://img.shields.io/badge/development-0.68.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -116,6 +116,16 @@ and public exports, applies aliases, isolates private symbols, orders
 dependencies, and rejects cycles. Selective imports and whole-module namespaces
 participate in semantic/type checking and native execution.
 `^` and `^=` perform checked mathematical exponentiation rather than bitwise XOR.
+Native units of measure are part of the static type system. Numeric, vector,
+and point values accept linear or affine units; compatible assignments,
+arguments, returns, and explicit `as` conversions emit native scale/offset
+operations without storing unit metadata per value. Functions, methods,
+constructors, lambdas, fields, locals, generics, and face signatures can require
+specific units. Custom dimensions, quantities, base/derived units, aliases,
+prefixes, and affine units are supported with duplicate, consistency, and cycle
+checks. The built-in scientific catalog covers SI base and named derived units,
+all current SI prefixes, common time/angle/astronomical units, and selected
+laboratory and customary units.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> scope/name analysis -> type checking
@@ -155,11 +165,12 @@ invalid point arithmetic and prepares transform semantics without adding runtime
 cost. Cartesian/spherical conversion will be the first geometry contract taken
 up with core math after 1.0. Math, rendering, and physics
 library work remains paused until the hypercore and installation work are complete.
-Late in the pre-1.0 roadmap, Sagan will investigate units of measure as optional
-interfaces on numeric values. The design must assess whether opt-in units can be
-tracked reliably through arithmetic, conversions, and generic code; the problem
-is difficult, but the potential safety and scientific-programming payoff is
-substantial. This remains an investigation rather than a settled commitment.
+The pre-1.0 unit checkpoint is implemented as a native static type-system
+feature rather than an interface convention. It tracks dimensions, named
+quantities, concrete units, and affine point/difference categories through
+arithmetic and call boundaries, while erasing that metadata from runtime
+values. See the [unit design](docs/design/units-of-measure.md) and
+[built-in catalog](docs/reference/units.md).
 
 Windows is the initial supported installation platform. The Windows installer
 foundation bundles the UCRT64 backend toolchain, configures PATH, supplies
@@ -210,6 +221,7 @@ bash scripts/module_demo.sh
 make package-demo
 make run-demo
 make geometry-demo
+make units-demo
 bin/sagan --capabilities-json
 bin/sagan --diagnostics-json examples/type_error.sagan
 make editor-tooling-demo

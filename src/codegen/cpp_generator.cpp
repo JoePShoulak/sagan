@@ -1,6 +1,7 @@
 #include "cpp_generator.hpp"
 
 #include "../semantic/semantic_error.hpp"
+#include "../semantic/units.hpp"
 
 #include <algorithm>
 #include <array>
@@ -35,6 +36,9 @@ namespace codegen
       std::unordered_map<std::string, std::unordered_set<std::string>> weak_fields;
       std::unordered_set<std::string> emitted_faces;
       std::unordered_set<std::string> active_type_parameters;
+      std::unordered_map<std::string, const parser::function_declaration *> functions;
+      semantic::units::registry unit_registry;
+      std::vector<std::string> active_return_types;
       bool in_method = false;
 
       auto indentation() const -> std::string
@@ -73,6 +77,8 @@ namespace codegen
         if (name == "Int32") return "std::int32_t";
         if (name == "Int16") return "std::int16_t";
         if (name == "Int8") return "std::int8_t";
+        if (const auto measured = semantic::units::parse_measured_type(name, unit_registry, range))
+          return type_name(measured->numeric, range, entry);
         if (active_type_parameters.contains(name)) return identifier(name);
         if (std::string_view{name}.starts_with("Optional<") && name.ends_with('>'))
           return "std::optional<" + type_name(name.substr(9, name.size() - 10), range) + ">";
@@ -111,7 +117,9 @@ namespace codegen
               {
                 return std::isdigit(value) != 0;
               })) break;
-          const std::string component = name.substr(open + 1, name.size() - open - 2);
+          std::string component = name.substr(open + 1, name.size() - open - 2);
+          const auto arguments = generic_arguments(name);
+          if (arguments.size() == 2) component = arguments.front();
           const std::string runtime_family = family == "Vector"          ? "sagan_vector"
                                              : family == "Point"         ? "sagan_point"
                                              : family == "SphericalVector" ? "sagan_spherical_vector"
@@ -139,12 +147,83 @@ namespace codegen
         return {};
       }
 
+      auto ratio(const semantic::units::rational value) const -> std::string
+      {
+        std::string result = "(" + std::to_string(value.numerator) + ".0 / " +
+                             std::to_string(value.denominator) + ".0)";
+        if (value.decimal_exponent != 0)
+          result = "(" + result + " * std::pow(10.0, " + std::to_string(value.decimal_exponent) + "))";
+        if (value.pi_exponent != 0)
+          result = "(" + result + " * std::pow(std::acos(-1.0), " + std::to_string(value.pi_exponent) + "))";
+        return result;
+      }
+
+      auto convert_value(std::string value, const std::string &source_type,
+                         const std::string &target_type, const parser::span range) const -> std::string
+      {
+        const auto source = semantic::units::parse_measured_type(source_type, unit_registry, range);
+        const auto target = semantic::units::parse_measured_type(target_type, unit_registry, range);
+        if (!source || !target)
+        {
+          const auto component = [](const std::string &type) -> std::optional<std::string>
+          {
+            if (!std::string_view{type}.starts_with("Vector") && !std::string_view{type}.starts_with("Point") &&
+                !std::string_view{type}.starts_with("Spherical")) return {};
+            const auto open = type.find('<');
+            if (open == std::string::npos || !type.ends_with('>')) return {};
+            return type.substr(open + 1, type.size() - open - 2);
+          };
+          const auto source_component = component(source_type);
+          const auto target_component = component(target_type);
+          if (!source_component || !target_component) return value;
+          const auto source_unit = semantic::units::parse_measured_type(*source_component, unit_registry, range);
+          const auto target_unit = semantic::units::parse_measured_type(*target_component, unit_registry, range);
+          if (!source_unit || !target_unit || source_unit->unit.name == target_unit->unit.name) return value;
+          const auto factor = semantic::units::divide(source_unit->unit.scale, target_unit->unit.scale);
+          const auto source_open = source_type.find('<');
+          const std::string converted_type = source_type.substr(0, source_open + 1) + *target_component + '>';
+          return "sagan_multiply<" + type_name(converted_type, range) + ">(" + value + ", " + ratio(factor) + ")";
+        }
+        if (source->unit.name == target->unit.name) return value;
+        const bool affine = source->unit.kind == semantic::units::category::affine_point;
+        std::string canonical = "((" + value + ") * " + ratio(source->unit.scale);
+        if (affine) canonical += " + " + ratio(source->unit.offset);
+        canonical += ')';
+        std::string converted = "((" + canonical;
+        if (affine) converted += " - " + ratio(target->unit.offset);
+        converted += ") / " + ratio(target->unit.scale) + ')';
+        return converted;
+      }
+
+      auto converted_expression(const parser::expression &value, const std::string &target) -> std::string
+      {
+        return convert_value(expression(value), expression_type(value), target, value.range);
+      }
+
+      auto call_parameters(const parser::call_expression &value) const -> const std::vector<std::string> *
+      {
+        for (auto entry = types.calls.rbegin(); entry != types.calls.rend(); ++entry)
+          if (entry->range.begin == value.range.begin && entry->range.end == value.range.end)
+            return &entry->parameter_types;
+        return nullptr;
+      }
+
       auto binding_type(const parser::identifier_expression &value) const -> std::string
       {
         for (auto entry = types.declarations.rbegin(); entry != types.declarations.rend(); ++entry)
           if (entry->range.begin == value.range.begin && entry->range.end == value.range.end)
             return entry->type;
         return expression_type(value);
+      }
+
+      auto declaration_type(const parser::let_declaration &value) const -> std::string
+      {
+        for (auto entry = types.declarations.rbegin(); entry != types.declarations.rend(); ++entry)
+          if (entry->range.begin == value.range.begin && entry->range.end == value.range.end &&
+              entry->name == value.name)
+            return entry->type;
+        fail("missing checked type for declaration '" + value.name + "'", value.range);
+        return {};
       }
 
       auto weak_member(const parser::member_expression &value) const -> bool
@@ -313,6 +392,13 @@ namespace codegen
           spelling.erase(std::remove(spelling.begin(), spelling.end(), '_'), spelling.end());
           return spelling;
         }
+        if (const auto *measured = dynamic_cast<const parser::measured_expression *>(&value))
+        {
+          const std::string inner = expression(*measured->value);
+          return measured->conversion
+                     ? convert_value(inner, expression_type(*measured->value), expression_type(value), value.range)
+                     : inner;
+        }
         if (const auto *string = dynamic_cast<const parser::string_expression *>(&value))
         {
           std::string result = "std::string{}";
@@ -367,10 +453,10 @@ namespace codegen
           const std::string checked_type = type_name(expression_type(value), value.range);
           if (binary->operator_text == "+")
             return "sagan_add<" + checked_type + ">(" + expression(*binary->left) + ", " +
-                   expression(*binary->right) + ")";
+                   converted_expression(*binary->right, expression_type(*binary->left)) + ")";
           if (binary->operator_text == "-")
             return "sagan_subtract<" + checked_type + ">(" + expression(*binary->left) + ", " +
-                   expression(*binary->right) + ")";
+                   converted_expression(*binary->right, expression_type(*binary->left)) + ")";
           if (binary->operator_text == "*")
             return "sagan_multiply<" + checked_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
@@ -380,14 +466,21 @@ namespace codegen
           if (binary->operator_text == "%")
             return "sagan_modulo<" + checked_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
+          if (binary->operator_text == "==" || binary->operator_text == "!=" ||
+              binary->operator_text == "<" || binary->operator_text == "<=" ||
+              binary->operator_text == ">" || binary->operator_text == ">=")
+            return "(" + expression(*binary->left) + " " + operation(binary->operator_text, value.range) + " " +
+                   converted_expression(*binary->right, expression_type(*binary->left)) + ")";
           return "(" + expression(*binary->left) + " " + operation(binary->operator_text, value.range) + " " +
                  expression(*binary->right) + ")";
         }
         if (const auto *conditional = dynamic_cast<const parser::conditional_expression *>(&value))
-          return "(" + expression(*conditional->condition) + " ? " + expression(*conditional->when_true) +
-                 " : " + expression(*conditional->when_false) + ")";
+          return "(" + expression(*conditional->condition) + " ? " +
+                 converted_expression(*conditional->when_true, expression_type(value)) + " : " +
+                 converted_expression(*conditional->when_false, expression_type(value)) + ")";
         if (const auto *assignment = dynamic_cast<const parser::assignment_expression *>(&value))
-          return "(" + assignable(*assignment->target) + " = " + expression(*assignment->value) + ")";
+          return "(" + assignable(*assignment->target) + " = " +
+                 converted_expression(*assignment->value, expression_type(value)) + ")";
         if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
         {
           const auto *called_name = dynamic_cast<const parser::identifier_expression *>(call->callee.get());
@@ -420,7 +513,10 @@ namespace codegen
             for (std::size_t index = 0; index < call->arguments.size(); ++index)
             {
               if (index != 0) result += ", ";
-              result += expression(*call->arguments[index]);
+              const auto *parameters = call_parameters(*call);
+              result += parameters && index < parameters->size()
+                          ? converted_expression(*call->arguments[index], parameters->at(index))
+                          : expression(*call->arguments[index]);
             }
             return result + ")";
           }
@@ -481,7 +577,10 @@ namespace codegen
           for (std::size_t index = 0; index < call->arguments.size(); ++index)
           {
             if (index != 0) result += ", ";
-            result += expression(*call->arguments[index]);
+            const auto *parameters = call_parameters(*call);
+            result += parameters && index < parameters->size()
+                        ? converted_expression(*call->arguments[index], parameters->at(index))
+                        : expression(*call->arguments[index]);
           }
           return result + ")";
         }
@@ -605,10 +704,14 @@ namespace codegen
                 const std::string spread_temporary =
                     "sagan_spread_" + std::to_string(current_array_index) + "_" + std::to_string(index_value);
                 result += "const auto &" + spread_temporary + " = " + expression(*spread->value) + "; ";
-                result += temporary + ".insert(" + temporary + ".end(), " + spread_temporary + ".begin(), " +
-                          spread_temporary + ".end()); ";
+                const std::string spread_type = expression_type(*spread->value);
+                const std::string source_element = spread_type.substr(prefix.size(),
+                    spread_type.size() - prefix.size() - 1);
+                result += "for (const auto &sagan_element : " + spread_temporary + ") " + temporary +
+                          ".push_back(" + convert_value("sagan_element", source_element, element, spread->range) + "); ";
               }
-              else result += temporary + ".push_back(" + expression(*collection->elements[index_value]) + "); ";
+              else result += temporary + ".push_back(" +
+                             converted_expression(*collection->elements[index_value], element) + "); ";
             }
             return result + "return " + temporary + "; }())";
           }
@@ -616,7 +719,7 @@ namespace codegen
           for (std::size_t index_value = 0; index_value < collection->elements.size(); ++index_value)
           {
             if (index_value != 0) result += ", ";
-            result += expression(*collection->elements[index_value]);
+            result += converted_expression(*collection->elements[index_value], element);
           }
           return result + "}";
         }
@@ -638,13 +741,16 @@ namespace codegen
                                                    std::to_string(current_dictionary_index) + "_" +
                                                    std::to_string(index_value);
               result += "const auto &" + spread_temporary + " = " + expression(*spread->value) + "; ";
+              const auto [source_key, source_mapped] =
+                  dictionary_components(expression_type(*spread->value), spread->range);
               result += "for (const auto &[sagan_key, sagan_value] : " + spread_temporary + ") " + temporary +
-                        ".insert_or_assign(sagan_key, sagan_value); ";
+                        ".insert_or_assign(" + convert_value("sagan_key", source_key, key, spread->range) + ", " +
+                        convert_value("sagan_value", source_mapped, mapped, spread->range) + "); ";
             }
             else
             {
-              result += temporary + ".insert_or_assign(" + expression(*entry.key) + ", " +
-                        expression(*entry.value) + "); ";
+              result += temporary + ".insert_or_assign(" + converted_expression(*entry.key, key) + ", " +
+                        converted_expression(*entry.value, mapped) + "); ";
             }
           }
           return result + "return " + temporary + "; }())";
@@ -658,8 +764,9 @@ namespace codegen
             const auto &parameter = lambda->parameters[index];
             result += type(parameter.type_name, value.range) + " " + identifier(parameter.name);
           }
-          result += ") -> " + type_name(expression_type(*lambda->body), value.range) + " { return " +
-                    expression(*lambda->body) + "; }";
+          const std::string result_type = lambda->return_type.value_or(expression_type(*lambda->body));
+          result += ") -> " + type_name(result_type, value.range) + " { return " +
+                    converted_expression(*lambda->body, result_type) + "; }";
           return result;
         }
         fail("expression is not available in the initial native subset", value.range);
@@ -684,7 +791,12 @@ namespace codegen
           {
             if (declaration->type_name) output << type(declaration->type_name, declaration->range) << ' ';
             else output << "auto ";
-            output << identifier(declaration->name) << " = " << expression(*declaration->initializer);
+            output << identifier(declaration->name) << " = ";
+            if (declaration->type_name)
+              output << converted_expression(*declaration->initializer,
+                                             types.declarations.empty() ? *declaration->type_name
+                                                                        : declaration_type(*declaration));
+            else output << expression(*declaration->initializer);
           }
           else
             output << type(declaration->type_name, declaration->range) << ' ' << identifier(declaration->name);
@@ -705,11 +817,14 @@ namespace codegen
                                                assignment->operation == "/=" ? "divide" : "modulo";
             output << "sagan_" << operation_name << "_assign<"
                    << type_name(expression_type(*assignment->target), assignment->range) << '>' << '('
-                   << expression(*assignment->target) << ", " << expression(*assignment->value) << ");\n";
+                   << expression(*assignment->target) << ", "
+                   << ((assignment->operation == "+=" || assignment->operation == "-=")
+                         ? converted_expression(*assignment->value, expression_type(*assignment->target))
+                         : expression(*assignment->value)) << ");\n";
           }
           else
             output << assignable(*assignment->target) << ' ' << assignment->operation << ' '
-                   << expression(*assignment->value) << ";\n";
+                   << converted_expression(*assignment->value, expression_type(*assignment->target)) << ";\n";
         }
         else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
         {
@@ -750,7 +865,10 @@ namespace codegen
         else if (const auto *returned = dynamic_cast<const parser::return_statement *>(&value))
         {
           output << "return";
-          if (returned->value) output << ' ' << expression(*returned->value);
+          if (returned->value)
+            output << ' ' << (active_return_types.empty()
+                                 ? expression(*returned->value)
+                                 : converted_expression(*returned->value, active_return_types.back()));
           output << ";\n";
         }
         else if (const auto *matched = dynamic_cast<const parser::match_statement *>(&value))
@@ -800,7 +918,7 @@ namespace codegen
               else if (enum_pattern)
                 output << temporary << ".tag == " << identifier(enum_case->second.first) << "::Tag::"
                        << identifier(callee->name);
-              else output << temporary << " == " << expression(*branch.pattern);
+              else output << temporary << " == " << converted_expression(*branch.pattern, matched_type);
               output << ") ";
               emitted_condition = true;
               if (some_pattern)
@@ -918,11 +1036,13 @@ namespace codegen
                  << identifier(value.parameters[index].name);
         }
         output << ") ";
+        active_return_types.push_back(value.return_type.value_or("Void"));
         if (value.expression_body)
         {
           output << "{ ";
           if (entry) output << "sagan_initialize_runtime(); ";
-          output << "return " << expression(*value.expression_body) << "; }\n\n";
+          output << "return " << converted_expression(*value.expression_body, active_return_types.back()) << "; }\n\n";
+          active_return_types.pop_back();
           active_type_parameters = previous_type_parameters;
           return;
         }
@@ -939,6 +1059,7 @@ namespace codegen
         }
         else block(*value.body);
         output << "\n\n";
+        active_return_types.pop_back();
         active_type_parameters = previous_type_parameters;
       }
 
@@ -973,8 +1094,9 @@ namespace codegen
         output << ") ";
         const bool previous_method = in_method;
         in_method = true;
+        active_return_types.push_back(value.return_type.value_or("Void"));
         if (value.expression_body)
-          output << "{ return " << expression(*value.expression_body) << "; }";
+          output << "{ return " << converted_expression(*value.expression_body, active_return_types.back()) << "; }";
         else
         {
           if (!value.body)
@@ -982,6 +1104,7 @@ namespace codegen
             if (virtual_method)
             {
               output << "= 0;\n";
+              active_return_types.pop_back();
               in_method = previous_method;
               active_type_parameters = previous_type_parameters;
               return;
@@ -990,6 +1113,7 @@ namespace codegen
           }
           block(*value.body);
         }
+        active_return_types.pop_back();
         in_method = previous_method;
         active_type_parameters = previous_type_parameters;
         output << "\n";
@@ -1075,7 +1199,8 @@ namespace codegen
               output << "std::weak_ptr<" << identifier(*field->type_name) << "> ";
             else output << type(field->type_name, field->range) << ' ';
             output << identifier(field->name);
-            if (field->initializer) output << " = " << expression(*field->initializer);
+            if (field->initializer)
+              output << " = " << converted_expression(*field->initializer, declaration_type(*field));
             else output << "{}";
             output << ";\n";
           }
@@ -1256,6 +1381,10 @@ namespace codegen
 
       auto generate(const parser::program &tree) -> std::string
       {
+        unit_registry.add_program(tree);
+        for (const auto &entry : tree.statements)
+          if (const auto *function = dynamic_cast<const parser::function_declaration *>(entry.get()))
+            functions.insert_or_assign(function->name, function);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
           {
@@ -1763,7 +1892,8 @@ namespace codegen
           const auto *declaration = dynamic_cast<const parser::function_declaration *>(entry.get());
           if (!declaration)
           {
-            if (dynamic_cast<const parser::type_declaration *>(entry.get())) continue;
+            if (dynamic_cast<const parser::type_declaration *>(entry.get()) ||
+                dynamic_cast<const parser::measurement_declaration *>(entry.get())) continue;
             fail("only functions and classes are supported at the top level", entry->range);
           }
           function(*declaration);

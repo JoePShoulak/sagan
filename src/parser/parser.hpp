@@ -32,6 +32,7 @@ namespace parser
                                     bool allow_mutating = false) -> statement_ref;
     auto parse_constructor_declaration() -> statement_ref;
     auto parse_type_declaration(type_declaration::kind type) -> statement_ref;
+    auto parse_measurement_declaration(measurement_declaration::kind type) -> statement_ref;
     auto parse_module_declaration() -> statement_ref;
     auto parse_import_declaration() -> statement_ref;
     auto parse_export_declaration() -> statement_ref;
@@ -48,6 +49,7 @@ namespace parser
     auto parse_block() -> std::unique_ptr<block_statement>;
     auto parse_statement_body(const std::string &description) -> std::unique_ptr<block_statement>;
     auto parse_type_annotation(const std::string &description) -> std::string;
+    auto parse_unit_expression(bool allow_composite = true) -> std::string;
     auto parse_qualified_name(const std::string &description) -> std::string;
     auto parse_expression() -> expression_ref;
     auto parse_nested_expression() -> expression_ref;
