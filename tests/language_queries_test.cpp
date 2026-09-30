@@ -91,6 +91,27 @@ auto main() -> int
   require(folds.value && folds.value->size() == 1 &&
               folds.value->front().kind == language_service::folding_kind::block,
           "multiline function block was not identified for folding");
+  const auto selections = query.selection_ranges(at(text, "41"));
+  require(selections.value && selections.value->size() >= 4 &&
+              selections.value->front().bytes ==
+                  source::byte_range{at(text, "41"), at(text, "41") + 2} &&
+              selections.value->back().bytes == source::byte_range{0, static_cast<source::byte_offset>(text.size())},
+          "selection expansion did not reach from a literal to the document");
+  for (std::size_t i = 1; i < selections.value->size(); ++i)
+    require((*selections.value)[i].bytes.begin <= (*selections.value)[i - 1].bytes.begin &&
+                (*selections.value)[i].bytes.end >= (*selections.value)[i - 1].bytes.end,
+            "selection ranges were not strictly nested");
+  const auto emoji_selections = query.selection_ranges(emoji_use);
+  require(emoji_selections.value && emoji_selections.value->front().bytes.end -
+                                          emoji_selections.value->front().bytes.begin ==
+                                          std::string("🚀").size(),
+          "selection expansion split a UTF-8 emoji token");
+  const auto comment_selections = query.selection_ranges(at(text, "Launches"));
+  require(comment_selections.value && comment_selections.value->front().bytes.begin == 0,
+          "selection expansion omitted documentation-comment trivia");
+  require(query.selection_ranges(static_cast<source::byte_offset>(text.size() + 1)).state ==
+              diagnostics::result_state::incomplete,
+          "selection expansion accepted a position after the document");
   const auto rocket_completion = query.completions(emoji_use + std::string("🚀").size());
   require(rocket_completion.value && rocket_completion.value->size() == 1 &&
               rocket_completion.value->front().label == "🚀" &&
@@ -119,6 +140,8 @@ auto main() -> int
                                                             &indexed.value->model, &*indexed.value->types);
   require(stale_signature.signature_help(emoji_use).state == diagnostics::result_state::stale,
           "signature help accepted resolved calls from an older document version");
+  require(stale.selection_ranges(emoji_use).state == diagnostics::result_state::stale,
+          "selection expansion accepted an old semantic index");
 
   const std::string composition =
       "face Readable { fun read(): Int }\n"

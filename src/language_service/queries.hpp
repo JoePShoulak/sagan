@@ -135,6 +135,9 @@ namespace sagan::language_service
       -> diagnostics::analysis_result<std::vector<completion_item>>;
     auto signature_help(source::byte_offset offset) const
       -> diagnostics::analysis_result<signature_information>;
+    // Innermost-to-outermost, strictly nested source ranges for editor selection expansion.
+    auto selection_ranges(source::byte_offset offset) const
+      -> diagnostics::analysis_result<std::vector<source::source_range>>;
   };
 
   auto search_workspace_symbols(const semantic::workspace_semantic_index &workspace,

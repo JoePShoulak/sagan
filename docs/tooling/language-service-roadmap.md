@@ -132,8 +132,10 @@ keyword validity, named arguments, and the standard-library catalog remain
 unimplemented. Resolved-call signature information now reports the selected
 argument and compiler-resolved parameter/result types for valid strict source;
 parameter names, overload alternatives, documentation, and incomplete-call
-recovery remain to do. The API also lacks type definitions, selection ranges,
-and inlay hints. None of these library queries are advertised as editor
+recovery remain to do. Token/trivia, balanced-delimiter, declaration, and
+document selection ranges are available, though expression-level AST expansion
+remains to do. The API also lacks type definitions and inlay hints. None of
+these library queries are advertised as editor
 capabilities while LSP transport is absent.
 
 - Implement symbol-at-position, hover, resolved types, definition, type

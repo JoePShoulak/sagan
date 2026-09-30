@@ -27,7 +27,7 @@ contract is not yet implemented; the extension must not reproduce it.
 | Document symbols | Hierarchical declaration index | **Hierarchy query available; LSP transport blocked** |
 | Workspace symbols | Workspace semantic index | **Workspace search query available; LSP transport blocked** |
 | Folding | Recovering lossless syntax tree | **Basic syntax/trivia ranges available; precise nested construct ranges and LSP transport blocked** |
-| Selection ranges | Syntax parent chains with precise ranges | **Foundation available; expression parent chains blocked** |
+| Selection ranges | Syntax parent chains with precise ranges | **Token/trivia, delimiter, declaration, and document expansion query available; expression parent chains and LSP transport blocked** |
 | Document links | Resolved import/module targets | **Resolved import link query available; LSP transport blocked** |
 | Inlay hints | Resolved types/parameters with suppression rules | **Blocked** |
 | Rename | Versioned identity-based safe workspace edits | **Blocked** |

@@ -543,6 +543,76 @@ namespace sagan::language_service
                               active_parameter});
   }
 
+  auto document_queries::selection_ranges(const source::byte_offset offset) const
+    -> diagnostics::analysis_result<std::vector<source::source_range>>
+  {
+    using ranges = std::vector<source::source_range>;
+    if (document_.version() != index_.version() || document_.identity().id != index_.document().id)
+      return result<ranges>(document_.version(), diagnostics::result_state::stale);
+    if (!document_.to_utf16(offset))
+      return result<ranges>(document_.version(), diagnostics::result_state::incomplete);
+
+    const auto id = document_.identity().id;
+    std::vector<source::byte_range> candidates;
+    const auto add = [&](const source::byte_range range)
+    {
+      if (range.begin <= offset && (offset < range.end ||
+                                    (range.begin == range.end && offset == range.end)))
+        candidates.push_back(range);
+    };
+    const auto add_trivia = [&](const std::vector<syntax::trivia> &entries)
+    {
+      for (const auto &entry : entries) add(entry.range);
+    };
+    struct opening { int kind; source::byte_offset begin; };
+    std::vector<opening> delimiters;
+    for (const auto &token : tokens_)
+    {
+      add_trivia(token.leading_trivia);
+      add(token.range);
+      if (token.kind == tokens::LPAREN || token.kind == tokens::LBRACKET ||
+          token.kind == tokens::LBRACE)
+        delimiters.push_back({token.kind, token.range.begin});
+      else if (token.kind == tokens::RPAREN || token.kind == tokens::RBRACKET ||
+               token.kind == tokens::RBRACE)
+      {
+        const int expected = token.kind == tokens::RPAREN ? tokens::LPAREN :
+                             token.kind == tokens::RBRACKET ? tokens::LBRACKET : tokens::LBRACE;
+        if (!delimiters.empty() && delimiters.back().kind == expected)
+        {
+          add({delimiters.back().begin, token.range.end});
+          delimiters.pop_back();
+        }
+        else delimiters.clear();
+      }
+    }
+    add_trivia(trailing_trivia_);
+    if (tree_)
+      for (const auto &statement : tree_->statements)
+        if (statement->range.begin >= 0 && statement->range.end >= statement->range.begin)
+          add({static_cast<source::byte_offset>(statement->range.begin),
+               static_cast<source::byte_offset>(statement->range.end)});
+    const auto document_end = static_cast<source::byte_offset>(document_.text().size());
+    candidates.push_back({0, document_end});
+    std::sort(candidates.begin(), candidates.end(), [](const auto left, const auto right)
+    {
+      const auto left_width = left.end - left.begin;
+      const auto right_width = right.end - right.begin;
+      if (left_width != right_width) return left_width < right_width;
+      return left.begin > right.begin;
+    });
+    ranges chain;
+    for (const auto candidate : candidates)
+    {
+      if (!chain.empty() && (candidate.begin > chain.back().bytes.begin ||
+                             candidate.end < chain.back().bytes.end ||
+                             candidate == chain.back().bytes)) continue;
+      chain.push_back({id, candidate});
+    }
+    return result<ranges>(document_.version(), diagnostics::result_state::complete,
+                          std::move(chain));
+  }
+
   auto search_workspace_symbols(const semantic::workspace_semantic_index &workspace,
                                 const std::string_view query, const std::size_t limit)
     -> std::vector<workspace_symbol>
