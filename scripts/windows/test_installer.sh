@@ -24,8 +24,8 @@ mkdir -p "$launcher_data"
 LOCALAPPDATA="$(cygpath -w "$launcher_data")" \
   "$install_dir/bin/sagan-launch.exe" --windowed "$repo_root/examples/run_demo.sagan"
 grep -Fq "Direct Sagan execution: 42" "$launcher_data/Sagan/logs/latest-launch.log"
-reg.exe query 'HKCU\Software\Classes\.sagan' /ve | grep -Fq 'Sagan.Source'
-reg.exe query 'HKCU\Environment' /v Path | grep -Fq "$(cygpath -w "$install_dir/bin")"
+MSYS2_ARG_CONV_EXCL='*' reg.exe query 'HKCU\Software\Classes\.sagan' /ve | grep -Fq 'Sagan.Source'
+MSYS2_ARG_CONV_EXCL='*' reg.exe query 'HKCU\Environment' /v Path | grep -Fq "$(cygpath -w "$install_dir/bin")"
 
 MSYS2_ARG_CONV_EXCL='*' "$install_dir/unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 if [[ -e "$install_dir/bin/sagan.exe" ]]; then
