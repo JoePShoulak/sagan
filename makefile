@@ -43,7 +43,9 @@ SEMANTIC_INDEX_DEMO := bin/semantic-index-demo
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
 BUILD_TMP := build/tmp
-ifeq ($(OS),Windows_NT)
+HOST_UNAME := $(shell uname -s 2>/dev/null)
+WINDOWS_HOST := $(if $(filter Windows_NT,$(OS)),1,$(if $(findstring MINGW,$(HOST_UNAME)),1,$(if $(findstring MSYS,$(HOST_UNAME)),1,)))
+ifneq ($(WINDOWS_HOST),)
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
 WINDOWS_RUNTIME_LDFLAGS := -static -static-libgcc -static-libstdc++
 else
@@ -52,13 +54,13 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo units-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test check-windows-runtime coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo units-demo editor-tooling-demo workspace-demo semantic-index-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
 libraries: $(COMPILER_LIBRARY)
 
-ifeq ($(OS),Windows_NT)
+ifneq ($(WINDOWS_HOST),)
 windows-launcher: $(WINDOWS_LAUNCHER)
 
 $(WINDOWS_LAUNCHER_RESOURCE): packaging/windows/sagan.rc packaging/windows/sagan.ico
@@ -107,11 +109,15 @@ obj/version.o: obj/version.cpp src/version.hpp
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
 test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_DEMO) $(SEMANTIC_INDEX_DEMO)
+	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	$(SOURCE_DIAGNOSTICS_TEST)
 	$(WORKSPACE_DEMO)
 	$(SEMANTIC_INDEX_DEMO)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
+
+check-windows-runtime: $(TARGET)
+	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 
 coverage:
 	bash scripts/coverage.sh

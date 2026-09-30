@@ -69,9 +69,14 @@ To build without running the test script:
 
 ```bash
 make all
+make check-windows-runtime
 ```
 
-The resulting executable is `bin/sagan`.
+The resulting executable is `bin/sagan`. On Windows, the runtime check uses
+`objdump` to reject local builds that import the MinGW GCC, C++, or threading
+DLLs. Windows detection covers both an explicit `OS=Windows_NT` environment
+and ordinary Git Bash `MINGW`/`MSYS` hosts, so a local build cannot silently
+omit the static runtime flags.
 
 Build the Windows installer locally with Inno Setup 6 installed:
 
