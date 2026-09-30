@@ -3555,6 +3555,9 @@
 <p>The phases are dependency-ordered. Each phase ends with focused library tests
 and keeps strict batch compilation independently usable.</p>
 <h2 id="phase-0-contracts-and-baseline">Phase 0 — contracts and baseline</h2>
+<p><strong>Status: implemented foundation.</strong> The compiler now produces a reusable static
+archive, the batch CLI links it, focused library tests run independently, and
+the audit/contracts/capability baseline is checked into the documentation.</p>
 <ul>
 <li>Preserve the repository audit, architecture contracts, capability vocabulary,
   and extension readiness matrix.</li>
@@ -3566,6 +3569,12 @@ and keeps strict batch compilation independently usable.</p>
 <p><strong>Exit:</strong> existing tests pass through library entry points; no editor protocol
 code owns compiler logic.</p>
 <h2 id="phase-1-source-identity-and-structured-diagnostics">Phase 1 — source identity and structured diagnostics</h2>
+<p><strong>Status: foundation implemented; diagnostic migration remains.</strong> URI/path and
+versioned snapshots, byte/UTF-16 conversion, result states, cancellation,
+structured diagnostic containers, terminal/JSON rendering, strict document
+checking, and capability discovery are implemented. Existing module, project,
+build, entry-point, and runtime paths still need to migrate from textual
+exceptions to distinct structured codes.</p>
 <ul>
 <li>Implement URI/path identity, immutable snapshots, document versions, UTF-8
   byte ranges, UTF-16 positions, and a tested line index.</li>
