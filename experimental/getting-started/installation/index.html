@@ -3017,6 +3017,8 @@
       
         
       
+        
+      
     
     
     
@@ -3130,6 +3132,42 @@
     
   
     Versioning
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/windows-installer-release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Windows installer release gate
   
 
     
@@ -3579,6 +3617,11 @@ start normally from a terminal or File Explorer without requiring MSYS2's
 <code>libgcc_s_seh-1.dll</code>, <code>libstdc++-6.dll</code>, or <code>libwinpthread-1.dll</code> on the user's
 <code>PATH</code>. The bundled toolchain remains available internally for
 compiling generated C++ programs.</p>
+<p>The installer is a self-contained offline package. Supported upgrades install
+in place using the stable Sagan application identity and preserve the selected
+location and integrations. Installing an older Sagan version over a newer one
+is refused; uninstall the newer version first when an explicit downgrade is
+necessary. Windows ARM64, Linux, and macOS are not supported by Sagan 1.0.</p>
 <p>After installation, open a new terminal and run:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sagan<span class="w"> </span>--version
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sagan<span class="w"> </span>path/to/program.sagan
@@ -3618,16 +3661,30 @@ and ordinary Git Bash <code>MINGW</code>/<code>MSYS</code> hosts, so a local bui
 omit the static runtime flags.</p>
 <p>Build the Windows installer locally with Inno Setup 6 installed:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bash<span class="w"> </span>scripts/windows/build_installer.sh
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>bash<span class="w"> </span>scripts/windows/test_installer.sh
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>bash<span class="w"> </span>scripts/windows/verify_installer_artifact.sh
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>bash<span class="w"> </span>scripts/windows/test_installer.sh
 </span></code></pre></div>
+<p>Development installers may be unsigned. A public release must be built with
+<code>SAGAN_SIGNTOOL_COMMAND</code> set to an Inno Setup-compatible Authenticode signing
+command and must pass:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bash<span class="w"> </span>scripts/windows/verify_installer_artifact.sh<span class="w"> </span>--release
+</span></code></pre></div>
+<p>Every build also produces a sibling <code>.exe.sha256</code> checksum. Signing credentials
+must be supplied by protected release infrastructure and must never be stored in
+the repository.</p>
 <p>The smoke test installs into an isolated directory and deliberately removes
 all UCRT64/MinGW runtime directories from <code>PATH</code>. It verifies direct CLI
 startup, compilation and execution of a generated program, windowed Explorer
 dispatch through <code>sagan-launch.exe</code>, file association, PATH registration, and
 clean uninstallation. This prevents a developer or CI MSYS2 installation from
 masking missing runtime dependencies in the packaged executables.</p>
+<p>CI and the isolated-path smoke test establish implementation readiness. Before
+publishing 1.0, the exact signed release candidate must still be installed,
+run, upgraded, associated with <code>.sagan</code>, and uninstalled on a clean Windows x64
+computer or VM. Until that evidence is recorded, installer acceptance remains
+pending even when automated checks pass.</p>
 <p>For documentation tooling, install Python 3 and run:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>setup
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>setup
 </span></code></pre></div>
 <p>The documentation virtual environment and generated site live under the ignored
 <code>build/</code> directory.</p>
