@@ -23,7 +23,19 @@ namespace semantic
       std::vector<std::unordered_map<std::string, std::vector<std::size_t>>> names;
       std::vector<std::string> scope_keys{"program"};
       analysis_identity identity_;
+      bool tolerant_{};
       std::size_t current_scope = 0;
+      std::vector<std::size_t> active_type_scopes;
+      std::unordered_map<std::string, std::size_t> type_scopes;
+
+      static auto documentation(const std::vector<parser::documentation_comment> &comments)
+        -> std::vector<std::string>
+      {
+        std::vector<std::string> result;
+        result.reserve(comments.size());
+        for (const auto &comment : comments) result.push_back(comment.text);
+        return result;
+      }
 
       auto make_id(const std::string_view declared_name, const symbol_kind kind,
                    const symbol_origin origin, const std::size_t ordinal) const -> symbol_id
@@ -63,7 +75,8 @@ namespace semantic
 
       auto declare(std::string declared_name, const symbol_kind kind, const parser::span range,
                    const symbol_visibility visibility = symbol_visibility::public_access,
-                   const symbol_origin origin = symbol_origin::source) -> void
+                   const symbol_origin origin = symbol_origin::source,
+                   std::vector<std::string> documentation = {}) -> void
       {
         auto &entries = names[current_scope][declared_name];
         if (!entries.empty())
@@ -77,13 +90,15 @@ namespace semantic
           const bool overload = callable(existing.kind) && callable(kind);
           if (!overload)
           {
+            if (tolerant_) return;
             throw semantic_error("Duplicate declaration of '" + declared_name + "' in the same scope", range);
           }
         }
         const symbol_id id = make_id(declared_name, kind, origin, entries.size());
         entries.push_back(model.scopes[current_scope].symbols.size());
         model.scopes[current_scope].symbols.push_back(symbol{id, std::move(declared_name), kind, visibility,
-                                                             origin, range, current_scope});
+                                                             origin, range, current_scope,
+                                                             std::move(documentation)});
       }
 
       auto find(const std::string &name) const -> std::optional<symbol>
@@ -101,17 +116,52 @@ namespace semantic
         return {};
       }
 
-      auto resolve_name(const std::string &name, const parser::span range) -> void
+      auto resolve_name(const std::string &name, const parser::span range,
+                        const reference_kind kind = reference_kind::read) -> void
       {
         const auto declaration = find(name);
         if (!declaration)
         {
+          if (tolerant_) return;
           throw semantic_error("Undefined name '" + name + "'", range);
         }
-        model.resolutions.push_back(resolution{name, range, declaration->declaration, declaration->id});
+        model.resolutions.push_back(resolution{name, range, declaration->declaration, declaration->id, kind});
       }
 
-      auto resolve_type(const std::optional<std::string> &name, const parser::span range) -> void
+      auto resolve_member(const parser::member_expression &member, const reference_kind kind) -> void
+      {
+        const auto *target = dynamic_cast<const parser::identifier_expression *>(member.target.get());
+        if (!target) return;
+        if (const auto receiver = find(target->name);
+            receiver && receiver->kind == symbol_kind::imported_namespace)
+        {
+          model.unresolved_members.push_back(
+              unresolved_member_reference{receiver->id, member.member_name, member.range, kind});
+          return;
+        }
+        if (const auto declared_type = type_scopes.find(target->name); declared_type != type_scopes.end())
+        {
+          const auto found = names[declared_type->second].find(member.member_name);
+          if (found == names[declared_type->second].end()) return;
+          const auto &declared = model.scopes[declared_type->second].symbols[found->second.front()];
+          model.resolutions.push_back(resolution{member.member_name, member.range, declared.declaration,
+                                                 declared.id, kind});
+          return;
+        }
+        if (target->name != "self" || active_type_scopes.empty()) return;
+        const auto scope_id = active_type_scopes.back();
+        const auto found = names[scope_id].find(member.member_name);
+        // The type checker owns inherited/default face members and produces the
+        // actual validity diagnostic. The lexical analyzer links only members
+        // declared directly in this type scope.
+        if (found == names[scope_id].end()) return;
+        const auto &declared = model.scopes[scope_id].symbols[found->second.front()];
+        model.resolutions.push_back(resolution{member.member_name, member.range, declared.declaration,
+                                               declared.id, kind});
+      }
+
+      auto resolve_type(const std::optional<std::string> &name, const parser::span range,
+                        const reference_kind kind = reference_kind::type) -> void
       {
         if (name)
         {
@@ -120,15 +170,17 @@ namespace semantic
           const auto declaration = find(base);
           if (!declaration)
           {
+            if (tolerant_) return;
             throw semantic_error("Undefined type '" + base + "'", range);
           }
           if (declaration->kind != symbol_kind::type && declaration->kind != symbol_kind::builtin_type &&
               declaration->kind != symbol_kind::type_parameter &&
               declaration->kind != symbol_kind::imported_namespace)
           {
+            if (tolerant_) return;
             throw semantic_error("'" + base + "' does not name a type", range);
           }
-          model.resolutions.push_back(resolution{base, range, declaration->declaration, declaration->id});
+          model.resolutions.push_back(resolution{base, range, declaration->declaration, declaration->id, kind});
           if (open != std::string::npos)
           {
             if (!name->ends_with('>')) throw semantic_error("Malformed type annotation '" + *name + "'", range);
@@ -157,11 +209,13 @@ namespace semantic
         const std::size_t open = name.find('<');
         if (open == std::string::npos)
         {
-          resolve_name(name, range);
+          resolve_name(name, range, reference_kind::call);
           return;
         }
-        if (resolve_base) resolve_name(name.substr(0, open), range);
+        const std::string base = name.substr(0, open);
+        if (resolve_base) resolve_name(base, range, reference_kind::call);
         const std::string arguments = name.substr(open + 1, name.size() - open - 2);
+        std::vector<std::string> specialization_arguments;
         std::size_t begin = 0;
         int depth = 0;
         for (std::size_t index = 0; index <= arguments.size(); ++index)
@@ -172,10 +226,16 @@ namespace semantic
           {
             std::string argument = arguments.substr(begin, index - begin);
             while (!argument.empty() && argument.front() == ' ') argument.erase(argument.begin());
+            while (!argument.empty() && argument.back() == ' ') argument.pop_back();
+            specialization_arguments.push_back(argument);
             resolve_type(std::optional<std::string>{argument}, range);
             begin = index + 1;
           }
         }
+        if (resolve_base)
+          if (const auto generic = find(base))
+            model.specializations.push_back(generic_specialization{generic->id,
+                                                                    std::move(specialization_arguments), range});
       }
 
       auto predeclare(const parser::statement &value) -> void
@@ -186,7 +246,8 @@ namespace semantic
                   current_scope == 0 ? symbol_kind::variable : symbol_kind::field,
                   declaration->range,
                   declaration->private_member ? symbol_visibility::private_access
-                                              : symbol_visibility::public_access);
+                                              : symbol_visibility::public_access,
+                  symbol_origin::source, documentation(declaration->documentation));
         }
         else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&value))
         {
@@ -195,11 +256,13 @@ namespace semantic
                                                                                       : symbol_kind::method),
                   function->range,
                   function->private_member ? symbol_visibility::private_access
-                                           : symbol_visibility::public_access);
+                                           : symbol_visibility::public_access,
+                  symbol_origin::source, documentation(function->documentation));
         }
         else if (const auto *type = dynamic_cast<const parser::type_declaration *>(&value))
         {
-          declare(type->name, symbol_kind::type, type->range);
+          declare(type->name, symbol_kind::type, type->range, symbol_visibility::public_access,
+                  symbol_origin::source, documentation(type->documentation));
           if (type->type_kind == parser::type_declaration::kind::enum_type)
             for (const auto &member : type->enum_members)
               if (!member.payload_types.empty()) declare(member.name, symbol_kind::enum_constructor, member.range);
@@ -211,7 +274,8 @@ namespace semantic
                                            ? imported->imported_name
                                            : imported->imported_name.substr(separator + 1);
           declare(imported->alias.value_or(fallback), symbol_kind::imported_namespace, imported->range,
-                  symbol_visibility::public_access, symbol_origin::imported);
+                  symbol_visibility::public_access, symbol_origin::imported,
+                  documentation(imported->documentation));
         }
       }
 
@@ -251,10 +315,14 @@ namespace semantic
         {
           if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
             resolve_explicit_generic(identifier->name, identifier->range);
-          else expression(*call->callee);
-          if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get()))
+          else if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get()))
+          {
+            expression(*member->target);
+            resolve_member(*member, reference_kind::call);
             if (member->member_name.find('<') != std::string::npos)
               resolve_explicit_generic(member->member_name, member->range, false);
+          }
+          else expression(*call->callee);
           for (const auto &argument : call->arguments) expression(*argument);
         }
         else if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
@@ -265,6 +333,7 @@ namespace semantic
         else if (const auto *member = dynamic_cast<const parser::member_expression *>(&value))
         {
           expression(*member->target);
+          resolve_member(*member, reference_kind::read);
         }
         else if (const auto *string = dynamic_cast<const parser::string_expression *>(&value))
         {
@@ -340,12 +409,14 @@ namespace semantic
       auto type(const parser::type_declaration &value) -> void
       {
         const std::size_t parent = open_scope("type " + value.name);
+        type_scopes.insert_or_assign(value.name, current_scope);
+        active_type_scopes.push_back(current_scope);
         for (const auto &parameter : value.type_parameters)
           declare(parameter, symbol_kind::type_parameter, value.range);
         for (const auto &constraint : value.type_constraints) resolve_type(constraint, value.range);
         for (const auto &interface_name : value.composed_interfaces)
         {
-          resolve_type(std::optional<std::string>{interface_name}, value.range);
+          resolve_type(std::optional<std::string>{interface_name}, value.range, reference_kind::conformance);
         }
         if (value.type_kind == parser::type_declaration::kind::class_type ||
             value.type_kind == parser::type_declaration::kind::interface_type)
@@ -356,11 +427,13 @@ namespace semantic
         for (const auto &member : value.members) predeclare(*member);
         for (const auto &member : value.enum_members)
         {
-          declare(member.name, symbol_kind::enum_case, member.range);
+          declare(member.name, symbol_kind::enum_case, member.range, symbol_visibility::public_access,
+                  symbol_origin::source, documentation(member.documentation));
           for (const auto &payload : member.payload_types)
             resolve_type(std::optional<std::string>{payload}, member.range);
         }
         for (const auto &member : value.members) statement(*member, true);
+        active_type_scopes.pop_back();
         close_scope(parent);
       }
 
@@ -372,7 +445,8 @@ namespace semantic
           if (declaration->initializer) expression(*declaration->initializer);
           if (!already_declared) declare(declaration->name, symbol_kind::variable, declaration->range,
                                          declaration->private_member ? symbol_visibility::private_access
-                                                                     : symbol_visibility::public_access);
+                                                                     : symbol_visibility::public_access,
+                                         symbol_origin::source, documentation(declaration->documentation));
         }
         else if (const auto *expression_statement = dynamic_cast<const parser::expression_statement *>(&value))
         {
@@ -469,12 +543,13 @@ namespace semantic
         }
         else if (const auto *exported = dynamic_cast<const parser::export_declaration *>(&value))
         {
-          resolve_name(exported->exported_name, exported->range);
+          resolve_name(exported->exported_name, exported->range, reference_kind::export_reference);
         }
       }
 
     public:
-      explicit analysis(analysis_identity identity) : identity_(std::move(identity))
+      explicit analysis(analysis_identity identity, const bool tolerant = false)
+          : identity_(std::move(identity)), tolerant_(tolerant)
       {
         model.scopes.push_back(scope{0, no_parent, "program", {}});
         names.emplace_back();
@@ -547,10 +622,20 @@ namespace semantic
       stream << "    " << resolved.name << " @ " << resolved.use.begin << ".." << resolved.use.end
              << " -> " << resolved.declaration.begin << ".." << resolved.declaration.end << '\n';
     }
+    for (const auto &specialization : specializations)
+    {
+      stream << "    Specialization(" << specialization.generic.value << " @ "
+             << specialization.use.begin << ".." << specialization.use.end << ")\n";
+    }
   }
 
   auto analyze(const parser::program &tree, analysis_identity identity) -> semantic_model
   {
     return analysis(std::move(identity)).run(tree);
+  }
+
+  auto analyze_partial(const parser::program &tree, analysis_identity identity) -> semantic_model
+  {
+    return analysis(std::move(identity), true).run(tree);
   }
 }

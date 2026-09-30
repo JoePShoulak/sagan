@@ -154,29 +154,31 @@ namespace sagan::language_service
                       const diagnostics::cancellation_token cancellation)
     -> diagnostics::analysis_result<semantic_snapshot>
   {
-    diagnostics::phase active_phase = diagnostics::phase::lexical;
+    diagnostics::phase active_phase = diagnostics::phase::syntax;
     try
     {
       if (cancellation.is_cancelled()) return cancelled_index(document);
-      parser::tokenizer lexer(parser::programText{std::string(document.text())}, get_token);
-      std::vector<parser::token> tokens;
-      while (auto next = lexer.next())
-      {
-        tokens.push_back(std::move(*next));
-        if (cancellation.is_cancelled()) return cancelled_index(document);
-      }
-      active_phase = diagnostics::phase::syntax;
-      parser::syntax_parser syntax(std::move(tokens));
-      const auto tree = syntax.parse();
+      auto syntax_result = syntax::analyze(document, syntax::analysis_options{true, 64}, cancellation);
+      if (syntax_result.state == diagnostics::result_state::cancelled) return cancelled_index(document);
+      if (!syntax_result.value ||
+          (!syntax_result.value->strict_ast && !syntax_result.value->recovered_ast))
+        return {syntax_result.state, {}, std::move(syntax_result.diagnostics), document.version()};
       if (cancellation.is_cancelled()) return cancelled_index(document);
       active_phase = diagnostics::phase::semantic;
       const auto module = document.identity().canonical_path
                               ? document.identity().canonical_path->generic_string()
                               : document.identity().uri.value;
-      auto model = semantic::analyze(tree, semantic::analysis_identity{"local", module});
-      auto index = semantic::build_index(document, model);
-      return {diagnostics::result_state::complete,
-              semantic_snapshot{std::move(model), std::move(index)}, {}, document.version()};
+      const bool recovered = !syntax_result.value->strict_ast;
+      const auto &tree = recovered ? *syntax_result.value->recovered_ast : *syntax_result.value->strict_ast;
+      auto model = recovered
+                       ? semantic::analyze_partial(tree, semantic::analysis_identity{"local", module})
+                       : semantic::analyze(tree, semantic::analysis_identity{"local", module});
+      std::optional<semantic::type_model> type_model;
+      if (!recovered) type_model = semantic::check_types(tree);
+      auto index = semantic::build_index(document, model, type_model ? &*type_model : nullptr);
+      return {recovered ? diagnostics::result_state::recovered : diagnostics::result_state::complete,
+              semantic_snapshot{std::move(model), std::move(index)},
+              std::move(syntax_result.diagnostics), document.version()};
     }
     catch (const parser::parse_error &error)
     {

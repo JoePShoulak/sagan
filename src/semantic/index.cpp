@@ -1,6 +1,8 @@
 #include "index.hpp"
 
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 #include <utility>
 
 namespace semantic
@@ -19,11 +21,24 @@ namespace semantic
     {
       return range.begin <= offset && offset < range.end;
     }
+
+    auto stable_type_id(const std::string &type) -> type_id
+    {
+      std::uint64_t hash = 14695981039346656037ULL;
+      for (const unsigned char byte : std::string("sagan-type-v1|") + type)
+      {
+        hash ^= byte;
+        hash *= 1099511628211ULL;
+      }
+      std::ostringstream encoded;
+      encoded << "sagan-type-v1:" << std::hex << std::setfill('0') << std::setw(16) << hash;
+      return {encoded.str()};
+    }
   }
 
   semantic_index::semantic_index(sagan::source::document_identity document,
                                  const sagan::source::document_version version,
-                                 const semantic_model &model)
+                                 const semantic_model &model, const type_model *types)
       : document_(std::move(document)), version_(version)
   {
     for (const auto &scope : model.scopes)
@@ -31,17 +46,115 @@ namespace semantic
       {
         symbol_lookup_.insert_or_assign(entry.id.value, symbols_.size());
         symbols_.push_back(indexed_symbol{entry.id, entry.name, entry.kind, entry.visibility, entry.origin,
-                                          source_range(document_.id, entry.declaration), entry.scope_id});
+                                          source_range(document_.id, entry.declaration), entry.scope_id,
+                                          entry.documentation});
       }
     for (const auto &entry : model.resolutions)
-      references_.push_back(indexed_reference{entry.target, reference_kind::unclassified,
+      references_.push_back(indexed_reference{entry.target, entry.kind,
                                                source_range(document_.id, entry.use)});
+    for (const auto &entry : model.specializations)
+      specializations_.push_back(specialization_record{entry.generic, entry.arguments,
+                                                        source_range(document_.id, entry.use)});
+    unresolved_members_ = model.unresolved_members;
+    for (const auto &scope : model.scopes)
+    {
+      std::unordered_map<std::string, std::vector<symbol_id>> callable_groups;
+      for (const auto &entry : scope.symbols)
+        if (entry.kind == symbol_kind::function || entry.kind == symbol_kind::method ||
+            entry.kind == symbol_kind::constructor || entry.kind == symbol_kind::enum_constructor)
+          callable_groups[entry.name].push_back(entry.id);
+      for (auto &[name, candidates] : callable_groups)
+        if (candidates.size() > 1)
+          overloads_.push_back(overload_set{"sagan-overload-v1:" + candidates.front().value, name,
+                                             scope.id, std::move(candidates)});
+    }
+    for (const auto &reference : references_)
+    {
+      if (reference.kind != reference_kind::conformance) continue;
+      const indexed_symbol *implementer = nullptr;
+      for (const auto &candidate : symbols_)
+      {
+        if (candidate.kind != symbol_kind::type || candidate.origin != symbol_origin::source) continue;
+        if (candidate.declaration.bytes.begin <= reference.location.bytes.begin &&
+            candidate.declaration.bytes.end >= reference.location.bytes.end &&
+            (!implementer || candidate.declaration.bytes.end - candidate.declaration.bytes.begin <
+                                implementer->declaration.bytes.end - implementer->declaration.bytes.begin))
+          implementer = &candidate;
+      }
+      if (implementer)
+        conformances_.push_back(conformance_record{implementer->id, reference.target,
+                                                    implementer->declaration});
+    }
+    if (types)
+    {
+      std::unordered_map<std::string, type_id> known;
+      const auto record_type = [&](const std::string &display) -> type_id
+      {
+        if (const auto found = known.find(display); found != known.end()) return found->second;
+        auto id = stable_type_id(display);
+        known.emplace(display, id);
+        types_.push_back(type_record{id, display});
+        return id;
+      };
+      for (const auto &entry : types->declarations)
+        typed_ranges_.push_back(typed_range{source_range(document_.id, entry.range), record_type(entry.type), true});
+      for (const auto &entry : types->expressions)
+        typed_ranges_.push_back(typed_range{source_range(document_.id, entry.range), record_type(entry.type), false});
+      for (const auto &entry : types->members)
+      {
+        std::vector<symbol_id> candidates;
+        std::vector<std::size_t> type_scopes;
+        for (const auto &scope : model.scopes)
+          if (scope.label == "type " + entry.receiver_type) type_scopes.push_back(scope.id);
+        for (const auto &symbol : symbols_)
+          if (symbol.name == entry.member &&
+              std::find(type_scopes.begin(), type_scopes.end(), symbol.scope_id) != type_scopes.end())
+            candidates.push_back(symbol.id);
+        member_resolutions_.push_back(member_resolution_record{
+            source_range(document_.id, entry.use), record_type(entry.receiver_type), entry.member,
+            std::move(candidates)});
+      }
+      for (const auto &entry : types->inferred_specializations)
+      {
+        std::vector<symbol_id> candidates;
+        for (const auto &symbol : symbols_)
+          if (symbol.name == entry.generic &&
+              (symbol.kind == symbol_kind::function || symbol.kind == symbol_kind::method ||
+               symbol.kind == symbol_kind::constructor)) candidates.push_back(symbol.id);
+        inferred_specializations_.push_back(inferred_specialization_record{
+            source_range(document_.id, entry.use), entry.generic, entry.arguments, std::move(candidates)});
+      }
+    }
   }
 
   auto semantic_index::document() const -> const sagan::source::document_identity & { return document_; }
   auto semantic_index::version() const -> sagan::source::document_version { return version_; }
   auto semantic_index::symbols() const -> const std::vector<indexed_symbol> & { return symbols_; }
   auto semantic_index::references() const -> const std::vector<indexed_reference> & { return references_; }
+  auto semantic_index::overloads() const -> const std::vector<overload_set> & { return overloads_; }
+  auto semantic_index::specializations() const -> const std::vector<specialization_record> &
+  {
+    return specializations_;
+  }
+  auto semantic_index::conformances() const -> const std::vector<conformance_record> &
+  {
+    return conformances_;
+  }
+  auto semantic_index::types() const -> const std::vector<type_record> & { return types_; }
+  auto semantic_index::typed_ranges() const -> const std::vector<typed_range> & { return typed_ranges_; }
+  auto semantic_index::member_resolutions() const -> const std::vector<member_resolution_record> &
+  {
+    return member_resolutions_;
+  }
+  auto semantic_index::inferred_specializations() const
+    -> const std::vector<inferred_specialization_record> &
+  {
+    return inferred_specializations_;
+  }
+  auto semantic_index::unresolved_members() const -> const std::vector<unresolved_member_reference> &
+  {
+    return unresolved_members_;
+  }
 
   auto semantic_index::find(const symbol_id &id) const -> const indexed_symbol *
   {
@@ -78,9 +191,10 @@ namespace semantic
     return best;
   }
 
-  auto build_index(const sagan::source::document_snapshot &document, const semantic_model &model)
+  auto build_index(const sagan::source::document_snapshot &document, const semantic_model &model,
+                   const type_model *types)
     -> semantic_index
   {
-    return semantic_index(document.identity(), document.version(), model);
+    return semantic_index(document.identity(), document.version(), model, types);
   }
 }

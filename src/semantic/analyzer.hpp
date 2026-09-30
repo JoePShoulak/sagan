@@ -39,6 +39,7 @@ namespace semantic
 
   enum class symbol_visibility { public_access, private_access };
   enum class symbol_origin { source, imported, builtin, generated };
+  enum class reference_kind { unclassified, read, write, type, call, import, conformance, export_reference };
 
   auto name(symbol_kind value) -> std::string_view;
 
@@ -51,6 +52,7 @@ namespace semantic
     symbol_origin origin;
     parser::span declaration;
     std::size_t scope_id;
+    std::vector<std::string> documentation;
   };
 
   struct resolution
@@ -59,6 +61,22 @@ namespace semantic
     parser::span use;
     parser::span declaration;
     symbol_id target;
+    reference_kind kind;
+  };
+
+  struct generic_specialization
+  {
+    symbol_id generic;
+    std::vector<std::string> arguments;
+    parser::span use;
+  };
+
+  struct unresolved_member_reference
+  {
+    symbol_id receiver;
+    std::string member;
+    parser::span use;
+    reference_kind kind;
   };
 
   struct scope
@@ -73,6 +91,8 @@ namespace semantic
   {
     std::vector<scope> scopes;
     std::vector<resolution> resolutions;
+    std::vector<generic_specialization> specializations;
+    std::vector<unresolved_member_reference> unresolved_members;
 
     auto print(std::ostream &stream) const -> void;
   };
@@ -84,4 +104,5 @@ namespace semantic
   };
 
   auto analyze(const parser::program &tree, analysis_identity identity = {}) -> semantic_model;
+  auto analyze_partial(const parser::program &tree, analysis_identity identity = {}) -> semantic_model;
 }

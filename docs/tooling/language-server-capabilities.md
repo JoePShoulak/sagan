@@ -17,8 +17,10 @@ retention, versioned document overlays, overlay-first module resolution,
 dependency invalidation, cached reanalysis, cancellation, and stale-result
 rejection are also available. Strict semantic indexing now supplies opaque
 stable symbol IDs, typed kinds/visibility/origin, document-owned declaration
-ranges, and identity-based per-document references. Cross-module/member
-linking and position-query APIs are not yet complete. LSP transport remains unavailable.
+ranges, overloads, generic specializations, conformances, receiver members,
+canonical types, and identity-based document/workspace references. Selective
+imports and namespace members link to exported identities. Position-query APIs
+are not yet complete, and LSP transport remains unavailable.
 This document defines the guarantees
 the completed Sagan 1.0 server must satisfy and the capability-discovery shape
 clients may rely on. It is not a claim that blocked capabilities work today.

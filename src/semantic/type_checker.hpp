@@ -21,10 +21,26 @@ namespace semantic
     std::string type;
   };
 
+  struct resolved_member
+  {
+    parser::span use;
+    std::string receiver_type;
+    std::string member;
+  };
+
+  struct inferred_specialization
+  {
+    parser::span use;
+    std::string generic;
+    std::vector<std::string> arguments;
+  };
+
   struct type_model
   {
     std::vector<typed_declaration> declarations;
     std::vector<typed_expression> expressions;
+    std::vector<resolved_member> members;
+    std::vector<inferred_specialization> inferred_specializations;
 
     auto print(std::ostream &stream) const -> void;
   };

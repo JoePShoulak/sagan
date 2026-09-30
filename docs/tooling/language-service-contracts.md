@@ -150,8 +150,14 @@ and exposes typed symbol kind, visibility, origin, declaring scope, document,
 declaration range, and identity-based references. Built-ins use a canonical
 `sagan/core` identity namespace, so their IDs do not vary by source document.
 Source declaration keys currently incorporate the package/module identity and
-stable lexical-scope path. Cross-module linking and explicit cross-snapshot
-rebinding are the next Phase 4 layers.
+stable lexical-scope path. Workspace indexes link exported declarations to
+selective-import bindings and imported-namespace member uses. Semantic records
+also expose overload candidates, receiver-member candidates, explicit and
+inferred generic specializations, face conformances, declaration documentation,
+canonical type identities, and typed source ranges. Recovered documents may
+produce an explicitly recovered partial index; strict compilation remains the
+authority for executable programs. Explicit cross-snapshot rebinding remains a
+future source-edit concern.
 
 ## Language queries
 

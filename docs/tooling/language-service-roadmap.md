@@ -94,15 +94,16 @@ and overlay/module invalidation tests pass.
 
 ## Phase 4 — semantic index and stable identities
 
-**Status: foundation implemented; workspace linking remains.** Analyzer output
+**Status: complete.** Analyzer output
 now uses typed symbol kinds, visibility, origin, scope ownership, and opaque
 deterministic `sagan-symbol-v1` identities instead of public string kinds.
 Strict documents can be converted into a versioned, document-owned semantic
-index with identity-based definition/reference lookup, shadowed-local
-separation, overload separation, stable built-in identities, and a focused
-demo/test. Cross-module export linking, receiver/member resolution, typed
-overload/specialization records, face conformance records, documentation
-association, and recovered-tree semantic indexing still gate Phase 4's exit.
+index with identity-based definition/reference lookup, shadowed-local and
+overload separation, stable built-in identities, documentation, canonical
+types, receiver/member candidates, explicit and inferred specializations, and
+face conformances. The workspace index links selective imports and namespace
+members to exported identities. Recovered trees retain valid declarations
+without weakening strict compilation.
 
 - Replace stringly public symbol records with typed symbol, node, scope, type,
   overload, specialization, conformance, visibility, and origin records.
@@ -113,6 +114,9 @@ association, and recovered-tree semantic indexing still gate Phase 4's exit.
 
 **Exit:** identity-based definition/reference tests pass across modules,
 overloads, generics, private members, shadowed locals, faces, and enum cases.
+
+The exit behavior is exercised by `make semantic-index-demo`; Phase 5 now owns
+the position-based query and presentation APIs built on these records.
 
 ## Phase 5 — read-only language features
 

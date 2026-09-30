@@ -1254,6 +1254,9 @@ namespace semantic
                 if (!inferred_all) continue;
                 require_constraints(instantiated.type_parameters, instantiated.type_constraints, inferred,
                                     value.range);
+                if (requested.arguments.empty())
+                  model.inferred_specializations.push_back(
+                      inferred_specialization{identifier->range, requested.base, inferred});
                 for (auto &parameter : instantiated.parameters)
                   parameter = substitute_type(parameter, instantiated.type_parameters, inferred);
                 instantiated.result = substitute_type(instantiated.result, instantiated.type_parameters, inferred);
@@ -1389,6 +1392,8 @@ namespace semantic
             if (const auto field = object->second.fields.find(member->member_name);
                 field != object->second.fields.end())
             {
+              model.members.push_back(resolved_member{member->range, instantiated_target.base,
+                                                       member->member_name});
               require(!object->second.private_fields.contains(member->member_name) ||
                           (active_class && *active_class == instantiated_target.base),
                       "Private field '" + member->member_name + "' of class '" + accessed_target +
@@ -1403,6 +1408,8 @@ namespace semantic
             if (const auto methods = object->second.methods.find(requested_member.base);
                 methods != object->second.methods.end())
             {
+              model.members.push_back(resolved_member{member->range, instantiated_target.base,
+                                                       requested_member.base});
               require(!object->second.private_methods.contains(member->member_name) ||
                           (active_class && *active_class == instantiated_target.base),
                       "Private method '" + member->member_name + "' of class '" + accessed_target +
@@ -1432,6 +1439,8 @@ namespace semantic
             require(methods->second.size() == 1,
                     "Face method reference '" + member->member_name + "' is overloaded and requires a call",
                     value.range);
+            model.members.push_back(resolved_member{member->range, instantiated_interface.base,
+                                                     requested_member.base});
             auto signature = methods->second.front();
             for (auto &parameter : signature.parameters)
               parameter = substitute_type(parameter, interface->second.type_parameters,

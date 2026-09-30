@@ -191,8 +191,9 @@ discovery, and the recovered structured diagnostics produced for it.
 then demonstrates dependency cancellation, stale-result rejection, and the
 return to disk contents after close.
 `semantic-index-demo` shows deterministic compiler-owned symbol identities,
-distinct overloads and shadowed locals, stable built-ins across modules, and
-identity-based definition/reference indexing.
+distinct overloads and shadowed locals, stable built-ins, documentation,
+canonical types, generic specializations, receiver members, face conformances,
+safe partial-tree indexing, and cross-module identity-based references.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 `weak-demo` shows a live weak reference resolving to `Some`, lets its strong

@@ -24,6 +24,7 @@ LIBRARY_SOURCES := \
 	src/parser/unicode.cpp \
 	src/semantic/analyzer.cpp \
 	src/semantic/index.cpp \
+	src/semantic/workspace_index.cpp \
 	src/semantic/type_checker.cpp \
 	src/source/provider.cpp \
 	src/source/source.cpp \

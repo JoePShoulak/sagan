@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.66.1](https://img.shields.io/badge/development-0.66.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.67.0](https://img.shields.io/badge/development-0.67.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -193,9 +193,11 @@ publication. Semantic queries, formatting, refactoring, and LSP transport
 remain capability-disabled until their roadmap phases land. The semantic layer
 now assigns deterministic opaque identities to source, imported, built-in, and
 generated symbols; distinguishes typed symbol kinds, visibility, and origin;
-and exposes a reusable per-document declaration/reference index. This is the
-identity foundation for definition, references, navigation, and safe edits,
-while cross-module member linking and user-facing queries remain forthcoming.
+and exposes reusable document and workspace semantic indexes. Export/import
+aliases and namespace-member references now link across modules by identity;
+overloads, explicit and inferred generic specializations, face conformances,
+receiver members, documentation, canonical types, and recovered partial trees
+have structured records. Position-based editor queries remain forthcoming.
 
 ## Build and explore
 
