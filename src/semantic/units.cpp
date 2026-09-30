@@ -51,7 +51,7 @@ namespace semantic::units
         const auto begin = current_;
         while (current_ < text_.size() && text_[current_] != ' ' && text_[current_] != '*' &&
                text_[current_] != '/' && text_[current_] != '^' && text_[current_] != '(' &&
-               text_[current_] != '>') ++current_;
+               text_[current_] != ')' && text_[current_] != '>') ++current_;
         if (begin == current_) throw semantic_error("Expected a unit name", range_);
         return std::string(text_.substr(begin, current_ - begin));
       }

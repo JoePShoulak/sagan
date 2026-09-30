@@ -166,6 +166,21 @@ auto main() -> int
   const auto workspace_index = semantic::build_workspace_index(graph, disk);
   const auto course = workspace_index.exported("guidance", "course");
   if (course.size() != 1) throw std::runtime_error("export alias did not resolve to one declaration");
+  if (workspace_index.imports().empty() || !workspace_index.find(course.front()) ||
+      !workspace_index.exported("guidance", "missing").empty() ||
+      workspace_index.find(semantic::symbol_id{"missing-symbol"}))
+    throw std::runtime_error("workspace index lookup surfaces are inconsistent");
+  if (workspace_index.definitions(course.front()).size() != 1 ||
+      workspace_index.references_to(course.front(), true).size() < 3 ||
+      !workspace_index.definitions(semantic::symbol_id{"missing-symbol"}).empty() ||
+      !workspace_index.references_to(semantic::symbol_id{"missing-symbol"}).empty())
+    throw std::runtime_error("workspace definition and reference queries are incomplete");
+  bool import_definition_linked = false;
+  for (const auto &entry : workspace_index.imports())
+    if (!entry.targets.empty() && !workspace_index.definitions(entry.binding).empty())
+      import_definition_linked = true;
+  if (!import_definition_linked)
+    throw std::runtime_error("import binding did not navigate to its exported declaration");
   const auto cross_module_references = workspace_index.references_to(course.front());
   if (cross_module_references.size() < 2)
     throw std::runtime_error("selective import references did not link across modules");

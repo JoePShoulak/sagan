@@ -2,6 +2,8 @@
 #include "../src/language_service/language_service.hpp"
 #include "../src/language_service/workspace.hpp"
 #include "../src/modules/resolver.hpp"
+#include "../src/semantic/semantic_error.hpp"
+#include "../src/semantic/units.hpp"
 #include "../src/source/provider.hpp"
 #include "../src/source/source.hpp"
 #include "../src/syntax/syntax.hpp"
@@ -10,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -105,6 +108,104 @@ auto main() -> int
                       diagnostics::state_name(diagnostics::result_state::stale) == "stale" &&
                       diagnostics::severity_name(diagnostics::severity::hint) == "hint",
                   "stable diagnostic vocabulary");
+  const diagnostics::phase phases[] = {
+      diagnostics::phase::lexical, diagnostics::phase::syntax, diagnostics::phase::semantic,
+      diagnostics::phase::type, diagnostics::phase::module, diagnostics::phase::project,
+      diagnostics::phase::build, diagnostics::phase::entry_point, diagnostics::phase::runtime};
+  bool diagnostic_names_complete = true;
+  for (const auto phase : phases)
+    diagnostic_names_complete &= diagnostics::phase_name(phase) != "unknown" &&
+                                 diagnostics::default_code(phase) != "SAG-UNK-0001";
+  const diagnostics::severity severities[] = {
+      diagnostics::severity::error, diagnostics::severity::warning,
+      diagnostics::severity::information, diagnostics::severity::hint};
+  for (const auto severity : severities)
+    diagnostic_names_complete &= diagnostics::severity_name(severity) != "unknown";
+  const diagnostics::result_state states[] = {
+      diagnostics::result_state::complete, diagnostics::result_state::recovered,
+      diagnostics::result_state::incomplete, diagnostics::result_state::cancelled,
+      diagnostics::result_state::stale};
+  for (const auto state : states)
+    diagnostic_names_complete &= diagnostics::state_name(state) != "unknown";
+  diagnostic_names_complete &= diagnostics::phase_name(static_cast<diagnostics::phase>(999)) == "unknown" &&
+                               diagnostics::default_code(static_cast<diagnostics::phase>(999)) == "SAG-UNK-0001" &&
+                               diagnostics::severity_name(static_cast<diagnostics::severity>(999)) == "unknown" &&
+                               diagnostics::state_name(static_cast<diagnostics::result_state>(999)) == "unknown";
+  passed &= check(diagnostic_names_complete, "complete diagnostic enum vocabulary");
+
+  const auto throws = [](auto action)
+  {
+    try { action(); }
+    catch (...) { return true; }
+    return false;
+  };
+  const parser::span unit_range{0, 1};
+  semantic::units::registry unit_registry;
+  const auto meter = unit_registry.resolve("meter", unit_range);
+  const auto kilometer = unit_registry.resolve("kilometer", unit_range);
+  const auto speed = unit_registry.resolve("meter / second", unit_range);
+  const auto inverse_area = unit_registry.resolve("meter ^ -2", unit_range);
+  const auto grouped = unit_registry.resolve("(meter * meter) / second", unit_range);
+  const auto delta_celsius = unit_registry.resolve("Delta<Celsius>", unit_range);
+  passed &= check(kilometer.scale.decimal_exponent == 3 && speed.dimension.size() == 2 &&
+                      inverse_area.dimension.at("Length") == -2 && grouped.dimension.at("Length") == 2 &&
+                      delta_celsius.kind == semantic::units::category::affine_difference &&
+                      unit_registry.find("meter") && !unit_registry.find("missing") &&
+                      unit_registry.dimension_dimensions("Length") &&
+                      !unit_registry.dimension_dimensions("Missing") &&
+                      unit_registry.quantity_dimensions("Speed") &&
+                      !unit_registry.quantity_dimensions("Missing"),
+                  "unit registry resolves names prefixes grouping powers and deltas");
+  const auto measured = semantic::units::parse_measured_type("Float64<meter / second>", unit_registry, unit_range);
+  passed &= check(measured && measured->numeric == "Float64" &&
+                      semantic::units::format_type("Float64", meter) == "Float64<meter>" &&
+                      !semantic::units::parse_measured_type("String<meter>", unit_registry, unit_range) &&
+                      !semantic::units::parse_measured_type("Float64", unit_registry, unit_range) &&
+                      semantic::units::compatible(meter, kilometer) &&
+                      !semantic::units::compatible(meter, speed),
+                  "unit type parsing formatting and compatibility");
+  const auto normalized = semantic::units::rational{20, -40, 2, 1}.normalized();
+  const auto decimal = semantic::units::rational{100, 1000}.normalized();
+  const auto zero = semantic::units::rational{0, -10, 4, 2}.normalized();
+  const auto product = semantic::units::multiply({2, 3, 1}, {3, 4, -1});
+  const auto quotient = semantic::units::divide({2, 3}, {4, 5});
+  const auto sum = semantic::units::add({1, 2}, {1, 3});
+  passed &= check(normalized == semantic::units::rational{-1, 2, 2, 1} &&
+                      decimal == semantic::units::rational{1, 1, -1, 0} &&
+                      zero == semantic::units::rational{0, 1, 0, 0} &&
+                      product == semantic::units::rational{1, 2, 0, 0} &&
+                      quotient == semantic::units::rational{5, 6, 0, 0} &&
+                      sum == semantic::units::rational{5, 6, 0, 0},
+                  "exact unit ratios normalize multiply divide and add");
+  passed &= check(
+      throws([] { static_cast<void>(semantic::units::rational{1, 0}.normalized()); }) &&
+      throws([] { static_cast<void>(semantic::units::add({1, 1, 1}, {1, 1, 2})); }) &&
+      throws([] { static_cast<void>(semantic::units::multiply(
+          {std::numeric_limits<std::int64_t>::max(), 1}, {2, 1})); }) &&
+      throws([&] { static_cast<void>(unit_registry.resolve("missing", unit_range)); }) &&
+      throws([&] { static_cast<void>(unit_registry.resolve("meter ^ 0", unit_range)); }) &&
+      throws([&] { static_cast<void>(unit_registry.resolve("(meter", unit_range)); }) &&
+      throws([&] { static_cast<void>(unit_registry.resolve("Delta<Celsius", unit_range)); }) &&
+      throws([&] { static_cast<void>(unit_registry.resolve("meter )", unit_range)); }) &&
+      throws([&] { static_cast<void>(semantic::units::difference_of(meter)); }) &&
+      throws([&] { static_cast<void>(semantic::units::combine(
+          unit_registry.resolve("Celsius", unit_range), meter, '*', unit_registry)); }),
+      "unit registry rejects malformed incompatible and overflowing operations");
+
+  source::document_snapshot path_document(
+      source::identity_from_path(source::document_id{70}, std::filesystem::absolute("demo path.sagan")),
+      2, "x");
+  diagnostics::diagnostic escaped_value{
+      "SAG-LEX-0001", diagnostics::severity::warning, diagnostics::phase::lexical,
+      source::source_range{source::document_id{70}, source::byte_range{2, 3}},
+      std::string{"quote\" slash\\ back\b form\f line\n return\r tab\t low\x01"}, {}, {}, {}};
+  const auto escaped_json = diagnostics::render_json(
+      path_document, diagnostics::result_state::cancelled, {escaped_value});
+  passed &= check(escaped_json.contains("\\\" slash\\\\") && escaped_json.contains("\\b") &&
+                      escaped_json.contains("\\f") && escaped_json.contains("\\n") &&
+                      escaped_json.contains("\\r") && escaped_json.contains("\\t") &&
+                      escaped_json.contains("\\u0001") && escaped_json.contains("demo path.sagan"),
+                  "diagnostic JSON escapes control text and includes canonical paths");
 
   const std::string preserved_source =
       "// ordinary comment\n/** declaration docs */\nfun 🚀(): Int => 42  /* trailing */\n";
@@ -215,6 +316,76 @@ auto main() -> int
                       overlays->save(untitled, 3) && overlays->close(untitled),
                   "overlay lifecycle rejects stale versions and supports save close");
 
+  const auto provider_root = std::filesystem::absolute("build/source-provider-test").lexically_normal();
+  std::filesystem::remove_all(provider_root);
+  std::filesystem::create_directories(provider_root);
+  const auto provider_path = provider_root / "source file.sagan";
+  {
+    std::ofstream provider_file(provider_path);
+    provider_file << "fun value(): Int => 1\n";
+  }
+  const auto provider_identity = source::identity_from_path(source::document_id{71}, provider_path);
+  const auto disk_read = disk->read_path(provider_path);
+  const auto disk_uri_read = disk->read(provider_identity.uri);
+  passed &= check(disk->exists_path(provider_path) && disk_read && disk_uri_read &&
+                      disk_read.value->identity().id == disk_uri_read.value->identity().id &&
+                      disk_uri_read.value->text().contains("fun value"),
+                  "disk provider reads paths and keeps stable identities");
+  const auto invalid_scheme = disk->canonicalize(source::document_uri{"untitled:bad"});
+  const auto invalid_percent = disk->canonicalize(source::document_uri{"file:///bad%QQ.sagan"});
+  const auto missing_read = disk->read_path(provider_root / "missing.sagan");
+  passed &= check(!invalid_scheme && invalid_scheme.error->code == source::provider_error_code::invalid_uri &&
+                      !invalid_percent && invalid_percent.error->code == source::provider_error_code::invalid_uri &&
+                      !missing_read && missing_read.error->code == source::provider_error_code::not_found &&
+                      !disk->exists_path(provider_root / "missing.sagan"),
+                  "disk provider reports invalid URIs and missing files");
+  auto path_overlays = std::make_shared<source::document_store>(disk);
+  auto alias_uri_text = provider_identity.uri.value;
+  const auto alias_name = alias_uri_text.rfind("source%20file.sagan");
+  if (alias_name != std::string::npos) alias_uri_text.replace(alias_name, 1, "%73");
+  const source::document_uri alias_uri{alias_uri_text};
+  passed &= check(path_overlays->open(provider_identity.uri, 1, "overlay") &&
+                      path_overlays->read_path(provider_path).value->text() == "overlay" &&
+                      !path_overlays->open(alias_uri, 1, "duplicate path") &&
+                      path_overlays->canonicalize(provider_identity.uri).value ==
+                          std::filesystem::absolute(provider_path).lexically_normal() &&
+                      path_overlays->close(provider_identity.uri),
+                  "file overlays win by canonical path and reject URI aliases");
+
+  const source::document_uri provider_untitled{"untitled:provider-errors"};
+  passed &= check(!overlays->open(provider_untitled, -1, "") &&
+                      overlays->open(provider_untitled, 1, "abc") &&
+                      !overlays->open(provider_untitled, 2, "duplicate") &&
+                      overlays->is_open(provider_untitled) &&
+                      overlays->current_version(provider_untitled) == 1,
+                  "overlay rejects invalid versions and duplicate opens");
+  passed &= check(!overlays->replace(source::document_uri{"untitled:closed"}, 1, 2, "") &&
+                      !overlays->replace(provider_untitled, 0, 2, "") &&
+                      !overlays->replace(provider_untitled, 1, 1, "") &&
+                      !overlays->save(provider_untitled, 2) &&
+                      !overlays->save(source::document_uri{"untitled:closed"}, 1),
+                  "overlay rejects stale and closed replace-save operations");
+  auto invalid_edit_snapshot = overlays->read(provider_untitled);
+  const auto provider_document = invalid_edit_snapshot.value->identity().id;
+  passed &= check(!overlays->change(provider_untitled, 0, 2, {}) &&
+                      !overlays->change(provider_untitled, 1, 1, {}) &&
+                      !overlays->change(source::document_uri{"untitled:closed"}, 1, 2, {}) &&
+                      !overlays->change(provider_untitled, 1, 2,
+                          {{{provider_document, {2, 1}}, "x"}}) &&
+                      !overlays->change(provider_untitled, 1, 2,
+                          {{{source::document_id{999}, {0, 1}}, "x"}}),
+                  "overlay validates edit versions ranges and document identity");
+  passed &= check(overlays->save(provider_untitled, 1, std::string{"saved"}) &&
+                      overlays->read(provider_untitled).value->text() == "saved" &&
+                      overlays->close(provider_untitled) &&
+                      !overlays->close(provider_untitled) &&
+                      !overlays->current_version(provider_untitled),
+                  "overlay save replacement and close error paths");
+  passed &= check(overlays->read(provider_identity.uri) && overlays->read_path(provider_path) &&
+                      overlays->exists_path(provider_path) && overlays->canonicalize(provider_identity.uri),
+                  "document store delegates closed documents to disk");
+  std::filesystem::remove_all(provider_root);
+
   const auto workspace_root = std::filesystem::absolute("build/editor-workspace-test").lexically_normal();
   std::filesystem::remove_all(workspace_root);
   std::filesystem::create_directories(workspace_root);
@@ -276,6 +447,56 @@ auto main() -> int
                   "workspace analyzes current snapshot after invalidation");
   workspace.close(dependent_uri);
   workspace.close(dependency_uri);
+
+  auto lifecycle_documents = std::make_shared<source::document_store>(disk);
+  language_service::workspace lifecycle(lifecycle_documents);
+  const source::document_uri first_uri{"untitled:lifecycle-first"};
+  const source::document_uri second_uri{"untitled:lifecycle-second"};
+  passed &= check(!lifecycle.analyze(first_uri).value &&
+                      lifecycle.analyze(first_uri).state == diagnostics::result_state::incomplete &&
+                      !lifecycle.begin_analysis(first_uri) && !lifecycle.close(first_uri),
+                  "workspace reports unavailable closed documents");
+  passed &= check(lifecycle.open(first_uri, 1, "fun value(): Int => 1\n") &&
+                      lifecycle.open(second_uri, 1, "fun other(): Int => 2\n") &&
+                      lifecycle.documents().is_open(first_uri),
+                  "workspace exposes its document store");
+  lifecycle.set_dependencies(first_uri, {first_uri, second_uri});
+  lifecycle.set_dependencies(second_uri, {first_uri});
+  passed &= check(lifecycle.invalidate(first_uri) == 2,
+                  "workspace invalidation terminates across dependency cycles");
+  const auto first_snapshot = lifecycle_documents->read(first_uri);
+  passed &= check(lifecycle.change(first_uri, 1, 2,
+                      {{{first_snapshot.value->identity().id, {20, 21}}, "3"}}) &&
+                      lifecycle.save(first_uri, 2, std::string{"fun value(): Int => 4\n"}),
+                  "workspace changes and saves versioned overlays");
+  const auto first_analysis = lifecycle.analyze(first_uri);
+  const auto cached_analysis = lifecycle.analyze(first_uri);
+  passed &= check(first_analysis.state == diagnostics::result_state::complete &&
+                      cached_analysis.state == diagnostics::result_state::complete &&
+                      cached_analysis.analyzed_version == 2,
+                  "workspace caches current completed analysis");
+  const auto no_types = language_service::check_document(
+      valid_document, language_service::check_options{false, false});
+  source::document_snapshot entry_document(
+      source::document_identity{source::document_id{72}, source::document_uri{"untitled:entry-check"}, {}},
+      1, "fun helper(): Int => 1\n");
+  const auto entry_check = language_service::check_document(
+      entry_document, language_service::check_options{true, true});
+  diagnostics::cancellation_source cancelled_index_source;
+  cancelled_index_source.cancel();
+  const auto cancelled_index = language_service::index_document(
+      valid_document, cancelled_index_source.token());
+  const auto invalid_index = language_service::index_document(invalid_document);
+  passed &= check(no_types.state == diagnostics::result_state::complete &&
+                      no_types.value->typed_expression_count == 0 &&
+                      entry_check.state == diagnostics::result_state::incomplete &&
+                      entry_check.diagnostics.front().owner == diagnostics::phase::entry_point &&
+                      cancelled_index.state == diagnostics::result_state::cancelled &&
+                      invalid_index.state == diagnostics::result_state::incomplete &&
+                      invalid_index.diagnostics.front().owner == diagnostics::phase::semantic,
+                  "language service supports optional type and entry-point checks");
+  passed &= check(lifecycle.close(first_uri) && lifecycle.close(second_uri),
+                  "workspace removes cyclic dependency relationships on close");
 
   return passed ? 0 : 1;
 }
