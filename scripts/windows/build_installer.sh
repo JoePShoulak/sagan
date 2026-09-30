@@ -14,7 +14,10 @@ fi
 bash "$repo_root/scripts/windows/stage_installer.sh"
 version="$(bash "$repo_root/scripts/version.sh" numeric)"
 mkdir -p "$repo_root/build/installer"
-"$iscc" "/DSourceDir=$repo_root/build/windows-stage" "/DAppVersion=$version" \
-  "/O$repo_root/build/installer" "$repo_root/packaging/windows/sagan.iss"
+source_dir="$(cygpath -w "$repo_root/build/windows-stage")"
+output_dir="$(cygpath -w "$repo_root/build/installer")"
+script_path="$(cygpath -w "$repo_root/packaging/windows/sagan.iss")"
+MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DSourceDir=$source_dir" "/DAppVersion=$version" \
+  "/O$output_dir" "$script_path"
 
 echo "Built build/installer/sagan-$version-windows-x64.exe"
