@@ -1,5 +1,7 @@
 #include "codegen/cpp_generator.hpp"
+#include "diagnostics/diagnostic.hpp"
 #include "driver/native_runner.hpp"
+#include "language_service/language_service.hpp"
 #include "parser/lex.hpp"
 #include "parser/ast_render.hpp"
 #include "parser/parse_error.hpp"
@@ -11,6 +13,7 @@
 #include "semantic/analyzer.hpp"
 #include "semantic/semantic_error.hpp"
 #include "semantic/type_checker.hpp"
+#include "source/source.hpp"
 #include "version.hpp"
 
 #include <algorithm>
@@ -2112,6 +2115,20 @@ namespace
     }
     std::cerr << category << " error at " << line << ':' << column << ": " << error.what() << '\n';
   }
+
+  auto structured_diagnostic(const sagan::source::document_snapshot &document,
+                             const sagan::diagnostics::phase owner, const parser::span range,
+                             const std::string &message) -> sagan::diagnostics::diagnostic
+  {
+    const auto text_size = static_cast<int>(document.text().size());
+    const auto begin = static_cast<sagan::source::byte_offset>(std::clamp(range.begin, 0, text_size));
+    const auto end = static_cast<sagan::source::byte_offset>(
+        std::clamp(range.end, static_cast<int>(begin), text_size));
+    return sagan::diagnostics::diagnostic{
+        std::string(sagan::diagnostics::default_code(owner)), sagan::diagnostics::severity::error, owner,
+        sagan::source::source_range{document.identity().id, sagan::source::byte_range{begin, end}}, message,
+        {}, {}, {}};
+  }
 }
 
 auto main(const int argc, char **argv) -> int
@@ -2125,6 +2142,12 @@ auto main(const int argc, char **argv) -> int
   if (argc == 2 && std::string(argv[1]) == "--self-test")
   {
     return run_self_tests();
+  }
+
+  if (argc == 2 && std::string(argv[1]) == "--capabilities-json")
+  {
+    std::cout << sagan::language_service::capabilities_json();
+    return 0;
   }
 
   enum class output_mode
@@ -2145,6 +2168,7 @@ auto main(const int argc, char **argv) -> int
     emit_cpp_package,
     run_package,
     application_mode,
+    diagnostics_json,
   };
 
   output_mode mode = output_mode::tokens;
@@ -2231,6 +2255,11 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::application_mode;
     path = argv[2];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--diagnostics-json")
+  {
+    mode = output_mode::diagnostics_json;
+    path = argv[2];
+  }
   else if (argc == 3 && (std::string(argv[1]) == "--launch-console" ||
                          std::string(argv[1]) == "--launch-windowed"))
   {
@@ -2249,11 +2278,11 @@ auto main(const int argc, char **argv) -> int
   }
   else
   {
-    std::cerr << "usage: sagan [--version | --self-test | --tokens FILE | --ast FILE | --ast-dot FILE | "
+    std::cerr << "usage: sagan [--version | --self-test | --capabilities-json | --tokens FILE | --ast FILE | --ast-dot FILE | "
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
                  "--entry FILE | --modules FILE | --package PATH | --emit-cpp FILE [OUTPUT] | "
                  "--emit-cpp-modules FILE [OUTPUT] | --emit-cpp-package PATH [OUTPUT] | "
-                 "--run-package PATH | --application-mode PATH | FILE]\n";
+                 "--run-package PATH | --application-mode PATH | --diagnostics-json FILE | FILE]\n";
     return 2;
   }
 #ifdef _WIN32
@@ -2262,6 +2291,8 @@ auto main(const int argc, char **argv) -> int
   static_cast<void>(pause_after_run);
 #endif
   const bool ast_mode = mode != output_mode::tokens;
+  sagan::diagnostics::phase active_phase = sagan::diagnostics::phase::project;
+  std::optional<sagan::source::document_snapshot> document;
   try
   {
     if (mode == output_mode::application_mode)
@@ -2306,36 +2337,54 @@ auto main(const int argc, char **argv) -> int
       return 0;
     }
     const std::string source = read_file(path);
+    document.emplace(sagan::source::identity_from_path(sagan::source::document_id{1}, path), 0, source);
+    if (mode == output_mode::diagnostics_json)
+    {
+      const auto checked = sagan::language_service::check_document(*document);
+      std::cout << sagan::diagnostics::render_json(*document, checked.state, checked.diagnostics);
+      return checked.state == sagan::diagnostics::result_state::complete ? 0 : 1;
+    }
+    active_phase = sagan::diagnostics::phase::lexical;
     const auto result = tokenize(source);
 
     if (ast_mode)
     {
+      active_phase = sagan::diagnostics::phase::syntax;
       parser::syntax_parser syntax(result);
       const auto tree = syntax.parse();
       if (mode == output_mode::semantic)
       {
+        active_phase = sagan::diagnostics::phase::semantic;
         const auto model = semantic::analyze(tree);
         std::cout << "Sagan " << SAGAN_VERSION << " semantic model: " << path << "\n\n";
         model.print(std::cout);
       }
       else if (mode == output_mode::types)
       {
+        active_phase = sagan::diagnostics::phase::semantic;
         static_cast<void>(semantic::analyze(tree));
+        active_phase = sagan::diagnostics::phase::type;
         const auto model = semantic::check_types(tree);
         std::cout << "Sagan " << SAGAN_VERSION << " type model: " << path << "\n\n";
         model.print(std::cout);
       }
       else if (mode == output_mode::entry)
       {
+        active_phase = sagan::diagnostics::phase::semantic;
         static_cast<void>(semantic::analyze(tree));
+        active_phase = sagan::diagnostics::phase::type;
         static_cast<void>(semantic::check_types(tree));
+        active_phase = sagan::diagnostics::phase::entry_point;
         semantic::validate_entry_point(tree);
         std::cout << "Sagan " << SAGAN_VERSION << " executable entry point is valid: " << path << '\n';
       }
       else if (mode == output_mode::emit_cpp)
       {
+        active_phase = sagan::diagnostics::phase::semantic;
         static_cast<void>(semantic::analyze(tree));
+        active_phase = sagan::diagnostics::phase::type;
         const auto types = semantic::check_types(tree);
+        active_phase = sagan::diagnostics::phase::entry_point;
         semantic::validate_entry_point(tree);
         const std::string generated = codegen::generate_cpp(tree, types);
         if (output_path.empty()) std::cout << generated;
@@ -2359,8 +2408,11 @@ auto main(const int argc, char **argv) -> int
           semantic::validate_entry_point(linked);
           return driver::compile_and_run(codegen::generate_cpp(linked, types));
         }
+        active_phase = sagan::diagnostics::phase::semantic;
         static_cast<void>(semantic::analyze(tree));
+        active_phase = sagan::diagnostics::phase::type;
         const auto types = semantic::check_types(tree);
+        active_phase = sagan::diagnostics::phase::entry_point;
         semantic::validate_entry_point(tree);
         return driver::compile_and_run(codegen::generate_cpp(tree, types));
       }
@@ -2398,6 +2450,15 @@ auto main(const int argc, char **argv) -> int
   }
   catch (const parser::parse_error &error)
   {
+    if (document)
+    {
+      const auto value = structured_diagnostic(*document, active_phase, error.range, error.what());
+      if (mode == output_mode::diagnostics_json)
+        std::cout << sagan::diagnostics::render_json(*document, sagan::diagnostics::result_state::incomplete,
+                                                     {value});
+      else sagan::diagnostics::render_terminal(std::cerr, *document, value);
+      return 1;
+    }
     try
     {
       print_error(read_file(path), error, ast_mode ? "syntax" : "lexical");
@@ -2412,6 +2473,15 @@ auto main(const int argc, char **argv) -> int
   }
   catch (const semantic::semantic_error &error)
   {
+    if (document)
+    {
+      const auto value = structured_diagnostic(*document, active_phase, error.range, error.what());
+      if (mode == output_mode::diagnostics_json)
+        std::cout << sagan::diagnostics::render_json(*document, sagan::diagnostics::result_state::incomplete,
+                                                     {value});
+      else sagan::diagnostics::render_terminal(std::cerr, *document, value);
+      return 1;
+    }
     try
     {
       print_error(read_file(path), error, "semantic");

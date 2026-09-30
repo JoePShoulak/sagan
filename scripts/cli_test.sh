@@ -64,6 +64,8 @@ expect_failure() {
 
 expect_output "default tokenizer input" "tokenizer: examples/tokenizer_demo.sagan" "$binary"
 expect_output "version output" "Sagan " "$binary" --version
+expect_output "language-service capability discovery" '"schema":"sagan.language-service/1"' \
+  "$binary" --capabilities-json
 expect_output "explicit tokenizer input" "KWD_LET" "$binary" --tokens examples/tokenizer_demo.sagan
 printf '%s\n' 'let escaped = "\r\t\0"' > "$work_dir/escaped.sagan"
 expect_output "escaped token text" '\r\t\0' "$binary" --tokens "$work_dir/escaped.sagan"
@@ -73,6 +75,14 @@ expect_output "semantic model output" "SemanticModel" \
   "$binary" --semantic examples/semantic_demo.sagan
 expect_output "type model output" "TypeModel" \
   "$binary" --types examples/type_demo.sagan
+expect_output "structured diagnostic success" '"state":"complete","diagnostics":[]' \
+  "$binary" --diagnostics-json examples/semantic_demo.sagan
+expect_failure "structured lexical diagnostic" 1 '"code":"SAG-LEX-0001"' \
+  "$binary" --diagnostics-json examples/tokenizer_error.sagan
+expect_failure "structured syntax diagnostic" 1 '"code":"SAG-SYN-0001"' \
+  "$binary" --diagnostics-json examples/parser_error.sagan
+expect_failure "structured type diagnostic" 1 '"code":"SAG-TYP-0001"' \
+  "$binary" --diagnostics-json examples/type_error.sagan
 expect_output "weak ownership cycle type model" "TypeModel" \
   "$binary" --types examples/type_weak_ownership_cycle.sagan
 expect_output "entry-point validation" "executable entry point is valid" \

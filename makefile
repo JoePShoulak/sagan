@@ -7,10 +7,11 @@ LDFLAGS ?=
 # Conventional Commit markers to declare semantic-version impact.
 SAGAN_VERSION := $(shell bash scripts/version.sh current 2>/dev/null || echo 0.0.0+gunknown)
 
-SOURCES := \
-	src/main.cpp \
+LIBRARY_SOURCES := \
 	src/codegen/cpp_generator.cpp \
+	src/diagnostics/diagnostic.cpp \
 	src/driver/native_runner.cpp \
+	src/language_service/language_service.cpp \
 	src/modules/resolver.cpp \
 	src/parser/ast_render.cpp \
 	src/parser/ast_node.cpp \
@@ -21,12 +22,16 @@ SOURCES := \
 	src/parser/tokens.cpp \
 	src/parser/unicode.cpp \
 	src/semantic/analyzer.cpp \
-	src/semantic/type_checker.cpp
+	src/semantic/type_checker.cpp \
+	src/source/source.cpp
 
-OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
-OBJECTS += obj/version.o
+LIBRARY_OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(LIBRARY_SOURCES))
+CLI_OBJECTS := obj/main.o obj/version.o
+OBJECTS := $(LIBRARY_OBJECTS) $(CLI_OBJECTS)
 DEPENDENCIES := $(OBJECTS:.o=.d)
 TARGET := bin/$(APPNAME)
+COMPILER_LIBRARY := build/lib/libsagan-compiler.a
+SOURCE_DIAGNOSTICS_TEST := bin/source-diagnostics-test
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
 BUILD_TMP := build/tmp
@@ -37,9 +42,11 @@ BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test coverage demo parser-demo semantic-demo type-demo entry-demo module-demo package-demo run-demo geometry-demo execution-demo runtime-error-demo optional-demo weak-demo ownership-demo payload-enum-demo generic-sum-demo generic-class-demo ast-demo get-version FORCE
 
 all: $(TARGET)
+
+libraries: $(COMPILER_LIBRARY)
 
 ifeq ($(OS),Windows_NT)
 windows-launcher: $(WINDOWS_LAUNCHER)
@@ -56,9 +63,17 @@ windows-launcher:
 	@echo "The Explorer launcher is built only on Windows."
 endif
 
-$(TARGET): $(OBJECTS)
+$(COMPILER_LIBRARY): $(LIBRARY_OBJECTS)
+	@mkdir -p $(dir $@)
+	ar rcs $@ $(LIBRARY_OBJECTS)
+
+$(TARGET): $(CLI_OBJECTS) $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CLI_OBJECTS) $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+
+$(SOURCE_DIAGNOSTICS_TEST): tests/source_diagnostics_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
 obj/%.o: src/%.cpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
@@ -72,7 +87,8 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET)
+test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST)
+	$(SOURCE_DIAGNOSTICS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
 
@@ -141,6 +157,6 @@ get-version:
 FORCE:
 
 clean:
-	rm -rf obj bin
+	rm -rf obj bin build/lib
 
 -include $(DEPENDENCIES)

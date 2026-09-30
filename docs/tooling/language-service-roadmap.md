@@ -14,6 +14,10 @@ and keeps strict batch compilation independently usable.
 
 ## Phase 0 — contracts and baseline
 
+**Status: implemented foundation.** The compiler now produces a reusable static
+archive, the batch CLI links it, focused library tests run independently, and
+the audit/contracts/capability baseline is checked into the documentation.
+
 - Preserve the repository audit, architecture contracts, capability vocabulary,
   and extension readiness matrix.
 - Capture batch behavior and performance baselines for representative single-
@@ -25,6 +29,13 @@ and keeps strict batch compilation independently usable.
 code owns compiler logic.
 
 ## Phase 1 — source identity and structured diagnostics
+
+**Status: foundation implemented; diagnostic migration remains.** URI/path and
+versioned snapshots, byte/UTF-16 conversion, result states, cancellation,
+structured diagnostic containers, terminal/JSON rendering, strict document
+checking, and capability discovery are implemented. Existing module, project,
+build, entry-point, and runtime paths still need to migrate from textual
+exceptions to distinct structured codes.
 
 - Implement URI/path identity, immutable snapshots, document versions, UTF-8
   byte ranges, UTF-16 positions, and a tested line index.

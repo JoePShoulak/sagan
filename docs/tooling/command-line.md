@@ -15,6 +15,8 @@ bin/sagan path/to/source.sagan
 bin/sagan --tokens path/to/source.sagan
 bin/sagan --self-test
 bin/sagan --version
+bin/sagan --capabilities-json
+bin/sagan --diagnostics-json path/to/source.sagan
 bin/sagan --ast path/to/source.sagan
 bin/sagan --ast-dot path/to/source.sagan
 bin/sagan --ast-svg path/to/source.sagan build/tree.svg
@@ -64,6 +66,12 @@ configured entry, and returns its exit code.
 `--application-mode` prints `console` or `windowed`. It reads the named package
 manifest or discovers the nearest manifest for a source file; a loose file
 prints `console`.
+`--capabilities-json` prints the versioned compiler-service schema and granular
+implemented/unavailable feature flags. `--diagnostics-json` performs the strict
+lexical, syntax, semantic, and type check through the reusable language-service
+API and prints one machine-readable JSON document. It exits successfully only
+for a complete check; this is an automation/testing interface, not the future
+stdio Language Server Protocol transport.
 `--emit-cpp` performs the same front-end and entry checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.

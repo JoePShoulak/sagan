@@ -9,7 +9,11 @@ verified_by: null
 
 # Language-server capabilities
 
-Sagan does not yet ship a language server. This document defines the guarantees
+Sagan does not yet ship a language server. The compiler does expose
+`--capabilities-json` using the `sagan.language-service/1` schema and currently
+reports strict checking, structured diagnostics, UTF-16 positions, and
+cancellation as available. Recovery, overlays, and LSP transport are reported
+as unavailable. This document defines the guarantees
 the completed Sagan 1.0 server must satisfy and the capability-discovery shape
 clients may rely on. It is not a claim that blocked capabilities work today.
 

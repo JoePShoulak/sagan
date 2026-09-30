@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.61.3](https://img.shields.io/badge/development-0.61.3-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.62.0](https://img.shields.io/badge/development-0.62.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -171,6 +171,15 @@ channels, automation triggers, signing, publishing, support, rollback, and
 maintenance. Full VS Code extension readiness will be coordinated in the same
 transition period under separately supplied requirements.
 
+The compiler-owned editor-tooling track has begun without changing the held VS
+Code extension. The compiler now builds as a reusable static library and
+exposes the first versioned `sagan.language-service/1` contracts: document
+URI/path/version identity, UTF-8 byte and UTF-16 position conversion,
+structured diagnostics, cancellation, strict document checking, JSON
+diagnostics, and capability discovery. Recovery, overlays, semantic queries,
+formatting, refactoring, and LSP transport remain capability-disabled until
+their roadmap phases land.
+
 ## Build and explore
 
 Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
@@ -182,6 +191,8 @@ bash scripts/module_demo.sh
 make package-demo
 make run-demo
 make geometry-demo
+bin/sagan --capabilities-json
+bin/sagan --diagnostics-json examples/type_error.sagan
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 make ownership-demo

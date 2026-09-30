@@ -22,6 +22,7 @@ verified_by: null
 | C++ code generation and execution | **Initial executable subset implemented** | direct `sagan file.sagan`, `--run-package`, temporary native builds, exit propagation, `--emit-cpp`, reference-counted classes/faces, exceptions, lambdas, checked arithmetic, collections, dimensions, control flow, demos |
 | Deterministic execution | **Catchable runtime-error foundation implemented** | checked arithmetic and collection lookup failures become nominal `RuntimeError` values, with focused fixtures and a native demo |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
+| Editor-tooling foundation | **Phase 0/1 foundation implemented** | reusable compiler archive, versioned source identities, UTF-8 byte/UTF-16 positions, structured diagnostics and results, cancellation, strict document-check API, JSON output, capability discovery |
 
 ## Tokenizer verification
 
