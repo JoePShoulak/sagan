@@ -26,21 +26,21 @@ Sagan's planned core libraries are math, physics, and rendering. They are
 designed together around shared numerical and geometric types, but they do not
 all have the same inclusion policy.
 
-## Math: automatically available
+## [Math: automatically available](math.md)
 
 Core math is built into the language environment and available without an
 import. It supplies the numerical vocabulary on which Sagan programs and the
 other core libraries rely, including planned vector, matrix, quaternion,
 coordinate, and related operations.
 
-## Physics: explicit core library
+## [Physics: explicit core library](physics.md)
 
 Physics is a first-party core library, tightly coupled to Sagan's math types and
 designed for its simulation use cases. Programs must import it explicitly. This
 keeps the physics runtime and API out of applications that only need math or
 other lightweight language facilities.
 
-## Rendering: explicit core library
+## [Rendering: explicit core library](rendering.md)
 
 Rendering follows the same model as physics: first-party, deeply integrated
 with Sagan's shared math and simulation vocabulary, and explicitly imported.

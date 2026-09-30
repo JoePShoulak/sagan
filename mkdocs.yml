@@ -119,6 +119,9 @@ nav:
       - Memory model: reference/memory-model.md
   - Standard library:
       - standard-library/index.md
+      - Math: standard-library/math.md
+      - Physics: standard-library/physics.md
+      - Rendering: standard-library/rendering.md
       - Status: standard-library/status.md
   - Compiler and tooling:
       - tooling/index.md

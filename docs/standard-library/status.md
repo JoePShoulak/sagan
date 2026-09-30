@@ -28,9 +28,9 @@ implemented.
 
 | Core library | Coupling | Inclusion | Status |
 | --- | --- | --- | --- |
-| Math | Built into Sagan's language foundation | Automatic | Planned |
-| Physics | First-party and tightly coupled to math | Explicit import | Planned |
-| Rendering | First-party and tightly coupled to math and simulation types | Explicit import | Planned |
+| [Math](math.md) | Built into Sagan's language foundation | Automatic | Planned |
+| [Physics](physics.md) | First-party and tightly coupled to math | Explicit import | Planned |
+| [Rendering](rendering.md) | First-party and tightly coupled to math and simulation types | Explicit import | Planned |
 
 Open design work includes concrete APIs, module and package names, dependency
 boundaries, initialization behavior, linking strategy, and whether physics and
