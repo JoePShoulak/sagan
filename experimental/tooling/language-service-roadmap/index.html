@@ -4081,6 +4081,14 @@ overloads, generics, private members, shadowed locals, faces, and enum cases.</p
 <p>The exit behavior is exercised by the semantic-index coverage in <code>make test</code>; Phase 5 now owns
 the position-based query and presentation APIs built on these records.</p>
 <h2 id="phase-5-read-only-language-features">Phase 5 — read-only language features</h2>
+<p><strong>Status: in progress.</strong> A reusable <code>document_queries</code> API now resolves exact
+identifier occurrences from recovering syntax tokens and the semantic index.
+Focused tests cover UTF-16 and byte positions, version mismatch, hover source
+documentation, resolved types, local and imported definitions, references,
+highlights, face implementations, and hierarchical document symbols. The API
+does not yet cover type definitions, signatures, completion, workspace symbols,
+semantic classifications, folding, selection ranges, links, or inlay hints.
+These are not advertised as editor capabilities while LSP transport is absent.</p>
 <ul>
 <li>Implement symbol-at-position, hover, resolved types, definition, type
   definition, implementations, references, highlights, and signature help.</li>

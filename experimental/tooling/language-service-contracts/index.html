@@ -4112,6 +4112,15 @@ produce an explicitly recovered partial index; strict compilation remains the
 authority for executable programs. Explicit cross-snapshot rebinding remains a
 future source-edit concern.</p>
 <h2 id="language-queries">Language queries</h2>
+<p>The first concrete query layer is <code>src/language_service/queries.hpp</code>.
+<code>document_queries</code> takes one immutable document snapshot and matching semantic
+index, with an optional workspace index for imports. It returns structured
+results for byte or UTF-16 symbol selection, definitions, references, document
+highlights, face implementations, resolved type, source hover, and hierarchical
+document symbols. A version or document-identity mismatch returns <code>stale</code>;
+invalid UTF-16 boundaries return <code>incomplete</code>. Its selection ranges come from
+recovering syntax tokens, so names in comments or strings do not masquerade as
+declarations. These library APIs are not yet advertised as LSP features.</p>
 <p><code>language_service</code> accepts a workspace/document snapshot and byte or UTF-16
 position, returning compiler data:</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">auto</span><span class="w"> </span><span class="n">symbol_at</span><span class="p">(</span><span class="n">position</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">query_result</span><span class="o">&lt;</span><span class="n">symbol</span><span class="o">&gt;</span><span class="p">;</span>
