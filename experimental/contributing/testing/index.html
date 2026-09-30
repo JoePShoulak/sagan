@@ -2942,6 +2942,8 @@
       
         
       
+        
+      
     
     
     
@@ -3091,6 +3093,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release lifecycle
   
 
     
@@ -3601,7 +3639,9 @@ ordinary build never tries to link coverage objects without the gcov runtime.</p
 <p><code>.github/workflows/coverage.yml</code> repeats this process on Ubuntu for every push
 and pull request, then uploads <code>build/coverage.info</code> to Codecov. Authentication
 uses GitHub OIDC rather than a stored <code>CODECOV_TOKEN</code>. Codecov upload failures
-fail the coverage job so a missing report cannot appear successful.</p>
+fail the coverage job so a missing report cannot appear successful. CI and the
+release workflow also enforce a 90% line-coverage floor with
+<code>scripts/coverage_threshold.sh</code>.</p>
 <p>The live Codecov badge is authoritative for the current percentage. The suite
 covers tokenizer lifecycle and defensive invariants; Unicode, emoji, escapes,
 and malformed input; positive and negative parser and semantic cases; every AST

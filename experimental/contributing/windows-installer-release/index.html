@@ -16,7 +16,7 @@
         <link rel="prev" href="../versioning/">
       
       
-        <link rel="next" href="../documentation/">
+        <link rel="next" href="../release-lifecycle/">
       
       
         
@@ -2942,6 +2942,8 @@
       
         
       
+        
+      
     
     
     
@@ -3195,6 +3197,42 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release lifecycle
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
     </li>
   
 
@@ -3652,15 +3690,20 @@ distribution remain future work.</p>
 An unsigned artifact is a development artifact regardless of version text.</p>
 <h2 id="public-release-signing-gate">Public-release signing gate</h2>
 <p>Public installers and their embedded uninstallers require a trusted
-Authenticode signature. Release infrastructure supplies an Inno Setup sign-tool
+Authenticode signature. Sagan's own installed executables are signed as part of
+the same build. Release infrastructure supplies an Inno Setup sign-tool
 command through <code>SAGAN_SIGNTOOL_COMMAND</code>; the command must contain Inno's <code>$f</code>
 file placeholder. Certificate material and credentials must remain in protected
 release infrastructure, never in source control.</p>
 <p>Before publication, run:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bash<span class="w"> </span>scripts/windows/verify_installer_artifact.sh<span class="w"> </span>--release
 </span></code></pre></div>
-<p>This verifies both the checksum and Windows trust validation. The lifecycle
-review will decide the credential provider and release trigger before 1.0.</p>
+<p>This verifies both the checksum and Windows trust validation. Verified signed
+tags trigger release builds; the signing provider and credentials must be
+configured in the protected <code>release-signing</code> environment before 1.0.</p>
+<p>Unsigned artifacts built on ordinary <code>main</code> CI runs are development artifacts
+only. Both preview and stable GitHub Releases fail closed unless the trusted
+signature verifies.</p>
 <h2 id="clean-machine-acceptance-gate">Clean-machine acceptance gate</h2>
 <p>Automation cannot prove that a developer workstation is not masking an
 installer defect. The exact signed release candidate must therefore be tested
