@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Highlight the current `weak` declaration modifier and `??` optional-coalescing operator.
+- Recognize `None` as Sagan's absence value.
+- Exercise generic declarations, payload enum cases, weak fields, and optional expressions in the grammar fixtures and demonstration file.
+- Describe the compiler's language-service foundation without claiming unavailable semantic editor features.
+
 ## 0.1.1
 
 - Align syntax scopes and the demonstration program with Sagan 0.13.0's complete tokenizer and parser grammar.

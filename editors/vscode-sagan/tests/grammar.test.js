@@ -74,6 +74,7 @@ async function main() {
   const vocabulary = tokenize(grammar, readFixture("vocabulary.sagan"));
   const expectedScopes = {
     let: "keyword.declaration.variable.sagan",
+    weak: "storage.modifier.weak.sagan",
     hidden: "variable.other.definition.sagan",
     fun: "keyword.declaration.function.sagan",
     new: "keyword.declaration.constructor.sagan",
@@ -114,8 +115,9 @@ async function main() {
   };
 
   for (const [word, scope] of Object.entries(expectedScopes)) assertScoped(vocabulary, word, scope);
-  for (const operator of ["...", "?.", ":=", "=>", "==", "!=", "<=", ">=", "++", "--", "+=", "-=", "*=", "/=", "%=", "^="])
+  for (const operator of ["...", "?.", "??", ":=", "=>", "==", "!=", "<=", ">=", "++", "--", "+=", "-=", "*=", "/=", "%=", "^="])
     assertScoped(vocabulary, operator, "keyword.operator");
+  assertScoped(vocabulary, "None", "constant.language.optional.none.sagan");
 
   const strings = tokenize(grammar, readFixture("strings.sagan"));
   assertScoped(strings, "\\u{1F680}", "constant.character.escape.sagan");

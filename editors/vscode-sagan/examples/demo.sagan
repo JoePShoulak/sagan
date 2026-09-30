@@ -34,12 +34,26 @@ class ExplorerShip has Navigable, TelemetrySource {
   }
 }
 
+/// A generic weak reference demonstrates Sagan's safe absence model.
+class Observer<T> {
+  weak let .target: T
+
+  fun target_or(fallback: T): T => self.target ?? fallback
+}
+
 enum GuidanceStatus {
   waiting
   /// Guidance has converged and can be applied.
   ready
   failed
 }
+
+enum Result<T, E> {
+  success(T)
+  failure(E)
+}
+
+fun identity<T>(value: T): T => value
 
 fun clamp(value: Float, minimum: Float, maximum: Float): Float =>
   value < minimum ? minimum ; value > maximum ? maximum ; value
@@ -63,6 +77,8 @@ let captured = target_altitude := altitude := 125_500.0
 let previous_count = telemetry_count++
 let active_ship = fleet[active_index]
 let course = fleet[active_index]?.navigator.current_course(origin, destination).magnitude()
+let optional_course: Optional<Vector> = None
+let resolved_course = optional_course ?? Some(course)
 let predicted_position = trajectory.sample!(simulation_time + time_step).position
 let gravity = universe.systems[home_system].bodies[planet_index].gravity_at(ship.position)
 let telemetry_value = mission?.telemetry.latest().channels[channel_index].sample_count++

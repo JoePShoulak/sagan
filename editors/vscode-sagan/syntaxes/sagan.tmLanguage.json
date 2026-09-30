@@ -230,11 +230,10 @@
     },
     "enum-declaration": {
       "name": "meta.declaration.enum.sagan",
-      "begin": "\\b(enum)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)(\\s*)(\\{)",
+      "begin": "\\b(enum)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
       "beginCaptures": {
         "1": { "name": "keyword.declaration.type.enum.sagan" },
-        "3": { "name": "entity.name.type.enum.sagan" },
-        "5": { "name": "punctuation.section.enum.begin.sagan" }
+        "3": { "name": "entity.name.type.enum.sagan" }
       },
       "end": "\\}",
       "endCaptures": {
@@ -242,6 +241,13 @@
       },
       "patterns": [
         { "include": "#comments" },
+        { "name": "punctuation.section.enum.begin.sagan", "match": "\\{" },
+        { "name": "punctuation.definition.generic.begin.sagan", "match": "<" },
+        { "name": "punctuation.definition.generic.end.sagan", "match": ">" },
+        { "name": "punctuation.section.payload.begin.sagan", "match": "\\(" },
+        { "name": "punctuation.section.payload.end.sagan", "match": "\\)" },
+        { "name": "keyword.operator.assignment.sagan", "match": "=" },
+        { "include": "#numbers" },
         { "name": "variable.other.enummember.sagan", "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*" },
         { "name": "punctuation.separator.comma.sagan", "match": "," }
       ]
@@ -261,12 +267,14 @@
     "constants": {
       "patterns": [
         { "name": "constant.language.boolean.sagan", "match": "\\b(?:true|false)\\b" },
+        { "name": "constant.language.optional.none.sagan", "match": "\\bNone\\b" },
         { "name": "constant.language.numeric.sagan", "match": "\\b(?:inf|nan)\\b" },
         { "name": "constant.other.naming-convention.sagan", "match": "\\b[A-Z][A-Z0-9_]*\\b" }
       ]
     },
     "keywords": {
       "patterns": [
+        { "name": "storage.modifier.weak.sagan", "match": "\\bweak\\b" },
         { "name": "keyword.control.conditional.sagan", "match": "\\b(?:if|else|match|case)\\b" },
         { "name": "keyword.control.loop.sagan", "match": "\\b(?:for|in|while|until|break|continue)\\b" },
         { "name": "keyword.control.flow.sagan", "match": "\\b(?:return|yield)\\b" },
@@ -336,6 +344,7 @@
     "operators": {
       "patterns": [
         { "name": "keyword.operator.spread.sagan", "match": "\\.\\.\\." },
+        { "name": "keyword.operator.coalescing.sagan", "match": "\\?\\?" },
         { "name": "keyword.operator.access.safe.sagan", "match": "\\?\\." },
         { "name": "keyword.operator.arrow.sagan", "match": "=>" },
         { "name": "keyword.operator.comparison.sagan", "match": "==|!=|<=|>=|<|>" },

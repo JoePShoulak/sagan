@@ -4,10 +4,11 @@ export Thing as PublicThing
 
 let value = true
 fun named(parameter: Float): Float => parameter
-class Example has First, Second { let .hidden = 1
+class Example<T> has First, Second { weak let .observer: Optional<T>
+let .hidden = 1
 new() {} }
 face Contract is Parent {}
-enum State { ready, waiting }
+enum State<T> { ready, success(T), waiting }
 
 if value { return } else { yield value }
 match value { case true {} case else {} }
@@ -25,6 +26,8 @@ let assigned = target := source
 let lambda = fun(item) => item
 let spread = [...items]
 let safe = object?.property
+let fallback = safe ?? None
+let present = Some(value)
 counter++
 --counter
 counter += 1
