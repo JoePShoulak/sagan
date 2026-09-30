@@ -2,6 +2,7 @@
 #include "../src/source/provider.hpp"
 #include "../src/modules/resolver.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
@@ -37,7 +38,8 @@ auto main() -> int
       4, text);
   const auto indexed = language_service::index_document(document);
   require(indexed.value.has_value(), "source did not produce a semantic index");
-  const language_service::document_queries query(document, indexed.value->index);
+  const language_service::document_queries query(document, indexed.value->index, nullptr,
+                                                  &indexed.value->model);
 
   const auto emoji_use = at(text, "🚀(41)");
   const auto selected = query.symbol_at(emoji_use);
@@ -76,6 +78,27 @@ auto main() -> int
               outline.value->front().symbol.name == "🚀" &&
               !outline.value->back().children.empty(),
           "document symbols are not in source order");
+  const auto classifications = query.semantic_classifications();
+  require(classifications.value &&
+              std::any_of(classifications.value->begin(), classifications.value->end(),
+                          [&](const auto &entry)
+                          {
+                            return entry.range.bytes.begin == emoji_use &&
+                                   entry.kind == semantic::symbol_kind::function && !entry.declaration;
+                          }),
+          "semantic classification missed the emoji call");
+  const auto folds = query.folding_regions();
+  require(folds.value && folds.value->size() == 1 &&
+              folds.value->front().kind == language_service::folding_kind::block,
+          "multiline function block was not identified for folding");
+  const auto rocket_completion = query.completions(emoji_use + std::string("🚀").size());
+  require(rocket_completion.value && rocket_completion.value->size() == 1 &&
+              rocket_completion.value->front().label == "🚀" &&
+              rocket_completion.value->front().replacement.bytes.begin == emoji_use,
+          "emoji prefix completion did not preserve the replacement range");
+  const auto no_model = language_service::document_queries(document, indexed.value->index);
+  require(no_model.completions(emoji_use).state == diagnostics::result_state::incomplete,
+          "completion without scope metadata silently returned an empty list");
 
   const source::document_snapshot changed(document.identity(), 5, text);
   const language_service::document_queries stale(changed, indexed.value->index);
@@ -111,11 +134,26 @@ auto main() -> int
       1, shadowing);
   const auto shadowed_index = language_service::index_document(shadowed);
   require(shadowed_index.value.has_value(), "shadowing fixture did not produce an index");
-  const language_service::document_queries shadowed_query(shadowed, shadowed_index.value->index);
+  const language_service::document_queries shadowed_query(shadowed, shadowed_index.value->index,
+                                                            nullptr, &shadowed_index.value->model);
   const auto inner = shadowed_query.symbol_at(at(shadowing, "altitude)") );
   const auto outer = shadowed_query.symbol_at(at(shadowing, "return altitude") + 7);
   require(inner.value && outer.value && inner.value->id != outer.value->id,
           "shadowed locals resolved to the same symbol identity");
+  const auto inner_completion = shadowed_query.completions(at(shadowing, "print(altitude)") + 9);
+  require(inner_completion.value && inner_completion.value->size() == 1 &&
+              inner_completion.value->front().id ==
+                  shadowed_query.symbol_at(at(shadowing, "print(altitude)") + 6).value->id,
+          "completion did not select the innermost shadowed local");
+  const auto outer_completion = shadowed_query.completions(at(shadowing, "return altitude") + 10);
+  require(outer_completion.value && outer_completion.value->size() == 1 &&
+              outer_completion.value->front().id == outer.value->id,
+          "completion outside nested scope selected the wrong local");
+  const auto before_declaration = shadowed_query.completions(at(shadowing, "let altitude"));
+  require(before_declaration.value &&
+              std::none_of(before_declaration.value->begin(), before_declaration.value->end(),
+                           [](const auto &item) { return item.label == "altitude"; }),
+          "completion exposed a local before its declaration");
 
   const source::disk_source_provider disk;
   const auto graph = modules::resolve("tests/fixtures/modules/module_demo/main.sagan", disk);
@@ -132,5 +170,14 @@ auto main() -> int
   require(linked.value && linked.value->size() == 1 &&
               linked.value->front().document != source.value->identity().id,
           "imported name did not navigate to its target module");
+  const auto searched = language_service::search_workspace_symbols(workspace_index, "calculate");
+  require(searched.size() == 1 && searched.front().module == "guidance" &&
+              searched.front().name == "calculate" &&
+              language_service::search_workspace_symbols(workspace_index, "calculate", 0).empty(),
+          "workspace symbol search did not return deterministic source declarations");
+  const auto links = workspace_query.import_links();
+  require(links.value && links.value->size() == 2 &&
+              links.value->front().target.value.find("guidance.sagan") != std::string::npos,
+          "resolved imports did not produce document links");
   return 0;
 }

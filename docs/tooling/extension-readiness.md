@@ -22,13 +22,13 @@ contract is not yet implemented; the extension must not reproduce it.
 | Implementations/conformances | Face/class conformance index | **Face implementation query available; LSP transport blocked** |
 | References/highlights | Identity-based workspace reference index | **Position queries available; LSP transport blocked** |
 | Signature help | Resolved overload/signature query | **Blocked** |
-| Completion | Parser context, semantic scope/type state, module/catalog metadata | **Blocked** |
-| Semantic highlighting | Stable classification vocabulary and ranges | **Blocked** |
+| Completion | Parser context, semantic scope/type state, module/catalog metadata | **Lexical-scope candidate query available; contextual completion and LSP transport blocked** |
+| Semantic highlighting | Stable classification vocabulary and ranges | **Compiler classification query available; LSP semantic-token transport blocked** |
 | Document symbols | Hierarchical declaration index | **Hierarchy query available; LSP transport blocked** |
-| Workspace symbols | Workspace semantic index | **Compiler index available; query/LSP transport blocked** |
-| Folding | Recovering lossless syntax tree | **Foundation available; fine-grained block nodes blocked** |
+| Workspace symbols | Workspace semantic index | **Workspace search query available; LSP transport blocked** |
+| Folding | Recovering lossless syntax tree | **Basic syntax/trivia ranges available; precise nested construct ranges and LSP transport blocked** |
 | Selection ranges | Syntax parent chains with precise ranges | **Foundation available; expression parent chains blocked** |
-| Document links | Resolved import/module targets | **Module targets available; position query/LSP transport blocked** |
+| Document links | Resolved import/module targets | **Resolved import link query available; LSP transport blocked** |
 | Inlay hints | Resolved types/parameters with suppression rules | **Blocked** |
 | Rename | Versioned identity-based safe workspace edits | **Blocked** |
 | Quick fixes/code actions | Structured fixes and proven refactoring actions | **Blocked** |

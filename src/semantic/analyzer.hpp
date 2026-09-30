@@ -87,6 +87,7 @@ namespace semantic
     std::size_t id;
     std::size_t parent;
     std::string label;
+    parser::span range;
     std::vector<symbol> symbols;
   };
 

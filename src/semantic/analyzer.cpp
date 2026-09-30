@@ -57,11 +57,11 @@ namespace semantic
         return {encoded.str()};
       }
 
-      auto open_scope(std::string label) -> std::size_t
+      auto open_scope(std::string label, const parser::span range) -> std::size_t
       {
         const std::size_t parent = current_scope;
         const std::size_t id = model.scopes.size();
-        model.scopes.push_back(scope{id, parent, std::move(label), {}});
+        model.scopes.push_back(scope{id, parent, std::move(label), range, {}});
         names.emplace_back();
         scope_keys.push_back(scope_keys[parent] + "/" + std::to_string(id));
         current_scope = id;
@@ -424,7 +424,7 @@ namespace semantic
         }
         else if (const auto *lambda = dynamic_cast<const parser::lambda_expression *>(&value))
         {
-          const std::size_t parent = open_scope("lambda");
+          const std::size_t parent = open_scope("lambda", lambda->range);
           for (const auto &parameter : lambda->parameters)
           {
             resolve_type(parameter.type_name, lambda->range);
@@ -438,7 +438,7 @@ namespace semantic
 
       auto block(const parser::block_statement &value, std::string label = "block") -> void
       {
-        const std::size_t parent = open_scope(std::move(label));
+        const std::size_t parent = open_scope(std::move(label), value.range);
         for (const auto &entry : value.statements)
         {
           if (dynamic_cast<const parser::let_declaration *>(entry.get()))
@@ -455,7 +455,7 @@ namespace semantic
 
       auto function(const parser::function_declaration &value) -> void
       {
-        const std::size_t parent = open_scope("function " + value.name);
+        const std::size_t parent = open_scope("function " + value.name, value.range);
         for (const auto &parameter : value.type_parameters)
           declare(parameter, symbol_kind::type_parameter, value.range);
         for (const auto &constraint : value.type_constraints) resolve_type(constraint, value.range);
@@ -472,7 +472,7 @@ namespace semantic
 
       auto type(const parser::type_declaration &value) -> void
       {
-        const std::size_t parent = open_scope("type " + value.name);
+        const std::size_t parent = open_scope("type " + value.name, value.range);
         type_scopes.insert_or_assign(value.name, current_scope);
         active_type_scopes.push_back(current_scope);
         for (const auto &parameter : value.type_parameters)
@@ -539,7 +539,7 @@ namespace semantic
         else if (const auto *loop = dynamic_cast<const parser::for_statement *>(&value))
         {
           expression(*loop->iterable);
-          const std::size_t parent = open_scope("for loop");
+          const std::size_t parent = open_scope("for loop", loop->range);
           declare(loop->binding, symbol_kind::loop_binding, loop->range);
           for (const auto &entry : loop->body->statements) statement(*entry, false);
           close_scope(parent);
@@ -569,7 +569,7 @@ namespace semantic
                   return dynamic_cast<const parser::identifier_expression *>(argument.get()) != nullptr;
                 });
             if (branch.pattern && !binding_pattern) expression(*branch.pattern);
-            const std::size_t parent = open_scope("match case");
+            const std::size_t parent = open_scope("match case", branch.body->range);
             if (binding_pattern)
             {
               resolve_name(callee->name, callee->range);
@@ -619,7 +619,7 @@ namespace semantic
       explicit analysis(analysis_identity identity, const bool tolerant = false)
           : identity_(std::move(identity)), tolerant_(tolerant)
       {
-        model.scopes.push_back(scope{0, no_parent, "program", {}});
+        model.scopes.push_back(scope{0, no_parent, "program", {}, {}});
         names.emplace_back();
         for (const std::string_view builtin : {"Bool", "Float", "Float32", "Float64", "Frame",
                                                "Int", "Int8", "Int16", "Int32", "Int64", "Optional", "RuntimeError", "String",
@@ -638,6 +638,7 @@ namespace semantic
 
       auto run(const parser::program &tree) -> semantic_model
       {
+        model.scopes.front().range = tree.range;
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements) statement(*entry, true);
         return std::move(model);

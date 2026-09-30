@@ -165,16 +165,22 @@ future source-edit concern.
 
 The first concrete query layer is `src/language_service/queries.hpp`.
 `document_queries` takes one immutable document snapshot and matching semantic
-index, with an optional workspace index for imports. It returns structured
-results for byte or UTF-16 symbol selection, definitions, references, document
-highlights, face implementations, resolved type, source hover, and hierarchical
-document symbols. A version or document-identity mismatch returns `stale`;
+index, with an optional workspace index for imports and semantic model for
+lexical completion. It returns structured results for byte or UTF-16 symbol
+selection, definitions, references, document highlights, face implementations,
+resolved type, source hover, hierarchical document symbols, semantic
+classifications, folding regions, and resolved import links. A separate
+workspace query searches indexed declarations. Completion currently offers
+visible lexical symbols and built-ins with a versioned replacement range;
+it does not claim member/context-sensitive or standard-library completion.
+A version or document-identity mismatch returns `stale`;
 invalid UTF-16 boundaries return `incomplete`. Its selection ranges come from
 recovering syntax tokens, so names in comments or strings do not masquerade as
 declarations. These library APIs are not yet advertised as LSP features.
 
-`language_service` accepts a workspace/document snapshot and byte or UTF-16
-position, returning compiler data:
+The following is a target API sketch, not a list of currently implemented
+methods. Eventually `language_service` will accept a workspace/document
+snapshot and byte or UTF-16 position, returning compiler data:
 
 ```cpp
 auto symbol_at(position) -> query_result<symbol>;
@@ -193,11 +199,12 @@ auto folding_ranges(document_id) -> query_result<std::vector<source_range>>;
 auto selection_ranges(positions) -> query_result<std::vector<selection_chain>>;
 ```
 
-Completion records contain symbol kind, label, insertion text, display
-signature, documentation, defining module, filter/sort text, visibility,
-deprecation state, and optional additional import edits. Keyword candidates
-come from parser context; library candidates come from the compiler metadata
-catalog. Capability discovery reports when a catalog or query is unavailable.
+The current `completion_item` has symbol kind, label, insertion text, detail,
+documentation, source module, filter/sort text, a deprecation flag, and an
+additional-import-edit field. It does not yet populate contextual keyword,
+member, imported, or standard-library candidates. Those remain targets for a
+later parser-context and compiler-metadata catalog. The server must not
+advertise completion until the required context coverage is implemented.
 
 ## Structured edits and formatting
 
