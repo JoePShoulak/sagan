@@ -3660,22 +3660,27 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="language-reference">Language reference</h1>
-<p>The reference separates implemented lexical and grammar behavior from language
-rules that still await semantic and runtime work.</p>
+<p>Use this section when you need the exact rule for a piece of Sagan syntax or
+behavior. If you are learning the language in order, begin with the
+<a href="../tour/">language tour</a> instead.</p>
 <ul>
-<li><a href="lexical-specification/">Lexical specification</a>: current tokenizer behavior.</li>
+<li><a href="lexical-specification/">Lexical specification</a> explains how source text
+  becomes tokens, including Unicode and emoji identifiers.</li>
 <li><a href="grammar/">Grammar</a>, <a href="declarations/">declarations</a>,
-  <a href="expressions/">expressions</a>, and <a href="statements/">statements</a>: implemented
-  syntax with semantics still provisional.</li>
-<li><a href="type-system/">Type system</a> and
-  <a href="classes-interfaces-composition/">classes/interfaces</a>: settled direction
-  with major open semantics.</li>
-<li><a href="exceptions/">Exceptions</a>, <a href="modules/">modules</a>, and
-  <a href="memory-model/">memory model</a>: implemented reference-counted objects,
-  weak fields, and escaping closure captures, plus explicitly deferred work.</li>
+  <a href="expressions/">expressions</a>, and <a href="statements/">statements</a> define the
+  language's written forms.</li>
+<li><a href="type-system/">Type system</a> explains inference, conversions, generics,
+  optionals, collections, geometry, and measured values.</li>
+<li><a href="classes-interfaces-composition/">Classes, faces, and composition</a> defines
+  Sagan's composition-first object model.</li>
+<li><a href="exceptions/">Exceptions</a>, <a href="modules/">modules and packages</a>, and the
+  <a href="memory-model/">memory model</a> cover larger program behavior.</li>
+<li><a href="units/">Built-in unit catalog</a> lists the scientific units supplied by the
+  compiler.</li>
 </ul>
-<p>The lexical and syntax references describe working compiler-front-end behavior;
-type, runtime, and library behavior remains largely design work.</p>
+<p>These pages describe implemented behavior unless a paragraph explicitly says a
+feature is deferred. Every page remains work-in-progress until it has received
+the project's human documentation audit.</p>
 
 
 

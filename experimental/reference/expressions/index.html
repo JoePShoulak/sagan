@@ -3811,17 +3811,16 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="expressions">Expressions</h1>
-<p>The tokenizer recognizes identifiers, literals, grouping and collection
-delimiters, member access, safe access <code>?.</code>, calls, spread <code>...</code>, assignment
-with value <code>:=</code>, <code>=&gt;</code>, comparisons, arithmetic, logical words, increment,
-decrement, and compound-assignment tokens.</p>
+<p>An expression produces a value. Literals such as <code>42</code>, names such as <code>answer</code>,
+calls such as <code>calculate()</code>, and arithmetic such as <code>distance / time</code> are all
+expressions.</p>
 <p>Compound assignments are parsed as statements rather than expressions. Unlike
 the value-producing <code>:=</code>, they do not participate in expression precedence or
 chaining.</p>
-<p><strong>Settled design:</strong> <code>^</code> means exponentiation; <code>and</code>, <code>or</code>, <code>not</code>, and
+<p><code>^</code> means exponentiation; <code>and</code>, <code>or</code>, <code>not</code>, and
 <code>!</code> are logical operators; <code>? ... ; ...</code> is the conditional expression; and
 prefix/postfix increment return new/old values respectively.</p>
-<p><strong>Implemented semantics:</strong> <code>++</code> and <code>--</code> require an assignable numeric operand.
+<p><code>++</code> and <code>--</code> require an assignable numeric operand.
 The prefix form mutates before producing its value; the postfix form produces
 the old value and then mutates.</p>
 <p><code>^</code> is mathematical exponentiation, and <code>^=</code> assigns its result; neither is a
@@ -3835,7 +3834,7 @@ Overflow raises a runtime error. Division and remainder by zero raise runtime
 errors for integer and floating-point operands. Compound assignments use the
 same checks. Floating-point remainder follows <code>fmod</code> semantics. These failures
 are catchable as the appropriate built-in <code>RuntimeError</code> case.</p>
-<p><strong>Implemented native semantics:</strong> anonymous lambdas use
+<p>Anonymous lambdas use
 <code>fun(parameters) =&gt; expression</code>, with optional parameter and return annotations.
 Function types use <code>(Parameter, ...) =&gt; Result</code>; <code>() =&gt; Int</code> is therefore a
 parameterless function returning <code>Int</code>. Typed lambdas can be stored, passed,
@@ -3848,10 +3847,10 @@ escaping closure cannot retain a dangling stack reference. Copies of one
 closure share its captured state, and multiple closures created in the same
 scope observe mutations to the same captured variable. Untyped lambda
 parameters remain parser/type-model input but are not native-emittable.</p>
-<p>Closures that capture a method's contextual <code>self</code> are rejected in 1.0 rather
-than being emitted with an unsafe object lifetime. Those lifetime semantics
-remain provisional, as do the rules for spread outside array and dictionary
-literals, safe access, dictionary-key hashability, and assignment expressions.</p>
+<p>Closures that capture a method's contextual <code>self</code> are rejected rather than
+being emitted with an unsafe object lifetime. Capturing <code>self</code> remains
+deferred. Spread is supported in arrays and dictionaries; it is not a
+general-purpose operator in other expressions.</p>
 <p>Numeric and geometry literals accept unit suffixes. A simple suffix is a unit
 name (<code>10 meter</code>); a composite suffix is parenthesized
 (<code>&lt;1.0, 0.0, 0.0&gt; (meter / second)</code>). <code>value as unit</code> explicitly converts a
@@ -3887,7 +3886,7 @@ only inside its case:</p>
 <code>Success(42)</code> constructs a case and <code>case Success(value)</code> binds its typed
 payload. Weak class fields use the optional model when read, including through
 safe access and coalescing chains.</p>
-<p><strong>Settled dictionary-spread behavior:</strong> dictionary entries are applied from
+<p>Dictionary entries are applied from
 left to right. When an explicit entry or later spread repeats an existing key,
 the later value replaces the earlier value. Each spread operand is evaluated
 once.</p>
@@ -3918,7 +3917,7 @@ are syntax errors. <code>(value)</code> remains a grouped expression. Spherical 
 and points require exactly three components in the order shown. The <code>s</code> must be
 adjacent to the delimiter: <code>s(...)</code> is a spherical point, while <code>s (...)</code> calls
 an ordinary identifier named <code>s</code>. Inclination and azimuth are radians.</p>
-<p><strong>Implemented native semantics:</strong> Cartesian and spherical vectors and points
+<p>Cartesian and spherical vectors and points
 retain distinct, fixed-size runtime types. All support construction, zero-based
 indexing, iteration, equality, printing, and string interpolation. Cartesian
 vectors and points additionally support same-family spreading. Spherical
@@ -3951,10 +3950,10 @@ their conceptual frame. Future generic math APIs must state whether they accept
 points, displacement vectors, or both rather than erasing this distinction.
 Spherical values currently support access and storage but no arithmetic; callers
 must not silently mix representations.</p>
-<p>Calls and all collection forms permit trailing commas. <code>...value</code> creates a
-spread node; later semantic analysis will validate whether its surrounding call
-or collection supports the value being expanded. A spread dictionary entry
-does not use a colon.</p>
+<p>Calls and all collection forms permit trailing commas. <code>...value</code> spreads an
+array into an array or a dictionary into a dictionary. A spread dictionary
+entry does not use a colon. Unsupported spread contexts are compile-time
+errors.</p>
 <p>At the top level of a vector element, <code>&gt;</code> closes the vector. Parentheses make a
 greater-than comparison explicit inside a vector, as in
 <code>&lt;(left &gt; right), true&gt;</code>. Outside a vector-opening expression position, <code>&lt;</code> and
@@ -3980,8 +3979,9 @@ syntax error and must be written as separate comparisons joined with <code>and</
 <code>fleet[index]?.navigator.course(origin).magnitude()</code> first indexes <code>fleet</code>,
 safely accesses <code>navigator</code>, accesses and calls <code>course</code>, then accesses and
 calls <code>magnitude</code>.
-Evaluation order, short-circuit behavior, assignability, overload resolution,
-and coercion remain semantic-analysis work.</p>
+<code>and</code>, <code>or</code>, <code>??</code>, and the conditional expression evaluate lazily where their
+result permits skipping a branch. Assignment targets, overloads, and implicit
+conversions are checked before code generation.</p>
 
 
 

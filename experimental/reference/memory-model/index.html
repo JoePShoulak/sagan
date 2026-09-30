@@ -3670,15 +3670,16 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="memory-model">Memory model</h1>
-<p>Reference counting is the implemented foundation of the native object model.
+<p>Sagan manages class objects with reference counting. In plain language, the
+runtime tracks how many owning references still point to an object and releases
+the object when that count reaches zero.
 Class instances use shared reference-counted storage. Assigning a class value or
 converting it to a face value preserves the same underlying object, so mutation
 through one reference is visible through the others. Face calls dispatch to the
 concrete class implementation.</p>
-<p>This is an initial executable subset, not a complete ownership model. The C++
-backend currently supplies retain/release behavior. Sagan exposes non-owning
-references through class fields declared with <code>weak let</code>, but does not yet
-expose borrowing or explicit lifetime operations.</p>
+<p>The generated C++ supplies this retain/release behavior. Sagan exposes
+non-owning references through class fields declared with <code>weak let</code>, but does
+not expose borrowing or explicit lifetime operations.</p>
 <p>The safe absence model for weak references is executable:
 <code>Optional&lt;T&gt;</code>, <code>Some(value)</code>, <code>None</code>, payload matching, safe <code>?.</code> propagation,
 and lazy <code>??</code> fallback. A weak field begins empty, accepts a strong class or
@@ -3704,11 +3705,10 @@ cell, so mutation remains visible and the cell is released after the scope and
 all capturing closures are gone. Function values are written as
 <code>(Parameter, ...) =&gt; Result</code>. Capturing contextual <code>self</code> is rejected in 1.0
 until object-capture lifetime rules are defined.</p>
-<p>Reference cycles must currently contain an explicit weak edge to be reclaimed;
-all-strong cycles remain retained. <strong>Open questions:</strong> borrowing, automatic cycle
-detection or collection, destruction order,
-thread interaction, foreign ownership, contextual <code>self</code> capture, value
-semantics, and destruction observability beyond the guarantees above.</p>
+<p>Reference cycles must contain an explicit weak edge to be reclaimed; an
+all-strong cycle keeps itself alive. Borrowing, automatic cycle collection,
+foreign ownership, contextual <code>self</code> capture, and observable destruction hooks
+are deferred.</p>
 <p>The design also intends to prevent concurrent mutation of the same data when
 parallel execution is eventually introduced, but parallel execution itself is
 deferred.</p>

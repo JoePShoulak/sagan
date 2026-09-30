@@ -1266,28 +1266,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#literals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Literals
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#comments-and-whitespace" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Comments and whitespace
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#punctuation-and-operators" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3878,28 +3856,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#literals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Literals
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#comments-and-whitespace" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Comments and whitespace
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#punctuation-and-operators" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3943,8 +3899,10 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="lexical-specification">Lexical specification</h1>
-<p>Sagan source is UTF-8. Malformed UTF-8 is a lexical error. Tokens retain byte
-spans into the original source.</p>
+<p>Sagan source files use UTF-8. UTF-8 is the text encoding that lets one file
+contain ordinary ASCII, non-English scripts, mathematical symbols, and emoji.
+Malformed UTF-8 is a lexical error. The compiler retains each token's original
+byte range so diagnostics can point back to the source.</p>
 <h2 id="identifiers">Identifiers</h2>
 <p>Textual identifiers follow Unicode 17 <code>XID_Start</code> and <code>XID_Continue</code>, with <code>_</code>
 also accepted in either position. Emoji sequences may begin or continue an
@@ -3958,21 +3916,23 @@ identifier. This permits names such as:</p>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>}
 </span></code></pre></div>
 <p>Identifier spellings are normalized to Unicode NFC before keyword lookup and
-later compiler processing. Source spans continue to reference the original
-bytes. Standalone join controls and incomplete emoji ZWJ sequences are invalid.
-ASCII punctuation sequences such as <code>:)</code> are not identifiers.</p>
+later compiler processing. In plain language, canonically equivalent Unicode
+spellings are treated as the same name even when their bytes differ. Source
+spans still reference the original bytes. Standalone join controls and
+incomplete emoji ZWJ sequences are invalid. ASCII punctuation sequences such
+as <code>:)</code> are not identifiers.</p>
 <p>Identifiers are case-sensitive. Names beginning with <code>__</code> are reserved for the
 compiler. A trailing <code>!</code> may be included in a method identifier as Sagan's
 mutating-counterpart naming convention.</p>
 <h2 id="numbers">Numbers</h2>
-<p>The initial language supports decimal integers, decimal floating-point values,
-scientific notation, and <code>_</code> separators placed strictly between digits.</p>
+<p>Sagan supports decimal integers, decimal floating-point values, scientific
+notation, and <code>_</code> separators placed strictly between digits.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let count = 10_000
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>let gravity = 6.674_30e-11
 </span></code></pre></div>
 <p>A decimal point requires a digit on both sides. Consequently <code>.5</code>, <code>5.</code>,
-<code>.5e2</code>, and <code>5.e2</code> are lexical errors. Binary, octal, hexadecimal, unit
-numeric type suffixes are not currently supported. A numeric or geometry literal
+<code>.5e2</code>, and <code>5.e2</code> are lexical errors. Binary, octal, and hexadecimal numeric
+literals are not supported. A numeric or geometry literal
 may be followed by a separately tokenized unit name; the parser, rather than the
 lexer, forms the measured expression.</p>
 <h2 id="strings">Strings</h2>
@@ -4002,37 +3962,18 @@ delimiter contexts are preserved for the parser to interpret.</p>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>and or not self is has
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>true false inf nan
 </span></code></pre></div>
-<h2 id="literals">Literals</h2>
-<p>Decimal integers and floating-point literals support <code>_</code> only between digits.
-Floating-point forms may contain a decimal point with digits on both sides and
-an <code>e</code> or <code>E</code> exponent with optional sign. <code>.5</code>, <code>5.</code>, malformed
-separators, incomplete exponents, and letters directly following a number are
-not accepted as one valid numeric literal.</p>
-<p>Single- and double-quoted strings are recognized. Triple double quotes create
-multiline strings. Non-raw strings process <code>\\</code>, <code>\"</code>, <code>\'</code>, <code>\n</code>,
-<code>\r</code>, <code>\t</code>, <code>\0</code>, and <code>\u{...}</code>; they tokenize <code>${...}</code>
-interpolation, including nested braces. Raw strings begin with <code>r</code> and do not
-process escapes or interpolation.</p>
-<h2 id="comments-and-whitespace">Comments and whitespace</h2>
-<p><code>//</code> starts a line comment. Block comments <code>/* ... */</code> nest.
-<code>///</code> and <code>/** ... */</code> produce <code>DOC_COMMENT</code>; ordinary comments are
-discarded. Spaces, tabs, form feeds, and vertical tabs are non-significant.</p>
-<p>The parser attaches <code>DOC_COMMENT</code> tokens to declarations. Documentation
-comments must be followed by a logical newline. Ordinary blank lines are not
-represented in the token stream, so attachment is based on the next declaration
-token rather than the count of physical blank lines.</p>
-<p>LF and CRLF each count as one logical newline. Blank and comment-only lines do
-not emit newline tokens. Newlines are suppressed inside parentheses and
-brackets and after a continuation token. Brace and angle-bracket newlines are
-preserved so the parser can interpret them with grammar context.</p>
+<p>Documentation comments must be followed by a logical newline. The parser
+attaches them to the next declaration. Ordinary blank lines are not represented
+in the token stream, so attachment does not depend on the number of physical
+blank lines between the comment and declaration.</p>
 <h2 id="punctuation-and-operators">Punctuation and operators</h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>( ) [ ] { } &lt; &gt; , : . ? ;
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>+ - * / % ^ = !
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>... ?. ?? := =&gt; == != &lt;= &gt;= ++ --
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>+= -= *= /= %= ^=
 </span></code></pre></div>
-<p>Longest valid token wins. Standalone <code>@</code> and backticks are errors; Schematic's
-special tag, event, and code-block tokens are not part of Sagan.</p>
+<p>The longest valid token wins, so <code>&gt;=</code> is one token rather than <code>&gt;</code> followed by
+<code>=</code>. Standalone <code>@</code> and backticks are errors.</p>
 <h2 id="token-categories">Token categories</h2>
 <p>The token vocabulary also includes newline; ordinary and method identifiers;
 integer and float; whole/raw strings; string begin, segment, end, and

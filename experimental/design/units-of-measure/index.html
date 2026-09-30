@@ -3813,9 +3813,10 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="native-units-of-measure">Native units of measure</h1>
-<p>This document is the implemented pre-1.0 contract for Sagan's native unit
-system. The compiler front end, native C++ backend, focused self-tests, and
-<code>make units-demo</code> exercise the verified slice described here.</p>
+<p>Sagan understands physical units as part of a value's type. This lets the
+compiler reject mistakes such as adding a distance to a duration before the
+program runs. Unit metadata is used for checking and conversion; it does not
+add a separate unit object beside every number at runtime.</p>
 <h2 id="syntax">Syntax</h2>
 <p>Dimensions, named quantities, linear units, and affine units are top-level
 declarations:</p>

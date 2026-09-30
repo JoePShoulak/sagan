@@ -3670,13 +3670,13 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="statements">Statements</h1>
-<p><strong>Settled design:</strong> ordinary statements are newline-terminated rather than
+<p>Statements perform actions. Ordinary statements are newline-terminated rather than
 semicolon-terminated. The tokenizer emits logical newline tokens while
 suppressing continuation newlines in known contexts.</p>
-<p>Intended statements include declarations, assignments, expression statements,
+<p>Statements include declarations, assignments, expression statements,
 <code>if</code>/<code>else</code>, <code>match</code>/<code>case</code>, <code>for</code>/<code>in</code>, <code>while</code>, <code>until</code>,
 <code>break</code>, <code>continue</code>, <code>return</code>, <code>yield</code>, and exception constructs.</p>
-<p><strong>Implemented in the parser:</strong> newline-separated blocks, <code>let</code> declarations,
+<p>The language supports newline-separated blocks, <code>let</code> declarations,
 ordinary <code>=</code> and compound <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>, <code>%=</code>, and <code>^=</code> assignment
 statements, expression statements inside blocks,
 <code>if</code>/<code>else</code> including <code>else if</code> chains, <code>for name in expression</code>, <code>while</code>, and
@@ -3691,25 +3691,25 @@ expression remains a dictionary literal.</p>
 <p>Exception statements use <code>hope</code> for the protected block, expression-shaped
 <code>unless</code> handler patterns, optional final <code>finally</code> cleanup, and <code>scream
 expression</code> to raise a value. A <code>hope</code> requires at least one handler or cleanup
-clause. Handler meaning, propagation, and cleanup behavior remain semantic and
-runtime questions.</p>
+clause. Handlers are tried in source order, unmatched exceptions propagate
+outward, and <code>finally</code> runs during both normal and exceptional exits. See
+<a href="../exceptions/">Exceptions</a>.</p>
 <p>At the program root, the parser accepts declarations only. Executable control
 flow, expression statements, and assignment statements belong inside function
-bodies. This preserves Sagan's declaration-only module scope while entry-point
-semantics remain under design.</p>
-<p>Compound assignment is statement-only, like ordinary <code>=</code> reassignment. The
-target and value are retained separately in the AST along with the exact
-operator. Semantic analysis will validate assignability, types, and operator
-support.</p>
+bodies. An executable program enters through <code>fun main()</code>.</p>
+<p>Compound assignment is statement-only, like ordinary <code>=</code> reassignment. Its
+target must be assignable, and the result must convert losslessly back into the
+target's type.</p>
 <p><code>unless</code> is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.</p>
 <p><code>yield expression</code> and bare <code>yield</code> are syntactically valid inside function
-bodies. Semantic analysis will determine which functions are generators and
-validate their yielded types; the runtime will define suspension behavior.</p>
-<p>Enum and optional patterns bind typed payload names, and covering every case is
-recognized as exhaustive. <strong>Open questions:</strong> iterable protocol semantics,
-broader destructuring patterns, generator typing, unreachable-code rules, entry-point
-selection, and the runtime behavior of control transfer.</p>
+bodies, but generators do not execute yet. Generator typing and suspension are
+deferred.</p>
+<p>Enum and optional patterns bind typed payload names, and covering every enum
+case is recognized as exhaustive. Non-<code>Void</code> functions must return on every
+guaranteed path, and code after a guaranteed return is rejected as unreachable.
+Custom iteration protocols, broader destructuring patterns, and generators are
+deferred.</p>
 
 
 

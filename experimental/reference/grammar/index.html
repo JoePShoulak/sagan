@@ -3670,19 +3670,11 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="grammar-and-syntax">Grammar and syntax</h1>
-<p>The implementation is authoritative for the current concrete grammar. The
-simplified productions below describe every implemented declaration and
-statement family; the expression precedence table completes the expression
-grammar.</p>
-<p><strong>Implemented:</strong> the tokenizer supplies tokens and newline boundaries. The
-parser implements <code>let</code> declarations, blocks, assignment and expression
-statements, <code>if</code>/<code>else</code>, named block-bodied functions with typed parameters and
-return annotations, <code>for</code>/<code>in</code>, <code>while</code>, and <code>until</code> loops, loop control,
-returns, yields, braced or same-line <code>match</code>/<code>case</code>, primary and string expressions, the
-<code>hope</code>/<code>unless</code>/<code>finally</code>/<code>scream</code> exception grammar, settled precedence table,
-postfix chains, collection literals, top-level face/class/enum declarations,
-module/import/export declarations, and declaration documentation.</p>
-<p><strong>Concrete conventions:</strong> declarations use words such as <code>let</code>, <code>fun</code>, <code>face</code>,
+<p>This page is a compact map of Sagan's grammar. A <em>production</em> is a rule showing
+which smaller pieces may appear inside a larger piece. The notation is intended
+as a reference, not as the easiest way to learn the language; the
+<a href="../../tour/">tour</a> teaches the same forms through examples.</p>
+<p>Declarations use words such as <code>let</code>, <code>fun</code>, <code>face</code>,
 <code>class</code>, and <code>enum</code>; braces delimit multi-statement bodies; one-statement
 control-flow bodies may remain on their header line without braces; newlines
 normally terminate statements; <code>=&gt;</code> introduces expression bodies; and
@@ -3778,17 +3770,13 @@ declaration, and it must be the first declaration when present.</p>
 declaration. They are accepted on top-level declarations, face/class methods,
 class fields, local <code>let</code> declarations, and enum members. They cannot attach to
 executable statements. Orphaned documentation comments are syntax errors.</p>
-<p><strong>Semantic questions:</strong> validation of returned and yielded values,
-match-pattern binding, type tests,
-destructuring, and exhaustiveness are semantic questions rather than established
-behavior.</p>
 <p>The parser currently stops after the first syntax error. Multi-error recovery
 is a future diagnostic enhancement, not an omitted grammar production.</p>
-<p>Parser examples may include APIs outside the executable subset. Exception
-statements themselves execute with exact type-and-value handler matching,
-outward propagation, and guaranteed <code>finally</code> cleanup.
-The initial semantic pass can validate scopes and names; type analysis and code
-generation remain future stages.</p>
+<p>The compiler validates return values, optional and enum payload patterns,
+exhaustive enum matches, scopes, names, and types before generating C++.
+<code>yield</code> is currently syntax-only: it is represented by the parser, but generator
+typing and execution are deferred. General destructuring patterns are also
+deferred.</p>
 
 
 

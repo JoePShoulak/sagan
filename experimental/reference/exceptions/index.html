@@ -3670,11 +3670,11 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="exceptions">Exceptions</h1>
-<p><strong>Settled design vocabulary:</strong> <code>hope</code> starts protected code, <code>unless</code>
+<p>Sagan uses four exception words: <code>hope</code> starts protected code, <code>unless</code>
 introduces a handler, <code>finally</code> introduces cleanup, and <code>scream</code> raises an
-exception. Exceptions are intended to be the primary error mechanism.</p>
-<p><strong>Implemented in the parser, type checker, and C++ backend:</strong> the four words are
-dedicated tokens and produce exception AST nodes. The grammar is:</p>
+exception. An exception is a value that interrupts the normal path through a
+function so another block can handle the problem.</p>
+<p>The grammar is:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>statement_body := block | same_line_statement
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hope_statement := "hope" statement_body
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                  ("unless" expression statement_body)*
@@ -3701,14 +3701,15 @@ their shared reference-counted identity while propagating.</p>
 body cannot <code>return</code>, <code>scream</code>, or use <code>break</code>/<code>continue</code> to control a loop
 outside that cleanup body. Loops wholly inside the cleanup body may use their
 own <code>break</code> and <code>continue</code> statements.</p>
-<p>The built-in nominal <code>RuntimeError</code> enum converts native failures into ordinary
+<p>The built-in <code>RuntimeError</code> enum converts native failures into ordinary
 Sagan exception values. Its current cases are <code>integer_overflow</code>,
 <code>division_by_zero</code>, <code>modulo_by_zero</code>, <code>undefined_exponentiation</code>,
 <code>negative_integer_exponent</code>, <code>index_out_of_bounds</code>, and <code>missing_key</code>.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hope print(values[values_count])
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>unless RuntimeError.index_out_of_bounds print("No such value")
 </span></code></pre></div>
-<p>The same exact type-and-value matching rules apply, so native failures propagate
+<p><em>Nominal</em> means that <code>RuntimeError</code> is its own named type rather than merely a
+collection of numbers. The same exact type-and-value matching rules apply, so native failures propagate
 through nested <code>hope</code> statements and always run <code>finally</code> cleanup. Uncaught
 native failures retain a readable diagnostic. Binding/destructuring handlers,
 declared exception effects, cleanup that itself fails while another exception

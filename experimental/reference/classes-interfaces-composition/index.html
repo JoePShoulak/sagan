@@ -3674,19 +3674,19 @@
 Interfaces may compose interfaces; classes declare conformance with <code>is</code> or
 <code>has</code>; multiple interfaces are comma-separated; and <code>self</code> refers to the
 current object.</p>
-<p>This composition-first direction is <strong>settled design</strong>. Deep inheritance
-hierarchies are not the intended reuse mechanism. A leading dot is intended to
-mark a private member.</p>
-<p><strong>Implemented in the parser:</strong> <code>face</code> and <code>class</code> are top-level declarations.
+<p>Composition means building a type from small contracts instead of placing it in
+a deep parent/child class hierarchy. Sagan does not provide implementation
+inheritance. A leading dot marks a private field or method.</p>
+<p><code>face</code> and <code>class</code> are top-level declarations.
 Both accept <code>is</code> or <code>has</code> followed by comma-separated interface names. Faces
 contain signature-only methods or block-bodied defaults. Classes contain <code>let</code>
 fields and block-bodied methods. <code>self</code> is an expression, and a leading dot on
 a class method is retained as private-member syntax in the AST.</p>
-<p><strong>Implemented visibility subset:</strong> a leading dot makes a class method private
-to its declaring class. Methods of that class may call it through <code>self</code> or
-another instance of the same class. Outside access is rejected, and a private
-method cannot satisfy a face requirement. Fields do not yet have private syntax.</p>
-<p><strong>Implemented default-method subset:</strong> an unambiguous default is composed into
+<p>A leading dot makes a field or method private to its declaring class. Methods
+of that class may access it through <code>self</code> or another instance of the same
+class. Outside access is rejected, and a private method cannot satisfy a face
+requirement.</p>
+<p>An unambiguous default is composed into
 the class and may call other requirements from the same face through <code>self</code>.
 An exact-signature class method overrides the default. If multiple directly
 composed faces provide the same default signature, the class must provide an
@@ -3695,10 +3695,28 @@ explicit override. This is static composition; it does not create a superclass.<
 signatures and defaults flow transitively to the final class. A face declaration
 may replace an inherited default with its own exact-signature declaration or
 default. Cyclic face composition is invalid.</p>
-<p><strong>Open questions:</strong> object construction, storage layout, dynamic dispatch,
-value/reference behavior, and whether limited
-implementation inheritance will exist after 1.0; no implementation-inheritance
-feature is part of the 1.0 hypercore contract.</p>
+<p>Classes are created by calling the class name. A matching <code>new(...)</code>
+constructor initializes the fields:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>face Named {
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  fun label(): String
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>}
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>class Probe is Named {
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  let name: String
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  new(name: String) {
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    self.name = name
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  }
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  fun label(): String =&gt; self.name
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>}
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>let voyager = Probe("Voyager")
+</span></code></pre></div>
+<p>Class and face values have shared reference identity. Calls through a face use
+dynamic dispatch, meaning the concrete class implementation runs even when the
+variable's declared type is the face. See the <a href="../memory-model/">memory model</a>
+for ownership and weak references.</p>
 
 
 

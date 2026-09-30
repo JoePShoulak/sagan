@@ -3670,8 +3670,11 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="type-system">Type system</h1>
-<p>Sagan is designed as a strongly and statically typed language.</p>
-<p><strong>Settled design:</strong></p>
+<p>Sagan is strongly and statically typed. <em>Statically typed</em> means the compiler
+checks types before the program runs. <em>Strongly typed</em> means values are not
+silently treated as unrelated types just because their machine representation
+looks similar.</p>
+<p>The central rules are:</p>
 <ul>
 <li>implicit conversion is limited to conversions proven lossless;</li>
 <li>variables are mutable by default;</li>
@@ -3680,7 +3683,7 @@
 <li>no separate character-literal type is planned; and</li>
 <li>math types form built-in vocabulary.</li>
 </ul>
-<p><strong>Implemented foundation:</strong> <code>Int</code> is the canonical integer spelling. Literals
+<p><code>Int</code> is the canonical integer spelling. Literals
 use the smallest fitting signed width from <code>Int8</code> through <code>Int64</code>; otherwise
 <code>Int</code> defaults to <code>Int64</code>. Floating literals and unconstrained <code>Float</code> positions
 default to <code>Float64</code>, with explicit <code>Float32</code> available. Only provably lossless
@@ -3716,11 +3719,10 @@ subtracting points returns a vector. Point addition, vector-first
 point translation, scaling, negation, and context-free conversion between the
 families are rejected. These rules preserve the same lossless component
 widening and checked integer arithmetic as vector operations.</p>
-<p><strong>Implemented for the native numeric subset:</strong> integer arithmetic overflow
+<p>Integer arithmetic overflow
 raises the nominal <code>RuntimeError.integer_overflow</code> exception. Other native
 numeric domain failures and collection lookup failures use the corresponding
-<code>RuntimeError</code> case. Typed collections and interfaces continue to have
-provisional semantics outside the implemented subset.</p>
+<code>RuntimeError</code> case.</p>
 <p>Generic enum annotations and inferred top-level generic functions are
 implemented. Generic classes infer invariant type arguments from constructors,
 and generic face conformance substitutes those arguments through required
@@ -3741,10 +3743,9 @@ and affine point/difference category participate in compatibility. Compatible
 values convert at declarations, assignments, arguments, and returns; callable
 signatures can therefore require a specific unit. Unit metadata is compile-time
 only, and the C++ backend stores ordinary native numeric and geometry values.</p>
-<p><strong>Open questions:</strong> user-defined member inference, value versus
-reference categories, broader generic semantics, variance,
-compile-time constants, and representation. Deferred cases are currently
-marked <code>Unknown</code> by the type model.</p>
+<p>Generic parameters are invariant: <code>Box&lt;Child&gt;</code> is not automatically a
+<code>Box&lt;Parent&gt;</code>. Variance, borrowing, user-defined implicit conversions, and a
+general compile-time-constant system are deferred.</p>
 <p>Annotations must name types. Typed variables may begin uninitialized, but they
 must be definitely assigned before use; compound assignment counts as a read.
 Non-<code>Void</code> functions must return along every guaranteed path, and statements

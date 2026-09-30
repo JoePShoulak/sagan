@@ -3836,7 +3836,7 @@
 </div>
 <h1 id="design-philosophy">Design philosophy</h1>
 <h2 id="simulation-first">Simulation first</h2>
-<p><strong>Settled design.</strong> Geometry, astrodynamics, physics, scientific computing,
+<p>Geometry, astrodynamics, physics, scientific computing,
 rendering, and interacting entities are central use cases. Vectors, matrices,
 quaternions, coordinates, scientific notation, and large numerical workloads
 belong in the language's normal vocabulary.</p>
@@ -3845,21 +3845,23 @@ first-party core libraries designed to interoperate closely with that math, but
 must be imported explicitly. Their concrete APIs and module names are not yet
 defined.</p>
 <h2 id="strong-and-explicit-types">Strong and explicit types</h2>
-<p><strong>Settled design.</strong> Sagan minimizes implicit coercion. A conversion is implicit
-only when the implemented checker can prove it lossless. The native executable
+<p>Sagan minimizes implicit conversion. An implicit conversion happens without an
+<code>as</code> expression, so Sagan permits one only when the checker can prove it
+lossless. The native executable
 subset raises runtime errors for integer arithmetic overflow and division or
 modulo by zero. Extending those guarantees to future numeric and user-defined
 types remains ongoing work.</p>
 <h2 id="composition-before-inheritance">Composition before inheritance</h2>
-<p><strong>Settled design.</strong> Small interfaces are the primary tools for reuse,
+<p>Small interfaces, spelled <code>face</code>, are the primary tools for reuse,
 abstraction, and polymorphism. Classes implement and combine interfaces, and
 interfaces may compose other interfaces.</p>
-<p><strong>Open question.</strong> Whether any limited implementation inheritance will exist.</p>
+<p>Sagan does not currently provide implementation inheritance. Code reuse comes
+from face defaults, ordinary functions, and composed objects.</p>
 <h2 id="visible-mutation-and-safety">Visible mutation and safety</h2>
-<p><strong>Settled design.</strong> Variables are mutable by default. A trailing <code>!</code> is part of
+<p>Variables are mutable by default. A trailing <code>!</code> is part of
 a method name and conventionally identifies a mutating counterpart; it is not an
 effect system.</p>
-<p><strong>Implemented foundation.</strong> Class/face values and escaping closure captures use
+<p>Class and face values and escaping closure captures use
 reference-counted storage; explicit weak class fields break object cycles.
 Parallel execution and unsafe escape hatches are explicitly post-1.0 work.
 Their concurrency and foreign-ownership rules are not part of the 1.0 contract.</p>

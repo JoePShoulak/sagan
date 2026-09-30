@@ -3670,14 +3670,14 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="declarations">Declarations</h1>
-<p><strong>Settled design:</strong> <code>let</code> declares mutable variables; <code>fun</code> introduces
+<p>Declarations introduce names. <code>let</code> declares mutable variables; <code>fun</code> introduces
 functions; <code>face</code>, <code>class</code>, and <code>enum</code> introduce named types; and
 <code>dimension</code>, <code>quantity</code>, <code>unit</code>, and <code>affine unit</code> introduce compile-time
 measurement metadata. Measurement declarations are checked for duplicate names,
 inconsistent dimensions, unresolved references, and dependency cycles. See the
 <a href="../../design/units-of-measure/">native units contract</a>.
 <code>module</code>, <code>import</code>, and <code>export</code> participate in modular source.</p>
-<p><strong>Implemented syntax:</strong> the parser accepts a single optional leading <code>module</code>
+<p>The parser accepts a single optional leading <code>module</code>
 declaration, imports with optional <code>from</code> and <code>as</code> clauses, and standalone
 exports with an optional alias. See <a href="../modules/">Modules</a> for the accepted
 forms.</p>
@@ -3688,14 +3688,16 @@ source span and text. Supported targets are modules, imports, exports, <code>let
 local variables and individual enum members.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let altitude: Float = 125_000.0
 </span></code></pre></div>
-<p><strong>Implemented in the parser:</strong> top-level mutable variables, named block-bodied
-functions, faces, classes, and simple enums. Faces accept method signatures and
-default bodies. Classes accept <code>let</code> fields and methods. Enums contain
-identifier-only members separated by newlines or commas. The initial executable
-enum subset uses <code>EnumName.member</code> to produce nominal values; those values
-support same-enum equality, <code>match</code> cases, interpolation, and printing by member
-name.</p>
-<p><strong>Implemented native class subset:</strong> class fields require explicit types and may
+<p>Top-level declarations may define mutable variables, functions, faces, classes,
+and enums. Functions may use a block body or a short expression body:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>fun double(value: Int): Int =&gt; value * 2
+</span></code></pre></div>
+<p>Faces accept required method signatures and methods with default bodies.
+Classes accept fields, constructors, and methods. Enum members may be plain
+names or may carry typed payloads. A plain enum value is written with its type,
+such as <code>Direction.north</code>; payload cases such as <code>Success(42)</code> act as
+constructors.</p>
+<p>Class fields require explicit types and may
 have default initializers. A class may declare overloaded <code>new(...)</code> constructors;
 calling <code>ClassName(arguments...)</code> selects exactly one compatible constructor.
 Every field without a declaration-site default must be assigned on every
@@ -3722,11 +3724,11 @@ strong class fields, including class references nested in optionals or generic
 type annotations. At least one edge must use <code>weak let</code>. A face-typed field must also
 be weak because its concrete class target is selected dynamically and cannot be
 proven acyclic. The diagnostic reports the strong field path that forms a cycle.</p>
-<p><strong>Implemented conformance subset:</strong> <code>is</code> and <code>has</code> are interchangeable and do
+<p><code>is</code> and <code>has</code> are interchangeable and do
 not denote inheritance. A class composing a face must satisfy each required
 method with an exact class implementation or unambiguous default. Missing or
 incompatible methods are compile-time errors.</p>
-<p><strong>Implemented face defaults:</strong> an unambiguous default is inherited, an exact
+<p>An unambiguous face default is composed into the class, an exact
 class method overrides it, and competing defaults with the same signature
 require an explicit class override. Defaults may call other requirements from
 their own face through <code>self</code>.
@@ -3736,7 +3738,6 @@ Face names may be used as value, parameter, and return annotations. A class
 value converts to a face only when its declaration explicitly conforms through
 <code>is</code> or <code>has</code>, including transitive face composition. Calls through the face
 dispatch to the concrete class while retaining shared reference identity.</p>
-<p><strong>Provisional semantics:</strong> broader method-overload ranking and borrowing.</p>
 <p>Enum cases may carry one or more typed payload values, such as
 <code>Success(Int)</code> or <code>Position(Float, Float)</code>. Payload cases act as constructors in
 the surrounding declaration namespace. Match patterns use the case name and
@@ -3777,10 +3778,10 @@ explicit specialization with <code>Box&lt;Int8&gt;(42)</code>. Generic class par
 the same <code>is Face</code> constraint syntax and are checked when constructed. A face
 method cannot introduce method-specific parameters because virtual generic
 methods are intentionally unsupported.</p>
-<p><strong>Open questions:</strong> inference requirements, duplicate declarations, scope,
-forward references, variance and face method generics,
-module resolution and visibility, and entry-point forms. These require semantic
-analysis or future language revisions.</p>
+<p>Duplicate declarations, unresolved names, incompatible overloads, invalid
+visibility access, and module export violations are compile-time errors. Generic
+types are invariant. Borrowing, variance, and virtual methods with their own
+method-level generic parameters are not part of the current language.</p>
 
 
 

@@ -3767,6 +3767,8 @@
 <p>This page has not been confirmed as accurate or approved for publication. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="modules-and-packages">Modules and packages</h1>
+<p>A <em>module</em> is one named source file. A <em>package</em> is a directory that groups
+modules into one application and records how to build and launch it.</p>
 <p>Sagan source files declare their qualified module name and may selectively
 import an exported symbol or bind a whole module as a namespace:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>module navigation.guidance
@@ -3832,8 +3834,8 @@ Dependency declarations receive deterministic module-qualified identities,
 aliases resolve to those identities, and dependencies are emitted before their
 consumers. Namespace access exposes only exported members. Missing/private
 exports and dependency cycles are rejected, including a complete cycle path.</p>
-<p>Math will be automatically available. Physics and rendering are first-party
-core libraries that require explicit imports.</p>
+<p>The core math vocabulary is automatically available. Physics and rendering are
+planned first-party libraries that will require explicit imports.</p>
 <p>Mutable module-level initialization, external dependencies, package registries,
 version constraints, lockfiles, distribution, and the final import granularity
 of physics and rendering remain future work.</p>
