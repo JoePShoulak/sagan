@@ -430,9 +430,9 @@ namespace semantic
       {
         model.scopes.push_back(scope{0, no_parent, "program", {}});
         names.emplace_back();
-        for (const std::string_view builtin : {"Bool", "Coordinate", "Float", "Float32", "Float64", "Frame",
+        for (const std::string_view builtin : {"Bool", "Float", "Float32", "Float64", "Frame",
                                                "Int", "Int8", "Int16", "Int32", "Int64", "Optional", "RuntimeError", "String",
-                                               "Vector", "Void"})
+                                               "Point", "SphericalPoint", "SphericalVector", "Vector", "Void"})
         {
           declare(std::string(builtin), "builtin type", parser::span{0, 0});
         }

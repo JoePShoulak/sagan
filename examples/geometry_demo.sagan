@@ -1,0 +1,28 @@
+fun main(): Int {
+  let origin = (10, 20, 30)
+  let offset = <1, 2, 3>
+  let moved = origin + offset
+  let restored = moved - offset
+  let travel = moved - origin
+
+  let updated = origin
+  updated += offset
+  updated -= offset
+
+  let radial_position = s(10.0, 0.5, 1.0)
+  let radial_direction = s<2.0, 0.25, 0.75>
+
+  print("Origin: ${origin}")
+  print("Moved point: ${moved}")
+  print("Restored point: ${restored}")
+  print("Travel displacement: ${travel}")
+  print("Compound translation restored: ${updated}")
+  print("Spherical point: ${radial_position}")
+  print("Spherical point radius: ${radial_position.radius}")
+  print("Spherical vector: ${radial_direction}")
+  print("Spherical vector magnitude: ${radial_direction.magnitude}")
+
+  if moved == (11, 22, 33) and restored == origin and travel == offset and updated == origin and
+      radial_position.radius == 10.0 and radial_direction.magnitude == 2.0 return 0
+  else return 1
+}

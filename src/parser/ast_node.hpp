@@ -169,7 +169,9 @@ namespace parser
     {
       array,
       vector,
-      coordinate,
+      point,
+      spherical_vector,
+      spherical_point,
     };
 
     kind collection_kind;

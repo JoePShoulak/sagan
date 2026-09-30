@@ -830,9 +830,11 @@ namespace
         "      Spread\n"
         "        Identifier(defaults)\n");
     passed &= expect_ast(
-        "vectors coordinates and delimiter ambiguity",
+        "vectors points spherical literals and delimiter ambiguity",
         "let direction = <1.0, 0.0, 0.0,>\n"
         "let position = (x, y, z,)\n"
+        "let radial_direction = s<2.0, inclination, azimuth>\n"
+        "let radial_position = s(radius, inclination, azimuth)\n"
         "let relation = left < right\n"
         "let flags = <(left > right), true>\n",
         "Program\n"
@@ -842,10 +844,20 @@ namespace
         "      Float(0.0)\n"
         "      Float(0.0)\n"
         "  Let(position)\n"
-        "    Coordinate\n"
+        "    Point\n"
         "      Identifier(x)\n"
         "      Identifier(y)\n"
         "      Identifier(z)\n"
+        "  Let(radial_direction)\n"
+        "    SphericalVector\n"
+        "      Float(2.0)\n"
+        "      Identifier(inclination)\n"
+        "      Identifier(azimuth)\n"
+        "  Let(radial_position)\n"
+        "    SphericalPoint\n"
+        "      Identifier(radius)\n"
+        "      Identifier(inclination)\n"
+        "      Identifier(azimuth)\n"
         "  Let(relation)\n"
         "    Binary(<)\n"
         "      Identifier(left)\n"
@@ -859,12 +871,24 @@ namespace
         "      Bool(true)\n");
     passed &= expect_syntax_error("empty vector", "let invalid = <>\n");
     passed &= expect_syntax_error("single-element vector", "let invalid = <1>\n");
-    passed &= expect_syntax_error("single-element coordinate", "let invalid = (1,)\n");
+    passed &= expect_syntax_error("single-element point", "let invalid = (1,)\n");
+    passed &= expect_syntax_error("short spherical vector", "let invalid = s<1, 2>\n");
+    passed &= expect_syntax_error("long spherical point", "let invalid = s(1, 2, 3, 4)\n");
     passed &= expect_syntax_error("empty parentheses", "let invalid = ()\n");
     passed &= expect_syntax_error("array elements require commas", "let invalid = [1 2]\n");
     passed &= expect_syntax_error("dictionary entries require commas", "let invalid = {1: 2 3: 4}\n");
-    passed &= expect_syntax_error("coordinate elements require commas", "let invalid = (1, 2 3)\n");
+    passed &= expect_syntax_error("point elements require commas", "let invalid = (1, 2 3)\n");
     passed &= expect_syntax_error("dictionary entry without colon", "let invalid = {\"name\",}\n");
+    passed &= expect_ast(
+        "spaced s remains an ordinary identifier",
+        "let result = s (1, 2, 3)\n",
+        "Program\n"
+        "  Let(result)\n"
+        "    Call\n"
+        "      Identifier(s)\n"
+        "      Integer(1)\n"
+        "      Integer(2)\n"
+        "      Integer(3)\n");
     passed &= expect_ast(
         "blocks assignments and conditional statements",
         "fun update(telemetry_ready: Bool): Bool {\n"
@@ -1656,12 +1680,15 @@ namespace
         "let selected = more[\"two\"]\n",
         {"counts: Dictionary<String, Int16>", "more: Dictionary<String, Int16>", "selected: Int16"});
     passed &= expect_type_model(
-        "dimensioned vector and coordinate inference",
+        "dimensioned vector point and spherical inference",
         "let direction = <1.0, 0.0, 0.0>\n"
         "let origin = (0, 0, 0)\n"
+        "let radial_direction = s<2.0, 0.5, 1.0>\n"
+        "let radial_origin = s(10.0, 0.5, 1.0)\n"
         "let extended = <...direction, 1.0>\n"
         "let component = direction[1]\n",
-        {"direction: Vector3<Float64>", "origin: Coordinate3<Int8>",
+        {"direction: Vector3<Float64>", "origin: Point3<Int8>",
+         "radial_direction: SphericalVector3<Float64>", "radial_origin: SphericalPoint3<Float64>",
          "extended: Vector4<Float64>", "component: Float64"});
     passed &= expect_type_model(
         "vector arithmetic inference",
@@ -1671,12 +1698,22 @@ namespace
         {"sum: Vector3<Float64>", "difference: Vector3<Float64>", "scaled: Vector3<Float64>",
          "divided: Vector3<Float64>", "reversed: Vector3<Float64>"});
     passed &= expect_type_model(
-        "named vector and coordinate components",
+        "affine point arithmetic inference",
+        "let origin = (10, 20, 30)\nlet offset = <1, 2, 3>\nlet precise = <0.5, 1.5, 2.5>\n"
+        "let moved = origin + offset\nlet restored = moved - offset\nlet travel = moved - origin\n"
+        "let widened = origin + precise\n",
+        {"moved: Point3<Int8>", "restored: Point3<Int8>", "travel: Vector3<Int8>",
+         "widened: Point3<Float64>"});
+    passed &= expect_type_model(
+        "named vector point and spherical components",
         "fun update_components(): Void {\n"
         "  let direction = <1.0, 2.0, 3.0>\n  let position = (4, 5, 6, 7)\n"
         "  let horizontal = direction.x\n  let altitude = position.z\n  let frame = position.w\n"
+        "  let radial = s(10.0, 0.5, 1.0)\n  let orbit = s<2.0, 0.25, 0.75>\n"
+        "  let radius = radial.radius\n  let magnitude = orbit.magnitude\n  let azimuth = radial.azimuth\n"
         "  direction.y = 8.0\n  direction.z += 1.0\n}\n",
-        {"horizontal: Float64", "altitude: Int8", "frame: Int8"});
+        {"horizontal: Float64", "altitude: Int8", "frame: Int8", "radius: Float64",
+         "magnitude: Float64", "azimuth: Float64"});
     passed &= expect_type_model(
         "lambda callability captures and immediate calls",
         "fun exercise(): Int {\n  let offset = 2\n"
@@ -1849,16 +1886,31 @@ namespace
     passed &= expect_type_error("vector multiplication is not implicit dot or component multiplication",
                                 "let invalid = <1.0, 2.0> * <3.0, 4.0>\n",
                                 "is not defined for Vector2<Float64> and Vector2<Float64>");
-    passed &= expect_type_error("coordinate addition is not vector addition",
+    passed &= expect_type_error("point addition is not vector addition",
                                 "let invalid = (1.0, 2.0) + (3.0, 4.0)\n",
-                                "requires vectors with equal dimensions");
+                                "is not defined for Point2<Float64> and Point2<Float64>");
+    passed &= expect_type_error("vector cannot translate point from the left",
+                                "let invalid = <1.0, 2.0> + (3.0, 4.0)\n",
+                                "is not defined for Vector2<Float64> and Point2<Float64>");
+    passed &= expect_type_error("point and vector dimensions must agree",
+                                "let invalid = (1.0, 2.0) + <3.0, 4.0, 5.0>\n",
+                                "requires dimensioned operands of equal size");
     passed &= expect_type_error("vectors have equality but no ordered comparison",
                                 "let invalid = <1.0, 2.0> < <3.0, 4.0>\n",
                                 "Ordered comparison is not defined");
     passed &= expect_type_error("named component must exist",
                                 "let invalid = <1.0, 2.0>.z\n", "Vector2 has no member 'z'");
     passed &= expect_type_error("dimensioned values reject unknown members",
-                                "let invalid = (1.0, 2.0).latitude\n", "Coordinate has no member 'latitude'");
+                                "let invalid = (1.0, 2.0).latitude\n", "Point has no member 'latitude'");
+    passed &= expect_type_error("spherical values reject Cartesian components",
+                                "let invalid = s(1.0, 0.5, 0.25).x\n",
+                                "SphericalPoint has no member 'x'");
+    passed &= expect_type_error("spherical arithmetic requires explicit conversion",
+                                "let invalid = s(1.0, 0.5, 0.25) + s<1.0, 0.5, 0.25>\n",
+                                "is not defined for SphericalPoint3<Float64> and SphericalVector3<Float64>");
+    passed &= expect_type_error("spherical literals reject spreads",
+                                "let components = <1.0, 0.5, 0.25>\nlet invalid = s<...components, 0.5, 0.25>\n",
+                                "SphericalVector literals do not support spread elements");
     passed &= expect_type_error("dimensioned values are not optional",
                                 "let invalid = <1.0, 2.0>?.x\n",
                                 "Safe member access is not defined for Vector values");

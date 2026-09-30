@@ -240,9 +240,11 @@ namespace parser
   auto collection_expression::print(std::ostream &stream, const int indent) const -> void
   {
     write_indent(stream, indent);
-    const char *name = collection_kind == kind::array        ? "Array"
-                       : collection_kind == kind::vector     ? "Vector"
-                                                             : "Coordinate";
+    const char *name = collection_kind == kind::array              ? "Array"
+                       : collection_kind == kind::vector           ? "Vector"
+                       : collection_kind == kind::point            ? "Point"
+                       : collection_kind == kind::spherical_vector ? "SphericalVector"
+                                                                    : "SphericalPoint";
     stream << name << '\n';
     for (const auto &element : elements)
     {

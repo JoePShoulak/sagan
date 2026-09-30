@@ -67,8 +67,10 @@ namespace parser
     auto parse_string() -> expression_ref;
     auto parse_array() -> expression_ref;
     auto parse_dictionary() -> expression_ref;
-    auto parse_vector() -> expression_ref;
-    auto parse_parenthesized() -> expression_ref;
+    auto parse_vector(collection_expression::kind type = collection_expression::kind::vector,
+                      std::optional<int> prefix_begin = {}) -> expression_ref;
+    auto parse_parenthesized(collection_expression::kind type = collection_expression::kind::point,
+                             std::optional<int> prefix_begin = {}) -> expression_ref;
     auto parse_lambda() -> expression_ref;
 
   public:

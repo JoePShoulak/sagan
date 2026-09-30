@@ -15,7 +15,7 @@ face Renderable {
 }
 
 face Navigable is Renderable, Trackable {
-  fun current_course(origin: Coordinate, destination: Coordinate): Vector
+  fun current_course(origin: Point, destination: Point): Vector
   fun status_label(): String {
     return "navigating"
   }

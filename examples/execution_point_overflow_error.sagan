@@ -1,0 +1,7 @@
+fun main(): Int {
+  let position = (127, 0)
+  let offset = <1, 0>
+  let invalid = position + offset
+  print(invalid)
+  return 0
+}

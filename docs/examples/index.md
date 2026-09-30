@@ -13,7 +13,8 @@ verified_by: null
 `examples/tokenizer_demo.sagan` is the representative source fixture. It
 covers modules and imports, interfaces and classes, function forms, mutating
 method names, typed declarations, numeric separators and scientific notation,
-vectors and coordinates, dictionaries, raw and multiline strings, nested
+Cartesian vectors and points plus spherical vectors and points, dictionaries,
+raw and multiline strings, nested
 interpolation, exception keywords, increment, and an emoji identifier.
 
 ```bash
@@ -47,7 +48,7 @@ function using `yield`, so both appear in text and interactive visual AST output
 It also includes ordinary, raw, multiline, and interpolated strings, including
 interpolations containing member access and arithmetic expressions.
 The collection section demonstrates arrays, dictionaries with expression keys,
-vectors, coordinates, spreads, trailing commas, and multiline formatting.
+Cartesian vectors, points, spreads, trailing commas, and multiline formatting.
 Its control-flow section adds nested blocks, declarations, ordinary assignment,
 expression statements, an `if`/`else if`/`else` chain, all three loop forms,
 `break`, `continue`, both return forms, and `match`/`case` with a fallback inside
@@ -112,6 +113,17 @@ Unicode output, and exit-code handling without an external compiler command.
 
 ```bash
 make run-demo
+```
+
+## Cartesian and spherical geometry demonstration
+
+`examples/geometry_demo.sagan` treats points as affine locations and vectors as
+displacements. It translates and restores a Cartesian point, subtracts two
+points into a vector, exercises compound translation, and constructs/inspects
+spherical point and vector literals before running natively.
+
+```bash
+make geometry-demo
 ```
 
 ## Optional-value demonstration
@@ -214,7 +226,7 @@ source.
 `examples/type_demo.sagan` demonstrates scalar inference, integer-width
 selection, annotations, lossless numeric widening, calls, overloads,
 conditions, returns, homogeneous arrays and dictionaries, indexing, and
-dimensioned vector and coordinate literals.
+dimensioned Cartesian vector and point literals plus spherical literals.
 
 ```bash
 bash scripts/type_demo.sh
@@ -247,7 +259,7 @@ countdown array using a spread, reads a checked array index, formats interpolate
 strings,
 constructs a typed dictionary using a spread and later-key override, reads a
 checked key, demonstrates checked powers and prefix/postfix increment values,
-constructs a vector with a spread, constructs a coordinate, prints and indexes
+constructs a vector with a spread, constructs a point, prints and indexes
 both dimensioned values, reads and updates named components, iterates the
 vector's components, performs checked vector/scalar arithmetic and compound updates, and mutates state through
 `while` and `until` loops, selects an ordered `match` case with a fallback,

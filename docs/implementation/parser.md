@@ -25,7 +25,8 @@ syntax trees with source-spanned diagnostics.
 - Ordinary, raw, and multiline string expressions
 - Interpolated strings with complete embedded expressions
 - Arrays and dictionaries, including empty forms and expression keys
-- Vectors and coordinates with a minimum of two elements
+- Cartesian vectors and points with a minimum of two elements
+- Exactly three-component spherical vectors and points using adjacent `s<...>` and `s(...)`
 - Trailing commas in calls and every collection form
 - Spread expressions and dictionary spread entries
 - Right-associative exponentiation

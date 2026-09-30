@@ -3,6 +3,7 @@
 #include "../semantic/semantic_error.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <iomanip>
 #include <sstream>
@@ -97,7 +98,9 @@ namespace codegen
         if (const std::size_t open = name.find('<'); open != std::string::npos && name.ends_with('>') &&
             user_types.contains(name.substr(0, open)))
           return identifier(name.substr(0, open));
-        for (const std::string_view family : {std::string_view{"Vector"}, std::string_view{"Coordinate"}})
+        for (const std::string_view family : {std::string_view{"SphericalVector"},
+                                              std::string_view{"SphericalPoint"},
+                                              std::string_view{"Vector"}, std::string_view{"Point"}})
         {
           if (!std::string_view{name}.starts_with(family)) continue;
           const std::size_t open = name.find('<', family.size());
@@ -109,7 +112,10 @@ namespace codegen
                 return std::isdigit(value) != 0;
               })) break;
           const std::string component = name.substr(open + 1, name.size() - open - 2);
-          const std::string runtime_family = family == "Vector" ? "sagan_vector" : "sagan_coordinate";
+          const std::string runtime_family = family == "Vector"          ? "sagan_vector"
+                                             : family == "Point"         ? "sagan_point"
+                                             : family == "SphericalVector" ? "sagan_spherical_vector"
+                                                                            : "sagan_spherical_point";
           return runtime_family + "<" + type_name(component, range) + ", " + dimension_text + ">";
         }
         fail("type '" + name + "' is not available in the initial native subset", range);
@@ -509,12 +515,25 @@ namespace codegen
           }
           const std::string target_type = expression_type(*member->target);
           if (std::string_view{target_type}.starts_with("Vector") ||
-              std::string_view{target_type}.starts_with("Coordinate"))
+              std::string_view{target_type}.starts_with("Point") ||
+              std::string_view{target_type}.starts_with("Spherical"))
           {
-            const std::string_view component_names = "xyzw";
-            const std::size_t component = component_names.find(member->member_name);
-            if (member->member_name.size() != 1 || component == std::string_view::npos)
-              fail("dimensioned member access is invalid", value.range);
+            std::size_t component = std::string_view::npos;
+            if (std::string_view{target_type}.starts_with("Spherical"))
+            {
+              const std::array<std::string_view, 3> names =
+                  std::string_view{target_type}.starts_with("SphericalPoint")
+                      ? std::array<std::string_view, 3>{"radius", "inclination", "azimuth"}
+                      : std::array<std::string_view, 3>{"magnitude", "inclination", "azimuth"};
+              const auto found = std::find(names.begin(), names.end(), member->member_name);
+              if (found != names.end()) component = static_cast<std::size_t>(found - names.begin());
+            }
+            else
+            {
+              const std::string_view names = "xyzw";
+              if (member->member_name.size() == 1) component = names.find(member->member_name);
+            }
+            if (component == std::string_view::npos) fail("dimensioned member access is invalid", value.range);
             return expression(*member->target) + ".at(" + std::to_string(component) + ")";
           }
           if (weak_member(*member)) return "sagan_lock_weak(" + raw_member(*member) + ")";
@@ -523,8 +542,7 @@ namespace codegen
         if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
         {
           const std::string checked = expression_type(value);
-          if (collection->collection_kind == parser::collection_expression::kind::vector ||
-              collection->collection_kind == parser::collection_expression::kind::coordinate)
+          if (collection->collection_kind != parser::collection_expression::kind::array)
           {
             const std::string runtime_type = type_name(checked, value.range);
             const bool has_spread = std::any_of(collection->elements.begin(), collection->elements.end(),
@@ -1339,7 +1357,7 @@ namespace codegen
                   "  bool operator==(const sagan_vector &) const = default;\n"
                   "};\n\n"
                   "template <typename T, std::size_t Size>\n"
-                  "struct sagan_coordinate\n"
+                  "struct sagan_point\n"
                   "{\n"
                   "  std::array<T, Size> components;\n"
                   "  T &at(const std::size_t index) { return components.at(index); }\n"
@@ -1349,7 +1367,33 @@ namespace codegen
                   "  auto begin() const { return components.begin(); }\n"
                   "  auto end() const { return components.end(); }\n"
                   "  constexpr std::size_t size() const { return Size; }\n"
-                  "  bool operator==(const sagan_coordinate &) const = default;\n"
+                  "  bool operator==(const sagan_point &) const = default;\n"
+                  "};\n\n"
+                  "template <typename T, std::size_t Size>\n"
+                  "struct sagan_spherical_vector\n"
+                  "{\n"
+                  "  std::array<T, Size> components;\n"
+                  "  T &at(const std::size_t index) { return components.at(index); }\n"
+                  "  const T &at(const std::size_t index) const { return components.at(index); }\n"
+                  "  auto begin() { return components.begin(); }\n"
+                  "  auto end() { return components.end(); }\n"
+                  "  auto begin() const { return components.begin(); }\n"
+                  "  auto end() const { return components.end(); }\n"
+                  "  constexpr std::size_t size() const { return Size; }\n"
+                  "  bool operator==(const sagan_spherical_vector &) const = default;\n"
+                  "};\n\n"
+                  "template <typename T, std::size_t Size>\n"
+                  "struct sagan_spherical_point\n"
+                  "{\n"
+                  "  std::array<T, Size> components;\n"
+                  "  T &at(const std::size_t index) { return components.at(index); }\n"
+                  "  const T &at(const std::size_t index) const { return components.at(index); }\n"
+                  "  auto begin() { return components.begin(); }\n"
+                  "  auto end() { return components.end(); }\n"
+                  "  auto begin() const { return components.begin(); }\n"
+                  "  auto end() const { return components.end(); }\n"
+                  "  constexpr std::size_t size() const { return Size; }\n"
+                  "  bool operator==(const sagan_spherical_point &) const = default;\n"
                   "};\n\n"
                   "template <typename Collection, typename Index>\n"
                   "decltype(auto) sagan_index(Collection &&collection, const Index index)\n"
@@ -1378,6 +1422,15 @@ namespace codegen
                   "struct sagan_is_vector<sagan_vector<Component, Size>> : std::true_type {};\n"
                   "template <typename T>\n"
                   "inline constexpr bool sagan_is_vector_v = sagan_is_vector<std::remove_cvref_t<T>>::value;\n\n"
+                  "template <typename T> struct sagan_point_traits;\n"
+                  "template <typename Component, std::size_t Size>\n"
+                  "struct sagan_point_traits<sagan_point<Component, Size>>\n"
+                  "{ using component = Component; static constexpr std::size_t size = Size; };\n"
+                  "template <typename T> struct sagan_is_point : std::false_type {};\n"
+                  "template <typename Component, std::size_t Size>\n"
+                  "struct sagan_is_point<sagan_point<Component, Size>> : std::true_type {};\n"
+                  "template <typename T>\n"
+                  "inline constexpr bool sagan_is_point_v = sagan_is_point<std::remove_cvref_t<T>>::value;\n\n"
                   "template <typename T>\n"
                   "void sagan_stream_component(std::ostream &stream, const T value)\n"
                   "{\n"
@@ -1396,9 +1449,31 @@ namespace codegen
                   "  return stream << '>';\n"
                   "}\n\n"
                   "template <typename T, std::size_t Size>\n"
-                  "std::ostream &operator<<(std::ostream &stream, const sagan_coordinate<T, Size> &value)\n"
+                  "std::ostream &operator<<(std::ostream &stream, const sagan_point<T, Size> &value)\n"
                   "{\n"
                   "  stream << '(';\n"
+                  "  for (std::size_t index = 0; index < Size; ++index)\n"
+                  "  {\n"
+                  "    if (index != 0) stream << \", \";\n"
+                  "    sagan_stream_component(stream, value.components[index]);\n"
+                  "  }\n"
+                  "  return stream << ')';\n"
+                  "}\n\n"
+                  "template <typename T, std::size_t Size>\n"
+                  "std::ostream &operator<<(std::ostream &stream, const sagan_spherical_vector<T, Size> &value)\n"
+                  "{\n"
+                  "  stream << \"s<\";\n"
+                  "  for (std::size_t index = 0; index < Size; ++index)\n"
+                  "  {\n"
+                  "    if (index != 0) stream << \", \";\n"
+                  "    sagan_stream_component(stream, value.components[index]);\n"
+                  "  }\n"
+                  "  return stream << '>';\n"
+                  "}\n\n"
+                  "template <typename T, std::size_t Size>\n"
+                  "std::ostream &operator<<(std::ostream &stream, const sagan_spherical_point<T, Size> &value)\n"
+                  "{\n"
+                  "  stream << \"s(\";\n"
                   "  for (std::size_t index = 0; index < Size; ++index)\n"
                   "  {\n"
                   "    if (index != 0) stream << \", \";\n"
@@ -1438,6 +1513,15 @@ namespace codegen
                   "      result.components[index] = sagan_add<Component>(left_value.components[index], right_value.components[index]);\n"
                   "    return result;\n"
                   "  }\n"
+                  "  else if constexpr (sagan_is_point_v<Result>)\n"
+                  "  {\n"
+                  "    using Traits = sagan_point_traits<Result>;\n"
+                  "    using Component = typename Traits::component;\n"
+                  "    Result result{};\n"
+                  "    for (std::size_t index = 0; index < Traits::size; ++index)\n"
+                  "      result.components[index] = sagan_add<Component>(left_value.components[index], right_value.components[index]);\n"
+                  "    return result;\n"
+                  "  }\n"
                   "  else\n"
                   "  {\n"
                   "  const Result left = static_cast<Result>(left_value);\n"
@@ -1458,6 +1542,15 @@ namespace codegen
                   "  if constexpr (sagan_is_vector_v<Result>)\n"
                   "  {\n"
                   "    using Traits = sagan_vector_traits<Result>;\n"
+                  "    using Component = typename Traits::component;\n"
+                  "    Result result{};\n"
+                  "    for (std::size_t index = 0; index < Traits::size; ++index)\n"
+                  "      result.components[index] = sagan_subtract<Component>(left_value.components[index], right_value.components[index]);\n"
+                  "    return result;\n"
+                  "  }\n"
+                  "  else if constexpr (sagan_is_point_v<Result>)\n"
+                  "  {\n"
+                  "    using Traits = sagan_point_traits<Result>;\n"
                   "    using Component = typename Traits::component;\n"
                   "    Result result{};\n"
                   "    for (std::size_t index = 0; index < Traits::size; ++index)\n"

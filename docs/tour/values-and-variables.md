@@ -37,10 +37,15 @@ a narrower inference. A declaration must provide an annotation, initializer, or
 both.
 
 Arrays infer one homogeneous element type; dictionaries infer homogeneous key
-and value types; and vectors and coordinates infer a numeric component type and
-dimension. Empty arrays/dictionaries await generic annotation syntax. Native
+and value types; and Cartesian/spherical vectors and points infer a numeric
+component type and dimension. Empty arrays/dictionaries await generic annotation syntax. Native
 construction, indexing, iteration, spreads, and display are implemented;
 checked vector addition, subtraction, negation, and scalar scaling are also
-implemented. Dimension-checked `.x`, `.y`, `.z`, and `.w` component reads and
-updates work for vectors and coordinates. Physical units and
+implemented. Points are affine locations: vectors translate them, and
+subtracting two points yields the displacement vector. Dimension-checked
+`.x`, `.y`, `.z`, and `.w` component reads and
+updates work for Cartesian vectors and points. Three-dimensional spherical
+values use `s<magnitude, inclination, azimuth>` and
+`s(radius, inclination, azimuth)`, with radians and representation-specific
+named members. Physical units and
 coordinate frames are deliberately not distinguished by the initial type system.

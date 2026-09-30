@@ -99,6 +99,8 @@ expect_output "direct Sagan execution" "The answer from" \
   "$binary" examples/execution_demo.sagan
 expect_output "direct package execution" "Package answer: 42" \
   "$binary" --run-package examples/package_demo
+expect_output "Cartesian and spherical geometry execution" "Spherical vector: s<2, 0.25, 0.75>" \
+  "$binary" examples/geometry_demo.sagan
 expect_output "package entry execution with import linking" "Package answer: 42" \
   "$binary" examples/package_demo/src/main.sagan
 printf '%s\n' 'fun main(): Int {' '  print("exit seven")' '  return 7' '}' > "$work_dir/exit-seven.sagan"
@@ -163,7 +165,7 @@ grep -Fq "sagan_subtract_assign<std::int8_t>" "$work_dir/generated.cpp"
 grep -Fq "sagan_multiply<std::int8_t>(6, 7)" "$work_dir/generated.cpp"
 grep -Fq "sagan_modulo<double>(5.5, 2.0)" "$work_dir/generated.cpp"
 grep -Fq "sagan_vector<double, 3>" "$work_dir/generated.cpp"
-grep -Fq "sagan_coordinate<double, 3>" "$work_dir/generated.cpp"
+grep -Fq "sagan_point<double, 3>" "$work_dir/generated.cpp"
 grep -Fq "sagan_dimensioned_spread_0_0" "$work_dir/generated.cpp"
 grep -Fq "sagan_add<sagan_vector<double, 3>>" "$work_dir/generated.cpp"
 grep -Fq "sagan_multiply<sagan_vector<double, 3>>(2.0" "$work_dir/generated.cpp"

@@ -216,8 +216,10 @@ pleasant enough to guarantee for 1.0?
 
 Review scalar values, variables, mutability, assignment, precedence,
 evaluation order, calls, member access, safe access, indexing, collections,
-coordinates, vectors, and basic conversions. Keep disputed coordinate meaning
-open for the final expert stage even if its surface syntax is confirmed here.
+points, vectors, Cartesian/spherical representation, and basic conversions.
+Keep the geometry model visible for final expert verification: points are affine
+locations, vectors are displacements, point/vector conversion requires an
+origin rather than a cast, and Cartesian/spherical conversion is explicit.
 
 **Approval question:** do ordinary expressions read and behave the way you
 expect before advanced typing is involved?
@@ -296,7 +298,8 @@ as normal paths?
 ### Stage 11 — numerical and simulation guarantees
 
 Review checked arithmetic, overflow, floating-point behavior, dimensions,
-coordinates versus vectors, deterministic execution, platform differences,
+points versus vectors, Cartesian versus spherical representation,
+deterministic execution, platform differences,
 math availability, and the boundaries of physics and rendering. Confirm exact
 guarantees rather than aspirations.
 
@@ -308,7 +311,8 @@ honest about their limits?
 Reserve the most coupled or controversial subjects for a focused review after
 the preceding behavior is concrete:
 
-- coordinate and vector separation, arithmetic, conversions, and generic use;
+- point and vector separation, arithmetic, conversions, and generic use;
+- spherical conventions, Cartesian conversion, and reference-frame policy;
 - interface composition, default conflicts, conformance, dispatch, and whether
   any implementation inheritance belongs in Sagan;
 - generic constraints, method-specific generics, explicit type arguments, and

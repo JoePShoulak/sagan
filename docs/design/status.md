@@ -54,7 +54,8 @@ renderers, CLI behavior, and defensive invariants.
 The parser currently verifies `let` declarations, core primary expressions,
 the settled operator-precedence table, chained calls/indexing/member access,
 ordinary and safe access, mutating method calls, ordinary/raw/multiline/
-interpolated strings, and array/dictionary/vector/coordinate expressions with
+interpolated strings, and array/dictionary/Cartesian-vector/point expressions
+with spreads plus exactly three-dimensional spherical-vector/point literals with
 spreads and trailing commas. Text, DOT, SVG, and interactive HTML tree renderers
 cover every implemented AST node. Blocks, same-line single-statement bodies,
 ordinary and compound assignment, expression statements, and
@@ -123,14 +124,16 @@ status of the first-party physics and rendering libraries are settled.
 
 ## Required pre-1.0 design checkpoints
 
-Before declaring the hypercore language stable, reevaluate whether coordinates
-should remain a distinct type from vectors. The decision must explicitly cover
-their mathematical meaning, valid arithmetic (`coordinate - coordinate`,
-`coordinate + vector`, and invalid `coordinate + coordinate`), component access,
-conversion rules, generic algorithms, runtime representation, and whether type
-separation prevents meaningful simulation errors without creating unnecessary
-friction. This review must happen before work begins on math, rendering, or
-physics libraries.
+The geometry checkpoint is complete: locations are named `Point` and remain
+affine values distinct from displacement `Vector` values. Point-vector
+translation and point subtraction are implemented; point addition and
+context-free point/vector conversion are rejected. Cartesian values use ordinary
+`(...)` and `<...>` literals. Exactly three-dimensional spherical points and
+vectors use adjacent `s(...)` and `s<...>` literals, radians, and named radial/
+angular components. Spherical arithmetic and Cartesian conversion are reserved
+for the first core math geometry API after 1.0. All four families have fixed-size
+component storage, frame tracking remains deferred, and future generic APIs must
+preserve the semantic and representation distinctions.
 
 The 1.0 release must also provide professional graphical installers for Windows,
 macOS, and Linux, plus platform-appropriate command-line installation. The

@@ -19,7 +19,8 @@ The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, assignment, calls, grouping, common unary/binary operators,
 prefix and postfix numeric increment and decrement, checked integer arithmetic,
-dimensioned vector and coordinate values, their spreads, indexing, named components, iteration,
+dimensioned Cartesian and spherical vector and point values, Cartesian spreads,
+indexing, named components, iteration,
 printing and interpolation,
 typed expression lambdas with local lexical captures and immediate or stored calls,
 classes with typed fields, default or overloaded `new(...)` construction, `self`, and
@@ -69,16 +70,24 @@ generated helpers. Integer overflow and zero divisors raise runtime errors;
 floating-point remainder uses `fmod` and floating-point division also rejects a
 zero divisor.
 
-Vectors and coordinates lower to separate fixed-size native runtime types, so a
-coordinate is not silently interchangeable with a vector. Their dimensions and
+Cartesian vectors and points lower to separate fixed-size native runtime types,
+so a point is not silently interchangeable with a vector. Their dimensions and
 component types come from the checked semantic model. Vectors support checked
 addition, subtraction, unary negation, scalar multiplication and division,
 equality, and compound forms. Vector-vector multiplication is deliberately not
-assigned an implicit dot, cross, or component-wise meaning. Coordinate
-arithmetic and explicit generic annotations for dimensioned values are not implemented. Both dimensioned
+assigned an implicit dot, cross, or component-wise meaning. Points support
+checked translation by vectors and subtraction into displacement vectors;
+point addition and direction-first translation are rejected. Explicit generic
+annotations for dimensioned values are not implemented. Both dimensioned
 families provide `.x`, `.y`, `.z`, and `.w` component access where their
 dimension permits it; components are assignable because variables are mutable
 by default.
+Spherical points and vectors lower to two further fixed-size families and retain
+their `s(...)`/`s<...>` printed forms. Points expose radius, inclination, and
+azimuth; vectors expose magnitude, inclination, and azimuth. They support
+storage, indexing, iteration, equality, interpolation, and printing. Arithmetic
+and Cartesian conversion are intentionally absent until the core math API fixes
+the conversion conventions.
 
 Faces lower to native abstract interfaces with virtual methods. Semantic
 analysis first verifies every required signature and resolves defaults, then the

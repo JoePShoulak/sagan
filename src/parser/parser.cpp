@@ -1058,6 +1058,15 @@ namespace parser
     {
       return parse_vector();
     }
+    if (check(tokens::IDENTIFIER) && peek()->text == "s" && current + 1 < input.size() &&
+        input[current].range.end == input[current + 1].range.begin &&
+        (input[current + 1].id == tokens::LANGLE || input[current + 1].id == tokens::LPAREN))
+    {
+      const int prefix_begin = advance().range.begin;
+      if (check(tokens::LANGLE))
+        return parse_vector(collection_expression::kind::spherical_vector, prefix_begin);
+      return parse_parenthesized(collection_expression::kind::spherical_point, prefix_begin);
+    }
     if (match(tokens::IDENTIFIER) || match(tokens::KWD_SELF))
     {
       const token &value = previous();
@@ -1249,7 +1258,8 @@ namespace parser
     return std::make_unique<dictionary_expression>(span{open.range.begin, close.range.end}, std::move(entries));
   }
 
-  auto syntax_parser::parse_vector() -> expression_ref
+  auto syntax_parser::parse_vector(const collection_expression::kind type,
+                                   const std::optional<int> prefix_begin) -> expression_ref
   {
     const token &open = expect(tokens::LANGLE, "'<' to begin a vector");
     std::vector<expression_ref> elements;
@@ -1271,23 +1281,29 @@ namespace parser
     }
     vector_literal_depth--;
     const token &close = expect(tokens::RANGLE, "'>' after the vector elements");
-    if (elements.size() < 2)
+    if (type == collection_expression::kind::spherical_vector && elements.size() != 3)
+    {
+      throw parse_error("A spherical vector literal requires exactly three elements",
+                        span{prefix_begin.value_or(open.range.begin), close.range.end});
+    }
+    if (type == collection_expression::kind::vector && elements.size() < 2)
     {
       throw parse_error("A vector literal requires at least two elements", span{open.range.begin, close.range.end});
     }
-    return std::make_unique<collection_expression>(span{open.range.begin, close.range.end},
-                                                   collection_expression::kind::vector, std::move(elements));
+    return std::make_unique<collection_expression>(span{prefix_begin.value_or(open.range.begin), close.range.end},
+                                                   type, std::move(elements));
   }
 
-  auto syntax_parser::parse_parenthesized() -> expression_ref
+  auto syntax_parser::parse_parenthesized(const collection_expression::kind type,
+                                          const std::optional<int> prefix_begin) -> expression_ref
   {
-    const token &open = expect(tokens::LPAREN, "'(' to begin a grouped expression or coordinate");
+    const token &open = expect(tokens::LPAREN, "'(' to begin a grouped expression or point");
     if (check(tokens::RPAREN))
     {
       throw parse_error("Empty parentheses are not an expression", peek()->range);
     }
     auto first = parse_nested_expression();
-    if (!match(tokens::COMMA))
+    if (!match(tokens::COMMA) && type == collection_expression::kind::point)
     {
       const token &close = expect(tokens::RPAREN, "')' after the grouped expression");
       return std::make_unique<grouping_expression>(span{open.range.begin, close.range.end}, std::move(first));
@@ -1303,12 +1319,17 @@ namespace parser
         break;
       }
     }
-    const token &close = expect(tokens::RPAREN, "')' after the coordinate elements");
-    if (elements.size() < 2)
+    const token &close = expect(tokens::RPAREN, "')' after the point elements");
+    if (type == collection_expression::kind::spherical_point && elements.size() != 3)
     {
-      throw parse_error("A coordinate literal requires at least two elements", span{open.range.begin, close.range.end});
+      throw parse_error("A spherical point literal requires exactly three elements",
+                        span{prefix_begin.value_or(open.range.begin), close.range.end});
     }
-    return std::make_unique<collection_expression>(span{open.range.begin, close.range.end},
-                                                   collection_expression::kind::coordinate, std::move(elements));
+    if (type == collection_expression::kind::point && elements.size() < 2)
+    {
+      throw parse_error("A point literal requires at least two elements", span{open.range.begin, close.range.end});
+    }
+    return std::make_unique<collection_expression>(span{prefix_begin.value_or(open.range.begin), close.range.end},
+                                                   type, std::move(elements));
   }
 }

@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.59.0](https://img.shields.io/badge/development-0.59.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.60.0](https://img.shields.io/badge/development-0.60.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -27,7 +27,8 @@ enforces lossless numeric widening. It also validates type annotations,
 all-path returns, definite initialization, unreachable code, and executable
 entry points. Sagan can print semantic and type models as
 well as text, DOT, SVG, and interactive HTML syntax trees. Homogeneous arrays
-and dictionaries plus dimensioned vectors and coordinates are inferred. Nominal
+and dictionaries plus dimensioned Cartesian and spherical vectors and points
+are inferred. Nominal
 enums can be selected, compared, matched, interpolated, and printed. Cases may
 carry typed payloads, construct values like `Success(42)`, and bind their
 contents through exhaustive `match` branches. Every case also has a unique
@@ -64,12 +65,24 @@ Integer arithmetic is checked: overflow, division by zero, and modulo by zero
 raise catchable `RuntimeError` values instead of inheriting undefined native
 behavior. Collection bounds and missing dictionary keys use the same nominal
 error model.
-Dimensioned vectors and coordinates execute as distinct runtime values with
-spread construction, indexing, iteration, printing, and interpolation.
+Dimensioned vectors and points execute as distinct runtime values with
+indexing, iteration, printing, and interpolation. Cartesian values use
+`<x, y, z>` vectors and `(x, y, z)` points; exactly three-dimensional spherical
+values use `s<magnitude, inclination, azimuth>` vectors and
+`s(radius, inclination, azimuth)` points, with angles measured in radians.
+The `s` prefix must be adjacent, so `s (...)` remains an ordinary call.
+Cartesian vectors and points also support same-family spread construction.
 Vectors additionally support checked addition, subtraction, negation, scalar
 multiplication/division, equality, and corresponding compound assignments.
-Vectors and coordinates expose dimension-checked `.x`, `.y`, `.z`, and `.w`
+Points are affine locations rather than interchangeable tuples: adding or
+subtracting a vector translates a point, while subtracting two points produces
+their displacement vector. Adding points is a type error.
+Cartesian values expose dimension-checked `.x`, `.y`, `.z`, and `.w`
 components for reading and mutation when that component exists.
+Spherical points expose `.radius`, `.inclination`, and `.azimuth`; spherical
+vectors expose `.magnitude`, `.inclination`, and `.azimuth`. Spherical
+arithmetic and Cartesian conversion are intentionally deferred to the core math
+API so their conventions are explicit rather than silently inferred.
 Typed expression lambdas can be stored, invoked immediately or through a local
 variable, and capture surrounding local state in the executable subset.
 Classes support typed fields, overloaded `new(...)` constructors, default
@@ -135,9 +148,13 @@ The [design philosophy](docs/design/philosophy.md),
 [language reference](docs/reference/index.md) distinguish settled direction
 from provisional and unresolved behavior.
 
-Before the hypercore reaches 1.0, the design will explicitly reevaluate whether
-coordinates should remain a separate type from vectors. Math, rendering, and
-physics library work remains paused until that core semantic decision is made.
+The pre-1.0 geometry review names locations `Point` and keeps them distinct from
+displacement `Vector` values. Cartesian and spherical forms have equally direct
+literal syntax, while reference-frame tracking remains deferred. This prevents
+invalid point arithmetic and prepares transform semantics without adding runtime
+cost. Cartesian/spherical conversion will be the first geometry contract taken
+up with core math after 1.0. Math, rendering, and physics
+library work remains paused until the hypercore and installation work are complete.
 
 The 1.0 readiness roadmap also includes professional installers for Windows,
 macOS, and Linux; interactive install-location, permissions, progress, and
@@ -163,6 +180,7 @@ make parser-demo
 bash scripts/module_demo.sh
 make package-demo
 make run-demo
+make geometry-demo
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 make ownership-demo

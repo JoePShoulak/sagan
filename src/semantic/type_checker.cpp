@@ -3,6 +3,7 @@
 #include "semantic_error.hpp"
 
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <cstdint>
 #include <limits>
@@ -250,8 +251,10 @@ namespace semantic
     auto dimensioned(const std::string_view type) -> std::optional<dimensioned_type>
     {
       std::string family;
-      if (type.starts_with("Vector")) family = "Vector";
-      else if (type.starts_with("Coordinate")) family = "Coordinate";
+      if (type.starts_with("SphericalVector")) family = "SphericalVector";
+      else if (type.starts_with("SphericalPoint")) family = "SphericalPoint";
+      else if (type.starts_with("Vector")) family = "Vector";
+      else if (type.starts_with("Point")) family = "Point";
       else return {};
       const std::size_t digits_begin = family.size();
       const std::size_t angle = type.find('<', digits_begin);
@@ -400,7 +403,8 @@ namespace semantic
                  (effective_float_width == 64 && actual_width <= 32);
         }
         const auto actual_dimensioned = dimensioned(actual);
-        if ((expected == "Vector" || expected == "Coordinate") && actual_dimensioned)
+        if ((expected == "Vector" || expected == "Point" || expected == "SphericalVector" ||
+             expected == "SphericalPoint") && actual_dimensioned)
         {
           return actual_dimensioned->family == expected;
         }
@@ -465,15 +469,21 @@ namespace semantic
 
         if (operation == "+" || operation == "-")
         {
-          require(left_dimensioned && right_dimensioned && left_dimensioned->family == "Vector" &&
-                      right_dimensioned->family == "Vector" &&
+          require(left_dimensioned && right_dimensioned &&
                       left_dimensioned->dimensions == right_dimensioned->dimensions,
-                  "Operator '" + operation + "' requires vectors with equal dimensions, but received " + left +
-                      " and " + right,
-                  range);
-          return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
-                 common_type(left_dimensioned->component, right_dimensioned->component, range,
-                             "Vector components") + ">";
+                  "Operator '" + operation + "' requires dimensioned operands of equal size, but received " +
+                      left + " and " + right, range);
+          const std::string component = common_type(left_dimensioned->component, right_dimensioned->component,
+                                                    range, "Dimensioned components");
+          if (left_dimensioned->family == "Vector" && right_dimensioned->family == "Vector")
+            return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" + component + ">";
+          if (left_dimensioned->family == "Point" && right_dimensioned->family == "Vector")
+            return "Point" + std::to_string(left_dimensioned->dimensions) + "<" + component + ">";
+          if (operation == "-" && left_dimensioned->family == "Point" &&
+              right_dimensioned->family == "Point")
+            return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" + component + ">";
+          require(false, "Operator '" + operation + "' is not defined for " + left + " and " + right, range);
+          return std::string(unknown_type);
         }
 
         if (operation == "*" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
@@ -1351,9 +1361,19 @@ namespace semantic
           {
             require(!member->safe, "Safe member access is not defined for " + shaped->family + " values",
                     value.range);
+            const bool spherical = shaped->family == "SphericalPoint" || shaped->family == "SphericalVector";
+            const std::array<std::string_view, 3> spherical_names =
+                shaped->family == "SphericalPoint"
+                    ? std::array<std::string_view, 3>{"radius", "inclination", "azimuth"}
+                    : std::array<std::string_view, 3>{"magnitude", "inclination", "azimuth"};
             const std::string_view component_names = "xyzw";
-            const std::size_t component = component_names.find(member->member_name);
-            require(member->member_name.size() == 1 && component != std::string_view::npos,
+            const auto spherical_component = std::find(spherical_names.begin(), spherical_names.end(),
+                                                       member->member_name);
+            const std::size_t component = spherical
+                                              ? static_cast<std::size_t>(spherical_component - spherical_names.begin())
+                                              : component_names.find(member->member_name);
+            require((spherical && spherical_component != spherical_names.end()) ||
+                        (!spherical && member->member_name.size() == 1 && component != std::string_view::npos),
                     shaped->family + " has no member '" + member->member_name + "'", value.range);
             require(component < shaped->dimensions,
                     shaped->family + std::to_string(shaped->dimensions) + " has no member '" +
@@ -1452,7 +1472,11 @@ namespace semantic
           }
           const std::string family = collection->collection_kind == parser::collection_expression::kind::vector
                                          ? "Vector"
-                                         : "Coordinate";
+                                     : collection->collection_kind == parser::collection_expression::kind::point
+                                         ? "Point"
+                                     : collection->collection_kind == parser::collection_expression::kind::spherical_vector
+                                         ? "SphericalVector"
+                                         : "SphericalPoint";
           std::optional<std::string> component_type;
           std::size_t dimensions = 0;
           for (const auto &element : collection->elements)
@@ -1461,6 +1485,8 @@ namespace semantic
             std::size_t contribution = 1;
             if (dynamic_cast<const parser::spread_expression *>(element.get()))
             {
+              require(family == "Vector" || family == "Point",
+                      family + " literals do not support spread elements", element->range);
               const auto spread_type = dimensioned(current);
               require(spread_type && spread_type->family == family,
                       family + " spread requires another " + family + ", but received " + current,

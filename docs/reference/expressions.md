@@ -120,17 +120,24 @@ let values = [1, 2, ...additional_values,]
 let metadata = {"name": "Voyager", active_key: true, ...defaults,}
 let direction = <1.0, 0.0, 0.0,>
 let position = (100.0, 200.0, 300.0,)
+let radial_direction = s<2.0, 0.5, 1.0>
+let radial_position = s(100.0, 0.5, 1.0)
 ```
 
 Arrays and dictionaries may be empty. Dictionary keys accept any expression;
-semantic analysis will determine whether a key's type is hashable. Vectors and
-coordinates require at least two elements, so `<>`, `<1>`, and `(1,)` are
-syntax errors. `(value)` remains a grouped expression.
+semantic analysis will determine whether a key's type is hashable. Cartesian
+vectors and points require at least two elements, so `<>`, `<1>`, and `(1,)`
+are syntax errors. `(value)` remains a grouped expression. Spherical vectors
+and points require exactly three components in the order shown. The `s` must be
+adjacent to the delimiter: `s(...)` is a spherical point, while `s (...)` calls
+an ordinary identifier named `s`. Inclination and azimuth are radians.
 
-**Implemented native semantics:** vectors and coordinates retain distinct,
-fixed-size runtime types. Both support construction, same-family spreading,
-zero-based indexing, iteration, equality, printing, and string interpolation.
-Invalid array, vector, or coordinate indices raise
+**Implemented native semantics:** Cartesian and spherical vectors and points
+retain distinct, fixed-size runtime types. All support construction, zero-based
+indexing, iteration, equality, printing, and string interpolation. Cartesian
+vectors and points additionally support same-family spreading. Spherical
+literals reject spreads so their three-component representation stays explicit.
+Invalid array, vector, or point indices raise
 `RuntimeError.index_out_of_bounds`; absent dictionary keys raise
 `RuntimeError.missing_key`.
 Vectors of equal dimension support `+`, `-`, unary `+`/`-`, equality, scalar
@@ -138,9 +145,27 @@ Vectors of equal dimension support `+`, `-`, unary `+`/`-`, equality, scalar
 are also supported. `.x`, `.y`, `.z`, and `.w` read or mutate components when
 the value's dimension contains that component; requesting a component outside
 the dimension is a compile-time error. Component arithmetic retains the scalar
-overflow and zero-divisor checks. Vector-vector multiplication and ordered comparison are
-undefined rather than implicitly meaning dot, cross, component multiplication,
-or lexicographic ordering. Coordinate arithmetic remains future math work.
+overflow and zero-divisor checks. Cartesian points are affine locations: `point +
+vector` and `point - vector` translate a point and produce a point;
+`point - point` produces the displacement vector. Their dimensions
+must agree, and component types widen only when the scalar conversion is
+lossless. `point + point`, `vector + point`, point scaling,
+and point negation are invalid. Vector-vector multiplication and ordered
+comparison are undefined rather than implicitly meaning dot, cross, component
+multiplication, or lexicographic ordering.
+
+There is no implicit or context-free explicit conversion between points and
+vectors: converting a point into a displacement requires an origin, and
+converting a displacement into a point requires applying it to an origin.
+Cartesian/spherical conversion is also explicit and is reserved for the first
+core math geometry API after 1.0; it is not implemented in the hypercore.
+Points and vectors use separate fixed-size wrappers with the same component
+storage cost. Coordinate frames are not yet tracked, so values of the same
+family, dimension, and compatible component type may interact regardless of
+their conceptual frame. Future generic math APIs must state whether they accept
+points, displacement vectors, or both rather than erasing this distinction.
+Spherical values currently support access and storage but no arithmetic; callers
+must not silently mix representations.
 
 Calls and all collection forms permit trailing commas. `...value` creates a
 spread node; later semantic analysis will validate whether its surrounding call

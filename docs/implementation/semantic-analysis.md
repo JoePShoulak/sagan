@@ -20,8 +20,8 @@ Functions form overload groups, while other duplicate names in one scope are
 rejected. Function and lambda parameters, local declarations, loop variables,
 type members, enum members, imports, exports, composition references, and
 `self` participate in the current traversal. Built-in type symbols currently
-include `Bool`, `Coordinate`, `Float`, `Float32`, `Float64`, `Frame`, `Int`,
-`String`, `Vector`, and `Void`.
+include `Bool`, `Float`, `Float32`, `Float64`, `Frame`, `Int`, `Point`,
+`SphericalPoint`, `SphericalVector`, `String`, `Vector`, and `Void`.
 
 Name collection deliberately remains separate from type and control-flow
 checking. Top-level names are collected before bodies are visited, permitting
@@ -48,9 +48,10 @@ valid.
 Array literals infer one losslessly widened element type, dictionary literals
 infer homogeneous key and value types, and indexing returns the stored type.
 Their empty forms are rejected until explicit generic annotations exist.
-Vectors and coordinates require numeric components and carry dimension plus
-component type, such as `Vector3<Float64>`; compatibility requires equal
-dimensions and lossless component widening.
+Vectors and points require numeric components and carry dimension plus component
+type, such as `Vector3<Float64>` or `Point3<Float64>`; compatibility requires
+equal dimensions and lossless component widening. Spherical forms are distinct
+three-dimensional families with radial/angular named components.
 
 Dimensioned `.x`, `.y`, `.z`, and `.w` members resolve to their component type
 when present. Typed expression lambdas retain parameter and result signatures

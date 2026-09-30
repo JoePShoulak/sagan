@@ -110,6 +110,7 @@ make entry-demo
 make module-demo
 make package-demo
 make run-demo
+make geometry-demo
 make optional-demo
 make weak-demo
 make payload-enum-demo
@@ -132,6 +133,7 @@ bash scripts/entry_demo.sh
 bash scripts/module_demo.sh
 bash scripts/package_demo.sh
 bash scripts/run_demo.sh
+bash scripts/geometry_demo.sh
 bash scripts/optional_demo.sh
 bash scripts/weak_demo.sh
 bash scripts/payload_enum_demo.sh
@@ -156,6 +158,9 @@ namespace imports, and verifies export visibility, filename, and cycle diagnosti
 modules, emits C++, compiles it, and runs the resulting native program.
 `run-demo` proves that the compiler driver directly runs a source file and a
 manifest-backed package without an external build script.
+`geometry-demo` executes the affine distinction between points and displacement
+vectors, including translation and point subtraction, then demonstrates native
+`s(...)` spherical points and `s<...>` spherical vectors.
 `optional-demo` prints its Sagan source and generated C++, then executes typed
 optional construction, payload matching, safe access, and lazy fallback chains.
 `weak-demo` shows a live weak reference resolving to `Some`, lets its strong

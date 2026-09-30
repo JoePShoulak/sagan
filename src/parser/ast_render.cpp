@@ -156,9 +156,15 @@ namespace parser
       }
       if (const auto *collection = dynamic_cast<const collection_expression *>(&value))
       {
-        const char *kind = collection->collection_kind == collection_expression::kind::array        ? "Array"
-                           : collection->collection_kind == collection_expression::kind::vector     ? "Vector"
-                                                                                                     : "Coordinate";
+        const char *kind = collection->collection_kind == collection_expression::kind::array
+                               ? "Array"
+                           : collection->collection_kind == collection_expression::kind::vector
+                               ? "Vector"
+                           : collection->collection_kind == collection_expression::kind::point
+                               ? "Point"
+                           : collection->collection_kind == collection_expression::kind::spherical_vector
+                               ? "SphericalVector"
+                               : "SphericalPoint";
         auto result = std::make_unique<visual_node>(
             visual_node{std::string(kind) + "\n" + std::to_string(collection->elements.size()) + " element(s)",
                         "collection"});
