@@ -159,6 +159,14 @@ until Phase 8 implements and tests transport.
 
 ## Phase 6 — formatter and safe source edits
 
+**Status: in progress.** The library now has a conservative, token-preserving
+two-space indentation pass with document/range/on-type APIs, idempotence and
+preview tests. Versioned multi-document edit validation rejects stale,
+overlapping, or invalid UTF boundaries. Identity-based local rename is offered
+only after a successful semantic recheck and reference-rebinding proof. The
+remaining style rules, public/cross-module rename, and other refactorings below
+are not yet available. See [formatting and source edits](formatting-and-edits.md).
+
 - Implement the deterministic lossless formatter with document/range/on-type
   APIs, golden tests, and idempotence tests.
 - Implement versioned workspace edits and proof gates.

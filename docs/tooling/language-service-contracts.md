@@ -218,6 +218,15 @@ lifecycle tests pass.
 
 ## Structured edits and formatting
 
+The first concrete implementation is in `src/language_service/edits.hpp`,
+`formatter.hpp`, and `refactor.hpp`. `preview_edits` validates exact document
+versions, identities, UTF boundaries, and non-overlap, then returns proposed
+text without writing. The current formatter is a strict-parse,
+token-preserving indentation pass, not the completed style formatter described
+below. `rename_local` is the only current refactoring; it rechecks and rebinds
+the proposed source by symbol identity. Other transformations are target
+contracts and must remain disabled until their proof gates exist.
+
 ```cpp
 struct versioned_document_edits {
   document_uri uri;

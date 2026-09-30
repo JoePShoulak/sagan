@@ -30,9 +30,9 @@ contract is not yet implemented; the extension must not reproduce it.
 | Selection ranges | Syntax parent chains with precise ranges | **Typed-expression and recovering syntax expansion available; LSP transport blocked** |
 | Document links | Resolved import/module targets | **Resolved import link query available; LSP transport blocked** |
 | Inlay hints | Resolved types/parameters with suppression rules | **Compiler inferred-type and parameter-name hints available; LSP transport blocked** |
-| Rename | Versioned identity-based safe workspace edits | **Blocked** |
+| Rename | Versioned identity-based safe workspace edits | **Conservative local-binding library rename available; cross-file/public rename and LSP transport blocked** |
 | Quick fixes/code actions | Structured fixes and proven refactoring actions | **Blocked** |
-| Formatting | Lossless deterministic formatter API | **Blocked** |
+| Formatting | Lossless deterministic formatter API | **Conservative indentation-only document/range/on-type library API available; complete style formatter and LSP transport blocked** |
 | Type hierarchy | Type/conformance semantic index | **Compiler query available for indexed conformances; LSP transport blocked** |
 | Call hierarchy | Resolved callable/call-site index | **Compiler query available for resolved calls; LSP transport blocked** |
 | Check/build/run tasks | Structured cancellable operations | **Blocked** |

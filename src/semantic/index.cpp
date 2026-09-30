@@ -218,8 +218,13 @@ namespace semantic
 
   auto semantic_index::symbol_at(const sagan::source::byte_offset offset) const -> const indexed_symbol *
   {
+    const indexed_reference *best_reference = nullptr;
     for (const auto &entry : references_)
-      if (contains(entry.location.bytes, offset)) return find(entry.target);
+      if (contains(entry.location.bytes, offset) &&
+          (!best_reference || entry.location.bytes.end - entry.location.bytes.begin <
+                                  best_reference->location.bytes.end - best_reference->location.bytes.begin))
+        best_reference = &entry;
+    if (best_reference) return find(best_reference->target);
     const indexed_symbol *best = nullptr;
     for (const auto &entry : symbols_)
       if (contains(entry.declaration.bytes, offset) &&

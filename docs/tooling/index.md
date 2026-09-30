@@ -22,10 +22,10 @@ Current tooling includes:
 - an early VS Code syntax-highlighting extension; and
 - MkDocs and Mike for experimental and released versioned documentation.
 
-There is no package registry, formatter, debugger integration, Language Server
-Protocol server, or REPL yet. The reusable language-service foundation exists,
-but position-based queries and editor protocol transport are still future work. The
-[readiness audit](language-service-audit.md), [proposed contracts](language-service-contracts.md),
-[implementation roadmap](language-service-roadmap.md), and
-[extension readiness checklist](extension-readiness.md) define the work needed
-without duplicating compiler logic in an editor extension.
+There is no package registry, complete style formatter, debugger integration,
+Language Server Protocol server, or REPL yet. Read-only compiler-library queries
+are available, and Phase 6 now has a conservative layout formatter and safe edit
+preview. These are not editor protocol features yet. The [readiness audit](language-service-audit.md),
+[contracts](language-service-contracts.md), [implementation roadmap](language-service-roadmap.md),
+[formatting/edit safety guide](formatting-and-edits.md), and
+[extension readiness checklist](extension-readiness.md) track what remains.
