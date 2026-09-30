@@ -83,7 +83,9 @@ namespace sagan::language_service
     output << "{\"schema\":\"" << value.schema << "\",\"documentationCatalog\":\""
            << documentation_schema_version << "\",\"sourceEditsSchema\":\""
            << source_edits_schema_version << "\",\"operationsSchema\":\""
-           << operations_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
+           << operations_schema_version << "\",\"sourceMapSchema\":\""
+           << codegen::source_map_schema_version << "\",\"debugMetadataSchema\":\""
+           << debug_metadata_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
            << "\"capabilities\":{\"strictDocumentCheck\":" << boolean(value.strict_document_check)
            << ",\"structuredDiagnostics\":" << boolean(value.structured_diagnostics)
            << ",\"utf16Positions\":" << boolean(value.utf16_positions)
@@ -91,6 +93,9 @@ namespace sagan::language_service
            << ",\"recovery\":" << boolean(value.recovery)
            << ",\"documentOverlays\":" << boolean(value.document_overlays)
            << ",\"semanticIndex\":" << boolean(value.semantic_index)
+           << ",\"nativeCheck\":true,\"nativeBuild\":true,\"nativeRun\":true"
+           << ",\"sourceMaps\":true,\"debugMetadata\":true,\"debugLaunchPlan\":true"
+           << ",\"debugAttach\":false,\"optimizedLocalEvaluation\":false,\"testDiscovery\":false"
            << ",\"languageServer\":" << boolean(value.language_server) << "}}\n";
     return output.str();
   }

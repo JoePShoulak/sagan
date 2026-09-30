@@ -187,13 +187,17 @@ Phase 6 capabilities.
 
 ## Phase 7 — operations and debugger prerequisites
 
-**Status: in progress.** The first compiler-library operation is a synchronous,
-cancellable document check. It returns source identity/version, structured
-diagnostics, an exit status when completed, and ordered progress/diagnostic
-events through both a result and optional observer. This reuses the existing
-compiler check and does not yet provide an asynchronous handle, build/run
-operations, process streams, generated artifacts, or debugger metadata.
-Run `make operations-demo` to see valid, invalid, and cancelled checks.
+**Status: compiler-library exit reached; debugger and editor transport remain
+separate work.** Versioned document checking and native document/project build
+and run operations return ordered progress, captured stdout/stderr, structured
+diagnostics, exit status, retained artifacts, and cancellation state. Native
+operations support unsaved imported-module overlays and reject results made
+stale by dependency changes. Debug and optimized generated C++ carry source
+maps, linked-module origin paths, candidate breakpoint ranges, generated
+function identities, lexical scopes and lifetimes, local value representation
+metadata, conservative expression-evaluation hooks, and a launch plan. Known
+generated-toolchain and uncaught Sagan runtime errors map back to Sagan source.
+Run `make operations-demo` to see Sagan input and both native results.
 
 - Refactor check/build/run into cancellable structured operations with progress,
   streams, diagnostics, exit states, and generated artifacts.
@@ -202,8 +206,12 @@ Run `make operations-demo` to see valid, invalid, and cancelled checks.
   exception mapping, and expression-evaluation hooks.
 - Add test operations only after an authoritative Sagan test model exists.
 
-**Exit:** generated/toolchain/runtime failures map to Sagan source and debugger
-metadata round-trips in debug and optimized test builds.
+**Exit met:** source/error mapping and debugger metadata round-trip in focused
+debug and optimized builds, including an imported overlay. The operations are
+synchronous library calls with cancellation, not asynchronous job handles or
+LSP task requests. There is no test-discovery model, live debugger, DAP server,
+attach contract, or reliable optimized-local evaluation. Breakpoints are
+candidate source locations; native debugger validation remains future work.
 
 ## Phase 8 — Language Server Protocol transport
 

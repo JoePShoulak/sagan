@@ -41,6 +41,52 @@ namespace codegen
       std::vector<std::string> active_return_types;
       std::vector<std::unordered_set<std::string>> boxed_scopes;
       bool in_method = false;
+      bool map_enabled = false;
+      std::optional<std::filesystem::path> default_source;
+      std::optional<std::filesystem::path> active_source;
+      std::string active_function;
+      std::vector<source_map_entry> mappings;
+
+      struct map_scope
+      {
+        cpp_generator &generator;
+        std::size_t begin;
+        parser::span source;
+        bool breakpoint;
+        std::optional<std::filesystem::path> source_path;
+        std::string function;
+        std::string previous_function;
+
+        map_scope(cpp_generator &owner, const parser::span range, const bool can_break,
+                  std::string function_name = {})
+            : generator(owner), begin(static_cast<std::size_t>(owner.output.tellp())),
+              source(range), breakpoint(can_break), source_path(owner.active_source),
+              function(function_name.empty() ? owner.active_function : std::move(function_name)),
+              previous_function(owner.active_function)
+        {
+          generator.active_function = function;
+        }
+
+        ~map_scope()
+        {
+          const auto end = static_cast<std::size_t>(generator.output.tellp());
+          if (generator.map_enabled && end > begin && source.begin >= 0 && source.end >= source.begin)
+            generator.mappings.push_back({begin, end, source, source_path, function, breakpoint});
+          generator.active_function = previous_function;
+        }
+      };
+
+      auto source_of(const parser::ast_node &node) -> void
+      {
+        active_source = node.origin_path ? node.origin_path : default_source;
+      }
+
+      auto active_source_utf8() const -> std::string
+      {
+        if (!active_source) return {};
+        const auto encoded = active_source->generic_u8string();
+        return {reinterpret_cast<const char *>(encoded.data()), encoded.size()};
+      }
 
       auto open_boxed_scope() -> void { boxed_scopes.emplace_back(); }
       auto close_boxed_scope() -> void { boxed_scopes.pop_back(); }
@@ -97,18 +143,13 @@ namespace codegen
 
       auto fail(const std::string &message, const parser::span range) const -> void
       {
-        throw semantic::semantic_error("C++ backend: " + message, range);
+        throw semantic::semantic_error("C++ backend: " + message, range, active_source);
       }
 
       auto identifier(const std::string &name) const -> std::string
       {
-        if (name == "main") return "main";
-        if (name == "print") return "sagan_print";
         if (name == "self" && in_method) return "(*this)";
-        std::ostringstream encoded;
-        encoded << "sagan_" << std::hex << std::setfill('0');
-        for (const unsigned char byte : name) encoded << std::setw(2) << static_cast<unsigned int>(byte);
-        return encoded.str();
+        return generated_identifier(name);
       }
 
       auto type_name(const std::string &name, const parser::span range,
@@ -864,6 +905,11 @@ namespace codegen
 
       auto statement(const parser::statement &value) -> void
       {
+        map_scope mapped(*this, value.range, true);
+        if (map_enabled)
+          output << indentation() << "sagan_source_scope sagan_site_" << temporary_index++
+                 << '(' << escaped_string(active_source_utf8())
+                 << ", " << value.range.begin << ", " << value.range.end << ");\n";
         output << indentation();
         if (const auto *declaration = dynamic_cast<const parser::let_declaration *>(&value))
         {
@@ -924,10 +970,11 @@ namespace codegen
               block(*else_block);
             else
             {
-              output << "\n";
+              output << (map_enabled ? "{\n" : "\n");
               ++depth;
               statement(*conditional->else_branch);
               --depth;
+              if (map_enabled) output << indentation() << '}';
             }
           }
           output << "\n";
@@ -1120,6 +1167,7 @@ namespace codegen
 
       auto function(const parser::function_declaration &value) -> void
       {
+        map_scope mapped(*this, value.range, false, identifier(value.name));
         const bool entry = value.name == "main";
         const auto previous_type_parameters = active_type_parameters;
         active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
@@ -1151,10 +1199,30 @@ namespace codegen
         }
         active_return_types.push_back(value.return_type.value_or("Void"));
         if (entry) output << indentation() << "sagan_initialize_runtime();\n";
+        if (entry && map_enabled)
+        {
+          output << indentation() << "try {\n";
+          ++depth;
+        }
         if (value.expression_body)
         {
+          map_scope expression_map(*this, value.expression_body->range, true);
+          if (map_enabled)
+            output << indentation() << "sagan_source_scope sagan_site_" << temporary_index++
+                   << '(' << escaped_string(active_source_utf8())
+                   << ", " << value.expression_body->range.begin << ", "
+                   << value.expression_body->range.end << ");\n";
           output << indentation() << "return "
                  << converted_expression(*value.expression_body, active_return_types.back()) << ";\n";
+          if (entry && map_enabled)
+          {
+            --depth;
+            output << indentation() << "} catch (const sagan_exception &error) {\n"
+                   << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t\" << error.site.begin"
+                   << " << '\\t' << error.site.end << '\\t' << error.site.path"
+                   << " << '\\t' << error.what() << '\\n';\n"
+                   << indentation() << "  return 1;\n" << indentation() << "}\n";
+          }
           close_boxed_scope();
           --depth;
           output << "}\n\n";
@@ -1165,6 +1233,15 @@ namespace codegen
         if (!value.body) fail("function has no executable body", value.range);
         for (const auto &entry_statement : value.body->statements) statement(*entry_statement);
         if (entry && value.return_type == "Void") output << indentation() << "return 0;\n";
+        if (entry && map_enabled)
+        {
+          --depth;
+          output << indentation() << "} catch (const sagan_exception &error) {\n"
+                 << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t\" << error.site.begin"
+                 << " << '\\t' << error.site.end << '\\t' << error.site.path"
+                 << " << '\\t' << error.what() << '\\n';\n"
+                 << indentation() << "  return 1;\n" << indentation() << "}\n";
+        }
         close_boxed_scope();
         --depth;
         output << "}\n\n";
@@ -1175,6 +1252,8 @@ namespace codegen
       auto method(const parser::function_declaration &value, const std::string_view class_name = {},
                   const bool virtual_method = false) -> void
       {
+        map_scope mapped(*this, value.range, false,
+                         std::string(class_name) + "::" + identifier(value.name));
         const auto previous_type_parameters = active_type_parameters;
         active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
         if (!value.type_parameters.empty())
@@ -1225,8 +1304,16 @@ namespace codegen
                  << type(parameter.type_name, value.range) << ">(" << identifier(parameter.name) << "_value);\n";
         }
         if (value.expression_body)
+        {
+          map_scope expression_map(*this, value.expression_body->range, true);
+          if (map_enabled)
+            output << indentation() << "sagan_source_scope sagan_site_" << temporary_index++
+                   << '(' << escaped_string(active_source_utf8())
+                   << ", " << value.expression_body->range.begin << ", "
+                   << value.expression_body->range.end << ");\n";
           output << indentation() << "return "
                  << converted_expression(*value.expression_body, active_return_types.back()) << ";\n";
+        }
         else
         {
           for (const auto &entry_statement : value.body->statements) statement(*entry_statement);
@@ -1499,7 +1586,21 @@ namespace codegen
       }
 
     public:
-      explicit cpp_generator(const semantic::type_model &checked_types) : types(checked_types) {}
+      explicit cpp_generator(const semantic::type_model &checked_types,
+                             const bool collect_map = false,
+                             std::optional<std::filesystem::path> source_path = {})
+          : types(checked_types), map_enabled(collect_map), default_source(std::move(source_path)) {}
+
+      auto take_mappings() -> std::vector<source_map_entry>
+      {
+        std::stable_sort(mappings.begin(), mappings.end(), [](const auto &left, const auto &right)
+        {
+          if (left.generated_begin != right.generated_begin)
+            return left.generated_begin < right.generated_begin;
+          return left.generated_end < right.generated_end;
+        });
+        return std::move(mappings);
+      }
 
       auto generate(const parser::program &tree) -> std::string
       {
@@ -1554,14 +1655,27 @@ namespace codegen
                   "  negative_integer_exponent,\n"
                   "  index_out_of_bounds,\n"
                   "  missing_key\n"
-                  "};\n\n"
-                  "struct sagan_exception final : std::exception\n"
+                  "};\n\n";
+        if (map_enabled)
+          output << "struct sagan_source_site { const char *path; int begin; int end; };\n"
+                    "thread_local sagan_source_site sagan_active_site{\"\", -1, -1};\n"
+                    "struct sagan_source_scope\n"
+                    "{\n"
+                    "  sagan_source_site previous;\n"
+                    "  sagan_source_scope(const char *path, int begin, int end)\n"
+                    "      : previous(sagan_active_site) { sagan_active_site = {path, begin, end}; }\n"
+                    "  ~sagan_source_scope() { sagan_active_site = previous; }\n"
+                    "};\n\n";
+        output << "struct sagan_exception final : std::exception\n"
                   "{\n"
                   "  std::any value;\n"
                   "  std::type_index type;\n"
-                  "  std::string message;\n"
-                  "  sagan_exception(std::any thrown, const std::type_index thrown_type, std::string text)\n"
-                  "      : value(std::move(thrown)), type(thrown_type), message(std::move(text)) {}\n"
+                  "  std::string message;\n";
+        if (map_enabled) output << "  sagan_source_site site;\n";
+        output << "  sagan_exception(std::any thrown, const std::type_index thrown_type, std::string text)\n"
+                  "      : value(std::move(thrown)), type(thrown_type), message(std::move(text))";
+        if (map_enabled) output << ", site(sagan_active_site)";
+        output << " {}\n"
                   "  const char *what() const noexcept override { return message.c_str(); }\n"
                   "};\n\n"
                   "template <typename T>\n"
@@ -1997,15 +2111,22 @@ namespace codegen
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
               type && type->type_kind == parser::type_declaration::kind::enum_type)
+          {
+            source_of(*entry);
             enumeration(*type);
+          }
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
               type && type->type_kind == parser::type_declaration::kind::interface_type)
+          {
+            source_of(*entry);
             interface(*type);
+          }
         for (const auto &entry : tree.statements)
         {
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
           {
+            source_of(*entry);
             if (type->type_kind == parser::type_declaration::kind::class_type) object(*type);
           }
         }
@@ -2024,6 +2145,7 @@ namespace codegen
                 dynamic_cast<const parser::const_declaration *>(entry.get())) continue;
             fail("only functions and classes are supported at the top level", entry->range);
           }
+          source_of(*entry);
           function(*declaration);
         }
         for (const auto &entry : tree.statements)
@@ -2039,5 +2161,23 @@ namespace codegen
   auto generate_cpp(const parser::program &tree, const semantic::type_model &types) -> std::string
   {
     return cpp_generator(types).generate(tree);
+  }
+
+  auto generated_identifier(const std::string_view name) -> std::string
+  {
+    if (name == "main") return "main";
+    if (name == "print") return "sagan_print";
+    std::ostringstream encoded;
+    encoded << "sagan_" << std::hex << std::setfill('0');
+    for (const unsigned char byte : name) encoded << std::setw(2) << static_cast<unsigned int>(byte);
+    return encoded.str();
+  }
+
+  auto generate_cpp_mapped(const parser::program &tree, const semantic::type_model &types,
+                          std::optional<std::filesystem::path> default_source) -> generated_cpp
+  {
+    cpp_generator generator(types, true, std::move(default_source));
+    auto text = generator.generate(tree);
+    return {std::move(text), generator.take_mappings()};
   }
 }

@@ -35,9 +35,9 @@ contract is not yet implemented; the extension must not reproduce it.
 | Formatting | Lossless deterministic formatter API | **Strict-parse, token-preserving document/range/on-type library API available; wrapping and incomplete-source formatting unsupported; LSP transport blocked** |
 | Type hierarchy | Type/conformance semantic index | **Compiler query available for indexed conformances; LSP transport blocked** |
 | Call hierarchy | Resolved callable/call-site index | **Compiler query available for resolved calls; LSP transport blocked** |
-| Check/build/run tasks | Structured cancellable operations | **Synchronous versioned document-check library operation available; build/run, asynchronous orchestration, and LSP transport blocked** |
+| Check/build/run tasks | Structured cancellable operations | **Versioned check and native document/project build/run library operations available, with streams, artifacts, cancellation, overlays and stale-result checks; asynchronous orchestration and LSP transport blocked** |
 | Test explorer | Authoritative Sagan test discovery model | **Unavailable by design for now** |
-| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Blocked; DAP is out of scope** |
+| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Source maps, candidate breakpoints, scopes, value metadata and launch plan available; live debugger, attach, optimized-local evaluation and DAP blocked** |
 | Lexical TextMate coloring | Existing extension grammar | **Already available, outside this task** |
 
 The extension may begin consuming a feature only when:

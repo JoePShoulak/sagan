@@ -3,6 +3,7 @@
 #include "span.hpp"
 
 #include <memory>
+#include <filesystem>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -22,6 +23,9 @@ namespace parser
   struct ast_node
   {
     span range;
+    // Set on linked top-level declarations so generation can retain the
+    // original module even though the linked AST has one combined root.
+    std::optional<std::filesystem::path> origin_path;
 
     explicit ast_node(span source_range) : range(source_range) {}
     virtual ~ast_node() = default;

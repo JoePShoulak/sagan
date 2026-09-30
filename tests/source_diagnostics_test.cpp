@@ -105,7 +105,13 @@ auto main() -> int
                       capabilities.contains("\"languageServer\":false") &&
                       capabilities.contains("\"documentationCatalog\":\"sagan-documentation-v1\"") &&
                       capabilities.contains("\"sourceEditsSchema\":\"sagan-source-edits-v1\"") &&
-                      capabilities.contains("\"operationsSchema\":\"sagan-operations-v1\""),
+                      capabilities.contains("\"operationsSchema\":\"sagan-operations-v1\"") &&
+                      capabilities.contains("\"sourceMapSchema\":\"sagan-cpp-source-map-v1\"") &&
+                      capabilities.contains("\"debugMetadataSchema\":\"sagan-debug-metadata-v1\"") &&
+                      capabilities.contains("\"nativeBuild\":true") &&
+                      capabilities.contains("\"nativeRun\":true") &&
+                      capabilities.contains("\"debugAttach\":false") &&
+                      capabilities.contains("\"testDiscovery\":false"),
                   "versioned capability discovery");
   passed &= check(diagnostics::default_code(diagnostics::phase::runtime) == "SAG-RUN-0001" &&
                       diagnostics::state_name(diagnostics::result_state::stale) == "stale" &&

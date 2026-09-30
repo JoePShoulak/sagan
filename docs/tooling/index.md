@@ -19,6 +19,8 @@ Current tooling includes:
 - package/module discovery and a self-contained Windows installer;
 - a reusable compiler library, recovering document analysis, workspace
   overlays, and a compiler-owned semantic index for future editor features;
+- structured check/build/run library operations, generated-code source maps,
+  and debugger metadata for future integrations;
 - an early VS Code syntax-highlighting extension; and
 - MkDocs and Mike for experimental and released versioned documentation.
 

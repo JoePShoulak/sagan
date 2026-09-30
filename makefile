@@ -9,12 +9,16 @@ SAGAN_VERSION := $(shell bash scripts/version.sh current 2>/dev/null || echo 0.0
 
 LIBRARY_SOURCES := \
 	src/codegen/cpp_generator.cpp \
+	src/codegen/source_map.cpp \
 	src/diagnostics/diagnostic.cpp \
 	src/driver/native_runner.cpp \
+	src/driver/process.cpp \
 	src/language_service/documentation.cpp \
+	src/language_service/debug_metadata.cpp \
 	src/language_service/edits.cpp \
 	src/language_service/formatter.cpp \
 	src/language_service/language_service.cpp \
+	src/language_service/native_operations.cpp \
 	src/language_service/operations.cpp \
 	src/language_service/queries.cpp \
 	src/language_service/queries_structure.cpp \
@@ -54,6 +58,9 @@ SEMANTIC_INDEX_TEST := bin/semantic-index-test
 LANGUAGE_QUERIES_TEST := bin/language-queries-test
 LANGUAGE_EDITS_TEST := bin/language-edits-test
 OPERATIONS_TEST := bin/operations-test
+SOURCE_MAP_TEST := bin/source-map-test
+PROCESS_TEST := bin/process-test
+NATIVE_OPERATIONS_TEST := bin/native-operations-test
 CONSTANTS_TEST := bin/constants-test
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
@@ -123,6 +130,18 @@ $(OPERATIONS_TEST): tests/operations_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
+$(SOURCE_MAP_TEST): tests/source_map_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+
+$(PROCESS_TEST): tests/process_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+
+$(NATIVE_OPERATIONS_TEST): tests/native_operations_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+
 $(CONSTANTS_TEST): tests/constants_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
@@ -139,7 +158,7 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(CONSTANTS_TEST)
+test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(CONSTANTS_TEST)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
@@ -150,6 +169,9 @@ test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TE
 	$(LANGUAGE_QUERIES_TEST)
 	$(LANGUAGE_EDITS_TEST)
 	$(OPERATIONS_TEST)
+	$(SOURCE_MAP_TEST)
+	$(PROCESS_TEST)
+	$(NATIVE_OPERATIONS_TEST)
 	$(CONSTANTS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
@@ -185,8 +207,9 @@ editor-tooling-demo: $(TARGET)
 formatter-demo: $(LANGUAGE_EDITS_TEST)
 	$(LANGUAGE_EDITS_TEST)
 
-operations-demo: $(OPERATIONS_TEST)
+operations-demo: $(OPERATIONS_TEST) $(NATIVE_OPERATIONS_TEST)
 	$(OPERATIONS_TEST)
+	$(NATIVE_OPERATIONS_TEST)
 
 ast-demo: $(TARGET)
 	@mkdir -p build

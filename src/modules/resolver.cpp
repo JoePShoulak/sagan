@@ -581,6 +581,7 @@ namespace modules
           if (dynamic_cast<parser::module_declaration *>(entry.get()) ||
               dynamic_cast<parser::import_declaration *>(entry.get()) ||
               dynamic_cast<parser::export_declaration *>(entry.get())) continue;
+          entry->origin_path = module.path;
           combined.push_back(std::move(entry));
         }
       }

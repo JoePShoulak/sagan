@@ -149,6 +149,29 @@ namespace driver
 #endif
   }
 
+  auto configured_compiler() -> native_compiler_configuration
+  {
+    native_compiler_configuration result;
+    result.executable = environment_value("CXX");
+    if (result.executable.empty())
+    {
+#ifdef _WIN32
+      if (const auto bundled = installed_compiler())
+      {
+        result.executable = bundled->string();
+        result.environment.emplace_back("PATH", bundled->parent_path().string() + ";" +
+                                                 environment_value("PATH"));
+      }
+      else
+#endif
+        result.executable = "g++";
+    }
+    result.flags = environment_value("SAGAN_CXXFLAGS").empty()
+                       ? "-std=c++23 -Wall -Wextra -Wpedantic -Werror"
+                       : environment_value("SAGAN_CXXFLAGS");
+    return result;
+  }
+
   auto compile_and_run(const std::string &generated_cpp) -> int
   {
     temporary_directory build;
@@ -169,24 +192,13 @@ namespace driver
     const environment_override tmp("TMP", temporary_path);
     const environment_override temp("TEMP", temporary_path);
 
-    std::string compiler = environment_value("CXX");
+    const auto configuration = configured_compiler();
+    const std::string &compiler = configuration.executable;
     std::optional<environment_override> bundled_path;
-    if (compiler.empty())
-    {
-#ifdef _WIN32
-      if (const auto bundled = installed_compiler())
-      {
-        compiler = bundled->string();
-        const std::string existing_path = environment_value("PATH");
-        bundled_path.emplace("PATH", bundled->parent_path().string() + ";" + existing_path);
-      }
-      else
-#endif
-        compiler = "g++";
-    }
-    const std::string flags = environment_value("SAGAN_CXXFLAGS").empty()
-                                  ? "-std=c++23 -Wall -Wextra -Wpedantic -Werror"
-                                  : environment_value("SAGAN_CXXFLAGS");
+    if (!configuration.environment.empty())
+      bundled_path.emplace(configuration.environment.front().first,
+                           configuration.environment.front().second);
+    const std::string &flags = configuration.flags;
     const bool quote_compiler = compiler.find_first_of(" \\/") != std::string::npos;
     std::string compile_command = (quote_compiler ? shell_quote(compiler) : compiler) + " " + flags + " " +
                                   shell_quote(source.string()) + " -o " + shell_quote(executable.string());
