@@ -16,7 +16,7 @@
         <link rel="prev" href="../reference/memory-model/">
       
       
-        <link rel="next" href="status/">
+        <link rel="next" href="math/">
       
       
         
@@ -1457,6 +1457,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1517,6 +1523,114 @@
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="math/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Math
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="physics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Physics
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
               
             
               
@@ -3325,17 +3439,17 @@ layout, import granularity, and implementations are not finalized.</p>
 <p>Sagan's planned core libraries are math, physics, and rendering. They are
 designed together around shared numerical and geometric types, but they do not
 all have the same inclusion policy.</p>
-<h2 id="math-automatically-available">Math: automatically available</h2>
+<h2 id="math-automatically-available"><a href="math/">Math: automatically available</a></h2>
 <p>Core math is built into the language environment and available without an
 import. It supplies the numerical vocabulary on which Sagan programs and the
 other core libraries rely, including planned vector, matrix, quaternion,
 coordinate, and related operations.</p>
-<h2 id="physics-explicit-core-library">Physics: explicit core library</h2>
+<h2 id="physics-explicit-core-library"><a href="physics/">Physics: explicit core library</a></h2>
 <p>Physics is a first-party core library, tightly coupled to Sagan's math types and
 designed for its simulation use cases. Programs must import it explicitly. This
 keeps the physics runtime and API out of applications that only need math or
 other lightweight language facilities.</p>
-<h2 id="rendering-explicit-core-library">Rendering: explicit core library</h2>
+<h2 id="rendering-explicit-core-library"><a href="rendering/">Rendering: explicit core library</a></h2>
 <p>Rendering follows the same model as physics: first-party, deeply integrated
 with Sagan's shared math and simulation vocabulary, and explicitly imported.
 Programs that do not render should not incur its dependencies or runtime costs.</p>
