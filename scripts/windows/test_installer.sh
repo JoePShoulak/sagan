@@ -19,8 +19,11 @@ MSYS2_ARG_CONV_EXCL='*' "$installer" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /C
 
 # Inspect imports before launching so a regression fails non-interactively
 # instead of presenting a missing-DLL dialog on a CI desktop.
-objdump="${OBJDUMP:-/c/msys64/ucrt64/bin/objdump.exe}"
-if [[ ! -x "$objdump" ]]; then
+objdump="${OBJDUMP:-}"
+if [[ -z "$objdump" ]]; then
+  objdump="$(command -v objdump.exe || command -v objdump || true)"
+fi
+if [[ -z "$objdump" || ! -x "$objdump" ]]; then
   echo "Installer testing requires objdump; set OBJDUMP to its path." >&2
   exit 1
 fi
