@@ -3518,7 +3518,10 @@ reports strict checking, structured diagnostics, UTF-16 positions, and
 cancellation as available. Bounded lexical/syntax recovery, lossless source
 retention, versioned document overlays, overlay-first module resolution,
 dependency invalidation, cached reanalysis, cancellation, and stale-result
-rejection are also available. LSP transport remains unavailable.
+rejection are also available. Strict semantic indexing now supplies opaque
+stable symbol IDs, typed kinds/visibility/origin, document-owned declaration
+ranges, and identity-based per-document references. Cross-module/member
+linking and position-query APIs are not yet complete. LSP transport remains unavailable.
 This document defines the guarantees
 the completed Sagan 1.0 server must satisfy and the capability-discovery shape
 clients may rely on. It is not a claim that blocked capabilities work today.</p>

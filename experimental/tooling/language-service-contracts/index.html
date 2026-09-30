@@ -3779,6 +3779,13 @@ package/module identity, declaration kind, and a stable declaration key; it is
 not a pointer, display name, or source-vector index. Local identities are stable
 for the lifetime of a compatible document snapshot. Cross-snapshot rebinding is
 explicit and may fail after an incompatible edit.</p>
+<p>The implemented foundation serializes identities as <code>sagan-symbol-v1:&lt;hex&gt;</code>
+and exposes typed symbol kind, visibility, origin, declaring scope, document,
+declaration range, and identity-based references. Built-ins use a canonical
+<code>sagan/core</code> identity namespace, so their IDs do not vary by source document.
+Source declaration keys currently incorporate the package/module identity and
+stable lexical-scope path. Cross-module linking and explicit cross-snapshot
+rebinding are the next Phase 4 layers.</p>
 <h2 id="language-queries">Language queries</h2>
 <p><code>language_service</code> accepts a workspace/document snapshot and byte or UTF-16
 position, returning compiler data:</p>

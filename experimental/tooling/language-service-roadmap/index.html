@@ -3741,6 +3741,15 @@ do not change the service contract.</p>
 <p><strong>Exit:</strong> unsaved changes affect importing modules, old analysis cannot publish,
 and overlay/module invalidation tests pass.</p>
 <h2 id="phase-4-semantic-index-and-stable-identities">Phase 4 — semantic index and stable identities</h2>
+<p><strong>Status: foundation implemented; workspace linking remains.</strong> Analyzer output
+now uses typed symbol kinds, visibility, origin, scope ownership, and opaque
+deterministic <code>sagan-symbol-v1</code> identities instead of public string kinds.
+Strict documents can be converted into a versioned, document-owned semantic
+index with identity-based definition/reference lookup, shadowed-local
+separation, overload separation, stable built-in identities, and a focused
+demo/test. Cross-module export linking, receiver/member resolution, typed
+overload/specialization records, face conformance records, documentation
+association, and recovered-tree semantic indexing still gate Phase 4's exit.</p>
 <ul>
 <li>Replace stringly public symbol records with typed symbol, node, scope, type,
   overload, specialization, conformance, visibility, and origin records.</li>
