@@ -1,5 +1,5 @@
 const SPEED_OF_LIGHT = 299_792_458
-const TEST_SPEED: Float64<meter / second> = 9.80665 (meter / second)
+const STANDARD_GRAVITY: Float64<meter / second^2> = 9.80665 (meter / second^2)
 
 class Orbit {
   const STANDARD_RADIUS: Int = 3
@@ -28,7 +28,7 @@ fun main(): Int {
   print("Retries: ${MAX_RETRIES}")
   print("Speed: ${SPEED}")
   print("Radius: ${ORBIT.STANDARD_RADIUS}")
-  print("Typed speed: ${TEST_SPEED}")
+  print("Standard gravity: ${STANDARD_GRAVITY}")
   print(destination)
   print("Alias value: ${PROBE.value}")
   print("Generic retries: ${identity(MAX_RETRIES)}")

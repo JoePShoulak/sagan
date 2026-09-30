@@ -145,10 +145,13 @@ auto main() -> int
   const auto kilometer = unit_registry.resolve("kilometer", unit_range);
   const auto speed = unit_registry.resolve("meter / second", unit_range);
   const auto inverse_area = unit_registry.resolve("meter ^ -2", unit_range);
+  const auto acceleration = unit_registry.resolve("meter / second^2", unit_range);
   const auto grouped = unit_registry.resolve("(meter * meter) / second", unit_range);
   const auto delta_celsius = unit_registry.resolve("Delta<Celsius>", unit_range);
   passed &= check(kilometer.scale.decimal_exponent == 3 && speed.dimension.size() == 2 &&
-                      inverse_area.dimension.at("Length") == -2 && grouped.dimension.at("Length") == 2 &&
+                      inverse_area.dimension.at("Length") == -2 && inverse_area.name == "meter^-2" &&
+                      acceleration.dimension.at("Time") == -2 &&
+                      acceleration.name == "meter / second^2" && grouped.dimension.at("Length") == 2 &&
                       delta_celsius.kind == semantic::units::category::affine_difference &&
                       unit_registry.find("meter") && !unit_registry.find("missing") &&
                       unit_registry.dimension_dimensions("Length") &&

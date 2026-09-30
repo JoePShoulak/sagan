@@ -109,6 +109,7 @@ namespace semantic::units
         const auto count = static_cast<unsigned int>(std::abs(exponent));
         for (unsigned int index = 0; index < count; ++index)
           result = combine(result, value, exponent > 0 ? '*' : '/', registry_);
+        result.name = value.name + '^' + std::to_string(exponent);
         return result;
       }
 
