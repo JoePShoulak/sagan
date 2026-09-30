@@ -11,8 +11,10 @@ LIBRARY_SOURCES := \
 	src/codegen/cpp_generator.cpp \
 	src/diagnostics/diagnostic.cpp \
 	src/driver/native_runner.cpp \
+	src/language_service/documentation.cpp \
 	src/language_service/language_service.cpp \
 	src/language_service/queries.cpp \
+	src/language_service/queries_structure.cpp \
 	src/language_service/workspace.cpp \
 	src/modules/resolver.cpp \
 	src/parser/ast_render.cpp \

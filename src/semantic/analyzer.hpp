@@ -3,6 +3,7 @@
 #include "../parser/ast_node.hpp"
 
 #include <ostream>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -79,6 +80,16 @@ namespace semantic
     parser::span use;
   };
 
+  struct callable_signature
+  {
+    symbol_id callable;
+    std::vector<std::string> parameter_names;
+    std::vector<std::string> parameter_types;
+    std::vector<std::string> generic_names;
+    std::vector<std::optional<std::string>> generic_constraints;
+    std::string result_type;
+  };
+
   struct unresolved_member_reference
   {
     symbol_id receiver;
@@ -101,6 +112,7 @@ namespace semantic
     std::vector<scope> scopes;
     std::vector<resolution> resolutions;
     std::vector<generic_specialization> specializations;
+    std::vector<callable_signature> callable_signatures;
     std::vector<unresolved_member_reference> unresolved_members;
 
     auto print(std::ostream &stream) const -> void;

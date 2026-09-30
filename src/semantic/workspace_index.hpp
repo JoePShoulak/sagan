@@ -31,6 +31,13 @@ namespace semantic
     reference_kind kind;
   };
 
+  struct exported_symbol
+  {
+    std::string module;
+    std::string public_name;
+    std::vector<symbol_id> targets;
+  };
+
   class workspace_semantic_index
   {
     std::vector<indexed_module> modules_;
@@ -52,6 +59,7 @@ namespace semantic
       -> std::vector<sagan::source::source_range>;
     auto exported(const std::string &module, const std::string &public_name) const
       -> std::vector<symbol_id>;
+    auto exported_symbols() const -> std::vector<exported_symbol>;
   };
 
   auto build_workspace_index(const modules::module_graph &graph,

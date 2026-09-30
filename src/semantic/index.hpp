@@ -21,6 +21,7 @@ namespace semantic
     sagan::source::source_range declaration;
     std::size_t scope_id;
     std::vector<std::string> documentation;
+    std::string owner_type;
   };
 
   struct indexed_reference
@@ -36,6 +37,16 @@ namespace semantic
     std::string name;
     std::size_t scope_id;
     std::vector<symbol_id> candidates;
+  };
+
+  struct callable_parameters
+  {
+    symbol_id callable;
+    std::vector<std::string> names;
+    std::vector<std::string> generic_names;
+    std::vector<std::string> types;
+    std::vector<std::optional<std::string>> generic_constraints;
+    std::string result_type;
   };
 
   struct specialization_record
@@ -94,6 +105,7 @@ namespace semantic
     std::vector<indexed_symbol> symbols_;
     std::vector<indexed_reference> references_;
     std::vector<overload_set> overloads_;
+    std::vector<callable_parameters> callable_parameters_;
     std::vector<specialization_record> specializations_;
     std::vector<conformance_record> conformances_;
     std::vector<type_record> types_;
@@ -112,6 +124,7 @@ namespace semantic
     auto symbols() const -> const std::vector<indexed_symbol> &;
     auto references() const -> const std::vector<indexed_reference> &;
     auto overloads() const -> const std::vector<overload_set> &;
+    auto parameters() const -> const std::vector<callable_parameters> &;
     auto specializations() const -> const std::vector<specialization_record> &;
     auto conformances() const -> const std::vector<conformance_record> &;
     auto types() const -> const std::vector<type_record> &;

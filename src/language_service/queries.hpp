@@ -1,6 +1,7 @@
 #pragma once
 
 #include "language_service.hpp"
+#include "documentation.hpp"
 #include "../semantic/workspace_index.hpp"
 #include "../syntax/syntax.hpp"
 
@@ -42,6 +43,9 @@ namespace sagan::language_service
     bool read_only{};
     bool private_access{};
     bool builtin{};
+    bool deprecated{};
+    bool unresolved{};
+    bool generated{};
   };
 
   struct workspace_symbol
@@ -84,13 +88,71 @@ namespace sagan::language_service
     std::vector<source::text_edit> additional_import_edits;
   };
 
+  struct signature_variant
+  {
+    semantic::symbol_id callable;
+    std::string label;
+    std::vector<std::string> parameter_names;
+    std::vector<std::string> parameter_types;
+    std::string result_type;
+    std::vector<std::string> documentation;
+  };
+
   struct signature_information
   {
     source::source_range call;
     std::string label;
     std::vector<std::string> parameter_types;
+    std::vector<std::string> parameter_names;
+    std::vector<std::string> generic_names;
+    std::vector<std::string> documentation;
     std::string result_type;
     std::size_t active_parameter{};
+    std::vector<signature_variant> alternatives;
+    std::size_t active_signature{};
+  };
+
+  struct type_hierarchy_information
+  {
+    symbol_occurrence symbol;
+    std::vector<symbol_occurrence> supertypes;
+    std::vector<symbol_occurrence> subtypes;
+  };
+
+  struct inlay_hint
+  {
+    source::byte_offset position{};
+    std::string label;
+    semantic::symbol_id symbol;
+  };
+
+  struct call_hierarchy_edge
+  {
+    symbol_occurrence caller;
+    symbol_occurrence callee;
+    std::vector<source::source_range> call_sites;
+  };
+
+  struct call_hierarchy_information
+  {
+    symbol_occurrence symbol;
+    std::vector<call_hierarchy_edge> incoming;
+    std::vector<call_hierarchy_edge> outgoing;
+  };
+
+  struct scope_information
+  {
+    std::size_t id{};
+    std::string label;
+    source::source_range range;
+  };
+
+  struct position_context
+  {
+    std::optional<source::source_range> containing_declaration;
+    std::vector<scope_information> scopes;
+    std::optional<source::source_range> expression;
+    std::optional<std::string> expression_type;
   };
 
   // These queries consume one immutable analysis result. A caller must never
@@ -138,6 +200,18 @@ namespace sagan::language_service
     // Innermost-to-outermost, strictly nested source ranges for editor selection expansion.
     auto selection_ranges(source::byte_offset offset) const
       -> diagnostics::analysis_result<std::vector<source::source_range>>;
+    auto type_definitions(source::byte_offset offset) const
+      -> diagnostics::analysis_result<std::vector<source::source_range>>;
+    auto type_hierarchy(source::byte_offset offset) const
+      -> diagnostics::analysis_result<type_hierarchy_information>;
+    auto inlay_hints(source::byte_range range) const
+      -> diagnostics::analysis_result<std::vector<inlay_hint>>;
+    auto call_hierarchy(source::byte_offset offset) const
+      -> diagnostics::analysis_result<call_hierarchy_information>;
+    auto documentation_at(source::byte_offset offset) const
+      -> diagnostics::analysis_result<documentation_entry>;
+    auto context_at(source::byte_offset offset) const
+      -> diagnostics::analysis_result<position_context>;
   };
 
   auto search_workspace_symbols(const semantic::workspace_semantic_index &workspace,

@@ -111,6 +111,23 @@ namespace semantic
     return found == exports_.end() ? std::vector<symbol_id>{} : found->second;
   }
 
+  auto workspace_semantic_index::exported_symbols() const -> std::vector<exported_symbol>
+  {
+    std::vector<exported_symbol> result;
+    for (const auto &[encoded, targets] : exports_)
+    {
+      const auto separator = encoded.find('\n');
+      if (separator == std::string::npos) continue;
+      result.push_back({encoded.substr(0, separator), encoded.substr(separator + 1), targets});
+    }
+    std::sort(result.begin(), result.end(), [](const auto &left, const auto &right)
+    {
+      if (left.public_name != right.public_name) return left.public_name < right.public_name;
+      return left.module < right.module;
+    });
+    return result;
+  }
+
   auto build_workspace_index(const modules::module_graph &graph,
                              const sagan::source::source_provider &source)
     -> workspace_semantic_index

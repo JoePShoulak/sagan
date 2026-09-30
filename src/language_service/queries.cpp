@@ -1,4 +1,5 @@
 #include "queries.hpp"
+#include "../parser/lex.hpp"
 #include "../parser/tokens.hpp"
 #include "../parser/unicode.hpp"
 
@@ -235,11 +236,13 @@ namespace sagan::language_service
     std::vector<document_symbol> symbols;
     for (const auto &symbol : index_.symbols())
     {
-      if (symbol.origin != semantic::symbol_origin::source) continue;
-      if (symbol.kind != semantic::symbol_kind::function && symbol.kind != semantic::symbol_kind::type &&
-          symbol.kind != semantic::symbol_kind::variable && symbol.kind != semantic::symbol_kind::method &&
-          symbol.kind != semantic::symbol_kind::field && symbol.kind != semantic::symbol_kind::constructor &&
-          symbol.kind != semantic::symbol_kind::enum_case) continue;
+      if (symbol.origin == semantic::symbol_origin::builtin ||
+          symbol.origin == semantic::symbol_origin::generated) continue;
+      if (symbol.kind == semantic::symbol_kind::parameter ||
+          symbol.kind == semantic::symbol_kind::type_parameter ||
+          symbol.kind == semantic::symbol_kind::loop_binding ||
+          symbol.kind == semantic::symbol_kind::match_binding ||
+          symbol.kind == semantic::symbol_kind::self_value) continue;
       const auto selection = name_range(document_, tokens_, symbol.declaration, symbol.name, false);
       if (!selection) continue;
       symbols.push_back(document_symbol{symbol_occurrence{symbol.id, symbol.kind, symbol.origin, *selection,
@@ -283,7 +286,11 @@ namespace sagan::language_service
                                                 symbol.kind == semantic::symbol_kind::constant ||
                                                     symbol.kind == semantic::symbol_kind::constant_field,
                                                 symbol.visibility == semantic::symbol_visibility::private_access,
-                                                symbol.origin == semantic::symbol_origin::builtin});
+                                                symbol.origin == semantic::symbol_origin::builtin,
+                                                std::any_of(symbol.documentation.begin(), symbol.documentation.end(),
+                                                            [](const auto &line)
+                                                            { return line.starts_with("@deprecated"); }),
+                                                false, symbol.origin == semantic::symbol_origin::generated});
     };
     for (const auto &symbol : index_.symbols())
       if (symbol.origin == semantic::symbol_origin::source ||
@@ -300,6 +307,20 @@ namespace sagan::language_service
           if (const auto *symbol = workspace_->find(reference.target))
             if (const auto selection = name_range(document_, tokens_, reference.location, symbol->name, true))
               append(*symbol, *selection, false);
+    for (const auto &member : index_.unresolved_members())
+    {
+      if (member.use.begin < 0 || member.use.end < member.use.begin) continue;
+      const source::byte_range use{static_cast<source::byte_offset>(member.use.begin),
+                                   static_cast<source::byte_offset>(member.use.end)};
+      const bool resolved = std::any_of(index_.member_resolutions().begin(),
+                                        index_.member_resolutions().end(), [&](const auto &record)
+                                        { return record.use.bytes == use && !record.candidates.empty(); });
+      if (resolved) continue;
+      if (const auto selection = name_range(document_, tokens_, {document_.identity().id, use},
+                                            member.member, true))
+        values.push_back(semantic_classification{{}, semantic::symbol_kind::field, *selection, false,
+                                                  false, false, false, false, true, false});
+    }
     std::sort(values.begin(), values.end(), [](const auto &left, const auto &right)
     {
       if (left.range.bytes.begin != right.range.bytes.begin)
@@ -418,6 +439,141 @@ namespace sagan::language_service
         break;
       }
     std::vector<completion_item> values;
+    const syntax::lossless_token *previous = nullptr;
+    const syntax::lossless_token *before_previous = nullptr;
+    for (const auto &token : tokens_)
+    {
+      if (token.range.end > replacement.bytes.begin) break;
+      if (token.kind == tokens::NEWLINE) { previous = nullptr; before_previous = nullptr; continue; }
+      before_previous = previous;
+      previous = &token;
+    }
+    if (previous && (previous->kind == tokens::KWD_IMPORT || previous->kind == tokens::KWD_FROM))
+    {
+      if (workspace_)
+        for (const auto &module : workspace_->modules())
+          if (module.name.starts_with(prefix))
+            values.push_back(completion_item{module.name, {"sagan-module-v1:" + module.name},
+                                             semantic::symbol_kind::module, replacement, module.name,
+                                             "module", {}, module.name, module.name, module.name, false, {}});
+      std::sort(values.begin(), values.end(), [](const auto &left, const auto &right)
+      { return left.label < right.label; });
+      return result<std::vector<completion_item>>(document_.version(), diagnostics::result_state::complete,
+                                                  std::move(values));
+    }
+    if (previous && before_previous &&
+        (previous->kind == tokens::DOT || previous->kind == tokens::SAFE_DOT))
+    {
+      const auto receiver = symbol_at(before_previous->range.begin);
+      if (receiver.value && receiver.value->kind == semantic::symbol_kind::imported_namespace && workspace_)
+      {
+        for (const auto &imported : workspace_->imports())
+          if (imported.binding == receiver.value->id && imported.whole_module)
+            for (const auto &module : workspace_->modules())
+              if (module.name == imported.source_module)
+                for (const auto &symbol : module.index.symbols())
+                  if (symbol.origin == semantic::symbol_origin::source && symbol.scope_id == 0 &&
+                      symbol.visibility == semantic::symbol_visibility::public_access &&
+                      symbol.name.starts_with(prefix) &&
+                      !workspace_->exported(module.name, symbol.name).empty())
+                    values.push_back(completion_item{symbol.name, symbol.id, symbol.kind, replacement,
+                                                     symbol.name, std::string(semantic::name(symbol.kind)),
+                                                     symbol.documentation, module.name, symbol.name,
+                                                     symbol.name, false, {}});
+      }
+      else
+      {
+        std::string type_name;
+        if (const auto type = resolved_type(before_previous->range.begin); type.value) type_name = *type.value;
+        if (receiver.value && receiver.value->kind == semantic::symbol_kind::type)
+          type_name = receiver.value->name;
+        type_name = type_name.substr(0, type_name.find_first_of("< (["));
+        const auto inside_owner = [&]()
+        {
+          for (const auto &symbol : index_.symbols())
+            if (symbol.kind == semantic::symbol_kind::type && symbol.name == type_name &&
+                symbol.declaration.bytes.begin <= offset && offset < symbol.declaration.bytes.end)
+              return true;
+          return false;
+        }();
+        std::set<std::string> provided;
+        const auto append_members = [&](const semantic::semantic_index &index, const std::string &module,
+                                        const std::string &owner_name, const bool same_type)
+        {
+          for (const auto &symbol : index.symbols())
+            if (symbol.owner_type == owner_name && symbol.name.starts_with(prefix) &&
+                (symbol.kind == semantic::symbol_kind::field ||
+                 symbol.kind == semantic::symbol_kind::constant_field ||
+                 symbol.kind == semantic::symbol_kind::method ||
+                 symbol.kind == semantic::symbol_kind::enum_case) &&
+                (symbol.visibility == semantic::symbol_visibility::public_access || same_type) &&
+                provided.insert(symbol.name).second)
+              values.push_back(completion_item{symbol.name, symbol.id, symbol.kind, replacement,
+                                               symbol.name, std::string(semantic::name(symbol.kind)),
+                                               symbol.documentation, module, symbol.name, symbol.name, false, {}});
+        };
+        if (!type_name.empty())
+        {
+          struct type_candidate
+          {
+            const semantic::semantic_index *index;
+            const semantic::indexed_symbol *symbol;
+            std::string module;
+          };
+          std::vector<type_candidate> roots;
+          const auto collect_type = [&](const semantic::semantic_index &index, const std::string &module)
+          {
+            for (const auto &symbol : index.symbols())
+              if (symbol.kind == semantic::symbol_kind::type &&
+                  symbol.origin == semantic::symbol_origin::source && symbol.name == type_name)
+                roots.push_back({&index, &symbol, module});
+          };
+          collect_type(index_, "local");
+          if (roots.empty() && workspace_)
+            for (const auto &module : workspace_->modules())
+              if (module.index.document().id != document_.identity().id)
+                collect_type(module.index, module.name);
+          const auto accessible = type_definitions(before_previous->range.begin);
+          if (!accessible.value || accessible.value->size() != 1) roots.clear();
+          else std::erase_if(roots, [&](const auto &candidate)
+          { return candidate.symbol->declaration != accessible.value->front(); });
+          if (roots.size() == 1)
+          {
+            std::vector<type_candidate> pending{roots.front()};
+            std::set<std::string> visited;
+            while (!pending.empty())
+            {
+              const auto current = pending.front();
+              pending.erase(pending.begin());
+              if (!visited.insert(current.symbol->id.value).second) continue;
+              append_members(*current.index, current.module, current.symbol->name,
+                             inside_owner && current.symbol->id == roots.front().symbol->id);
+              for (const auto &edge : current.index->conformances())
+                if (edge.implementer == current.symbol->id)
+                {
+                  const auto enqueue = [&](const semantic::semantic_index &index, const std::string &module)
+                  {
+                    if (const auto *related = index.find(edge.interface))
+                      pending.push_back({&index, related, module});
+                  };
+                  enqueue(index_, "local");
+                  if (workspace_)
+                    for (const auto &module : workspace_->modules()) enqueue(module.index, module.name);
+                }
+            }
+          }
+        }
+      }
+      std::sort(values.begin(), values.end(), [](const auto &left, const auto &right)
+      {
+        if (left.label != right.label) return left.label < right.label;
+        return left.id.value < right.id.value;
+      });
+      values.erase(std::unique(values.begin(), values.end(), [](const auto &left, const auto &right)
+      { return left.id == right.id; }), values.end());
+      return result<std::vector<completion_item>>(document_.version(), diagnostics::result_state::complete,
+                                                  std::move(values));
+    }
     if (!model_ || model_->scopes.empty())
       return result<std::vector<completion_item>>(document_.version(), diagnostics::result_state::incomplete);
     std::size_t innermost = 0;
@@ -465,6 +621,115 @@ namespace sagan::language_service
       if (scope_id == 0) break;
       scope_id = scope.parent;
     }
+    if (workspace_ && tree_)
+    {
+      std::string current_module;
+      source::byte_offset import_offset = 0;
+      for (const auto &statement : tree_->statements)
+        if (const auto *module = dynamic_cast<const parser::module_declaration *>(statement.get()))
+        {
+          current_module = module->name;
+          const auto newline = document_.text().find('\n', static_cast<std::size_t>(module->range.end));
+          import_offset = newline == std::string_view::npos ?
+                              static_cast<source::byte_offset>(document_.text().size()) :
+                              static_cast<source::byte_offset>(newline + 1);
+          break;
+        }
+      for (const auto &exported : workspace_->exported_symbols())
+      {
+        if (exported.module == current_module || exported.targets.empty() ||
+            !exported.public_name.starts_with(prefix) || seen.contains(exported.public_name)) continue;
+        const bool imported = std::any_of(workspace_->imports().begin(), workspace_->imports().end(),
+                                          [&](const auto &link)
+                                          {
+                                            if (!index_.find(link.binding)) return false;
+                                            return std::any_of(exported.targets.begin(), exported.targets.end(),
+                                                               [&](const auto &target)
+                                                               { return std::find(link.targets.begin(),
+                                                                                  link.targets.end(), target) !=
+                                                                        link.targets.end(); });
+                                          });
+        if (imported) continue;
+        const auto *target = workspace_->find(exported.targets.front());
+        if (!target) continue;
+        source::text_edit edit{{document_.identity().id, {import_offset, import_offset}},
+                               "import " + exported.public_name + " from " + exported.module + "\n"};
+        values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
+                                         exported.public_name, std::string(semantic::name(target->kind)),
+                                         target->documentation, exported.module, exported.public_name,
+                                         exported.public_name, false, {std::move(edit)}});
+      }
+    }
+    if (previous && (previous->kind == tokens::KWD_IS || previous->kind == tokens::KWD_HAS))
+      std::erase_if(values, [](const auto &item)
+      {
+        return item.kind != semantic::symbol_kind::type &&
+               item.kind != semantic::symbol_kind::builtin_type &&
+               item.kind != semantic::symbol_kind::type_parameter;
+      });
+    const auto text = document_.text();
+    const auto line_break = replacement.bytes.begin == 0 ? std::string_view::npos :
+                            text.rfind('\n', replacement.bytes.begin - 1);
+    const auto line_begin = line_break == std::string_view::npos ? 0 : line_break + 1;
+    const bool statement_start = std::all_of(text.begin() + static_cast<std::ptrdiff_t>(line_begin),
+                                              text.begin() + static_cast<std::ptrdiff_t>(replacement.bytes.begin),
+                                              [](const char byte) { return byte == ' ' || byte == '\t'; });
+    bool inside_literal_or_comment = false;
+    for (const auto &token : tokens_)
+    {
+      if (token.range.begin <= offset && offset < token.range.end &&
+          (token.kind == tokens::STRING || token.kind == tokens::STRING_SEGMENT))
+        inside_literal_or_comment = true;
+      for (const auto &trivia : token.leading_trivia)
+        if (trivia.range.begin <= offset && offset < trivia.range.end &&
+            trivia.kind != syntax::trivia_kind::whitespace) inside_literal_or_comment = true;
+    }
+    if (statement_start && !inside_literal_or_comment)
+    {
+      bool in_function = false;
+      bool in_loop = false;
+      bool in_type = false;
+      auto context = innermost;
+      while (context < model_->scopes.size())
+      {
+        const auto &scope = model_->scopes[context];
+        in_function |= scope.label.starts_with("function ") || scope.label == "lambda";
+        in_loop |= scope.label == "loop body" || scope.label == "for loop";
+        in_type |= scope.label.starts_with("type ");
+        if (context == 0) break;
+        context = scope.parent;
+      }
+      const auto allowed = [&](const int token)
+      {
+        if (innermost == 0)
+        {
+          if (token == tokens::KWD_MODULE) return tree_ && tree_->statements.empty();
+          return token == tokens::KWD_FUN || token == tokens::KWD_CLASS ||
+                 token == tokens::KWD_FACE || token == tokens::KWD_ENUM ||
+                 token == tokens::KWD_LET || token == tokens::KWD_CONST ||
+                 token == tokens::KWD_IMPORT || token == tokens::KWD_FROM ||
+                 token == tokens::KWD_EXPORT || token == tokens::KWD_DIMENSION ||
+                 token == tokens::KWD_QUANTITY || token == tokens::KWD_UNIT ||
+                 token == tokens::KWD_AFFINE;
+        }
+        if (in_type && !in_function) return token == tokens::KWD_LET || token == tokens::KWD_CONST ||
+                                              token == tokens::KWD_FUN || token == tokens::KWD_NEW;
+        if (in_function)
+          return token == tokens::KWD_LET || token == tokens::KWD_CONST ||
+                 token == tokens::KWD_IF || token == tokens::KWD_MATCH ||
+                 token == tokens::KWD_FOR || token == tokens::KWD_WHILE ||
+                 token == tokens::KWD_UNTIL || token == tokens::KWD_HOPE ||
+                 token == tokens::KWD_SCREAM || token == tokens::KWD_RETURN ||
+                 token == tokens::KWD_FUN ||
+                 (in_loop && (token == tokens::KWD_BREAK || token == tokens::KWD_CONTINUE));
+        return false;
+      };
+      for (const auto &[spelling, token] : language_keywords())
+        if (allowed(token) && spelling.starts_with(prefix) && !seen.contains(spelling))
+          values.push_back(completion_item{spelling, {"sagan-keyword-v1:" + spelling},
+                                           semantic::symbol_kind::builtin_value, replacement, spelling,
+                                           "keyword", {}, "sagan/syntax", spelling, spelling, false, {}});
+    }
     std::sort(values.begin(), values.end(), [](const auto &left, const auto &right)
     {
       if (left.sort_text != right.sort_text) return left.sort_text < right.sort_text;
@@ -479,8 +744,89 @@ namespace sagan::language_service
   {
     if (document_.version() != index_.version() || document_.identity().id != index_.document().id)
       return result<signature_information>(document_.version(), diagnostics::result_state::stale);
-    if (!document_.to_utf16(offset) || !types_)
+    if (!document_.to_utf16(offset))
       return result<signature_information>(document_.version(), diagnostics::result_state::incomplete);
+
+    if (!types_)
+    {
+      std::vector<const syntax::lossless_token *> open_calls;
+      for (const auto &token : tokens_)
+      {
+        if (token.range.begin >= offset) break;
+        if (token.kind == tokens::LPAREN) open_calls.push_back(&token);
+        else if (token.kind == tokens::RPAREN && !open_calls.empty()) open_calls.pop_back();
+      }
+      if (open_calls.empty() || !tree_)
+        return result<signature_information>(document_.version(), diagnostics::result_state::incomplete);
+      const auto *opening = open_calls.back();
+      const syntax::lossless_token *callee = nullptr;
+      const syntax::lossless_token *before_callee = nullptr;
+      for (const auto &token : tokens_)
+      {
+        if (token.range.end > opening->range.begin) break;
+        before_callee = callee;
+        callee = &token;
+      }
+      if (!callee || (callee->kind != tokens::IDENTIFIER && callee->kind != tokens::METHOD_IDENTIFIER) ||
+          (before_callee && before_callee->kind == tokens::KWD_FUN))
+        return result<signature_information>(document_.version(), diagnostics::result_state::incomplete);
+      const parser::function_declaration *declaration = nullptr;
+      std::size_t candidate_count = 0;
+      const auto find_function = [&](const parser::statement &statement)
+      {
+        if (const auto *function = dynamic_cast<const parser::function_declaration *>(&statement);
+            function && function->name == unicode::normalize_nfc(callee->source_text))
+        {
+          declaration = function;
+          ++candidate_count;
+        }
+      };
+      for (const auto &statement : tree_->statements)
+      {
+        find_function(*statement);
+        if (const auto *type = dynamic_cast<const parser::type_declaration *>(statement.get()))
+          for (const auto &member : type->members) find_function(*member);
+      }
+      if (candidate_count != 1)
+        return result<signature_information>(document_.version(), diagnostics::result_state::incomplete);
+      std::vector<std::string> names;
+      std::vector<std::string> types;
+      for (const auto &parameter : declaration->parameters)
+      {
+        names.push_back(parameter.name);
+        types.push_back(parameter.type_name.value_or("Unknown"));
+      }
+      std::size_t active = 0;
+      int depth = 1;
+      int brackets = 0;
+      int braces = 0;
+      for (const auto &token : tokens_)
+      {
+        if (token.range.begin < opening->range.end) continue;
+        if (token.range.begin >= offset) break;
+        if (token.kind == tokens::LPAREN) ++depth;
+        else if (token.kind == tokens::RPAREN) --depth;
+        else if (token.kind == tokens::LBRACKET) ++brackets;
+        else if (token.kind == tokens::RBRACKET) --brackets;
+        else if (token.kind == tokens::LBRACE) ++braces;
+        else if (token.kind == tokens::RBRACE) --braces;
+        else if (token.kind == tokens::COMMA && depth == 1 && brackets == 0 && braces == 0) ++active;
+      }
+      std::string label = declaration->name + "(";
+      for (std::size_t i = 0; i < names.size(); ++i)
+      {
+        if (i) label += ", ";
+        label += names[i] + ": " + types[i];
+      }
+      label += "): " + declaration->return_type.value_or("Void");
+      std::vector<std::string> docs;
+      for (const auto &comment : declaration->documentation) docs.push_back(comment.text);
+      return result<signature_information>(
+          document_.version(), diagnostics::result_state::recovered,
+          signature_information{{document_.identity().id, {callee->range.begin, offset}}, std::move(label),
+                                std::move(types), std::move(names), declaration->type_parameters,
+                                std::move(docs), declaration->return_type.value_or("Void"), active, {}, 0});
+    }
 
     const semantic::resolved_call *selected = nullptr;
     for (const auto &call : types_->calls)
@@ -524,6 +870,93 @@ namespace sagan::language_service
         ++active_parameter;
       if (parentheses <= 0) break;
     }
+    const semantic::indexed_symbol *callable = nullptr;
+    for (const auto &reference : index_.references())
+      if (reference.kind == semantic::reference_kind::call &&
+          reference.location.bytes.begin >= static_cast<source::byte_offset>(selected->range.begin) &&
+          reference.location.bytes.end <= static_cast<source::byte_offset>(selected->callee_end))
+      {
+        callable = index_.find(reference.target);
+        if (workspace_)
+          for (const auto &external : workspace_->external_references())
+            if (external.location == reference.location)
+              if (const auto *resolved = workspace_->find(external.target)) callable = resolved;
+        break;
+      }
+    std::vector<std::string> parameter_names;
+    std::vector<std::string> generic_names;
+    if (callable)
+    {
+      const auto find_parameters = [&](const semantic::semantic_index &index)
+      {
+        for (const auto &record : index.parameters())
+          if (record.callable == callable->id)
+          {
+            parameter_names = record.names;
+            generic_names = record.generic_names;
+            break;
+          }
+      };
+      find_parameters(index_);
+      if (parameter_names.empty() && workspace_)
+        for (const auto &module : workspace_->modules()) find_parameters(module.index);
+    }
+    std::vector<signature_variant> alternatives;
+    const auto append_signature = [&](const semantic::semantic_index &index, const semantic::symbol_id &id)
+    {
+      const auto *symbol = index.find(id);
+      if (!symbol) return;
+      for (const auto &record : index.parameters())
+        if (record.callable == id)
+        {
+          std::string display = symbol->name + "(";
+          for (std::size_t i = 0; i < record.types.size(); ++i)
+          {
+            if (i) display += ", ";
+            if (i < record.names.size()) display += record.names[i] + ": ";
+            display += record.types[i];
+          }
+          display += "): " + record.result_type;
+          alternatives.push_back({id, std::move(display), record.names, record.types,
+                                  record.result_type, symbol->documentation});
+          break;
+        }
+    };
+    if (callable)
+    {
+      const auto collect = [&](const semantic::semantic_index &index)
+      {
+        if (!index.find(callable->id)) return;
+        for (const auto &overload : index.overloads())
+          if (std::find(overload.candidates.begin(), overload.candidates.end(), callable->id) !=
+              overload.candidates.end())
+          {
+            for (const auto &candidate : overload.candidates) append_signature(index, candidate);
+            return;
+          }
+        append_signature(index, callable->id);
+      };
+      collect(index_);
+      if (alternatives.empty() && workspace_)
+        for (const auto &module : workspace_->modules()) collect(module.index);
+    }
+    std::size_t active_signature = 0;
+    const auto canonical = [](const std::string_view type) -> std::string_view
+    {
+      if (type == "Int") return "Int64";
+      if (type == "Float") return "Float64";
+      return type;
+    };
+    for (std::size_t candidate = 0; candidate < alternatives.size(); ++candidate)
+    {
+      if (alternatives[candidate].parameter_types.size() != selected->parameter_types.size()) continue;
+      bool matches = true;
+      for (std::size_t i = 0; i < selected->parameter_types.size(); ++i)
+        matches &= canonical(alternatives[candidate].parameter_types[i]) ==
+                   canonical(selected->parameter_types[i]);
+      if (matches) { active_signature = candidate; break; }
+    }
+    if (!alternatives.empty()) parameter_names = alternatives[active_signature].parameter_names;
     std::string label = std::string(document_.text().substr(
         static_cast<std::size_t>(selected->range.begin),
         static_cast<std::size_t>(selected->callee_end - selected->range.begin)));
@@ -531,6 +964,7 @@ namespace sagan::language_service
     for (std::size_t i = 0; i < selected->parameter_types.size(); ++i)
     {
       if (i > 0) label += ", ";
+      if (i < parameter_names.size()) label += parameter_names[i] + ": ";
       label += selected->parameter_types[i];
     }
     label += "): " + selected->result_type;
@@ -539,8 +973,12 @@ namespace sagan::language_service
         signature_information{{document_.identity().id,
                                {static_cast<source::byte_offset>(selected->range.begin),
                                 static_cast<source::byte_offset>(selected->range.end)}},
-                              std::move(label), selected->parameter_types, selected->result_type,
-                              active_parameter});
+                              std::move(label), selected->parameter_types, std::move(parameter_names),
+                              std::move(generic_names), alternatives.empty() ?
+                                  (callable ? callable->documentation : std::vector<std::string>{}) :
+                                  alternatives[active_signature].documentation,
+                              selected->result_type,
+                              active_parameter, std::move(alternatives), active_signature});
   }
 
   auto document_queries::selection_ranges(const source::byte_offset offset) const
@@ -592,6 +1030,11 @@ namespace sagan::language_service
         if (statement->range.begin >= 0 && statement->range.end >= statement->range.begin)
           add({static_cast<source::byte_offset>(statement->range.begin),
                static_cast<source::byte_offset>(statement->range.end)});
+    if (types_)
+      for (const auto &expression : types_->expressions)
+        if (expression.range.begin >= 0 && expression.range.end >= expression.range.begin)
+          add({static_cast<source::byte_offset>(expression.range.begin),
+               static_cast<source::byte_offset>(expression.range.end)});
     const auto document_end = static_cast<source::byte_offset>(document_.text().size());
     candidates.push_back({0, document_end});
     std::sort(candidates.begin(), candidates.end(), [](const auto left, const auto right)
@@ -623,6 +1066,7 @@ namespace sagan::language_service
       {
         if (symbol.origin != semantic::symbol_origin::source || symbol.name.find(query) == std::string::npos)
           continue;
+        if (symbol.scope_id != 0 && symbol.owner_type.empty()) continue;
         found.push_back(workspace_symbol{symbol.id, symbol.name, symbol.kind, symbol.declaration,
                                           module.name, symbol.visibility});
       }

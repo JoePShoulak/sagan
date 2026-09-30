@@ -1,4 +1,5 @@
 #include "language_service.hpp"
+#include "documentation.hpp"
 
 #include "../parser/lex.hpp"
 #include "../parser/parse_error.hpp"
@@ -55,7 +56,8 @@ namespace sagan::language_service
     const auto value = supported_capabilities();
     const auto boolean = [](const bool enabled) { return enabled ? "true" : "false"; };
     std::ostringstream output;
-    output << "{\"schema\":\"" << value.schema << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
+    output << "{\"schema\":\"" << value.schema << "\",\"documentationCatalog\":\""
+           << documentation_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
            << "\"capabilities\":{\"strictDocumentCheck\":" << boolean(value.strict_document_check)
            << ",\"structuredDiagnostics\":" << boolean(value.structured_diagnostics)
            << ",\"utf16Positions\":" << boolean(value.utf16_positions)

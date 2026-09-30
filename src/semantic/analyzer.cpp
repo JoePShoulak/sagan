@@ -458,6 +458,20 @@ namespace semantic
 
       auto function(const parser::function_declaration &value) -> void
       {
+        for (const auto &declared : model.scopes[current_scope].symbols)
+          if (declared.name == value.name && declared.declaration.begin == value.range.begin &&
+              declared.declaration.end == value.range.end)
+          {
+            callable_signature signature{declared.id, {}, {}, value.type_parameters,
+                                         value.type_constraints, value.return_type.value_or("Void")};
+            for (const auto &parameter : value.parameters)
+            {
+              signature.parameter_names.push_back(parameter.name);
+              signature.parameter_types.push_back(parameter.type_name.value_or("Unknown"));
+            }
+            model.callable_signatures.push_back(std::move(signature));
+            break;
+          }
         const std::size_t parent = open_scope("function " + value.name, value.range);
         for (const auto &parameter : value.type_parameters)
           declare(parameter, symbol_kind::type_parameter, value.range);
@@ -632,14 +646,17 @@ namespace semantic
                                                "Point", "SphericalPoint", "SphericalVector", "Vector", "Void"})
         {
           declare(std::string(builtin), symbol_kind::builtin_type, parser::span{0, 0},
-                  symbol_visibility::public_access, symbol_origin::builtin);
+                  symbol_visibility::public_access, symbol_origin::builtin,
+                  {"Built-in Sagan type."});
         }
         declare("print", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin);
+                symbol_origin::builtin, {"Writes a value followed by a newline.",
+                                         "@param value The value to display.", "@return Void"});
         declare("Some", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin);
+                symbol_origin::builtin, {"Wraps a present value in an Optional.",
+                                         "@param value The present value."});
         declare("None", symbol_kind::builtin_value, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin);
+                symbol_origin::builtin, {"The absent Optional value."});
       }
 
       auto run(const parser::program &tree) -> semantic_model

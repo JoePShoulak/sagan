@@ -120,23 +120,31 @@ the position-based query and presentation APIs built on these records.
 
 ## Phase 5 — read-only language features
 
-**Status: in progress.** A reusable `document_queries` API now resolves exact
-identifier occurrences from recovering syntax tokens and the semantic index.
-Focused tests cover UTF-16 and byte positions, version mismatch, hover source
-documentation, resolved types, local and imported definitions, references,
-highlights, face implementations, hierarchical document symbols, semantic
-classifications, workspace symbol search, block/comment/string folding,
-resolved import links, and lexical-scope completion. Completion is deliberately
-limited to visible lexical declarations and built-ins; member/import context,
-keyword validity, named arguments, and the standard-library catalog remain
-unimplemented. Resolved-call signature information now reports the selected
-argument and compiler-resolved parameter/result types for valid strict source;
-parameter names, overload alternatives, documentation, and incomplete-call
-recovery remain to do. Token/trivia, balanced-delimiter, declaration, and
-document selection ranges are available, though expression-level AST expansion
-remains to do. The API also lacks type definitions and inlay hints. None of
-these library queries are advertised as editor
-capabilities while LSP transport is absent.
+**Status: compiler-library exit reached; protocol transport remains Phase 8.**
+`document_queries` resolves exact identifier occurrences from recovering syntax
+tokens and the semantic index. Its tested read-only surface includes symbol,
+hover, documentation, resolved type, definition/type definition, references,
+highlights, face implementations and type hierarchy, call hierarchy, signature
+help, document/workspace symbols, semantic classifications, folding, selection
+ranges, import links, inlay hints, and position context (scope, containing
+declaration, expression and type). Selection expansion includes typed
+expressions on strict snapshots and a recovering syntax fallback. Signature
+help includes parameter names, selected argument, overload alternatives and
+source documentation, with conservative recovery for an unambiguous incomplete
+local call. Completion derives lexical declarations, inferred receiver members,
+face defaults, namespace exports, importable workspace modules/exports, missing
+import edits, and statement-position keywords from compiler metadata. It
+respects shadowing and known visibility. The versioned documentation model
+reads source and built-in symbol comments, including parameter/return/generic
+tags, examples, deprecation and availability. All answers carry the document
+version and decline stale snapshots; uncertain resolutions return no target.
+
+Limits are intentional: recovering signature help declines ambiguous overloads;
+completion is a conservative candidate list, not a promise that every incomplete
+syntax context has a suggestion; there is no independent installed-package
+registry or standard-library catalog beyond the declarations currently known to
+the compiler. None of these library queries are advertised as LSP capabilities
+until Phase 8 implements and tests transport.
 
 - Implement symbol-at-position, hover, resolved types, definition, type
   definition, implementations, references, highlights, and signature help.

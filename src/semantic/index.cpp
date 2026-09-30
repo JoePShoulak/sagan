@@ -45,9 +45,12 @@ namespace semantic
       for (const auto &entry : scope.symbols)
       {
         symbol_lookup_.insert_or_assign(entry.id.value, symbols_.size());
+        std::string owner_type;
+        if (entry.scope_id < model.scopes.size() && model.scopes[entry.scope_id].label.starts_with("type "))
+          owner_type = model.scopes[entry.scope_id].label.substr(5);
         symbols_.push_back(indexed_symbol{entry.id, entry.name, entry.kind, entry.visibility, entry.origin,
                                           source_range(document_.id, entry.declaration), entry.scope_id,
-                                          entry.documentation});
+                                          entry.documentation, std::move(owner_type)});
       }
     for (const auto &entry : model.resolutions)
       references_.push_back(indexed_reference{entry.target, entry.kind,
@@ -68,6 +71,36 @@ namespace semantic
           overloads_.push_back(overload_set{"sagan-overload-v1:" + candidates.front().value, name,
                                              scope.id, std::move(candidates)});
     }
+    for (const auto &symbol : symbols_)
+      if (symbol.origin == symbol_origin::source &&
+          (symbol.kind == symbol_kind::function || symbol.kind == symbol_kind::method ||
+           symbol.kind == symbol_kind::constructor))
+        for (const auto &scope : model.scopes)
+          if (scope.parent == symbol.scope_id && scope.label == "function " + symbol.name &&
+              scope.range.begin == static_cast<int>(symbol.declaration.bytes.begin) &&
+              scope.range.end == static_cast<int>(symbol.declaration.bytes.end))
+          {
+            callable_parameters parameters{symbol.id, {}, {}, {}, {}, {}};
+            for (const auto &entry : scope.symbols)
+            {
+              if (entry.kind == symbol_kind::parameter) parameters.names.push_back(entry.name);
+              else if (entry.kind == symbol_kind::type_parameter)
+                parameters.generic_names.push_back(entry.name);
+            }
+            callable_parameters_.push_back(std::move(parameters));
+            break;
+          }
+    for (const auto &signature : model.callable_signatures)
+      for (auto &record : callable_parameters_)
+        if (record.callable == signature.callable)
+        {
+          record.names = signature.parameter_names;
+          record.generic_names = signature.generic_names;
+          record.types = signature.parameter_types;
+          record.generic_constraints = signature.generic_constraints;
+          record.result_type = signature.result_type;
+          break;
+        }
     for (const auto &reference : references_)
     {
       if (reference.kind != reference_kind::conformance) continue;
@@ -132,6 +165,10 @@ namespace semantic
   auto semantic_index::symbols() const -> const std::vector<indexed_symbol> & { return symbols_; }
   auto semantic_index::references() const -> const std::vector<indexed_reference> & { return references_; }
   auto semantic_index::overloads() const -> const std::vector<overload_set> & { return overloads_; }
+  auto semantic_index::parameters() const -> const std::vector<callable_parameters> &
+  {
+    return callable_parameters_;
+  }
   auto semantic_index::specializations() const -> const std::vector<specialization_record> &
   {
     return specializations_;

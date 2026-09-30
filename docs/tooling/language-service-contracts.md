@@ -163,33 +163,33 @@ future source-edit concern.
 
 ## Language queries
 
-The first concrete query layer is `src/language_service/queries.hpp`.
+The concrete query layer is `src/language_service/queries.hpp`.
 `document_queries` takes one immutable document snapshot and matching semantic
-index, with an optional workspace index for imports and semantic model for
-lexical completion. It returns structured results for byte or UTF-16 symbol
-selection, definitions, references, document highlights, face implementations,
-resolved type, source hover, hierarchical document symbols, semantic
-classifications, folding regions, and resolved import links. A separate
-workspace query searches indexed declarations. Completion currently offers
-visible lexical symbols and built-ins with a versioned replacement range;
-it does not claim member/context-sensitive or standard-library completion.
-Strict type-checked snapshots also retain resolved call metadata so
-`signature_help` can report parameter/result types and the active argument,
-including nested calls. It does not yet provide parameter names, alternate
-overloads, documentation, or recovery for incomplete calls.
-`selection_ranges` returns strictly nested, innermost-first byte ranges from
-source tokens or trivia through balanced delimiters and top-level declarations
-to the whole document. It works without a type model; expression-level AST
-selection is not yet available. Invalid positions are `incomplete`, and a
+index, with optional workspace, semantic-model, and resolved-type indexes. It
+returns structured byte-range results for symbols, definitions, type
+definitions, references, highlights, implementations, type/call hierarchies,
+resolved type, hover, documentation, signature help, completion, document
+symbols, classifications, folding, selection, import links, inlay hints, and
+position context. Symbol selection also accepts a UTF-16 position. A separate
+workspace query searches indexed declarations. Completion offers lexical
+symbols, built-ins, resolved members, face defaults, workspace exports,
+missing-import edits, module/namespace members and conservative contextual
+keywords. It does not invent external package APIs or blindly offer inaccessible
+members. Strict calls expose parameter/result types, names, documentation,
+overload alternatives and the active argument. A single unambiguous local
+incomplete call can provide recovered signature help; uncertain cases decline.
+`selection_ranges` returns nested, innermost-first byte ranges from tokens or
+trivia through typed expressions where available, balanced delimiters,
+declarations and the document. Invalid positions are `incomplete`, and a
 version mismatch is `stale`.
 A version or document-identity mismatch returns `stale`;
 invalid UTF-16 boundaries return `incomplete`. Its selection ranges come from
 recovering syntax tokens, so names in comments or strings do not masquerade as
 declarations. These library APIs are not yet advertised as LSP features.
 
-The following is a target API sketch, not a list of currently implemented
-methods. Eventually `language_service` will accept a workspace/document
-snapshot and byte or UTF-16 position, returning compiler data:
+The following is a conceptual API sketch. Concrete names and result types are
+in `queries.hpp`; the shared compiler layer returns source data rather than LSP
+objects:
 
 ```cpp
 auto symbol_at(position) -> query_result<symbol>;
@@ -208,12 +208,13 @@ auto folding_ranges(document_id) -> query_result<std::vector<source_range>>;
 auto selection_ranges(positions) -> query_result<std::vector<selection_chain>>;
 ```
 
-The current `completion_item` has symbol kind, label, insertion text, detail,
-documentation, source module, filter/sort text, a deprecation flag, and an
-additional-import-edit field. It does not yet populate contextual keyword,
-member, imported, or standard-library candidates. Those remain targets for a
-later parser-context and compiler-metadata catalog. The server must not
-advertise completion until the required context coverage is implemented.
+`completion_item` carries symbol identity/kind, replacement range, insertion
+text, detail, documentation, source module, filter/sort text, deprecation and
+additional-import edits. Keyword identities are namespaced synthetic IDs.
+Built-in candidates come from compiler declarations; other standard-library
+and external-package candidates require real metadata, not editor-maintained
+lists. The server must not advertise completion until its protocol and
+lifecycle tests pass.
 
 ## Structured edits and formatting
 
@@ -242,11 +243,13 @@ cannot be proven.
 
 ## Documentation catalog
 
-Source and built-in declarations share `documentation_entry`: summary, detail,
-parameters, return value, generic parameters, examples, deprecation,
-availability, declaring module/package, and optional source range. Compiler
-metadata is the sole built-in/standard-library catalog; editors do not carry a
-parallel list. The catalog and its Sagan language version are discoverable.
+Source and built-in declarations share versioned `documentation_entry` metadata:
+summary, detail, parameters, return value, generic parameters, examples,
+deprecation, availability, declaring module, and optional source range. The
+current `sagan-documentation-v1` schema is discoverable through
+`--capabilities-json`. Compiler declarations are the sole built-in catalog;
+there is no separately installed standard-library or package catalog yet.
+Editors must not carry a parallel list.
 
 ## Operations and debugger metadata
 

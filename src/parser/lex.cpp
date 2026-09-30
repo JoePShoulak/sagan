@@ -856,3 +856,8 @@ auto get_token(parser::programText &state) -> std::optional<parser::token>
 
   return {};
 }
+
+auto language_keywords() -> const std::unordered_map<std::string, int> &
+{
+  return keywords;
+}

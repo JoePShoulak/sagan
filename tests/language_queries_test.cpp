@@ -65,10 +65,18 @@ auto main() -> int
           "document highlights lost local symbol occurrences");
   require(query.resolved_type(emoji_use).value.has_value(),
           "resolved type was not available at the call site");
+  const auto position = query.context_at(emoji_use);
+  require(position.value && position.value->containing_declaration &&
+              position.value->scopes.size() >= 2 && position.value->expression_type,
+          "position context omitted its containing declaration, scope, or expression");
   const auto hover = query.hover(emoji_use);
   require(hover.value && hover.value->documentation.size() == 1 &&
               hover.value->documentation.front() == "Launches a value.",
           "source documentation did not reach hover");
+  const auto source_docs = query.documentation_at(emoji_use);
+  require(source_docs.value && source_docs.value->summary == "Launches a value." &&
+              source_docs.value->source.has_value(),
+          "structured source documentation was not attached to the function");
   require(!query.symbol_at(at(text, "return value") + 1).value,
           "keyword should not resolve to a declaration spanning its function body");
   require(!query.symbol_at(at(text, "\"🚀\"") + 1).value,
@@ -120,6 +128,8 @@ auto main() -> int
   const auto rocket_signature = query.signature_help(emoji_use + std::string("🚀(").size());
   require(rocket_signature.value && rocket_signature.value->active_parameter == 0 &&
               rocket_signature.value->parameter_types.size() == 1 &&
+              rocket_signature.value->parameter_names == std::vector<std::string>{"value"} &&
+              rocket_signature.value->documentation == std::vector<std::string>{"Launches a value."} &&
               rocket_signature.value->result_type == "Int64" &&
               rocket_signature.value->label.find("🚀(") == 0,
           "resolved call signature was not available inside its argument list");
@@ -144,18 +154,44 @@ auto main() -> int
           "selection expansion accepted an old semantic index");
 
   const std::string composition =
-      "face Readable { fun read(): Int }\n"
-      "class Probe is Readable { fun read(): Int => 1 }\n";
+      "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
+      "class Probe is Readable { fun read(): Int => 1 }\n"
+      "fun main(): Int {\n  let probe = Probe()\n  return probe.read()\n}\n";
   const source::document_snapshot composed(
       source::document_identity{source::document_id{81}, source::document_uri{"untitled:composition"}, {}},
       1, composition);
   const auto composed_index = language_service::index_document(composed);
   require(composed_index.value.has_value(), "face fixture did not produce an index");
-  const language_service::document_queries composed_query(composed, composed_index.value->index);
+  require(composed_index.value->types.has_value(), "composition fixture did not retain type metadata");
+  const language_service::document_queries composed_query(composed, composed_index.value->index,
+                                                           nullptr, &composed_index.value->model,
+                                                           &*composed_index.value->types);
   const auto implementations = composed_query.implementations(at(composition, "Readable"));
   require(implementations.value && implementations.value->size() == 1 &&
               implementations.value->front().bytes.begin == at(composition, "class Probe"),
           "face implementation did not use the conformance index");
+  const auto probe_type = composed_query.type_definitions(at(composition, "return probe") + 7);
+  require(probe_type.value && probe_type.value->size() == 1 &&
+              probe_type.value->front().bytes.begin == at(composition, "class Probe"),
+          "inferred nominal type did not navigate to its declaration");
+  const auto hierarchy = composed_query.type_hierarchy(at(composition, "Readable"));
+  require(hierarchy.value && hierarchy.value->subtypes.size() == 1 &&
+              hierarchy.value->subtypes.front().name == "Probe",
+          "face hierarchy did not find its implementing class");
+  const auto hints = composed_query.inlay_hints({0, static_cast<source::byte_offset>(composition.size())});
+  require(hints.value && std::any_of(hints.value->begin(), hints.value->end(),
+                                   [](const auto &hint) { return hint.label == ": Probe"; }),
+          "inferred local type did not produce an inlay hint");
+  const auto method_completion = composed_query.completions(at(composition, "probe.read()") + 8);
+  require(method_completion.value && method_completion.value->size() == 1 &&
+              method_completion.value->front().label == "read" &&
+              method_completion.value->front().kind == semantic::symbol_kind::method,
+          "member completion did not use the receiver's inferred type");
+  const auto inherited_completion = composed_query.completions(at(composition, "probe.read()") + 6);
+  require(inherited_completion.value &&
+              std::any_of(inherited_completion.value->begin(), inherited_completion.value->end(),
+                          [](const auto &item) { return item.label == "describe"; }),
+          "member completion omitted a composed face default");
 
   const std::string shadowing =
       "fun main(): Int {\n"
@@ -214,6 +250,109 @@ auto main() -> int
               second_signature.value->active_parameter == 1 &&
               second_signature.value->parameter_types.size() == 2,
           "signature help did not track the second argument of the outer call");
+  const auto incoming_calls = nested_query.call_hierarchy(at(nested_calls, "twice(value"));
+  require(incoming_calls.value && incoming_calls.value->incoming.size() == 1 &&
+              incoming_calls.value->incoming.front().caller.name == "main",
+          "call hierarchy did not find a function caller");
+  const auto outgoing_calls = nested_query.call_hierarchy(at(nested_calls, "main():"));
+  require(outgoing_calls.value && outgoing_calls.value->outgoing.size() == 2,
+          "call hierarchy did not find both nested calls");
+  const auto call_hints = nested_query.inlay_hints({0, static_cast<source::byte_offset>(nested_calls.size())});
+  require(call_hints.value &&
+              std::any_of(call_hints.value->begin(), call_hints.value->end(),
+                          [](const auto &hint) { return hint.label == "value:"; }) &&
+              std::any_of(call_hints.value->begin(), call_hints.value->end(),
+                          [](const auto &hint) { return hint.label == "right:"; }),
+          "resolved calls did not expose parameter-name hints");
+
+  const std::string incomplete_calls =
+      "fun add(left: Int, right: Int): Int => left + right\n"
+      "fun main(): Int {\n  return add(1, ";
+  const source::document_snapshot incomplete_document(
+      source::document_identity{source::document_id{84}, source::document_uri{"untitled:incomplete-call"}, {}},
+      3, incomplete_calls);
+  const auto incomplete_index = language_service::index_document(incomplete_document);
+  require(incomplete_index.value.has_value(), "incomplete call lost recoverable declarations");
+  const language_service::document_queries incomplete_query(incomplete_document,
+                                                              incomplete_index.value->index,
+                                                              nullptr, &incomplete_index.value->model);
+  const auto recovered_signature = incomplete_query.signature_help(
+      static_cast<source::byte_offset>(incomplete_calls.size()));
+  require(recovered_signature.value && recovered_signature.state == diagnostics::result_state::recovered &&
+              recovered_signature.value->active_parameter == 1 &&
+              recovered_signature.value->parameter_names.size() == 2,
+          "signature help did not survive a partially typed call");
+
+  const std::string overloaded_calls =
+      "fun pick(number: Int): Int => number\n"
+      "fun pick(message: String): String => message\n"
+      "fun main(): Int => pick(41)\n";
+  const source::document_snapshot overloaded_document(
+      source::document_identity{source::document_id{85}, source::document_uri{"untitled:overloads"}, {}},
+      1, overloaded_calls);
+  const auto overloaded_index = language_service::index_document(overloaded_document);
+  require(overloaded_index.value && overloaded_index.value->types,
+          "overload fixture lost strict type metadata");
+  const language_service::document_queries overloaded_query(overloaded_document,
+                                                               overloaded_index.value->index,
+                                                               nullptr, &overloaded_index.value->model,
+                                                               &*overloaded_index.value->types);
+  const auto overload_help = overloaded_query.signature_help(at(overloaded_calls, "pick(41)") + 5);
+  require(overload_help.value && overload_help.value->alternatives.size() == 2 &&
+              overload_help.value->parameter_names == std::vector<std::string>{"number"},
+          "signature help did not expose compiler-indexed overload alternatives");
+
+  const std::string documented_source =
+      "/// Summarizes an altitude.\n"
+      "/// Additional detail.\n"
+      "/// @param height measured altitude\n"
+      "/// @return adjusted altitude\n"
+      "/// @example rise(1)\n"
+      "/// @deprecated use climb instead\n"
+      "/// @since 0.77.0\n"
+      "fun rise(height: Int): Int => height + 1\n"
+      "fun main(): Int => rise(2)\n";
+  const source::document_snapshot documented(
+      source::document_identity{source::document_id{88}, source::document_uri{"untitled:documented"}, {}},
+      1, documented_source);
+  const auto documented_index = language_service::index_document(documented);
+  require(documented_index.value.has_value(), "documented fixture did not index");
+  const language_service::document_queries documented_query(documented, documented_index.value->index,
+                                                              nullptr, &documented_index.value->model);
+  const auto documentation = documented_query.documentation_at(at(documented_source, "rise(height"));
+  require(documentation.value && documentation.value->summary == "Summarizes an altitude." &&
+              documentation.value->detail == "Additional detail." &&
+              documentation.value->parameters.size() == 1 &&
+              documentation.value->parameters.front().name == "height" &&
+              documentation.value->returns == "adjusted altitude" &&
+              documentation.value->examples == std::vector<std::string>{"rise(1)"} &&
+              documentation.value->deprecated && documentation.value->availability == "0.77.0",
+          "structured source documentation metadata was not preserved");
+  const auto documented_classes = documented_query.semantic_classifications();
+  require(documented_classes.value &&
+              std::any_of(documented_classes.value->begin(), documented_classes.value->end(),
+                          [&](const auto &entry)
+                          {
+                            return entry.range.bytes.begin == at(documented_source, "rise(2)") &&
+                                   entry.deprecated;
+                          }),
+          "deprecated reference was not classified from compiler documentation");
+
+  const std::string keyword_source = "fun main(): Int {\n  \n  return 0\n}\n";
+  const source::document_snapshot keyword_document(
+      source::document_identity{source::document_id{86}, source::document_uri{"untitled:keywords"}, {}},
+      1, keyword_source);
+  const auto keyword_index = language_service::index_document(keyword_document);
+  require(keyword_index.value.has_value(), "keyword fixture did not index");
+  const language_service::document_queries keyword_query(keyword_document, keyword_index.value->index,
+                                                           nullptr, &keyword_index.value->model);
+  const auto body_keywords = keyword_query.completions(at(keyword_source, "  \n") + 2);
+  require(body_keywords.value &&
+              std::any_of(body_keywords.value->begin(), body_keywords.value->end(),
+                          [](const auto &item) { return item.label == "let"; }) &&
+              std::none_of(body_keywords.value->begin(), body_keywords.value->end(),
+                           [](const auto &item) { return item.label == "class"; }),
+          "keyword completion ignored the function-body context");
 
   const source::disk_source_provider disk;
   const auto graph = modules::resolve("tests/fixtures/modules/module_demo/main.sagan", disk);
@@ -239,5 +378,40 @@ auto main() -> int
   require(links.value && links.value->size() == 2 &&
               links.value->front().target.value.find("guidance.sagan") != std::string::npos,
           "resolved imports did not produce document links");
+  const auto builtin_docs = workspace_query.documentation_at(at(std::string(source.value->text()), "print"));
+  require(builtin_docs.value && builtin_docs.value->summary.starts_with("Writes a value") &&
+              builtin_docs.value->parameters.size() == 1 &&
+              builtin_docs.value->module == "sagan/core",
+          "built-in documentation was not available through the shared catalog");
+  const auto module_completion = workspace_query.completions(at(std::string(source.value->text()),
+                                                              "from guidance") + 6);
+  require(module_completion.value && module_completion.value->size() == 1 &&
+              module_completion.value->front().label == "guidance",
+          "import completion did not use workspace modules");
+  const auto namespace_completion = workspace_query.completions(at(std::string(source.value->text()),
+                                                                 "flight_data.offset()") + 13);
+  require(namespace_completion.value && namespace_completion.value->size() == 1 &&
+              namespace_completion.value->front().label == "offset",
+          "namespace completion did not use exported members");
+  const std::string unimported = "module scratch\n\nfun main(): Int {\n  return 0\n}\n";
+  const source::document_snapshot unimported_document(
+      source::document_identity{source::document_id{87}, source::document_uri{"untitled:unimported"}, {}},
+      1, unimported);
+  const auto unimported_index = language_service::index_document(unimported_document);
+  require(unimported_index.value.has_value(), "unimported fixture did not index");
+  const language_service::document_queries unimported_query(unimported_document,
+                                                              unimported_index.value->index,
+                                                              &workspace_index,
+                                                              &unimported_index.value->model);
+  const auto auto_imports = unimported_query.completions(at(unimported, "return 0"));
+  require(auto_imports.value &&
+              std::any_of(auto_imports.value->begin(), auto_imports.value->end(),
+                          [](const auto &item)
+                          {
+                            return item.label == "course" && item.additional_import_edits.size() == 1 &&
+                                   item.additional_import_edits.front().replacement_utf8 ==
+                                       "import course from guidance\n";
+                          }),
+          "exported workspace completion did not provide a missing-import edit");
   return 0;
 }

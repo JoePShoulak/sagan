@@ -20,9 +20,12 @@ stable symbol IDs, typed kinds/visibility/origin, document-owned declaration
 ranges, overloads, generic specializations, conformances, receiver members,
 canonical types, and identity-based document/workspace references. Selective
 imports and namespace members link to exported identities. The library now has
-tested position queries for symbols, source hover, inferred type, definitions,
-references, highlights, face implementations, and document symbols. Other
-position queries are incomplete, and LSP transport remains unavailable.
+tested read-only queries for symbols, hover, inferred type, definitions and
+type definitions, references, highlights, face implementations, type and call
+hierarchies, signatures, completion, source/builtin documentation,
+document/workspace symbols, classifications, folding and selection ranges,
+import links, inlay hints and position context. These are compiler-library
+capabilities, not LSP server features. LSP transport remains unavailable.
 This document defines the guarantees
 the completed Sagan 1.0 server must satisfy and the capability-discovery shape
 clients may rely on. It is not a claim that blocked capabilities work today.
