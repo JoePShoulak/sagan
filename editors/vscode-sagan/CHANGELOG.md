@@ -5,6 +5,8 @@
 - Add capability-gated, cancellable check/build/run commands and Sagan tasks.
 - Add Test Explorer discovery and selected document test execution using the
   compiler-owned `sagan-tests-v1` contract.
+- Use authoritative project-wide test execution when `testProjectRun` is
+  advertised, including selections spanning multiple documents.
 - Consume recovered-source formatting through the existing LSP providers.
 
 ## 0.3.4

@@ -82,8 +82,9 @@ for continued local extension development:
   serializes requests rather than scheduling concurrent operations.
 - Test Explorer consumes compiler-issued stable IDs, UTF-16 ranges, document
   and project discovery, selected document execution, structured outcomes, and
-  cancellation. Project-wide execution remains disabled until
-  `testProjectRun` is advertised.
+  cancellation. When `testProjectRun` is advertised, selections spanning
+  multiple modules execute as one authoritative project run; older servers
+  retain the document-run fallback.
 - Recovered-source document, range, and on-type formatting uses the existing
   LSP providers when `recoveredFormatting` is advertised; uncertain regions
   receive no speculative edits.
@@ -94,7 +95,6 @@ for continued local extension development:
   source maps and debug metadata alone are not a live debugger.
 - Expand package/module completion after an external package catalog and its
   compatibility rules are finalized.
-- Enable project-wide Test Explorer runs when `testProjectRun` is advertised.
 
 ## Deliberate non-goals
 

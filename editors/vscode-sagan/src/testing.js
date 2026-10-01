@@ -83,20 +83,28 @@ function registerTesting(context, client, output, capabilities) {
         const groups = new Map();
         for (const item of selected) {
           if (request.exclude?.includes(item)) continue;
-          const key = item.uri.toString();
+          const folder = capabilities.testProjectRun
+            ? vscode.workspace.getWorkspaceFolder(item.uri) : undefined;
+          const key = folder ? `project:${folder.uri.toString()}` : `document:${item.uri.toString()}`;
           if (!groups.has(key)) groups.set(key, []);
           groups.get(key).push(item);
           run.enqueued(item);
         }
         try {
-          for (const [uri, items] of groups) {
+          for (const [key, items] of groups) {
             if (token.isCancellationRequested) break;
+            const uri = items[0].uri.toString();
             const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
             items.forEach((item) => run.started(item));
-            const result = await client.sendRequest("sagan/tests/run", {
+            const parameters = {
               textDocument: { uri, version: document.version },
               testIds: items.map((item) => item.id)
-            }, token);
+            };
+            if (key.startsWith("project:")) {
+              parameters.scope = "project";
+              parameters.projectUri = key.slice("project:".length);
+            } else parameters.scope = "document";
+            const result = await client.sendRequest("sagan/tests/run", parameters, token);
             for (const test of result.tests || []) {
               const item = byProtocolId.get(test.id);
               if (!item) continue;

@@ -22,8 +22,9 @@ Use **Sagan: Check**, **Sagan: Build**, or **Sagan: Run** for the active Sagan
 document. The `sagan` task type also provides document and project variants.
 When the server advertises the Sagan test contracts, Test Explorer discovers
 tests by their compiler-issued stable IDs and can run all or selected tests.
-Project test discovery is supported; execution is grouped into authoritative
-document runs until the server advertises project-wide test execution.
+Project test discovery is supported. When the server advertises project-wide
+execution, a selection spanning several modules runs as one cancellable project
+operation; older compatible servers retain document-grouped execution.
 
 Run **Sagan: Show Tooling Status** from the Command Palette to inspect the compiler found for the current workspace. If discovery does not find it, set `sagan.compiler.path` to the compiler executable.
 

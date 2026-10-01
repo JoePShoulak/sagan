@@ -46,6 +46,7 @@ const vscode = {
   workspace: {
     asRelativePath: () => "orbit.sagan",
     findFiles: async () => [uri],
+    getWorkspaceFolder: () => ({ uri: { toString: () => "file:///workspace" } }),
     openTextDocument: async () => document,
     onDidOpenTextDocument: () => ({ dispose: () => {} }),
     onDidSaveTextDocument: () => ({ dispose: () => {} })
@@ -70,13 +71,16 @@ async function main() {
   const { registerTesting } = require("../src/testing");
   const context = { subscriptions: [] };
   registerTesting(context, client, { appendLine: () => {} },
-    { testDocumentDiscovery: true, testDocumentRun: true });
+    { testDocumentDiscovery: true, testDocumentRun: true, testProjectRun: true });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(requests[0][0], "sagan/tests/discover");
   assert.equal(controller.items.size, 1);
   assert.equal(typeof profileHandler, "function");
   await profileHandler({}, { isCancellationRequested: false });
-  assert(requests.some(([method]) => method === "sagan/tests/run"));
+  const runRequest = requests.find(([method]) => method === "sagan/tests/run");
+  assert(runRequest);
+  assert.equal(runRequest[1].scope, "project");
+  assert.equal(runRequest[1].projectUri, "file:///workspace");
   assert(events.some(([kind, id]) => kind === "passed" && id === "local::orbit"));
   console.log("All Sagan Test Explorer client tests passed.");
 }
