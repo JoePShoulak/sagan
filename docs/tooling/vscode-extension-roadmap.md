@@ -14,39 +14,26 @@ advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 
-## Critical priority: dependable F2 rename
+## Dependable F2 rename
 
-Reliable rename is the highest-priority editor capability after the current
-release-validation work. The present implementation is deliberately narrow:
-it supports compiler-proven local bindings, private members, and eligible
-non-entry functions within one document. It refuses exported or overloaded
-functions, public members, imported symbols, entry points, and cross-file
-edits. This safe boundary is preferable to an incorrect edit, but it is not
-sufficient for normal project development.
+F2 rename is available for compiler-proven local bindings, constants,
+parameters, loop and match bindings, private members, non-exported functions,
+exported identity groups, public members of exported types, enum cases,
+imports, aliases, and namespace-qualified references. A function named `main`
+is an ordinary function; executable entry behavior belongs to the selected
+root document rather than that spelling.
 
-Declaration-position selection is now fixed at the compiler query boundary and
-covered for local variables, local constants, parameters, loop bindings, match
-bindings, private fields, private mutating methods, and eligible functions. The
-server also advertises and implements `prepareRename`, so VS Code can select the exact
-identifier and show the compiler-owned reason when a known symbol is ineligible
-before prompting for a name. The live-host suite applies a declaration-based
-rename and verifies that one undo restores the complete document.
-The remaining critical work is expanding the same proof model to the symbol
-kinds and workspace cases below.
+The language server advertises `prepareRename`, returns versioned atomic
+workspace edits, revalidates renamed identity groups, and refuses collisions,
+ambiguous receiver types, stale snapshots, incomplete source, and other cases
+it cannot prove safe. The live Extension Development Host suite covers local
+and declaration-position rename, imported public-member navigation, cross-file
+public-member rename, and one-step undo of both single- and multi-file edits.
 
-The compiler and language server must provide workspace-wide, identity-based
-rename with collision, shadowing, visibility, overload, import/export, and
-rebinding proofs. Requests must be versioned and cancellable, return either one
-complete atomic workspace edit or a specific unsupported reason, and never
-return a partial rename. VS Code should expose `prepareRename` eligibility and
-the compiler-owned refusal reason instead of silently appearing inoperative.
-
-The acceptance matrix must cover declarations and references for local
-variables, parameters, functions, types, classes, faces, members, enum cases,
-modules, imports, aliases, and exports across multiple files. It must also test
-name collisions, shadowing, stale documents, unsaved overlays, Unicode and
-emoji identifiers, mutating names ending in `!`, private names beginning with
-`.`, cancellation, and undo as one workspace operation.
+Remaining rename readiness work is acceptance-matrix expansion rather than a
+missing core provider: add live-host cases for Unicode and emoji identifiers,
+mutating and private names, exports and aliases, collisions, unsaved overlays,
+cancellation, and explicit compiler-owned refusal messages.
 
 ## Extension-owned release work
 

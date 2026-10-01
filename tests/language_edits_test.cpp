@@ -209,8 +209,8 @@ auto main() -> int
               language_service::edit_state::conflict,
           "rename accepted a name already present in scope");
   require(language_service::rename_local(document, indexed.value->index, 4, "launch").state ==
-              language_service::edit_state::unsupported,
-          "rename offered the main entry function");
+              language_service::edit_state::ready,
+          "rename rejected an ordinary function named main");
   const source::document_snapshot function_document(
       {{source::document_id{107}, source::document_uri{"untitled:function-rename"}, {}}, 1,
        "fun double(value: Int): Int => value + value\n"

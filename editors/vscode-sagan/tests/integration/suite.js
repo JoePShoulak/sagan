@@ -166,15 +166,13 @@ async function run() {
                       memberOwner.getText() === memberOwnerBeforeRename || undefined,
     "single-operation cross-file rename undo");
 
-  let entryRenameRefused = false;
-  try {
-    const entryRename = await vscode.commands.executeCommand(
-      "vscode.executeDocumentRenameProvider", document.uri, new vscode.Position(1, 5), "start");
-    entryRenameRefused = entryRename === undefined;
-  } catch (error) {
-    entryRenameRefused = /No result|non-entry functions/.test(String(error));
-  }
-  assert(entryRenameRefused, "entry-point rename should be refused until workspace rename is proven");
+  const mainRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", document.uri, new vscode.Position(1, 5), "start");
+  assert(mainRename instanceof vscode.WorkspaceEdit,
+    "ordinary function named main did not return a rename edit");
+  const mainRenameEdits = mainRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
+  assert(mainRenameEdits.length === 1 && mainRenameEdits[0].newText === "start",
+    "ordinary function named main did not rename its declaration exactly once");
   console.log("Sagan Extension Development Host integration test passed.");
 }
 

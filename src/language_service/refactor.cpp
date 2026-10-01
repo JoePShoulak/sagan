@@ -53,14 +53,14 @@ namespace sagan::language_service
     if (!symbol || symbol->origin != semantic::symbol_origin::source)
       return {edit_state::unsupported, "Only source declarations can be renamed safely", {}};
     const bool local = local_binding(symbol->kind) && symbol->scope_id != 0;
-    const bool function = symbol->kind == semantic::symbol_kind::function && symbol->name != "main";
+    const bool function = symbol->kind == semantic::symbol_kind::function;
     const bool private_member = symbol->visibility == semantic::symbol_visibility::private_access &&
         (symbol->kind == semantic::symbol_kind::field ||
          symbol->kind == semantic::symbol_kind::constant_field ||
          symbol->kind == semantic::symbol_kind::method);
     if (!local && !function && !private_member)
       return {edit_state::unsupported,
-              "Only local bindings, private members, and non-entry functions can be renamed safely", {}};
+              "Only local bindings, private members, and non-exported functions can be renamed safely", {}};
     if (function || symbol->kind == semantic::symbol_kind::method)
     {
       if (std::any_of(index.references().begin(), index.references().end(), [&](const auto &reference)

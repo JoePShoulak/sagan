@@ -10,7 +10,7 @@ namespace sagan::language_service
         {"format.onType", true, "Only closing brace and newline triggers"},
         {"rename.local", true, "Only one proven local symbol and its indexed references"},
         {"rename.privateMember", true, "Only uniquely resolved members confined to one document"},
-        {"rename.function", true, "Only non-exported, non-overloaded, non-entry functions in one document"},
+        {"rename.function", true, "Only non-exported, non-overloaded functions in one document"},
         {"rename.workspace", true,
          "Exported identity groups and exact imported public-member receivers are supported"},
         {"imports.organize", true, "Only one uninterrupted comment-free block"},
