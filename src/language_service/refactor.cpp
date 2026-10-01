@@ -28,12 +28,14 @@ namespace sagan::language_service
             source::document_uri{"untitled:rename-probe"}, {}}, 1,
            "fun probe(): Int {\nlet " + std::string(name) + " = 1\nreturn 0\n}\n"});
       const auto parsed = syntax::analyze(probe, {.recover = false});
-      if (!parsed.value || !parsed.value->strict_ast) return false;
+      if (!parsed.value) return false;
       const auto begin = static_cast<source::byte_offset>(std::string("fun probe(): Int {\nlet ").size());
       return std::any_of(parsed.value->tokens.begin(), parsed.value->tokens.end(),
                          [&](const auto &token)
                          {
-                           return token.kind == tokens::IDENTIFIER && token.range.begin == begin &&
+                           return (token.kind == tokens::IDENTIFIER ||
+                                   token.kind == tokens::METHOD_IDENTIFIER) &&
+                                  token.range.begin == begin &&
                                   token.range.end == begin + name.size() && token.source_text == name;
                          });
     }

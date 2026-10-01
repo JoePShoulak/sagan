@@ -25,7 +25,8 @@ boundary is preferable to an incorrect edit, but it is not sufficient for
 normal project development.
 
 Declaration-position selection is now fixed at the compiler query boundary and
-covered for local variables, parameters, and eligible functions. The server
+covered for local variables, local constants, parameters, loop bindings, match
+bindings, and eligible functions. The server
 also advertises and implements `prepareRename`, so VS Code can select the exact
 identifier and show the compiler-owned reason when a known symbol is ineligible
 before prompting for a name.

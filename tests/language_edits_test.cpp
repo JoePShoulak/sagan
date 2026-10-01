@@ -240,6 +240,62 @@ auto main() -> int
   require(parameter_rename.state == language_service::edit_state::ready &&
               parameter_rename.edits.documents.front().edits.size() == 3,
           "parameter rename failed from the declaration position");
+  const source::document_snapshot loop_document(
+      {{source::document_id{109}, source::document_uri{"untitled:loop-rename"}, {}}, 1,
+       "fun main(): Int {\n"
+       "let indices: Array<Int> = 5.times\n"
+       "for index in indices {\n"
+       "print(index)\n"
+       "}\n"
+       "return 0\n"
+       "}\n"});
+  const auto indexed_loop = language_service::index_document(loop_document);
+  require(indexed_loop.value.has_value(), "loop-binding rename fixture did not index");
+  const auto loop_declaration = static_cast<source::byte_offset>(
+      loop_document.text().find("index in"));
+  const auto loop_rename = language_service::rename_local(
+      loop_document, indexed_loop.value->index, loop_declaration, "item");
+  require(loop_rename.state == language_service::edit_state::ready &&
+              loop_rename.edits.documents.front().edits.size() == 2,
+          "loop-binding rename failed from the declaration position");
+  const source::document_snapshot constant_document(
+      {{source::document_id{110}, source::document_uri{"untitled:constant-rename"}, {}}, 1,
+       "fun answer(): Int {\n"
+       "const OFFSET = 2\n"
+       "return OFFSET + 40\n"
+       "}\n"
+       "fun main(): Int => answer()\n"});
+  const auto indexed_constant = language_service::index_document(constant_document);
+  require(indexed_constant.value.has_value(), "constant rename fixture did not index");
+  const auto constant_declaration = static_cast<source::byte_offset>(
+      constant_document.text().find("OFFSET ="));
+  const auto constant_rename = language_service::rename_local(
+      constant_document, indexed_constant.value->index, constant_declaration, "DISTANCE");
+  require(constant_rename.state == language_service::edit_state::ready &&
+              constant_rename.edits.documents.front().edits.size() == 2,
+          "constant rename failed from the declaration position");
+  const source::document_snapshot match_document(
+      {{source::document_id{111}, source::document_uri{"untitled:match-rename"}, {}}, 1,
+       "enum Result {\n"
+       "Success(Int) = 200\n"
+       "Failure(String) = 500\n"
+       "}\n"
+       "fun unwrap(result: Result): Int {\n"
+       "match result {\n"
+       "case Success(value) return value\n"
+       "case Failure(message) return 0\n"
+       "}\n"
+       "}\n"
+       "fun main(): Int => unwrap(Success(42))\n"});
+  const auto indexed_match = language_service::index_document(match_document);
+  require(indexed_match.value.has_value(), "match-binding rename fixture did not index");
+  const auto match_declaration = static_cast<source::byte_offset>(
+      match_document.text().find("value) return"));
+  const auto match_rename = language_service::rename_local(
+      match_document, indexed_match.value->index, match_declaration, "payload");
+  require(match_rename.state == language_service::edit_state::ready &&
+              match_rename.edits.documents.front().edits.size() == 2,
+          "match-binding rename failed from the declaration position");
   const source::document_snapshot exported_document(
       {{source::document_id{108}, source::document_uri{"untitled:exported-rename"}, {}}, 1,
        "module helper\nfun double(value: Int): Int => value + value\nexport double\n"});
