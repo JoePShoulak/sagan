@@ -134,6 +134,16 @@ async function run() {
     vscode.workspace.workspaceFolders[0].uri, "member_rename", "vehicle.sagan"));
   await vscode.window.showTextDocument(memberMain);
   const memberPosition = new vscode.Position(4, memberMain.lineAt(4).text.indexOf("sample") + 1);
+  const memberDefinitions = await waitFor(
+    () => vscode.commands.executeCommand("vscode.executeDefinitionProvider", memberMain.uri, memberPosition)
+      .then((items) => items && items.length ? items : undefined),
+    "cross-file public-member definition");
+  assert(memberDefinitions.some((location) => location.uri.toString() === memberOwner.uri.toString()),
+    "cross-file public-member definition did not target its declaring module");
+  const memberReferences = await vscode.commands.executeCommand(
+    "vscode.executeReferenceProvider", memberMain.uri, memberPosition);
+  assert(memberReferences && memberReferences.length === 3,
+    "cross-file public-member references did not include the declaration and both calls");
   const memberMainBeforeRename = memberMain.getText();
   const memberOwnerBeforeRename = memberOwner.getText();
   const memberRename = await vscode.commands.executeCommand(
