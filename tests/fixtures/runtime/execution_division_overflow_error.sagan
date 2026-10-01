@@ -2,3 +2,5 @@ fun main(): Int {
   let value: Int8 = -128
   return value / -1
 }
+
+exit(main())

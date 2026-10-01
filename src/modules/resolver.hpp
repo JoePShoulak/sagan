@@ -5,9 +5,11 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "../parser/ast_node.hpp"
+#include "../diagnostics/diagnostic.hpp"
 #include "../source/provider.hpp"
 
 namespace modules
@@ -16,6 +18,13 @@ namespace modules
   {
     console,
     windowed,
+  };
+
+  struct package_dependency
+  {
+    std::string alias;
+    std::string name;
+    std::string requirement;
   };
 
   struct package_manifest
@@ -27,6 +36,14 @@ namespace modules
     std::filesystem::path source_root;
     std::string entry_module;
     application_mode mode{application_mode::console};
+    std::vector<package_dependency> dependencies;
+  };
+
+  struct package_resolution_options
+  {
+    std::filesystem::path index_path;
+    std::string compiler_version;
+    std::filesystem::path lock_path;
   };
 
   auto application_mode_name(application_mode mode) -> std::string_view;
@@ -66,15 +83,33 @@ namespace modules
   };
 
   auto resolve(const std::filesystem::path &entry_path) -> module_graph;
-  auto resolve(const std::filesystem::path &entry_path, const sagan::source::source_provider &source) -> module_graph;
+  auto resolve(const std::filesystem::path &entry_path, const sagan::source::source_provider &source,
+               sagan::diagnostics::cancellation_token cancellation = {}) -> module_graph;
   auto link(const std::filesystem::path &entry_path) -> parser::program;
-  auto link(const std::filesystem::path &entry_path, const sagan::source::source_provider &source) -> parser::program;
+  auto link(const std::filesystem::path &entry_path, const sagan::source::source_provider &source,
+            sagan::diagnostics::cancellation_token cancellation = {}) -> parser::program;
   auto load_package(const std::filesystem::path &package_path) -> package_manifest;
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>;
+  // Lists import spellings from a package's source tree and its locked,
+  // installed dependencies. This does not require the active editor buffer to
+  // parse, so it remains usable while an import statement is incomplete.
+  auto importable_modules(const std::filesystem::path &entry_path,
+                          sagan::diagnostics::cancellation_token cancellation = {},
+                          const package_resolution_options &options = {}) -> std::vector<std::string>;
   auto resolve_package(const std::filesystem::path &package_path) -> module_graph;
   auto resolve_package(const std::filesystem::path &package_path,
-                       const sagan::source::source_provider &source) -> module_graph;
+                       const sagan::source::source_provider &source,
+                       sagan::diagnostics::cancellation_token cancellation = {}) -> module_graph;
+  auto resolve_package(const std::filesystem::path &package_path,
+                       const sagan::source::source_provider &source,
+                       sagan::diagnostics::cancellation_token cancellation,
+                       const package_resolution_options &options) -> module_graph;
   auto link_package(const std::filesystem::path &package_path) -> parser::program;
   auto link_package(const std::filesystem::path &package_path,
-                    const sagan::source::source_provider &source) -> parser::program;
+                    const sagan::source::source_provider &source,
+                    sagan::diagnostics::cancellation_token cancellation = {}) -> parser::program;
+  auto link_package(const std::filesystem::path &package_path,
+                    const sagan::source::source_provider &source,
+                    sagan::diagnostics::cancellation_token cancellation,
+                    const package_resolution_options &options) -> parser::program;
 }

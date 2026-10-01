@@ -15,8 +15,8 @@ structure as text, DOT, SVG, or interactive HTML. AST means *abstract syntax
 tree*: a tree-shaped representation of the program's grammar.
 It can also analyze lexical scopes and print symbols and resolved references.
 The `--types` mode prints the implemented scalar/function type model.
-The `--entry` mode validates whether a fully checked unit has a legal executable
-entry point.
+The `--entry` mode checks the selected root file as an executable program;
+no specially named function is required.
 The `--emit-cpp` mode emits C++ for the executable subset, and `--run-package`
 runs the entry selected by a package manifest.
 

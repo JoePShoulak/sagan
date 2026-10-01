@@ -82,6 +82,11 @@ Expected output:
 --8<-- "docs/examples/executable/hello.stdout"
 ```
 
+The compact [Fibonacci example](executable/fibonacci.sagan) demonstrates
+parallel `let`, simultaneous reassignment, postfix increment, and a brace-free
+one-statement loop. Run it with `sagan docs/examples/executable/fibonacci.sagan`;
+its expected output is `144`.
+
 ## Regression fixtures
 
 `tests/fixtures/` is grouped by compiler responsibility:

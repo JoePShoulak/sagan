@@ -36,9 +36,22 @@ clause. Handlers are tried in source order, unmatched exceptions propagate
 outward, and `finally` runs during both normal and exceptional exits. See
 [Exceptions](exceptions.md).
 
-At the program root, the parser accepts declarations only. Executable control
-flow, expression statements, and assignment statements belong inside function
-bodies. An executable program enters through `fun main()`.
+The selected root file is the executable program. Its declarations and
+executable statements run in source order, so a small program needs no
+`main` function:
+
+```sagan
+let answer = 42
+print(answer)
+```
+
+Root-level mutable bindings are visible to functions in that file. Imported
+modules may contain declarations but not executable top-level statements;
+importing a module never runs an implicit script. Normal completion exits with
+status `0`. Call `exit(code)` to end immediately with a status from `0` to
+`255`; `finally` cleanup runs before the process exits. A final expression is
+neither printed nor used as an exit code.
+`return` remains function-only, and a function named `main` is ordinary.
 
 Compound assignment is statement-only, like ordinary `=` reassignment. Its
 target must be assignable, and the result must convert losslessly back into the
@@ -59,6 +72,19 @@ leaves `a` as `1` and `b` as `1`. Targets must be distinct, mutable variable
 names; fields, indexes, compound operators, and mismatched list lengths are
 not supported in this form. This is reassignment, not a declaration or tuple
 expression.
+
+Parallel `let` declares new mutable names with matching initializers:
+
+```sagan
+let i, a, b = 0, 0, 1
+while i++ <= n  a, b = b, a + b
+```
+
+All initializer expressions run before any new name is introduced. A group
+requires exactly one value per name; individual names may carry type
+annotations. Unannotated integer variables default to `Int64`. The loop shows
+two other independent rules: postfix `i++` yields the old value, and a
+single-statement `while` body can omit braces when it stays on the same line.
 
 `unless` is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.

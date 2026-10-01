@@ -1,0 +1,3 @@
+module main
+fun answer(): Int => 43
+export answer

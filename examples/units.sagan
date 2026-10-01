@@ -42,3 +42,5 @@ fun main(): Int {
   print(orbital_angle)
   return 0
 }
+
+exit(main())

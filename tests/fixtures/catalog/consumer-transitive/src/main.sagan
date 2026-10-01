@@ -1,0 +1,3 @@
+module main
+import parent_answer from parent.main
+print(parent_answer())

@@ -207,10 +207,14 @@ Run `make operations-demo` to see Sagan input and both native results.
 - Add test operations only after an authoritative Sagan test model exists.
 
 **Exit met:** source/error mapping and debugger metadata round-trip in focused
-debug and optimized builds, including an imported overlay. The operations are
-synchronous library calls with cancellation, not asynchronous job handles or
-LSP task requests. There is no test-discovery model, live debugger, DAP server,
-attach contract, or reliable optimized-local evaluation. Breakpoints are
+debug and optimized builds, including an imported overlay. A later increment
+added asynchronous check/build/run job handles and cancellable LSP operation
+requests. Explicit `test "name" { ... }` declarations and versioned
+document/project discovery now exist in both the library and a custom LSP
+request. A later increment added selected document and linked-project test
+execution, including package roots and imported-module overlays. There is
+still no live debugger, DAP server, attach
+contract, or reliable optimized-local evaluation. Breakpoints are
 candidate source locations; native debugger validation remains future work.
 
 ## Phase 8 — Language Server Protocol transport
@@ -220,8 +224,9 @@ the workload/release gate.** `bin/sagan-lsp` speaks JSON-RPC/LSP over stdio,
 uses versioned unsaved overlays and UTF-16 positions, handles workspace
 folders and file notifications, publishes diagnostics, and translates the
 completed compiler queries and safe edit actions. Requests can be cancelled
-with `$/cancelRequest`; protocol stdout contains frames only. The server does
-not implement build/run task requests or DAP. See the
+with `$/cancelRequest`; protocol stdout contains frames only. The server now
+provides custom check/build/run operation, test-discovery, and selected
+document/project test execution requests, but not DAP. See the
 [language-server guide](language-server.md) for the exact advertised surface
 and limitations. `make lsp-demo` shows source, hover, navigation, and an edit
 diagnostic.

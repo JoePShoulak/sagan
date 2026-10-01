@@ -1,0 +1,8 @@
+[package]
+name = "consumer-transitive"
+version = "0.1.0"
+source = "src"
+entry = "main"
+
+[dependencies]
+parent = "^1.0.0"

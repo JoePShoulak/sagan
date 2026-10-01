@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 1.0.1](https://img.shields.io/badge/development-1.0.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 1.6.0](https://img.shields.io/badge/development-1.6.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -26,10 +26,7 @@ function name.
 ```sagan
 fun 🚀(name: String): String => "Hello, ${name}!"
 
-fun main(): Int {
-  print(🚀("universe"))
-  return 0
-}
+print(🚀("universe"))
 ```
 
 Save that as `hello.sagan`, then run:
@@ -95,8 +92,9 @@ missing values. `hope`, `unless`, `finally`, and `scream` handle failures.
 Sagan also supports checked arithmetic, generics, payload enums, collections,
 pattern matching, reference-counted classes, modules, and packages.
 
-Small conveniences stay readable: `5.times` makes `[0, 1, 2, 3, 4]`, and
-`a, b = b, a + b` updates both variables from their old values.
+Small conveniences stay readable: `5.times` makes `[0, 1, 2, 3, 4]`;
+`let i, a, b = 0, 0, 1` declares several variables together; and
+`a, b = b, a + b` updates existing variables from their old values.
 
 ## Install Sagan
 
@@ -120,6 +118,9 @@ source. The experimental `v0.88.0-rc.1` preview and the initial 1.0
 installer are disclosed unsigned exceptions, so Windows may show an
 unknown-publisher warning. Windows ARM64,
 Linux, and macOS remain future targets.
+
+See the [code signing policy](docs/contributing/code-signing-policy.md) for
+the planned trusted publisher and the verification required of future releases.
 
 ## Get started
 

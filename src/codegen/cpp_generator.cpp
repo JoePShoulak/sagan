@@ -8,6 +8,7 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -40,9 +41,11 @@ namespace codegen
       semantic::units::registry unit_registry;
       std::vector<std::string> active_return_types;
       std::vector<std::unordered_set<std::string>> boxed_scopes;
+      std::vector<std::unordered_set<std::string>> unboxed_scopes;
       bool in_method = false;
       bool map_enabled = false;
       std::optional<std::filesystem::path> default_source;
+      std::optional<std::string> selected_test;
       std::optional<std::filesystem::path> active_source;
       std::string active_function;
       std::vector<source_map_entry> mappings;
@@ -88,15 +91,18 @@ namespace codegen
         return {reinterpret_cast<const char *>(encoded.data()), encoded.size()};
       }
 
-      auto open_boxed_scope() -> void { boxed_scopes.emplace_back(); }
-      auto close_boxed_scope() -> void { boxed_scopes.pop_back(); }
+      auto open_boxed_scope() -> void { boxed_scopes.emplace_back(); unboxed_scopes.emplace_back(); }
+      auto close_boxed_scope() -> void { boxed_scopes.pop_back(); unboxed_scopes.pop_back(); }
       auto box(const std::string &name) -> void { boxed_scopes.back().insert(name); }
+      auto unbox(const std::string &name) -> void { unboxed_scopes.back().insert(name); }
       auto boxed(const std::string &name) const -> bool
       {
-        return std::any_of(boxed_scopes.rbegin(), boxed_scopes.rend(), [&](const auto &scope)
+        for (std::size_t index = boxed_scopes.size(); index > 0; --index)
         {
-          return scope.contains(name);
-        });
+          if (boxed_scopes[index - 1].contains(name)) return true;
+          if (unboxed_scopes[index - 1].contains(name)) return false;
+        }
+        return false;
       }
 
       auto function_components(const std::string_view name) const
@@ -328,14 +334,18 @@ namespace codegen
         return expression_type(value);
       }
 
-      auto declaration_type(const parser::let_declaration &value) const -> std::string
+      auto declaration_type(const parser::span range, const std::string &name) const -> std::string
       {
         for (auto entry = types.declarations.rbegin(); entry != types.declarations.rend(); ++entry)
-          if (entry->range.begin == value.range.begin && entry->range.end == value.range.end &&
-              entry->name == value.name)
+          if (entry->range.begin == range.begin && entry->range.end == range.end && entry->name == name)
             return entry->type;
-        fail("missing checked type for declaration '" + value.name + "'", value.range);
+        fail("missing checked type for declaration '" + name + "'", range);
         return {};
+      }
+
+      auto declaration_type(const parser::let_declaration &value) const -> std::string
+      {
+        return declaration_type(value.range, value.name);
       }
 
       auto weak_member(const parser::member_expression &value) const -> bool
@@ -497,7 +507,7 @@ namespace codegen
         {
           if (name->name == "None") return "std::nullopt";
           const std::string generated = generic_identifier(name->name, value.range);
-          return boxed(name->name) ? "(*" + generated + ")" : generated;
+          return boxed(name->name) ? "sagan_box_value(" + generated + ")" : generated;
         }
         if (const auto *literal = dynamic_cast<const parser::literal_expression *>(&value))
         {
@@ -931,6 +941,7 @@ namespace codegen
           }
           if (dynamic_cast<const parser::const_declaration *>(declaration))
           {
+            unbox(declaration->name);
             output << "const " << type_name(checked_type, declaration->range) << ' '
                    << identifier(declaration->name) << " = " << initializer << ";\n";
           }
@@ -941,6 +952,28 @@ namespace codegen
                    << type_name(checked_type, declaration->range) << ">(";
             if (!initializer.empty()) output << initializer;
             output << ");\n";
+          }
+        }
+        else if (const auto *declaration = dynamic_cast<const parser::parallel_let_declaration *>(&value))
+        {
+          std::vector<std::string> snapshots;
+          for (std::size_t index = 0; index < declaration->bindings.size(); ++index)
+          {
+            const auto &entry = declaration->bindings[index];
+            const std::string snapshot = "sagan_parallel_let_" + std::to_string(temporary_index++);
+            if (index != 0) output << indentation();
+            output << "auto " << snapshot << " = "
+                   << converted_expression(*entry.initializer, declaration_type(entry.name_range, entry.name))
+                   << ";\n";
+            snapshots.push_back(snapshot);
+          }
+          for (std::size_t index = 0; index < declaration->bindings.size(); ++index)
+          {
+            const auto &entry = declaration->bindings[index];
+            const std::string checked_type = declaration_type(entry.name_range, entry.name);
+            box(entry.name);
+            output << indentation() << "auto " << identifier(entry.name) << " = std::make_shared<"
+                   << type_name(checked_type, entry.name_range) << ">(" << snapshots[index] << ");\n";
           }
         }
         else if (const auto *expression_value = dynamic_cast<const parser::expression_statement *>(&value))
@@ -1193,7 +1226,6 @@ namespace codegen
       auto function(const parser::function_declaration &value) -> void
       {
         map_scope mapped(*this, value.range, false, identifier(value.name));
-        const bool entry = value.name == "main";
         const auto previous_type_parameters = active_type_parameters;
         active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
         if (!value.type_parameters.empty())
@@ -1206,7 +1238,7 @@ namespace codegen
           }
           output << ">\n";
         }
-        output << type(value.return_type, value.range, entry) << ' ' << identifier(value.name) << '(';
+        output << type(value.return_type, value.range) << ' ' << identifier(value.name) << '(';
         for (std::size_t index = 0; index < value.parameters.size(); ++index)
         {
           if (index != 0) output << ", ";
@@ -1223,12 +1255,6 @@ namespace codegen
                  << type(parameter.type_name, value.range) << ">(" << identifier(parameter.name) << "_value);\n";
         }
         active_return_types.push_back(value.return_type.value_or("Void"));
-        if (entry) output << indentation() << "sagan_initialize_runtime();\n";
-        if (entry && map_enabled)
-        {
-          output << indentation() << "try {\n";
-          ++depth;
-        }
         if (value.expression_body)
         {
           map_scope expression_map(*this, value.expression_body->range, true);
@@ -1239,15 +1265,6 @@ namespace codegen
                    << value.expression_body->range.end << ");\n";
           output << indentation() << "return "
                  << converted_expression(*value.expression_body, active_return_types.back()) << ";\n";
-          if (entry && map_enabled)
-          {
-            --depth;
-            output << indentation() << "} catch (const sagan_exception &error) {\n"
-                   << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t\" << error.site.begin"
-                   << " << '\\t' << error.site.end << '\\t' << error.site.path"
-                   << " << '\\t' << error.what() << '\\n';\n"
-                   << indentation() << "  return 1;\n" << indentation() << "}\n";
-          }
           close_boxed_scope();
           --depth;
           output << "}\n\n";
@@ -1257,16 +1274,6 @@ namespace codegen
         }
         if (!value.body) fail("function has no executable body", value.range);
         for (const auto &entry_statement : value.body->statements) statement(*entry_statement);
-        if (entry && value.return_type == "Void") output << indentation() << "return 0;\n";
-        if (entry && map_enabled)
-        {
-          --depth;
-          output << indentation() << "} catch (const sagan_exception &error) {\n"
-                 << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t\" << error.site.begin"
-                 << " << '\\t' << error.site.end << '\\t' << error.site.path"
-                 << " << '\\t' << error.what() << '\\n';\n"
-                 << indentation() << "  return 1;\n" << indentation() << "}\n";
-        }
         close_boxed_scope();
         --depth;
         output << "}\n\n";
@@ -1613,8 +1620,10 @@ namespace codegen
     public:
       explicit cpp_generator(const semantic::type_model &checked_types,
                              const bool collect_map = false,
-                             std::optional<std::filesystem::path> source_path = {})
-          : types(checked_types), map_enabled(collect_map), default_source(std::move(source_path)) {}
+                             std::optional<std::filesystem::path> source_path = {},
+                             std::optional<std::string> test_name = {})
+          : types(checked_types), map_enabled(collect_map), default_source(std::move(source_path)),
+            selected_test(std::move(test_name)) {}
 
       auto take_mappings() -> std::vector<source_map_entry>
       {
@@ -1660,7 +1669,8 @@ namespace codegen
                     field && field->weak_member)
                   weak_fields[type->name].insert(field->name);
           }
-        output << "// Generated by Sagan.\n#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <functional>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <tuple>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <variant>\n#include <vector>\n"
+        output << "// Generated by Sagan.\n#include <cstdlib>\n";
+        output << "#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <functional>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <tuple>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <variant>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
                   "#include <windows.h>\n"
                   "#endif\n\n"
@@ -1681,7 +1691,8 @@ namespace codegen
                   "  index_out_of_bounds,\n"
                   "  invalid_range,\n"
                   "  invalid_conversion,\n"
-                  "  missing_key\n"
+                  "  missing_key,\n"
+                  "  uninitialized_binding\n"
                   "};\n\n";
         if (map_enabled)
           output << "struct sagan_source_site { const char *path; int begin; int end; };\n"
@@ -1710,6 +1721,12 @@ namespace codegen
                   "{ throw sagan_exception{std::move(value), std::type_index(typeid(T)), \"Uncaught Sagan exception\"}; }\n\n"
                   "[[noreturn]] void sagan_runtime_failure(const sagan_runtime_error error, std::string message)\n"
                   "{ throw sagan_exception{error, std::type_index(typeid(sagan_runtime_error)), std::move(message)}; }\n\n"
+                  "template <typename T>\n"
+                  "T &sagan_box_value(const std::shared_ptr<T> &value)\n"
+                  "{\n"
+                  "  if (!value) sagan_runtime_failure(sagan_runtime_error::uninitialized_binding, \"Sagan binding was used before initialization\");\n"
+                  "  return *value;\n"
+                  "}\n\n"
                   "template <typename Float>\n"
                   "std::int64_t sagan_round_int(const Float value)\n"
                   "{\n"
@@ -1900,6 +1917,23 @@ namespace codegen
                   "void sagan_print(const std::int8_t value)\n"
                   "{\n"
                   "  std::cout << static_cast<int>(value) << '\\n';\n"
+                  "}\n\n"
+                  "struct sagan_assertion_failure final : std::exception\n"
+                  "{\n"
+                  "  std::string message;\n"
+                  "  explicit sagan_assertion_failure(std::string text) : message(std::move(text)) {}\n"
+                  "  const char *what() const noexcept override { return message.c_str(); }\n"
+                  "};\n\n"
+                  "void sagan_assert(const bool condition, const std::string &message = \"Assertion failed\")\n"
+                  "{\n"
+                  "  if (!condition) throw sagan_assertion_failure(message);\n"
+                  "}\n\n"
+                  "struct sagan_exit_signal { int code; };\n\n"
+                  "[[noreturn]] void sagan_exit(const std::int64_t code)\n"
+                  "{\n"
+                  "  if (code < 0 || code > 255)\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::invalid_conversion, \"Exit status must be between 0 and 255\");\n"
+                  "  throw sagan_exit_signal{static_cast<int>(code)};\n"
                   "}\n\n"
                   "template <typename T>\n"
                   "std::string sagan_stringify(const T &value)\n"
@@ -2188,6 +2222,25 @@ namespace codegen
             source_of(*entry);
             interface(*type);
           }
+        open_boxed_scope();
+        for (const auto &entry : tree.statements)
+        {
+          if (const auto *binding = dynamic_cast<const parser::let_declaration *>(entry.get()))
+          {
+            box(binding->name);
+            output << "std::shared_ptr<" << type_name(declaration_type(*binding), binding->range)
+                   << "> " << identifier(binding->name) << ";\n";
+          }
+          else if (const auto *group = dynamic_cast<const parser::parallel_let_declaration *>(entry.get()))
+            for (const auto &binding : group->bindings)
+            {
+              box(binding.name);
+              output << "std::shared_ptr<" << type_name(declaration_type(binding.name_range, binding.name),
+                                                        binding.name_range)
+                     << "> " << identifier(binding.name) << ";\n";
+            }
+        }
+        output << '\n';
         for (const auto &entry : tree.statements)
         {
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
@@ -2196,10 +2249,6 @@ namespace codegen
             if (type->type_kind == parser::type_declaration::kind::class_type) object(*type);
           }
         }
-        for (const auto &entry : tree.statements)
-          if (const auto *constant = dynamic_cast<const parser::const_declaration *>(entry.get()))
-            output << "extern const " << type_name(declaration_type(*constant), constant->range)
-                   << ' ' << identifier(constant->name) << ";\n";
         output << '\n';
         for (const auto &entry : tree.statements)
         {
@@ -2209,16 +2258,76 @@ namespace codegen
             if (dynamic_cast<const parser::type_declaration *>(entry.get()) ||
                 dynamic_cast<const parser::measurement_declaration *>(entry.get()) ||
                 dynamic_cast<const parser::const_declaration *>(entry.get())) continue;
-            fail("only functions and classes are supported at the top level", entry->range);
+            continue;
           }
           source_of(*entry);
           function(*declaration);
         }
+        output << "\nint main() {\n";
+        ++depth;
+        output << indentation() << "sagan_initialize_runtime();\n";
+        output << indentation() << "try {\n";
+        ++depth;
+        const std::string previous_function = active_function;
+        active_function = "main";
         for (const auto &entry : tree.statements)
-          if (const auto *constant = dynamic_cast<const parser::const_declaration *>(entry.get()))
-            output << "const " << type_name(declaration_type(*constant), constant->range) << ' '
-                   << identifier(constant->name) << " = "
-                   << converted_expression(*constant->initializer, declaration_type(*constant)) << ";\n";
+        {
+          if (dynamic_cast<const parser::function_declaration *>(entry.get()) ||
+              dynamic_cast<const parser::type_declaration *>(entry.get()) ||
+              dynamic_cast<const parser::measurement_declaration *>(entry.get())) continue;
+          if (selected_test && !dynamic_cast<const parser::let_declaration *>(entry.get()) &&
+              !dynamic_cast<const parser::parallel_let_declaration *>(entry.get())) continue;
+          source_of(*entry);
+          if (const auto *binding = dynamic_cast<const parser::let_declaration *>(entry.get()))
+          {
+            output << indentation() << identifier(binding->name) << " = std::make_shared<"
+                   << type_name(declaration_type(*binding), binding->range) << ">(";
+            if (binding->initializer)
+              output << converted_expression(*binding->initializer, declaration_type(*binding));
+            output << ");\n";
+          }
+          else if (const auto *group = dynamic_cast<const parser::parallel_let_declaration *>(entry.get()))
+          {
+            std::vector<std::string> snapshots;
+            for (const auto &binding : group->bindings)
+            {
+              const std::string snapshot = "sagan_root_let_" + std::to_string(temporary_index++);
+              output << indentation() << "auto " << snapshot << " = "
+                     << converted_expression(*binding.initializer,
+                                             declaration_type(binding.name_range, binding.name)) << ";\n";
+              snapshots.push_back(snapshot);
+            }
+            for (std::size_t index = 0; index < group->bindings.size(); ++index)
+            {
+              const auto &binding = group->bindings[index];
+              output << indentation() << identifier(binding.name) << " = std::make_shared<"
+                     << type_name(declaration_type(binding.name_range, binding.name), binding.name_range)
+                     << ">(" << snapshots[index] << ");\n";
+            }
+          }
+          else statement(*entry);
+        }
+        if (selected_test)
+          output << indentation() << identifier(*selected_test) << "();\n";
+        active_function = previous_function;
+        output << indentation() << "return 0;\n";
+        --depth;
+        output << indentation() << "} catch (const sagan_exit_signal &requested) {\n"
+               << indentation() << "  return requested.code;\n" << indentation() << "}\n";
+        output << indentation() << "catch (const sagan_assertion_failure &error) {\n"
+               << indentation() << "  std::cerr << \"SAGAN_ASSERTION_FAILURE\\t\" << error.what() << '\\n';\n"
+               << indentation() << "  return 1;\n" << indentation() << "}\n";
+        if (map_enabled)
+        {
+          output << indentation() << "catch (const sagan_exception &error) {\n"
+                 << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t\" << error.site.begin"
+                 << " << '\\t' << error.site.end << '\\t' << error.site.path"
+                 << " << '\\t' << error.what() << '\\n';\n"
+                 << indentation() << "  return 1;\n" << indentation() << "}\n";
+        }
+        --depth;
+        output << "}\n";
+        close_boxed_scope();
         return output.str();
       }
     };
@@ -2231,8 +2340,9 @@ namespace codegen
 
   auto generated_identifier(const std::string_view name) -> std::string
   {
-    if (name == "main") return "main";
     if (name == "print") return "sagan_print";
+    if (name == "assert") return "sagan_assert";
+    if (name == "exit") return "sagan_exit";
     std::ostringstream encoded;
     encoded << "sagan_" << std::hex << std::setfill('0');
     for (const unsigned char byte : name) encoded << std::setw(2) << static_cast<unsigned int>(byte);
@@ -2243,6 +2353,22 @@ namespace codegen
                           std::optional<std::filesystem::path> default_source) -> generated_cpp
   {
     cpp_generator generator(types, true, std::move(default_source));
+    auto text = generator.generate(tree);
+    return {std::move(text), generator.take_mappings()};
+  }
+
+  auto generate_cpp_mapped_test(const parser::program &tree, const semantic::type_model &types,
+                               const std::string_view internal_test_name,
+                               std::optional<std::filesystem::path> default_source) -> generated_cpp
+  {
+    const bool found = std::any_of(tree.statements.begin(), tree.statements.end(),
+        [&](const auto &entry)
+        {
+          const auto *function = dynamic_cast<const parser::function_declaration *>(entry.get());
+          return function && function->test_name && function->name == internal_test_name;
+        });
+    if (!found) throw std::invalid_argument("Selected test is not present in the analyzed program");
+    cpp_generator generator(types, true, std::move(default_source), std::string(internal_test_name));
     auto text = generator.generate(tree);
     return {std::move(text), generator.take_mappings()};
   }

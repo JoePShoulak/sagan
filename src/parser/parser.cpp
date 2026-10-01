@@ -5,6 +5,7 @@
 #include "tokens.hpp"
 
 #include <utility>
+#include <unordered_set>
 
 namespace parser
 {
@@ -99,6 +100,7 @@ namespace parser
     std::vector<statement_ref> body;
     bool seen_module = false;
     bool seen_non_module = false;
+    std::unordered_set<std::string> test_names;
     skip_newlines();
     while (!at_end())
     {
@@ -119,6 +121,13 @@ namespace parser
       else if (match(tokens::KWD_FUN))
       {
         declaration = parse_function_declaration();
+      }
+      else if (match(tokens::KWD_TEST))
+      {
+        declaration = parse_test_declaration();
+        const auto &test = *dynamic_cast<const function_declaration *>(declaration.get());
+        if (!test_names.insert(*test.test_name).second)
+          throw parse_error("Duplicate test name '" + *test.test_name + "'", *test.test_name_range);
       }
       else if (match(tokens::KWD_FACE))
       {
@@ -172,7 +181,9 @@ namespace parser
       }
       else
       {
-        throw parse_error("Only declarations are allowed at the top level", peek()->range);
+        if (!documentation.empty())
+          throw parse_error("A documentation comment must precede a declaration", documentation.back().range);
+        declaration = parse_statement();
       }
       if (dynamic_cast<module_declaration *>(declaration.get()) == nullptr)
       {
@@ -182,7 +193,7 @@ namespace parser
       body.push_back(std::move(declaration));
       if (!at_end())
       {
-        expect(tokens::NEWLINE, "a newline after the declaration");
+        expect(tokens::NEWLINE, "a newline after the top-level statement");
         skip_newlines();
       }
     }
@@ -286,6 +297,35 @@ namespace parser
       type_name = parse_type_annotation("a type name after ':'");
     }
 
+    if (match(tokens::COMMA))
+    {
+      if (allow_private || weak_member)
+        throw parse_error("Class fields must be declared one at a time", previous().range);
+      std::vector<parallel_let_binding> bindings;
+      bindings.push_back(parallel_let_binding{name.range, name.text, std::move(type_name), {}});
+      do
+      {
+        const token &next_name = expect(tokens::IDENTIFIER, "a variable name after ',' in a let declaration");
+        if (is_constant_name(next_name.text))
+          throw parse_error("SCREAMING_SNAKE_CASE names are reserved for const declarations", next_name.range);
+        std::optional<std::string> next_type;
+        if (match(tokens::COLON)) next_type = parse_type_annotation("a type name after ':'");
+        bindings.push_back(parallel_let_binding{next_name.range, next_name.text, std::move(next_type), {}});
+      } while (match(tokens::COMMA));
+
+      expect(tokens::EQUAL, "'=' after the variable names");
+      for (std::size_t index = 0; index < bindings.size(); ++index)
+      {
+        bindings[index].initializer = parse_expression();
+        if (index + 1 < bindings.size())
+          expect(tokens::COMMA, "one initializer for each variable");
+      }
+      if (check(tokens::COMMA))
+        throw parse_error("A parallel let declaration needs exactly one initializer per variable", peek()->range);
+      return std::make_unique<parallel_let_declaration>(
+          span{keyword.range.begin, bindings.back().initializer->range.end}, std::move(bindings));
+    }
+
     expression_ref initializer;
     if (match(tokens::EQUAL))
     {
@@ -383,6 +423,40 @@ namespace parser
                                                   std::move(type_constraints),
                                                   std::move(parameters), std::move(return_type),
                                                   std::move(body), std::move(expression_body));
+  }
+
+  auto syntax_parser::parse_test_declaration() -> statement_ref
+  {
+    const token keyword = previous();
+    if (!check(tokens::STRING_BEGIN))
+      throw parse_error("A test requires a quoted name after 'test'",
+                        at_end() ? keyword.range : peek()->range);
+    auto name_expression = parse_string();
+    const auto *literal = dynamic_cast<const string_expression *>(name_expression.get());
+    std::string display_name;
+    for (const auto &part : literal->parts)
+    {
+      if (part.interpolation)
+        throw parse_error("A test name cannot contain interpolation", name_expression->range);
+      display_name += part.text;
+    }
+    if (display_name.empty())
+      throw parse_error("A test name cannot be empty", name_expression->range);
+    if (display_name.front() == '/' || display_name.back() == '/' ||
+        display_name.find("//") != std::string::npos)
+      throw parse_error("A test name must have nonempty slash-separated suite and case names",
+                        name_expression->range);
+    const auto name_range = name_expression->range;
+    auto body = parse_block();
+    const auto end = body->range.end;
+    auto test = std::make_unique<function_declaration>(
+        span{keyword.range.begin, end}, "$sagan_test_" + std::to_string(keyword.range.begin),
+        false, false, std::vector<std::string>{},
+        std::vector<std::optional<std::string>>{}, std::vector<function_parameter>{},
+        std::optional<std::string>{"Void"}, std::move(body), expression_ref{});
+    test->test_name = std::move(display_name);
+    test->test_name_range = name_range;
+    return test;
   }
 
   auto syntax_parser::parse_constructor_declaration() -> statement_ref

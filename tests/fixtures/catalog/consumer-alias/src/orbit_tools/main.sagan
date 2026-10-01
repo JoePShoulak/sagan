@@ -1,0 +1,3 @@
+module orbit_tools.main
+fun orbit_answer(): Int => 99
+export orbit_answer

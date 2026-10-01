@@ -1,6 +1,7 @@
 #include "../src/lsp/server.hpp"
 #include "../src/source/provider.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -54,6 +55,25 @@ auto main() -> int
               initialized.get("experimental")->get("compiler")->get("capabilities")
                   ->get("languageServer")->boolean() == true,
           "initialize did not advertise implemented hover support");
+  const auto catalog_uri = sagan::source::identity_from_path(
+      sagan::source::document_id{}, "tests/fixtures/package_index/index.tsv").uri.value;
+  const auto package_query = request(service, "sagan/packages/query",
+      J::object{{"indexUri", catalog_uri}, {"prefix", "physics"}});
+  require(package_query.get("schema")->string() == "sagan-package-index-v1" &&
+              package_query.get("state")->string() == "ready" &&
+              package_query.get("packages")->elements()->size() == 2,
+          "LSP package index query did not expose compiler-owned local catalog results");
+  const auto catalog = request(service, "sagan/packages/catalog",
+      J::object{{"indexUri", sagan::source::identity_from_path(
+          sagan::source::document_id{}, "tests/fixtures/catalog/index.tsv").uri.value},
+          {"prefix", "orbit"}, {"limit", 1}});
+  const auto &catalog_package = catalog.get("packages")->elements()->front();
+  require(catalog.get("schema")->string() == "sagan-package-catalog-v1" &&
+              catalog.get("state")->string() == "ready" &&
+              catalog_package.get("modules")->elements()->size() == 1 &&
+              catalog_package.get("modules")->elements()->front().get("exports")
+                  ->elements()->front().get("name")->string() == "orbit_answer",
+          "LSP package catalog omitted installed exported declarations");
   const std::string uri = "file:///lsp-demo.sagan";
   const std::string text = "fun 🚀(value: Int): Int => value + 2\nfun main(): Int {\n  let answer = 🚀(40)\n  print(answer)\n  return 0\n}\n";
   const auto opened = notify(service, "textDocument/didOpen",
@@ -63,6 +83,160 @@ auto main() -> int
               opened.front().get("method")->string() == "textDocument/publishDiagnostics" &&
               opened.front().get("params")->get("diagnostics")->elements()->empty(),
           "didOpen did not publish clean diagnostics");
+  J::array operation_notifications;
+  service.set_notification_sink([&](const J &message) { operation_notifications.push_back(message); });
+  const auto operation = request(service, "sagan/operation",
+      J::object{{"kind", "check"}, {"scope", "document"},
+                {"textDocument", J::object{{"uri", uri}, {"version", 1}}},
+                {"workDoneToken", "check-demo"}});
+  require(operation.get("schema") && operation.get("schema")->string() == "sagan-operations-v2" &&
+              operation.get("state") && operation.get("state")->string() == "completed" &&
+              operation.get("diagnostics") && operation.get("diagnostics")->elements()->empty() &&
+              operation.get("exitStatus") && operation.get("exitStatus")->integer() == 0 &&
+              !operation_notifications.empty(), "LSP check operation contract failed");
+  bool saw_progress = false;
+  bool saw_operation_event = false;
+  for (const auto &notice : operation_notifications)
+  {
+    saw_progress |= notice.get("method") && notice.get("method")->string() == "$/progress";
+    saw_operation_event |= notice.get("method") && notice.get("method")->string() == "sagan/operationEvent";
+  }
+  require(saw_progress && saw_operation_event, "LSP operation omitted progress notifications");
+  service.set_notification_sink({});
+  const auto stale_operation = service.handle(J::object{{"jsonrpc", "2.0"}, {"id", 41},
+      {"method", "sagan/operation"},
+      {"params", J::object{{"kind", "check"}, {"scope", "document"},
+                            {"textDocument", J::object{{"uri", uri}, {"version", 0}}}}}});
+  require(stale_operation.size() == 1 && stale_operation.front().get("error") &&
+              stale_operation.front().get("error")->get("code")->integer() == -32602,
+          "LSP operation accepted stale document version");
+  const J cancelled_id{42};
+  service.register_request(cancelled_id);
+  service.cancel_request(cancelled_id);
+  service.begin_request(cancelled_id);
+  const auto cancelled_operation = service.handle(J::object{{"jsonrpc", "2.0"}, {"id", cancelled_id},
+      {"method", "sagan/operation"},
+      {"params", J::object{{"kind", "check"}, {"scope", "document"},
+                            {"textDocument", J::object{{"uri", uri}, {"version", 1}}}}}});
+  service.end_request(cancelled_id);
+  require(cancelled_operation.size() == 1 && cancelled_operation.front().get("result") &&
+              cancelled_operation.front().get("result")->get("state") &&
+              cancelled_operation.front().get("result")->get("state")->string() == "cancelled" &&
+              cancelled_operation.front().get("result")->get("diagnostics")->elements()->empty(),
+          "LSP operation cancellation did not return a structured empty result");
+  const std::string native_uri = "untitled:sagan-native-operation";
+  const auto native_opened = notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", native_uri}, {"version", 1},
+                                            {"text", "print(42)\n"}}}});
+  require(native_opened.size() == 2, "second operation document did not open");
+  J::array native_events;
+  service.set_notification_sink([&](const J &message) { native_events.push_back(message); });
+  const auto native_run = request(service, "sagan/operation",
+      J::object{{"kind", "run"}, {"scope", "document"},
+                {"textDocument", J::object{{"uri", native_uri}, {"version", 1}}}});
+  service.set_notification_sink({});
+  require(native_run.get("state") && native_run.get("state")->string() == "completed" &&
+              native_run.get("exitStatus") && native_run.get("exitStatus")->integer() == 0 &&
+              native_run.get("stdout") &&
+              (native_run.get("stdout")->string() == "42\n" ||
+               native_run.get("stdout")->string() == "42\r\n") &&
+              native_run.get("executable") && native_run.get("executable")->string() &&
+              !native_events.empty(),
+          "LSP native run did not report structured output and artifact");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", native_uri}}}});
+  const std::string test_uri = "untitled:sagan-test-discovery";
+  notify(service, "textDocument/didOpen",
+         J::object{{"textDocument", J::object{{"uri", test_uri}, {"version", 1},
+                                              {"text", "test \"orbit 🚀\" { print(1) }\n"}}}});
+  const auto discovered = request(service, "sagan/tests/discover",
+      J::object{{"textDocument", J::object{{"uri", test_uri}, {"version", 1}}}});
+  require(discovered.get("schema") && discovered.get("schema")->string() == "sagan-tests-v1" &&
+              discovered.get("state")->string() == "complete" &&
+              discovered.get("tests")->elements()->size() == 1 &&
+              discovered.get("tests")->elements()->front().get("name")->string() == "orbit 🚀" &&
+              discovered.get("tests")->elements()->front().get("suites")->elements()->empty() &&
+              discovered.get("tests")->elements()->front().get("range")->get("end")
+                  ->get("character")->integer() == 15,
+          "LSP test discovery did not expose stable UTF-16 test metadata");
+  J::array selected_tests;
+  selected_tests.push_back(*discovered.get("tests")->elements()->front().get("id"));
+  J::array test_events;
+  service.set_notification_sink([&](const J &message) { test_events.push_back(message); });
+  const auto test_run = request(service, "sagan/tests/run",
+      J::object{{"textDocument", J::object{{"uri", test_uri}, {"version", 1}}},
+                {"testIds", std::move(selected_tests)}});
+  service.set_notification_sink({});
+  require(test_run.get("schema")->string() == "sagan-tests-v1" &&
+              test_run.get("state")->string() == "complete" &&
+              test_run.get("tests")->elements()->size() == 1 &&
+              test_run.get("tests")->elements()->front().get("state")->string() == "passed" &&
+              test_events.size() >= 3,
+          "LSP selected-test run did not stream structured states");
+  const auto project_path = std::filesystem::absolute(
+      "tests/fixtures/modules/tests_project/main.sagan").lexically_normal();
+  const auto project_uri = sagan::source::identity_from_path(
+      sagan::source::document_id{}, project_path).uri.value;
+  notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", project_uri}, {"version", 1},
+          {"text", "module main\nimport tools\ntest \"root/🚀\" { print(1) }\n"}}}});
+  const auto project_discovery = request(service, "sagan/tests/discover",
+      J::object{{"scope", "project"}, {"projectUri", project_uri},
+                {"textDocument", J::object{{"uri", project_uri}, {"version", 1}}}});
+  require(project_discovery.get("state")->string() == "complete" &&
+              project_discovery.get("tests")->elements()->size() == 2,
+          "LSP project discovery did not include imported-module tests");
+  J::array imported_selection;
+  imported_selection.push_back(*project_discovery.get("tests")->elements()->front().get("id"));
+  const auto project_run = request(service, "sagan/tests/run",
+      J::object{{"scope", "project"}, {"projectUri", project_uri},
+                {"textDocument", J::object{{"uri", project_uri}, {"version", 1}}},
+                {"testIds", std::move(imported_selection)}});
+  require(project_run.get("state")->string() == "complete" &&
+              project_run.get("tests")->elements()->size() == 1 &&
+              project_run.get("tests")->elements()->front().get("state")->string() == "passed",
+          "LSP project test request did not execute a selected linked-module test");
+  const auto package_uri = sagan::source::identity_from_path(sagan::source::document_id{},
+      project_path.parent_path()).uri.value;
+  const auto package_run = request(service, "sagan/tests/run",
+      J::object{{"scope", "project"}, {"projectUri", package_uri},
+                {"textDocument", J::object{{"uri", project_uri}, {"version", 1}}}});
+  require(package_run.get("state")->string() == "complete" &&
+              package_run.get("tests")->elements()->size() == 2 &&
+              package_run.get("tests")->elements()->front().get("package")->string() ==
+                  "tests-project",
+          "LSP package-root test request lost package identity");
+  J::array unknown_project_selection;
+  unknown_project_selection.push_back("sagan-test-v1:unknown");
+  const auto unknown_project_run = request(service, "sagan/tests/run",
+      J::object{{"scope", "project"}, {"projectUri", package_uri},
+                {"textDocument", J::object{{"uri", project_uri}, {"version", 1}}},
+                {"testIds", std::move(unknown_project_selection)}});
+  require(unknown_project_run.get("state")->string() == "incomplete" &&
+              unknown_project_run.get("tests")->elements()->empty() &&
+              !unknown_project_run.get("diagnostics")->elements()->empty(),
+          "LSP project test run accepted an unknown stable ID");
+  notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", project_uri}}}});
+  const auto stale_discovery = service.handle(J::object{{"jsonrpc", "2.0"}, {"id", 43},
+      {"method", "sagan/tests/discover"},
+      {"params", J::object{{"textDocument", J::object{{"uri", test_uri}, {"version", 0}}}}}});
+  require(stale_discovery.size() == 1 && stale_discovery.front().get("error") &&
+              stale_discovery.front().get("error")->get("code")->integer() == -32602,
+          "LSP test discovery accepted a stale document version");
+  J::array incomplete_changes;
+  incomplete_changes.push_back(J::object{{"text", "test \"orbit\" { print(\n"}});
+  notify(service, "textDocument/didChange",
+      J::object{{"textDocument", J::object{{"uri", test_uri}, {"version", 2}}},
+                {"contentChanges", std::move(incomplete_changes)}});
+  const auto incomplete_discovery = request(service, "sagan/tests/discover",
+      J::object{{"textDocument", J::object{{"uri", test_uri}, {"version", 2}}}});
+  require(incomplete_discovery.get("diagnostics") &&
+              !incomplete_discovery.get("diagnostics")->elements()->empty() &&
+              incomplete_discovery.get("tests"),
+          "LSP test discovery did not return structured incomplete-source diagnostics");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", test_uri}}}});
   const auto hover = request(service, "textDocument/hover", at(uri, 2, 15));
   require(hover.get("contents"), "emoji function hover failed");
   const auto split_emoji = service.handle(J::object{{"jsonrpc", "2.0"}, {"id", 10},
@@ -138,14 +312,10 @@ auto main() -> int
   require(prepared_rename.get("range") && prepared_rename.get("placeholder") &&
               prepared_rename.get("placeholder")->string() == "answer",
           "F2 preparation did not select the local declaration name");
-  const auto refused_entry_rename = service.handle(
-      J::object{{"jsonrpc", "2.0"}, {"id", 11}, {"method", "textDocument/prepareRename"},
-                {"params", at(uri, 1, 4)}});
-  require(refused_entry_rename.size() == 1 && refused_entry_rename.front().get("error") &&
-              refused_entry_rename.front().get("error")->get("message") &&
-              refused_entry_rename.front().get("error")->get("message")->string()->find(
-                  "non-entry functions") != std::string_view::npos,
-          "F2 preparation did not explain why the main entry point is ineligible");
+  const auto prepared_main = request(service, "textDocument/prepareRename", at(uri, 1, 4));
+  require(prepared_main.get("range") && prepared_main.get("placeholder") &&
+              prepared_main.get("placeholder")->string() == "main",
+          "F2 preparation rejected an ordinary function named main");
   const auto renamed = request(service, "textDocument/rename",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"position", J::object{{"line", 3}, {"character", 9}}},

@@ -1,0 +1,8 @@
+[package]
+name = "consumer-reversed"
+version = "0.1.0"
+source = "src"
+entry = "main"
+
+[dependencies]
+orbit_tools = { version = "^0.1.0", package = "orbit-tools" }

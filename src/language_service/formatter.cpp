@@ -37,6 +37,63 @@ namespace sagan::language_service
       return true;
     }
 
+    auto same_diagnostics(const std::vector<diagnostics::diagnostic> &before,
+                          const std::vector<diagnostics::diagnostic> &after) -> bool
+    {
+      if (before.size() != after.size()) return false;
+      for (std::size_t index = 0; index < before.size(); ++index)
+        if (before[index].code != after[index].code ||
+            before[index].owner != after[index].owner ||
+            before[index].message != after[index].message) return false;
+      return true;
+    }
+
+    auto unfinished_line_end(const int kind) -> bool
+    {
+      return kind == tokens::EQUAL || kind == tokens::ASSIGN_VALUE ||
+             kind == tokens::FAT_ARROW || kind == tokens::COMMA ||
+             kind == tokens::DOT || kind == tokens::SAFE_DOT ||
+             kind == tokens::COLON || kind == tokens::LPAREN ||
+             kind == tokens::LBRACKET || kind == tokens::LANGLE ||
+             kind == tokens::PLUS || kind == tokens::MINUS ||
+             kind == tokens::STAR || kind == tokens::SLASH ||
+             kind == tokens::CARET || kind == tokens::PERCENT;
+    }
+
+    auto safe_recovered_line(const syntax::syntax_document &syntax,
+                             const std::vector<diagnostics::diagnostic> &issues,
+                             const source::byte_offset begin,
+                             const source::byte_offset end) -> bool
+    {
+      for (const auto &issue : issues)
+        if (begin <= issue.primary.bytes.begin && issue.primary.bytes.begin <= end)
+          return false;
+      int last = tokens::UNKNOWN;
+      int parentheses = 0;
+      int brackets = 0;
+      for (const auto &token : syntax.tokens)
+      {
+        if (token.range.end <= begin || token.range.begin >= end) continue;
+        if (token.error_token || token.range.begin < begin || token.range.end > end)
+          return false;
+        if (token.kind == tokens::NEWLINE) continue;
+        last = token.kind;
+        if (token.kind == tokens::LPAREN) ++parentheses;
+        else if (token.kind == tokens::RPAREN) --parentheses;
+        else if (token.kind == tokens::LBRACKET) ++brackets;
+        else if (token.kind == tokens::RBRACKET) --brackets;
+      }
+      if (parentheses != 0 || brackets != 0 || unfinished_line_end(last)) return false;
+      for (const auto &token : syntax.tokens)
+        for (const auto &trivia : token.leading_trivia)
+          if (trivia.kind == syntax::trivia_kind::skipped_text &&
+              trivia.range.begin < end && trivia.range.end > begin) return false;
+      for (const auto &trivia : syntax.trailing_trivia)
+        if (trivia.kind == syntax::trivia_kind::skipped_text &&
+            trivia.range.begin < end && trivia.range.end > begin) return false;
+      return true;
+    }
+
     auto protected_space(const syntax::syntax_document &syntax, const source::byte_offset offset) -> bool
     {
       const auto inside = [offset](const source::byte_range range)
@@ -124,28 +181,36 @@ namespace sagan::language_service
       if (requested.begin > requested.end || !document.to_utf16(requested.begin) ||
           !document.to_utf16(requested.end))
         return {edit_state::invalid, "Formatting range is not a source boundary", {}};
-      const auto analyzed = syntax::analyze(document, {.recover = false});
-      if (!analyzed.value || !analyzed.value->strict_ast)
-        return {edit_state::unsupported, "Incomplete source cannot be safely formatted", {}};
+      const auto analyzed = syntax::analyze(document, {.recover = true});
+      if (!analyzed.value)
+        return {edit_state::unsupported, "Source cannot be analyzed safely", {}};
+      const bool recovered = !analyzed.value->strict_ast;
       const auto text = document.text();
       versioned_document_edits changes{document.identity().uri, document.version(), {}};
       std::vector<source::byte_range> selected_lines;
       std::size_t line_begin = 0;
       int depth = 0;
+      bool selected_safe_line = false;
       while (line_begin < text.size())
       {
-        auto line_end = text.find('\n', line_begin);
+        auto line_end = text.find_first_of("\r\n", line_begin);
         if (line_end == std::string_view::npos) line_end = text.size();
-        const auto content_end = line_end > line_begin && text[line_end - 1] == '\r' ? line_end - 1 : line_end;
+        const auto content_end = line_end;
         auto content_begin = line_begin;
         while (content_begin < content_end && (text[content_begin] == ' ' || text[content_begin] == '\t'))
           ++content_begin;
         const bool protected_content = protected_line(*analyzed.value,
                                                        static_cast<source::byte_offset>(line_begin));
         const bool selected = line_begin < requested.end && line_end >= requested.begin;
-        if (selected)
+        const bool safe = !recovered || safe_recovered_line(
+            *analyzed.value, analyzed.diagnostics, static_cast<source::byte_offset>(line_begin),
+            static_cast<source::byte_offset>(content_end));
+        if (selected && safe)
+        {
+          selected_safe_line = true;
           selected_lines.push_back({static_cast<source::byte_offset>(line_begin),
                                     static_cast<source::byte_offset>(content_end)});
+        }
         int line_depth = depth;
         const auto first_token = std::find_if(analyzed.value->tokens.begin(), analyzed.value->tokens.end(),
                                               [&](const auto &token)
@@ -156,7 +221,7 @@ namespace sagan::language_service
                                               });
         if (first_token != analyzed.value->tokens.end() && first_token->kind == tokens::RBRACE)
           line_depth = std::max(0, depth - 1);
-        if (selected && !protected_content && content_begin < content_end)
+        if (selected && safe && !protected_content && content_begin < content_end)
         {
           const std::string indentation(static_cast<std::size_t>(line_depth) * 2, ' ');
           if (text.substr(line_begin, content_begin - line_begin) != indentation)
@@ -164,7 +229,7 @@ namespace sagan::language_service
                                       {static_cast<source::byte_offset>(line_begin),
                                        static_cast<source::byte_offset>(content_begin)}}, indentation});
         }
-        if (selected && !protected_content)
+        if (selected && safe && !protected_content)
         {
           auto trailing_begin = content_end;
           while (trailing_begin > line_begin &&
@@ -183,8 +248,11 @@ namespace sagan::language_service
             else if (token.kind == tokens::RBRACE) depth = std::max(0, depth - 1);
           }
         if (line_end == text.size()) break;
-        line_begin = line_end + 1;
+        line_begin = line_end + (text[line_end] == '\r' && line_end + 1 < text.size() &&
+                                 text[line_end + 1] == '\n' ? 2 : 1);
       }
+      if (recovered && !selected_safe_line)
+        return {edit_state::unsupported, "No complete region has proven token ownership", {}};
       for (std::size_t i = 1; i < analyzed.value->tokens.size(); ++i)
       {
         const auto &left = analyzed.value->tokens[i - 1];
@@ -207,9 +275,11 @@ namespace sagan::language_service
       if (preview.state != edit_state::ready) return {preview.state, preview.reason, {}};
       const source::document_snapshot changed(document.identity(), document.version(),
                                                preview.documents.front().text);
-      const auto verified = syntax::analyze(changed, {.recover = false});
-      if (!verified.value || !verified.value->strict_ast ||
-          !matching_tokens(*analyzed.value, *verified.value))
+      const auto verified = syntax::analyze(changed, {.recover = true});
+      if (!verified.value ||
+          static_cast<bool>(verified.value->strict_ast) != !recovered ||
+          !matching_tokens(*analyzed.value, *verified.value) ||
+          !same_diagnostics(analyzed.diagnostics, verified.diagnostics))
         return {edit_state::unsupported, "Formatting could change tokenization or syntax", {}};
       return {edit_state::ready, {}, std::move(edit)};
     }
@@ -234,9 +304,9 @@ namespace sagan::language_service
     if (!document.to_utf16(offset))
       return {edit_state::invalid, "Formatting position is not a source boundary", {}};
     const auto text = document.text();
-    const auto before = offset == 0 ? std::string_view::npos : text.rfind('\n', offset - 1);
+    const auto before = offset == 0 ? std::string_view::npos : text.find_last_of("\r\n", offset - 1);
     const auto line_begin = before == std::string_view::npos ? 0 : before + 1;
-    const auto after = text.find('\n', offset);
+    const auto after = text.find_first_of("\r\n", offset);
     const auto line_end = after == std::string_view::npos ? text.size() : after;
     return format_lines(document, {static_cast<source::byte_offset>(line_begin),
                                    static_cast<source::byte_offset>(line_end)});

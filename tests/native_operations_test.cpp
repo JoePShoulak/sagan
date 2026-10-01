@@ -1,4 +1,6 @@
+#include "../src/codegen/cpp_generator.hpp"
 #include "../src/language_service/operations.hpp"
+#include "../src/language_service/tests.hpp"
 #include "../src/source/provider.hpp"
 
 #include <algorithm>
@@ -19,7 +21,117 @@ auto main() -> int
   using namespace sagan;
   const source::document_snapshot valid(
       {{source::document_id{201}, source::document_uri{"untitled:native-op"}, {}}, 4,
-       "fun main(): Int {\n  print(\"Phase 7 says hello\")\n  return 0\n}\n"});
+       "fun report(): Int {\n  print(\"Phase 7 says hello\")\n  return 0\n}\nexit(report())\n"});
+  const source::document_snapshot source_tests(
+      {{source::document_id{215}, source::document_uri{"untitled:native-tests"}, {}}, 1,
+       "test \"math/add\" {\n  assert(1 + 1 == 2)\n  print(\"test ran\")\n}\n"
+       "test \"math/fail\" { assert(false, \"orbit escaped\") }\n"
+       "print(\"root must not run\")\n"});
+  const auto known_tests = language_service::discover_document_tests(source_tests);
+  require(known_tests.state == diagnostics::result_state::complete && known_tests.tests.size() == 2,
+          "native test fixture was not discoverable");
+  std::size_t test_events = 0;
+  const auto selected = language_service::run_document_tests(source_tests, "build/operations-test",
+      {known_tests.tests.front().id}, {}, [&](const auto &) { ++test_events; });
+  require(selected.state == diagnostics::result_state::complete && selected.tests.size() == 1 &&
+              selected.tests.front().state == language_service::test_case_state::passed &&
+              selected.tests.front().standard_output.find("test ran") != std::string::npos &&
+              selected.tests.front().standard_output.find("root must not run") == std::string::npos &&
+              test_events >= 3,
+          "selected Sagan test did not run independently of root script statements");
+  const auto all_tests = language_service::run_document_tests(source_tests, "build/operations-test");
+  require(all_tests.state == diagnostics::result_state::incomplete && all_tests.tests.size() == 2 &&
+              all_tests.tests.front().state == language_service::test_case_state::passed &&
+              all_tests.tests.back().state == language_service::test_case_state::failed &&
+              all_tests.tests.back().message == "orbit escaped",
+          "Sagan test runner did not distinguish pass from assertion failure");
+  source::disk_source_provider project_source;
+  const auto project_discovery = language_service::discover_project_tests(
+      "tests/fixtures/modules/tests_project/main.sagan", project_source);
+  require(project_discovery.state == diagnostics::result_state::complete &&
+              project_discovery.tests.size() == 2,
+          "multi-module project test fixture was not discovered");
+  const auto project_all = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project/main.sagan", project_source, "build/operations-test");
+  require(project_all.state == diagnostics::result_state::complete && project_all.tests.size() == 2 &&
+              project_all.tests.front().state == language_service::test_case_state::passed &&
+              project_all.tests.back().state == language_service::test_case_state::passed &&
+              project_all.tests.front().standard_output.find('2') != std::string::npos &&
+              project_all.tests.back().standard_output.find('1') != std::string::npos,
+          "project tests did not execute independently across linked modules");
+  const auto package_all = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project", project_source, "build/operations-test");
+  require(package_all.state == diagnostics::result_state::complete && package_all.tests.size() == 2 &&
+              package_all.tests.front().test.package == "tests-project",
+          "package-root test execution lost package identity");
+  const auto project_selected = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project/main.sagan", project_source, "build/operations-test",
+      {project_discovery.tests.front().id});
+  require(project_selected.state == diagnostics::result_state::complete &&
+              project_selected.tests.size() == 1 &&
+              project_selected.tests.front().test.id == project_discovery.tests.front().id,
+          "selected project test did not retain stable discovery identity");
+  const auto project_unknown = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project/main.sagan", project_source, "build/operations-test",
+      {"sagan-test-v1:missing"});
+  require(project_unknown.state == diagnostics::result_state::incomplete &&
+              project_unknown.tests.empty() && !project_unknown.diagnostics.empty(),
+          "unknown project test ID was not rejected before execution");
+  diagnostics::cancellation_source project_cancel;
+  project_cancel.cancel();
+  const auto cancelled_project = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project/main.sagan", project_source,
+      "build/operations-test", {}, project_cancel.token());
+  require(cancelled_project.state == diagnostics::result_state::cancelled &&
+              cancelled_project.tests.empty(),
+          "cancelled project test discovery attempted execution");
+  diagnostics::cancellation_source active_project_cancel;
+  bool requested_cancel = false;
+  const auto cancelled_between_tests = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project", project_source, "build/operations-test", {},
+      active_project_cancel.token(), [&](const auto &event)
+      {
+        if (!requested_cancel && event.state == language_service::test_case_state::queued)
+        { requested_cancel = true; active_project_cancel.cancel(); }
+      });
+  require(cancelled_between_tests.state == diagnostics::result_state::cancelled &&
+              cancelled_between_tests.tests.size() == 2 &&
+              cancelled_between_tests.tests.front().state == language_service::test_case_state::cancelled &&
+              cancelled_between_tests.tests.back().state == language_service::test_case_state::skipped,
+          "project runner did not cancel before launching its next test");
+  source::document_store project_overlays;
+  const auto imported_test_path = std::filesystem::absolute(
+      "tests/fixtures/modules/tests_project/tools.sagan").lexically_normal();
+  const auto imported_snapshot = project_overlays.read_path(imported_test_path);
+  require(imported_snapshot && static_cast<bool>(project_overlays.open(
+              imported_snapshot.value->identity().uri, 10,
+              "module tools\ntest \"math/add\" { assert(false, \"overlay failed\") }\n")),
+          "could not open unsaved imported test overlay");
+  const auto overlay_test = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project/main.sagan", project_overlays,
+      "build/operations-test", {project_discovery.tests.front().id});
+  require(overlay_test.state == diagnostics::result_state::incomplete &&
+              overlay_test.tests.size() == 1 &&
+              overlay_test.tests.front().state == language_service::test_case_state::failed &&
+              overlay_test.tests.front().message == "overlay failed",
+          "project runner ignored an unsaved imported-module overlay");
+  bool changed_during_discovery = false;
+  const auto stale_project_tests = language_service::run_project_tests(
+      "tests/fixtures/modules/tests_project/main.sagan", project_overlays,
+      "build/operations-test", {}, {}, [&](const auto &event)
+      {
+        if (!changed_during_discovery && event.state == language_service::test_case_state::queued)
+        {
+          changed_during_discovery = true;
+          const auto changed = project_overlays.replace(imported_snapshot.value->identity().uri, 10, 11,
+              "module tools\ntest \"math/add\" { print(99) }\n");
+          require(static_cast<bool>(changed), "could not change imported overlay during test run");
+        }
+      });
+  require(stale_project_tests.state == diagnostics::result_state::stale &&
+              !stale_project_tests.tests.empty() &&
+              stale_project_tests.tests.front().state == language_service::test_case_state::skipped,
+          "project runner published stale test results after an overlay edit");
   std::size_t streamed = 0;
   const auto result = language_service::run_document(
       valid, "build/operations-test", language_service::native_build_profile::debug, {},
@@ -28,18 +140,42 @@ auto main() -> int
         if (event.kind == language_service::operation_event_kind::standard_output)
           streamed += event.text.size();
       });
+  if (result.state != diagnostics::result_state::complete || result.exit_status != 0)
+  {
+    std::cerr << "Native operation state: " << static_cast<int>(result.state)
+              << ", exit: " << (result.exit_status ? std::to_string(*result.exit_status) : "none")
+              << ", stderr: " << result.standard_error << '\n';
+    for (const auto &issue : result.diagnostics) std::cerr << issue.message << '\n';
+  }
   require(result.state == diagnostics::result_state::complete && result.exit_status == 0 &&
               result.generated && result.generated_source && result.executable &&
               result.debug && !result.debug->functions.empty() &&
               std::any_of(result.debug->functions.begin(), result.debug->functions.end(),
                           [](const auto &function)
-                          { return function.generated_name == "main" && function.symbol.has_value(); }) &&
+                          { return function.generated_name == codegen::generated_identifier("report") &&
+                                   function.symbol.has_value(); }) &&
               result.debug->breakpoints.size() >= 2 &&
               std::filesystem::is_regular_file(*result.generated_source) &&
               std::filesystem::is_regular_file(*result.executable) &&
               result.standard_output.find("Phase 7 says hello") != std::string::npos &&
               streamed >= result.standard_output.size() && !result.output_truncated,
           "native operation did not build, run, capture output, and return artifacts");
+  auto asynchronous = language_service::start_run_document(valid, "build/operations-test");
+  const auto asynchronous_result = asynchronous.future.get();
+  require(asynchronous_result.operation_id == asynchronous.id &&
+              asynchronous_result.lifecycle == language_service::operation_state::completed &&
+              asynchronous_result.exit_status == 0 &&
+              asynchronous_result.standard_output.find("Phase 7 says hello") != std::string::npos,
+          "asynchronous run lost its stable identity or native result");
+  const source::document_snapshot dormant_test(
+      {{source::document_id{206}, source::document_uri{"untitled:dormant-test"}, {}}, 1,
+       "test \"not automatic\" {\n  print(999)\n}\nprint(42)\n"});
+  const auto ordinary_run = language_service::run_document(dormant_test, "build/operations-test");
+  require(ordinary_run.state == diagnostics::result_state::complete &&
+              ordinary_run.exit_status == 0 &&
+              ordinary_run.standard_output.find("42") != std::string::npos &&
+              ordinary_run.standard_output.find("999") == std::string::npos,
+          "ordinary execution invoked a test declaration automatically");
   const auto launch = language_service::plan_debug_launch(result);
   require(launch && launch->executable == result.executable &&
               launch->working_directory == result.executable->parent_path() &&
@@ -59,7 +195,7 @@ auto main() -> int
           "optimized native operation changed behavior or lost source mapping");
   const source::document_snapshot invalid(
       {{source::document_id{202}, source::document_uri{"untitled:invalid-native-op"}, {}}, 1,
-       "fun main(): Int => missing\n"});
+       "fun broken(): Int => missing\n"});
   const auto rejected = language_service::build_document(invalid, "build/operations-test");
   require(rejected.state == diagnostics::result_state::incomplete && rejected.exit_status == 1 &&
               !rejected.diagnostics.empty() && !rejected.generated_source &&
@@ -67,7 +203,7 @@ auto main() -> int
           "native build compiled invalid Sagan source");
   const source::document_snapshot module_without_linking(
       {{source::document_id{204}, source::document_uri{"untitled:module-without-linking"}, {}}, 1,
-       "module single\nfun main(): Int => 0\n"});
+       "module single\nfun report(): Int => 0\n"});
   const auto generated_failure = language_service::build_document(
       module_without_linking, "build/operations-test");
   require(generated_failure.state == diagnostics::result_state::incomplete &&
@@ -76,7 +212,7 @@ auto main() -> int
                   module_without_linking.identity().id,
           "generated-code failure did not retain source identity");
   const std::string failure_text =
-      "fun main(): Int {\n  let zero = 0\n  print(10 / zero)\n  return 0\n}\n";
+      "fun report(): Int {\n  let zero = 0\n  print(10 / zero)\n  return 0\n}\nexit(report())\n";
   const source::document_snapshot runtime_failure(
       {{source::document_id{203}, source::document_uri{"untitled:runtime-failure"}, {}}, 1,
        failure_text});
@@ -122,7 +258,8 @@ auto main() -> int
             event.text == "Compiling native program") compile_cancel.cancel();
       });
   require(stopped_build.state == diagnostics::result_state::cancelled &&
-              !stopped_build.exit_status,
+              !stopped_build.exit_status && !stopped_build.generated_source &&
+              !stopped_build.executable,
           "native build did not honor cancellation at the compiler boundary");
   const source::disk_source_provider disk;
   const auto runtime_fixture = disk.read_path("tests/fixtures/runtime/runtime_errors.sagan");

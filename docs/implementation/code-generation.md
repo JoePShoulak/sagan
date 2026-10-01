@@ -16,6 +16,7 @@ with `g++` and runs the resulting native executable.
 The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, immutable local and module-level constants, assignment,
+parallel local declarations and simultaneous reassignment,
 calls, grouping, common unary/binary operators,
 prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned Cartesian and spherical vector and point values, Cartesian spreads,
@@ -45,18 +46,17 @@ Windows, preventing Unicode text from being interpreted through a legacy code
 page; other platforms keep their existing UTF-8 environment. Names are
 deterministically encoded as legal C++ identifiers, so
 Unicode and emoji Sagan names do not depend on a C++ compiler's identifier
-spelling support. `main(): Int` maps to C++ `int main()`; `main(): Void` receives
-an implicit native success return.
+spelling support. The backend synthesizes native C++ `int main()` for the
+selected root file. Root statements execute in source order; normal completion
+returns success, and Sagan `exit(code)` supplies an explicit process status.
 
 Unsupported AST forms produce a source-located backend diagnostic rather than
 silently generating incorrect code. The emitter currently requires explicit
-function signatures. At the program root it emits functions and `const`
-bindings; ordinary top-level `let` bindings are not yet emitted. Constants
-become native `const` values instead of shared mutable scalar boxes. For a
-module-level constant, an `extern const` declaration lets functions refer to
-it before its source-order definition. Reference-valued constants retain the
-normal pointer representation and enforce the const view in Sagan's type
-checker, without claiming a deep-frozen object graph.
+function signatures. At the program root it emits functions, `const`
+bindings, mutable `let` bindings, and executable statements. Root bindings
+have shared storage visible to functions, while their initializers execute in
+source order. The type checker enforces the `const` view; this is not a
+deep-frozen object graph.
 
 Homogeneous dictionary literals with backend-supported scalar key and value
 types lower to `std::unordered_map`. Key lookup is checked and raises the native

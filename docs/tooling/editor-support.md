@@ -8,7 +8,7 @@ verified_by: null
 ---
 
 # Editor support
-The version 0.3.3 VS Code extension in `editors/vscode-sagan/` associates
+The version 0.3.4 VS Code extension in `editors/vscode-sagan/` associates
 `.sagan` files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations (including explicit `const` and visibly invalid
 `let ALL_CAPS` names), keywords, types, literals, operators, punctuation,

@@ -1,0 +1,4 @@
+module main
+import answer from helper
+
+print(answer(40))

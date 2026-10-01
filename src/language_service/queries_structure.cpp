@@ -144,6 +144,25 @@ namespace sagan::language_service
             break;
           }
       }
+      else if (const auto *group = dynamic_cast<const parser::parallel_let_declaration *>(&statement))
+      {
+        for (const auto &binding : group->bindings)
+        {
+          if (binding.type_name) continue;
+          const auto typed = std::find_if(types_->declarations.begin(), types_->declarations.end(),
+                                          [&](const auto &entry)
+                                          { return entry.range.begin == binding.name_range.begin &&
+                                                   entry.range.end == binding.name_range.end &&
+                                                   entry.name == binding.name; });
+          if (typed == types_->declarations.end() || typed->type.empty() || typed->type == "Unknown") continue;
+          const auto end = static_cast<source::byte_offset>(binding.name_range.end);
+          if (range.begin <= end && end <= range.end)
+          {
+            const auto symbol = index_.symbol_at(static_cast<source::byte_offset>(binding.name_range.begin));
+            values.push_back({end, ": " + typed->type, symbol ? symbol->id : semantic::symbol_id{}});
+          }
+        }
+      }
       else if (const auto *block = dynamic_cast<const parser::block_statement *>(&statement))
         for (const auto &child : block->statements) visit(*child);
       else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&statement))

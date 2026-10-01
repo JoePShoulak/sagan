@@ -22,9 +22,12 @@ The central rules are:
 - no separate character-literal type is planned; and
 - math types form built-in vocabulary.
 
-`Int` is the canonical integer spelling. Literals
-use the smallest fitting signed width from `Int8` through `Int64`; otherwise
-`Int` defaults to `Int64`. Floating literals and unconstrained `Float` positions
+`Int` is the canonical integer spelling. Integer literals use the smallest
+fitting signed width from `Int8` through `Int64`, but an unannotated mutable
+`let` binding that receives an integer value defaults to `Int64`. Explicit
+`Int8`, `Int16`, and `Int32` annotations preserve narrower storage; initialized
+`Int` annotations still use the existing fitting-width inference. Floating
+literals and unconstrained `Float` positions
 default to `Float64`, with explicit `Float32` available. Only provably lossless
 widening is implicit. Core scalar declarations, operators, conditions, calls,
 overloads, and returns are checked. Variables need either an annotation or an

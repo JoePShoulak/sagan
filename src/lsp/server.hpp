@@ -5,6 +5,7 @@
 #include "../source/provider.hpp"
 
 #include <istream>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <ostream>
@@ -40,9 +41,12 @@ namespace sagan::lsp
     std::optional<diagnostics::cancellation_source> active_cancellation_;
     std::unordered_set<std::string> pending_ids_;
     std::unordered_set<std::string> cancelled_ids_;
+    std::function<void(const json::value &)> notification_sink_;
 
     auto query(std::string_view method, const json::value &params,
                diagnostics::cancellation_token cancellation) -> json::value;
+    auto query_operation(const json::value &params,
+                         diagnostics::cancellation_token cancellation) -> json::value;
     auto publish(const source::document_uri &uri) -> json::value;
     auto synchronize(std::string_view method, const json::value &params) -> std::vector<json::value>;
 
@@ -53,6 +57,8 @@ namespace sagan::lsp
     auto cancel_request(const json::value &id) -> void;
     auto end_request(const json::value &id) -> void;
     auto active_token() const -> diagnostics::cancellation_token;
+    auto set_notification_sink(std::function<void(const json::value &)> sink) -> void;
+    auto notify(const json::value &message) const -> void;
     auto should_exit() const -> bool { return exit_; }
     auto documents() const -> const source::document_store & { return *documents_; }
   };

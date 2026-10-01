@@ -13,3 +13,5 @@ fun main(): Int {
   if answer == 42 and direct_offset == 2 and signal == flight_data.Signal.nominal return 0
   else return 1
 }
+
+exit(main())

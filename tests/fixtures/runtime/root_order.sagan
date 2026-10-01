@@ -1,0 +1,8 @@
+fun announce(): Int {
+  print("initializer")
+  return 42
+}
+
+print("before")
+const ANSWER: Int = announce()
+print(ANSWER)

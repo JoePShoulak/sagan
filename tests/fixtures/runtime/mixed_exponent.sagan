@@ -27,3 +27,5 @@ fun main(): Int {
   }
   return 5
 }
+
+exit(main())

@@ -105,13 +105,29 @@ auto main() -> int
                       capabilities.contains("\"languageServer\":true") &&
                       capabilities.contains("\"documentationCatalog\":\"sagan-documentation-v1\"") &&
                       capabilities.contains("\"sourceEditsSchema\":\"sagan-source-edits-v1\"") &&
-                      capabilities.contains("\"operationsSchema\":\"sagan-operations-v1\"") &&
+                      capabilities.contains("\"formattingSchema\":\"sagan-formatting-v1\"") &&
+                      capabilities.contains("\"recoveredFormatting\":true") &&
+                      capabilities.contains("\"operationsSchema\":\"sagan-operations-v2\"") &&
                       capabilities.contains("\"sourceMapSchema\":\"sagan-cpp-source-map-v1\"") &&
                       capabilities.contains("\"debugMetadataSchema\":\"sagan-debug-metadata-v1\"") &&
+                      capabilities.contains("\"breakpointMappingSchema\":\"sagan-dap-breakpoints-v1\"") &&
+                      capabilities.contains("\"packageCatalogSchema\":\"sagan-package-catalog-v1\"") &&
+                      capabilities.contains("\"debugAdapterExecutable\":\"sagan-dap") &&
                       capabilities.contains("\"nativeBuild\":true") &&
                       capabilities.contains("\"nativeRun\":true") &&
                       capabilities.contains("\"debugAttach\":false") &&
-                      capabilities.contains("\"testDiscovery\":false"),
+                      capabilities.contains("\"debugAdapter\":false") &&
+                      capabilities.contains("\"debugBreakpoints\":false") &&
+                      capabilities.contains("\"testDocumentDiscovery\":true") &&
+                      capabilities.contains("\"testProjectDiscovery\":true") &&
+                      capabilities.contains("\"testDocumentRun\":true") &&
+                      capabilities.contains("\"testProjectRun\":true") &&
+                      capabilities.contains("\"packageIndexReader\":true") &&
+                      capabilities.contains("\"packageQuery\":true") &&
+                      capabilities.contains("\"packageCatalog\":true") &&
+                      capabilities.contains("\"packageCompletion\":false") &&
+                      capabilities.contains("\"operationTransport\":true") &&
+                      capabilities.contains("\"operationCancellation\":true"),
                   "versioned capability discovery");
   passed &= check(diagnostics::default_code(diagnostics::phase::runtime) == "SAG-RUN-0001" &&
                       diagnostics::state_name(diagnostics::result_state::stale) == "stale" &&
@@ -501,12 +517,12 @@ auto main() -> int
   const auto invalid_index = language_service::index_document(invalid_document);
   passed &= check(no_types.state == diagnostics::result_state::complete &&
                       no_types.value->typed_expression_count == 0 &&
-                      entry_check.state == diagnostics::result_state::incomplete &&
-                      entry_check.diagnostics.front().owner == diagnostics::phase::entry_point &&
+                      entry_check.state == diagnostics::result_state::complete &&
+                      entry_check.diagnostics.empty() &&
                       cancelled_index.state == diagnostics::result_state::cancelled &&
                       invalid_index.state == diagnostics::result_state::incomplete &&
                       invalid_index.diagnostics.front().owner == diagnostics::phase::semantic,
-                  "language service supports optional type and entry-point checks");
+                  "language service accepts declaration-only root files");
   passed &= check(lifecycle.close(first_uri) && lifecycle.close(second_uri),
                   "workspace removes cyclic dependency relationships on close");
 

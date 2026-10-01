@@ -1,0 +1,29 @@
+fun fast_fibonacci(n: Int): Int {
+  let i, a, b = 0, 0, 1
+  while i++ <= n  a, b = b, a+b
+  return b
+}
+
+fun shadowed_initializers(): Int {
+  let a = 2
+  let b = 3
+  if true {
+    let a, b = b, a
+    return a * 10 + b
+  }
+  return 0
+}
+
+fun annotated_group(): Int {
+  let a: Int8, b: Int64 = 3, 4
+  return a + b
+}
+
+fun main(): Int {
+  print(fast_fibonacci(10))
+  print(shadowed_initializers())
+  print(annotated_group())
+  return 0
+}
+
+exit(main())

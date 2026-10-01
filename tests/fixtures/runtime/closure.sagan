@@ -13,3 +13,5 @@ fun main(): Int {
   print(apply_twice(add_offset, 40))
   return 0
 }
+
+exit(main())

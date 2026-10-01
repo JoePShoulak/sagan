@@ -33,6 +33,9 @@ namespace codegen
   auto generated_identifier(std::string_view name) -> std::string;
   auto generate_cpp_mapped(const parser::program &tree, const semantic::type_model &types,
                            std::optional<std::filesystem::path> default_source = {}) -> generated_cpp;
+  auto generate_cpp_mapped_test(const parser::program &tree, const semantic::type_model &types,
+                               std::string_view internal_test_name,
+                               std::optional<std::filesystem::path> default_source = {}) -> generated_cpp;
   auto generated_offset(const std::string &text, std::size_t one_based_line,
                         std::size_t one_based_column) -> std::optional<std::size_t>;
   auto source_for_generated_offset(const generated_cpp &output, std::size_t offset)

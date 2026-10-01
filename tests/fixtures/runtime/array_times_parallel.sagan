@@ -20,3 +20,5 @@ fun main(): Int {
   if a == 5 and b == 8 and indices[4] == 4 and extended[5] == 5 return 0
   else return 3
 }
+
+exit(main())

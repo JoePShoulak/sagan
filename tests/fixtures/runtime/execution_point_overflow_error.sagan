@@ -5,3 +5,5 @@ fun main(): Int {
   print(invalid)
   return 0
 }
+
+exit(main())

@@ -14,6 +14,11 @@ today from planned libraries and external release gates. The `work-in-progress`
 metadata at the top means the prose still awaits the owner's documentation
 audit; it does not mean every listed compiler feature is unfinished.
 
+Current development commits are preparation for a future 2.0 release. Their
+1.x commit versions are checkpoints, not a declaration that the 2.0 migration
+or release gates are complete. The major-version commit is reserved for the
+coordinated 2.0 publication decision.
+
 ## Roadmap snapshot
 
 | Area | Status | Evidence |
@@ -30,7 +35,7 @@ audit; it does not mean every listed compiler feature is unfinished.
 | Explicit constants | **Implemented as immutable bindings** | `const` plus ASCII SCREAMING_SNAKE_CASE, const-view mutation checks, class fields with declaration initializers, native execution and editor grammar tests; general compile-time evaluation deferred |
 | Deterministic execution | **1.0 hypercore contract settled** | exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
-| Editor tooling | **Usable language server and VS Code client** | reusable compiler library, source identity/UTF-16 positions, recovery, overlays, semantic queries, formatting, safe edits, stdio LSP, and the capability-aware VS Code 0.3.2 extension; debugger and test transport remain later work |
+| Editor tooling | **Usable language server and VS Code client; advanced support in progress** | reusable compiler library, source identity/UTF-16 positions, recovery, overlays, semantic queries, recovered-source formatting, safe edits, stdio LSP, cancellable check/build/run operations, document/project test execution, installed package imports, and experimental DAP; full package completion and debugger release support remain gated |
 
 Every release is a coordinated ecosystem freeze: compiler/language, included
 libraries, documentation, and extension must agree and pass together. See the
@@ -54,8 +59,9 @@ provide broad successful source files plus focused malformed examples. The
 semantic mode validates names and scopes. Type mode additionally validates the
 implemented type rules. The backend emits C++ for checked programs, and the
 execution demo compiles that output with `g++` and runs it.
-Entry mode performs the complete implemented checks and requires exactly one
-parameterless `main` returning `Int` or `Void`.
+Entry mode performs the complete implemented checks. The root file can execute
+top-level statements; normal completion exits with status 0, and `exit(code)`
+sets an explicit status. A function named `main` is ordinary code.
 
 The live Codecov report tracks tokenizer lifecycle behavior, Unicode and emoji
 edge cases, string escapes, malformed input, parser and semantic errors, all AST
@@ -73,8 +79,8 @@ commas. Text, DOT, SVG, and interactive HTML tree renderers
 cover every implemented AST node. Blocks, same-line single-statement bodies,
 ordinary and compound assignment, expression statements, and
 `if`/`else if`/`else` control flow are also verified. The parser
-enforces declaration-only program roots and provides named, typed, block-bodied
-functions as statement containers. `for`/`in`, `while`, and `until` loops,
+accepts executable root-file statements while imported modules remain
+declaration-only. `for`/`in`, `while`, and `until` loops,
 unlabeled `break` and `continue`, and bare or value-bearing `return` statements
 are implemented and rendered in every AST format. Braced or same-line
 single-statement `match`/`case`

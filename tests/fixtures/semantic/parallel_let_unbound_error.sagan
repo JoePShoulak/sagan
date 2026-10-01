@@ -1,0 +1,4 @@
+fun main(): Int {
+  let a, b = b, 1
+  return a
+}

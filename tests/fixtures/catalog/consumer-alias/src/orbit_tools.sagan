@@ -1,0 +1,3 @@
+module orbit_tools
+fun local_answer(): Int => 7
+export local_answer

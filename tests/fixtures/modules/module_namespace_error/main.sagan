@@ -3,3 +3,5 @@ module main
 import support as utilities
 
 fun main(): Int => utilities.private_value()
+
+exit(main())

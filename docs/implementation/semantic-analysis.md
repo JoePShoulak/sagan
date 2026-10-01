@@ -34,9 +34,12 @@ initializers, assignments, Boolean conditions, conditional branches, core
 operators, calls, overload selection, and returns; and visits every current
 statement family.
 
-`Int` is the source spelling. Literals and initialized `Int` variables use the
-smallest fitting signed `Int8`, `Int16`, `Int32`, or `Int64`; non-inferable
-`Int` positions default to `Int64`. Floating literals and non-inferable `Float`
+`Int` is the source spelling. Literals and initialized `Int`-annotated variables
+use the smallest fitting signed `Int8`, `Int16`, `Int32`, or `Int64`.
+Unannotated mutable integer `let` bindings default to `Int64`, including each
+name in a parallel `let` declaration; explicit narrower annotations remain
+available. Non-inferable `Int` positions also default to `Int64`. Floating
+literals and non-inferable `Float`
 positions default to `Float64`, while `Float32` may be explicit. Only widening
 that preserves every source value is implicit. A variable with neither an
 annotation nor initializer is rejected; a typed uninitialized variable is
@@ -92,6 +95,8 @@ Non-`Void` block-bodied functions must return on every statically guaranteed
 path; `if` requires both branches and `match` requires a fallback. Reads before
 definite initialization and statements after a guaranteed return are rejected.
 
-Executable validation is separate from ordinary module analysis. An executable
-must define exactly one parameterless `main` returning `Int` or `Void`. This
-contract is implemented and feeds the C++ backend.
+The root source file is the executable entry point. Its top-level statements
+run in source order; a declaration-only or empty root completes successfully.
+An ordinary function named `main` has no special entry-point role. Top-level
+`return` is invalid, and `exit(code)` explicitly sets the process status.
+Imported modules cannot contain executable top-level statements.

@@ -16,8 +16,9 @@ after malformed or incomplete input.
 
 ## Implemented slices
 
-- Programs and newline-separated declarations
-- `let` declarations with optional type annotations and initializers
+- Programs and newline-separated declarations and executable root statements
+- Single-name `let` declarations with optional type annotations and
+  initializers; parallel `let` declarations with one initializer per name
 - `const` declarations with mandatory initializers and ASCII
   `SCREAMING_SNAKE_CASE` names
 - Identifier, numeric, Boolean, and grouped primary expressions
@@ -41,7 +42,7 @@ after malformed or incomplete input.
 - Statement blocks, including empty and nested blocks, plus same-line
   single-statement control-flow bodies
 - Ordinary and compound (`+=`, `-=`, `*=`, `/=`, `%=`, `^=`) assignment
-  statements, plus expression statements inside blocks
+  statements, parallel reassignment, plus expression statements inside blocks
 - `if`/`else` statements and `else if` chains
 - `for`/`in`, `while`, and `until` loops
 - Unlabeled `break` and `continue`, restricted to loop bodies
@@ -63,7 +64,8 @@ after malformed or incomplete input.
 - Enum cases with zero or more typed payload declarations
 - Declaration-attached `///` and `/** ... */` documentation comments with
   retained source spans and focused placement diagnostics
-- Declaration-only program roots; executable statements are function-local
+- Script-style root statements; imported modules are checked separately to
+  remain declaration-only
 - Human-readable AST output and success/error demonstrations
 - DOT and standalone SVG AST rendering
 - A self-contained HTML view that places source input beside the visual tree

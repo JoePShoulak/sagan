@@ -1,0 +1,4 @@
+module main
+import orbit_answer from orbit_tools.main
+fun parent_answer(): Int => orbit_answer()
+export parent_answer

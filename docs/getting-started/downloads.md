@@ -9,6 +9,10 @@ verified_by: null
 
 # Downloads
 
+For publisher identity and signature verification, see the
+[code signing policy](../contributing/code-signing-policy.md). The initial
+1.0.0 installer is an explicitly disclosed unsigned exception.
+
 When stable Windows releases are published, they are available from two
 locations:
 

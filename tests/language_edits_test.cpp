@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -111,9 +113,94 @@ auto main() -> int
   const source::document_snapshot incomplete(
       {{source::document_id{102}, source::document_uri{"untitled:incomplete"}, {}}, 1,
        "fun main(): Int {\nlet value = \n"});
-  require(language_service::format_document(incomplete).state ==
-              language_service::edit_state::unsupported,
-          "formatter modified incomplete source");
+  const auto incomplete_format = language_service::format_document(incomplete);
+  require(incomplete_format.state == language_service::edit_state::ready &&
+              language_service::preview_edits(incomplete_format.edits, {&incomplete}).documents.front().text ==
+                  incomplete.text(),
+          "formatter changed an incomplete declaration");
+  const source::document_snapshot recoverable(
+      {{source::document_id{112}, source::document_uri{"untitled:recoverable"}, {}}, 4,
+       "fun main(): Int {\nlet complete=2\nlet pending = \n"});
+  const auto partial = language_service::format_document(recoverable);
+  const auto partial_preview = language_service::preview_edits(partial.edits, {&recoverable});
+  require(partial.state == language_service::edit_state::ready &&
+              partial_preview.state == language_service::edit_state::ready &&
+              partial_preview.documents.front().text ==
+                  "fun main(): Int {\n  let complete = 2\nlet pending = \n",
+          "formatter did not isolate a complete line from an incomplete declaration");
+  const source::document_snapshot partial_again(recoverable.identity(), 5,
+                                                 partial_preview.documents.front().text);
+  require(language_service::format_document(partial_again).edits.documents.front().edits.empty(),
+          "incomplete-source formatting was not idempotent");
+  const auto complete_at = static_cast<source::byte_offset>(recoverable.text().find("let complete"));
+  const auto partial_range = language_service::format_range(recoverable,
+                                                             {complete_at, complete_at + 3});
+  require(partial_range.state == language_service::edit_state::ready &&
+              language_service::preview_edits(partial_range.edits, {&recoverable}).documents.front().text ==
+                  partial_preview.documents.front().text,
+          "range formatting did not isolate a complete line in recovered source");
+  const auto partial_on_type = language_service::format_on_type(recoverable, complete_at + 13, '\n');
+  require(partial_on_type.state == language_service::edit_state::ready &&
+              language_service::preview_edits(partial_on_type.edits, {&recoverable}).documents.front().text ==
+                  partial_preview.documents.front().text,
+          "on-type formatting did not isolate a complete line in recovered source");
+  const std::vector<std::pair<std::string, std::string>> unfinished_cases{
+      {"print(\n", "print("},
+      {"let text = \"unterminated\n", "let text = \"unterminated"},
+      {"/* unterminated\n", "/* unterminated"},
+      {"let values = [1,\n", "let values = [1,"},
+      {"let pending = 1 +\n", "let pending = 1 +"},
+      {"let strange = @\n", "let strange = @"},
+      {"let typed: \n", "let typed:"},
+      {"fun incomplete(value: \n", "fun incomplete(value:"},
+      {"let closure = (value: Int) =>\n", "let closure = (value: Int) =>"},
+      {"import tools.\n", "import tools."},
+      {"export \n", "export "},
+      {"module \n", "module "},
+      {"let value = {\n", "let value = {"},
+      {"let value = [1, 2\n", "let value = [1, 2"},
+      {"let value = <Int\n", "let value = <Int"},
+      {"let text = r\"unfinished\n", "let text = r\"unfinished"},
+      {"let text = \"\"\"unfinished\n", "let text = \"\"\"unfinished"},
+      {"let text = \"${value\n", "let text = \"${value"},
+      {"/* outer /* inner */\n", "/* outer /* inner */"},
+      {"let dictionary = {\"x\": 1,\n", "let dictionary = {\"x\": 1,"},
+      {"let comparison = 2 <\n", "let comparison = 2 <"},
+      {"test \"orbit\" { assert(\n", "test \"orbit\" { assert("}};
+  for (std::size_t index = 0; index < unfinished_cases.size(); ++index)
+  {
+    const auto &[ending, preserved] = unfinished_cases[index];
+    const source::document_snapshot editing(
+        {{source::document_id{static_cast<std::uint64_t>(120 + index)},
+          source::document_uri{"untitled:editing-" + std::to_string(index)}, {}}, 3,
+         "fun main(): Int {\nlet 🚀=1\n" + ending});
+    const auto plan = language_service::format_document(editing);
+    require(plan.state == language_service::edit_state::ready ||
+                (plan.state == language_service::edit_state::unsupported && !plan.reason.empty()),
+            "malformed source produced neither safe edits nor a structured refusal");
+    if (plan.state != language_service::edit_state::ready) continue;
+    const auto preview = language_service::preview_edits(plan.edits, {&editing});
+    require(preview.state == language_service::edit_state::ready &&
+                preview.documents.front().text.find(preserved) != std::string::npos,
+            "formatter rewrote uncertain source");
+    const source::document_snapshot repeated(editing.identity(), 4, preview.documents.front().text);
+    require(language_service::format_document(repeated).edits.documents.front().edits.empty(),
+            "malformed-source formatting was not idempotent");
+  }
+  const source::document_snapshot lone_cr(
+      {{source::document_id{130}, source::document_uri{"untitled:lone-cr"}, {}}, 2,
+       "fun main(): Int {\rlet value=1\rlet pending = \r"});
+  const auto cr_plan = language_service::format_document(lone_cr);
+  require(cr_plan.state == language_service::edit_state::unsupported && !cr_plan.reason.empty(),
+          "formatter did not refuse unsupported lone-CR syntax safely");
+  const source::document_snapshot crlf(
+      {{source::document_id{131}, source::document_uri{"untitled:crlf"}, {}}, 2,
+       "fun main(): Int {\r\nlet value=1\r\nlet pending = \r\n"});
+  const auto crlf_plan = language_service::format_document(crlf);
+  require(crlf_plan.state == language_service::edit_state::ready &&
+              language_service::preview_edits(crlf_plan.edits, {&crlf}).documents.front().text ==
+                  "fun main(): Int {\r\n  let value = 1\r\nlet pending = \r\n",
+          "recovered formatter did not preserve CRLF line endings");
   const source::document_snapshot missing_brace(
       {{source::document_id{111}, source::document_uri{"untitled:missing-brace"}, {}}, 3,
        "fun main(): Int {\n  return 0\n"});

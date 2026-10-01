@@ -32,6 +32,11 @@ declaration. Imports and exports are top-level declarations. `export local as
 public` publishes a top-level variable, function, or type under a public name;
 unexported declarations remain private to the module.
 
+The loose file named on the command line, or the package's configured `entry`
+file, is the executable root. Only that file may contain executable top-level
+statements. Imported modules remain declaration-only and do not run code as a
+side effect of import. The entry file no longer needs `fun main()`.
+
 ## Packages
 
 A package is a directory containing a strict `sagan.toml` manifest:
@@ -70,6 +75,34 @@ package source root. Unknown manifest sections or keys, duplicate keys,
 malformed values, invalid package names or versions, missing source roots, and
 missing entries are errors.
 
+`[dependencies]` entries use quoted exact or caret versions. A package name
+that cannot be imported as a Sagan identifier needs an explicit alias:
+
+```toml
+[dependencies]
+physics = "^1.2.3"
+orbit_tools = { package = "orbit-tools", version = "^0.1.0" }
+```
+
+Set `SAGAN_PACKAGE_INDEX` to a local package index path. A package with
+dependencies must have `sagan.lock` beside its manifest, pinning the exact
+versions of direct and transitive dependencies. The compiler validates the
+lock against the index and installed manifests before linking; it does not
+download packages or rewrite the lockfile. A compiler-library index reader validates the
+`sagan-package-index-v1` schema, local installed manifests, package prefixes,
+and exact/caret compiler compatibility without network access. Its tab-separated
+rows are `name`, `version`, `compiler requirement`, `installed|available`, and
+manifest path (`-` when only available). `sagan.lock` begins with
+`sagan-package-lock-v1`, then sorted tab-separated `name` and exact version
+rows. The library selector can produce lockfile text, but installation and
+lockfile-writing commands remain future work. Ordinary packages without
+dependencies need neither index nor lockfile.
+
+`import orbit_tools.main` uses the dependency alias to select the installed
+package's `main` module. A plain `import orbit_tools` prefers a local module
+of that name. Aliases are scoped to the declaring package, so transitive
+dependencies do not leak into the root package's import namespace.
+
 Loose `.sagan` files do not require a manifest. They use loose-module resolution
 and the safe `console` launch default. A manifest is recommended for a named
 application, especially when selecting windowed launch behavior.
@@ -99,6 +132,6 @@ exports and dependency cycles are rejected, including a complete cycle path.
 The core math vocabulary is automatically available. Physics and rendering are
 planned first-party libraries that will require explicit imports.
 
-Mutable module-level initialization, external dependencies, package registries,
-version constraints, lockfiles, distribution, and the final import granularity
-of physics and rendering remain future work.
+Mutable module-level initialization, package installation/distribution,
+complete package-aware editor queries, and the final import granularity of
+physics and rendering remain future work.

@@ -31,6 +31,7 @@ namespace parser
     auto parse_const_declaration(bool allow_private = false) -> statement_ref;
     auto parse_function_declaration(bool body_optional = false, bool allow_private = false,
                                     bool allow_mutating = false) -> statement_ref;
+    auto parse_test_declaration() -> statement_ref;
     auto parse_constructor_declaration() -> statement_ref;
     auto parse_type_declaration(type_declaration::kind type) -> statement_ref;
     auto parse_measurement_declaration(measurement_declaration::kind type) -> statement_ref;
