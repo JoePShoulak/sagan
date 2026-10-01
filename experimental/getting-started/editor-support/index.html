@@ -1912,6 +1912,8 @@
       
         
       
+        
+      
     
     
     
@@ -2133,6 +2135,42 @@
     
   
     Editor support
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/language-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language server
   
 
     
@@ -3968,8 +4006,9 @@ independent of the compiler version.</p>
 <code>sagan.language-service/1</code> capability response. TextMate coloring is lexical;
 it is not proof that code parses or type-checks. Semantic completion, hover,
 go-to-definition, refactoring, formatting, and live diagnostics remain
-unavailable until the compiler exposes and the extension consumes the required
-language-server capabilities.</p>
+unavailable in the extension until it connects to the compiler's new
+<a href="../../tooling/language-server/">language server</a>. The extension is deliberately
+being updated separately.</p>
 <h2 id="development-host-testing">Development-host testing</h2>
 <p>Open <code>editors/vscode-sagan/</code> in VS Code, press <code>F5</code>, and choose <strong>Run Sagan
 Extension</strong> if prompted. The Extension Development Host opens the bundled

@@ -1811,6 +1811,8 @@
       
         
       
+        
+      
     
     
     
@@ -2032,6 +2034,42 @@
     
   
     Editor support
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../language-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language server
   
 
     
@@ -4245,6 +4283,16 @@ LSP task requests. There is no test-discovery model, live debugger, DAP server,
 attach contract, or reliable optimized-local evaluation. Breakpoints are
 candidate source locations; native debugger validation remains future work.</p>
 <h2 id="phase-8-language-server-protocol-transport">Phase 8 — Language Server Protocol transport</h2>
+<p><strong>Status: implementation and focused protocol fixtures in place; Phase 9 is
+the workload/release gate.</strong> <code>bin/sagan-lsp</code> speaks JSON-RPC/LSP over stdio,
+uses versioned unsaved overlays and UTF-16 positions, handles workspace
+folders and file notifications, publishes diagnostics, and translates the
+completed compiler queries and safe edit actions. Requests can be cancelled
+with <code>$/cancelRequest</code>; protocol stdout contains frames only. The server does
+not implement build/run task requests or DAP. See the
+<a href="../language-server/">language-server guide</a> for the exact advertised surface
+and limitations. <code>make lsp-demo</code> shows source, hover, navigation, and an edit
+diagnostic.</p>
 <ul>
 <li>Add a dedicated stdio JSON-RPC/LSP executable.</li>
 <li>Implement initialization and capability negotiation, workspace lifecycle,
@@ -4254,8 +4302,10 @@ candidate source locations; native debugger validation remains future work.</p>
 <li>Keep transport translation-only. Log to stderr or a configured file, never
   protocol stdout.</li>
 </ul>
-<p><strong>Exit:</strong> lifecycle and request/response fixtures pass against the executable;
-advertised capabilities exactly match the service capability document.</p>
+<p><strong>Exit met:</strong> lifecycle, request/response, overlay, Unicode, cancellation, error,
+hierarchy, edit, and framing fixtures pass against the shared server library
+and executable; advertised capabilities match the
+<a href="../language-server-capabilities/">capability document</a>.</p>
 <h2 id="phase-9-reliability-and-release-gate">Phase 9 — reliability and release gate</h2>
 <ul>
 <li>Add rapid-edit, cancellation, stale-version, malformed-input, multi-workspace,

@@ -1811,6 +1811,8 @@
       
         
       
+        
+      
     
     
     
@@ -2032,6 +2034,42 @@
     
   
     Editor support
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../language-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language server
   
 
     
@@ -2811,10 +2849,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#target-sagan-10-capabilities" class="md-nav__link">
+  <a href="#advertised-phase-8-capabilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Target Sagan 1.0 capabilities
+        Advertised Phase 8 capabilities
       
     </span>
   </a>
@@ -3862,10 +3900,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#target-sagan-10-capabilities" class="md-nav__link">
+  <a href="#advertised-phase-8-capabilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Target Sagan 1.0 capabilities
+        Advertised Phase 8 capabilities
       
     </span>
   </a>
@@ -3905,32 +3943,15 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="language-server-capabilities">Language-server capabilities</h1>
-<p>Sagan does not yet ship a language server. The compiler does expose
-<code>--capabilities-json</code> using the <code>sagan.language-service/1</code> schema and currently
-reports strict checking, structured diagnostics, UTF-16 positions, and
-cancellation as available. Bounded lexical/syntax recovery, lossless source
-retention, versioned document overlays, overlay-first module resolution,
-dependency invalidation, cached reanalysis, cancellation, and stale-result
-rejection are also available. Strict semantic indexing now supplies opaque
-stable symbol IDs, typed kinds/visibility/origin, document-owned declaration
-ranges, overloads, generic specializations, conformances, receiver members,
-canonical types, and identity-based document/workspace references. Selective
-imports and namespace members link to exported identities. The library now has
-tested read-only queries for symbols, hover, inferred type, definitions and
-type definitions, references, highlights, face implementations, type and call
-hierarchies, signatures, completion, source/builtin documentation,
-document/workspace symbols, classifications, folding and selection ranges,
-import links, inlay hints and position context. These are compiler-library
-capabilities, not LSP server features. LSP transport remains unavailable.
-The compiler library also provides versioned check and native build/run
-operations for documents and projects, generated C++ source maps, debugger
-metadata, and a native debug launch plan. These do not constitute a live
-debugger or an LSP task server.
-This document defines the guarantees
-the completed Sagan 1.0 server must satisfy and the capability-discovery shape
-clients may rely on. It is not a claim that blocked capabilities work today.</p>
+<p><code>bin/sagan-lsp</code> now provides the Phase 8 stdio Language Server Protocol
+transport over the shared compiler library. Its <code>initialize</code> response is the
+authority for an individual client's enabled features. The protocol schema is
+<code>sagan-lsp/1</code>, and experimental capability discovery embeds
+<code>sagan.language-service/1</code>. The compiler still owns parsing, semantics,
+module resolution, documentation, formatting, and safe edits. See the
+<a href="../language-server/">language-server guide</a> for a runnable demo and limitations.</p>
 <h2 id="baseline-guarantees">Baseline guarantees</h2>
-<p>The completed server will:</p>
+<p>The current Phase 8 server:</p>
 <ul>
 <li>speak Language Server Protocol over stdio without non-protocol stdout;</li>
 <li>identify its compiler, language, service-schema, project-model, and available
@@ -3938,20 +3959,21 @@ clients may rely on. It is not a claim that blocked capabilities work today.</p>
 <li>use UTF-16 LSP positions while retaining exact UTF-8 byte ranges internally;</li>
 <li>analyze unsaved, versioned overlays across multiple open files;</li>
 <li>reject stale edits and suppress results older than the current document;</li>
-<li>report partial, recovered, cancelled, stale, and complete states honestly;</li>
+<li>cancel queued or active queries through <code>$/cancelRequest</code> and return LSP
+  <code>RequestCancelled</code> for cancelled requests;</li>
 <li>publish stable coded diagnostics with related locations and fixes;</li>
 <li>negotiate and advertise only implemented capabilities;</li>
 <li>obtain syntax, semantics, formatting, project, build, and documentation data
   exclusively from reusable Sagan compiler libraries; and</li>
-<li>remain deterministic for identical workspace snapshots and configuration.</li>
+<li>produce deterministic answers for identical snapshots and configuration.</li>
 </ul>
-<h2 id="target-sagan-10-capabilities">Target Sagan 1.0 capabilities</h2>
-<p>After the roadmap gates pass, the server guarantees synchronization,
+<h2 id="advertised-phase-8-capabilities">Advertised Phase 8 capabilities</h2>
+<p>The server advertises synchronization,
 diagnostics, hover, definition, type definition, implementations, references,
 highlights, signature help, completion, semantic tokens, document/workspace
 symbols, folding, selection ranges, import links, inlay hints, rename, type and
 call hierarchies, code actions, formatting, and required file notifications.</p>
-<p>Individual refactorings are advertised only when their safety proof is
+<p>Individual refactorings are offered only when their safety proof is
 implemented. Test discovery is advertised only after Sagan defines a language
 or project test model. Debug Adapter Protocol support is separate; the language
 server may expose debug metadata discovery but does not claim to be a debugger.</p>
@@ -3968,11 +3990,11 @@ uses the versioned <code>sagan.language-service/1</code> schema and reports:</p>
 <li>cancellation and incremental synchronization modes; and</li>
 <li>explicit unavailability reasons for compiler features not present in a build.</li>
 </ul>
-<p>The current compiler-library discovery JSON includes
+<p>The compiler discovery JSON includes
 <code>"sourceEditsSchema":"sagan-source-edits-v1"</code>. Its C++
 <code>source_edit_capabilities()</code> action list reports which formatting and
 proof-gated edit actions are available and why others are disabled. This is
-not an LSP <code>initialize</code> response: the language server has not been implemented.
+embedded in LSP <code>initialize</code> under <code>experimental.compiler</code>.
 The same JSON reports <code>sagan-operations-v1</code>, <code>sagan-cpp-source-map-v1</code>, and
 <code>sagan-debug-metadata-v1</code>. Native check/build/run, source maps, debug metadata,
 and launch plans are true; test discovery, attach, and optimized-local

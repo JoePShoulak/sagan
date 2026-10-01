@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://sagan.shoulak.org/latest/reference/classes-interfaces-composition/">
+        <link rel="canonical" href="https://sagan.shoulak.org/latest/tooling/language-server/">
       
       
-        <link rel="prev" href="../type-system/">
+        <link rel="prev" href="../editor-support/">
       
       
-        <link rel="next" href="../exceptions/">
+        <link rel="next" href="../../design/status/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Classes, interfaces, and composition - Sagan Documentation</title>
+        <title>Sagan language server - Sagan Documentation</title>
       
     
     
@@ -86,7 +86,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#classes-interfaces-and-composition" class="md-skip">
+        <a href="#sagan-language-server" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Classes, interfaces, and composition
+              Sagan language server
             
           </span>
         </div>
@@ -1058,8 +1058,6 @@
       
   
   
-    
-  
   
   
     
@@ -1102,15 +1100,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../reference/" class="md-nav__link ">
               
   
   
@@ -1142,7 +1140,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1162,7 +1160,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../lexical-specification/" class="md-nav__link">
+      <a href="../../reference/lexical-specification/" class="md-nav__link">
         
   
   
@@ -1198,7 +1196,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../grammar/" class="md-nav__link">
+      <a href="../../reference/grammar/" class="md-nav__link">
         
   
   
@@ -1234,7 +1232,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../declarations/" class="md-nav__link">
+      <a href="../../reference/declarations/" class="md-nav__link">
         
   
   
@@ -1270,7 +1268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expressions/" class="md-nav__link">
+      <a href="../../reference/expressions/" class="md-nav__link">
         
   
   
@@ -1306,7 +1304,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../statements/" class="md-nav__link">
+      <a href="../../reference/statements/" class="md-nav__link">
         
   
   
@@ -1342,7 +1340,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../type-system/" class="md-nav__link">
+      <a href="../../reference/type-system/" class="md-nav__link">
         
   
   
@@ -1375,19 +1373,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../reference/classes-interfaces-composition/" class="md-nav__link">
         
   
   
@@ -1411,7 +1400,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1424,7 +1412,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../exceptions/" class="md-nav__link">
+      <a href="../../reference/exceptions/" class="md-nav__link">
         
   
   
@@ -1460,7 +1448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../modules/" class="md-nav__link">
+      <a href="../../reference/modules/" class="md-nav__link">
         
   
   
@@ -1496,7 +1484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../memory-model/" class="md-nav__link">
+      <a href="../../reference/memory-model/" class="md-nav__link">
         
   
   
@@ -1532,7 +1520,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../units/" class="md-nav__link">
+      <a href="../../reference/units/" class="md-nav__link">
         
   
   
@@ -1804,6 +1792,8 @@
       
   
   
+    
+  
   
   
     
@@ -1834,15 +1824,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../tooling/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -1874,7 +1864,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1894,7 +1884,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/compiler/" class="md-nav__link">
+      <a href="../compiler/" class="md-nav__link">
         
   
   
@@ -1930,7 +1920,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/command-line/" class="md-nav__link">
+      <a href="../command-line/" class="md-nav__link">
         
   
   
@@ -1966,7 +1956,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/diagnostics/" class="md-nav__link">
+      <a href="../diagnostics/" class="md-nav__link">
         
   
   
@@ -2002,7 +1992,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/cpp-backend/" class="md-nav__link">
+      <a href="../cpp-backend/" class="md-nav__link">
         
   
   
@@ -2038,7 +2028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/editor-support/" class="md-nav__link">
+      <a href="../editor-support/" class="md-nav__link">
         
   
   
@@ -2071,10 +2061,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../tooling/language-server/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -2098,6 +2097,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -2590,7 +2590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/language-service-audit/" class="md-nav__link">
+      <a href="../language-service-audit/" class="md-nav__link">
         
   
   
@@ -2626,7 +2626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/language-service-contracts/" class="md-nav__link">
+      <a href="../language-service-contracts/" class="md-nav__link">
         
   
   
@@ -2662,7 +2662,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/language-service-roadmap/" class="md-nav__link">
+      <a href="../language-service-roadmap/" class="md-nav__link">
         
   
   
@@ -2698,7 +2698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/formatting-and-edits/" class="md-nav__link">
+      <a href="../formatting-and-edits/" class="md-nav__link">
         
   
   
@@ -2734,7 +2734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/extension-readiness/" class="md-nav__link">
+      <a href="../extension-readiness/" class="md-nav__link">
         
   
   
@@ -2770,7 +2770,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tooling/language-server-capabilities/" class="md-nav__link">
+      <a href="../language-server-capabilities/" class="md-nav__link">
         
   
   
@@ -3821,54 +3821,40 @@
 <p class="admonition-title">Experimental documentation — Work in progress</p>
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
-<h1 id="classes-interfaces-and-composition">Classes, interfaces, and composition</h1>
-<p>Interfaces, spelled <code>face</code>, are Sagan's primary composition mechanism.
-Interfaces may compose interfaces; classes declare conformance with <code>is</code> or
-<code>has</code>; multiple interfaces are comma-separated; and <code>self</code> refers to the
-current object.</p>
-<p>Composition means building a type from small contracts instead of placing it in
-a deep parent/child class hierarchy. Sagan does not provide implementation
-inheritance. A leading dot marks a private field or method.</p>
-<p><code>face</code> and <code>class</code> are top-level declarations.
-Both accept <code>is</code> or <code>has</code> followed by comma-separated interface names. Faces
-contain signature-only methods or block-bodied defaults. Classes contain <code>let</code>
-fields and block-bodied methods. <code>self</code> is an expression, and a leading dot on
-a class method is retained as private-member syntax in the AST.</p>
-<p>A leading dot makes a field or method private to its declaring class. Methods
-of that class may access it through <code>self</code> or another instance of the same
-class. Outside access is rejected, and a private method cannot satisfy a face
-requirement.</p>
-<p>An unambiguous default is composed into
-the class and may call other requirements from the same face through <code>self</code>.
-An exact-signature class method overrides the default. If multiple directly
-composed faces provide the same default signature, the class must provide an
-explicit override. This is static composition; it does not create a superclass.</p>
-<p>Faces may compose other faces using the same <code>is</code> or <code>has</code> spelling. Required
-signatures and defaults flow transitively to the final class. A face declaration
-may replace an inherited default with its own exact-signature declaration or
-default. Cyclic face composition is invalid.</p>
-<p>Classes are created by calling the class name. A matching <code>new(...)</code>
-constructor initializes the fields:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>face Named {
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  fun label(): String
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>}
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>class Probe is Named {
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  let name: String
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  new(name: String) {
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    self.name = name
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  }
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  fun label(): String =&gt; self.name
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>}
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>let voyager = Probe("Voyager")
-</span></code></pre></div>
-<p>Class and face values have shared reference identity. Calls through a face use
-dynamic dispatch, meaning the concrete class implementation runs even when the
-variable's declared type is the face. See the <a href="../memory-model/">memory model</a>
-for ownership and weak references.</p>
+<h1 id="sagan-language-server">Sagan language server</h1>
+<p><code>bin/sagan-lsp</code> is Sagan's editor-facing process. An editor starts it and sends
+Language Server Protocol messages over standard input. Standard output is
+reserved for framed protocol replies; it is not a terminal command for people
+to type source into. The VS Code extension is a separate project and is not
+changed by this server work.</p>
+<p>From the repository, run <code>make lsp-demo</code> to see a small Sagan program, its
+hover/navigation results, and the diagnostic after an unsaved edit. Run
+<code>bash scripts/test.sh</code> for the full compiler and language-server test suite.</p>
+<p>The server uses Sagan's compiler library for parsing, module resolution,
+semantic queries, formatting, and proof-gated edits. Editors should not
+duplicate those rules. The protocol uses UTF-16 line/character positions and
+preserves the exact URI an editor opened; the compiler retains byte offsets
+and a canonical filesystem path internally. Multiple unsaved modules resolve
+through in-memory overlays before disk files. An edit to one open module
+refreshes diagnostics for all open files, including importers.</p>
+<p>The server currently advertises incremental synchronization, diagnostics,
+hover, definition/type definition, implementations, references and highlights,
+signature help, completion, document/workspace symbols, full semantic tokens,
+folding and selection ranges, import links, inlay hints, type and call
+hierarchies, local rename, safe quick fixes/import organization, and
+document/range/on-type formatting. <code>initialize</code> returns the normal LSP
+capabilities plus Sagan's versioned compiler capability schema under
+<code>experimental</code>. The transport schema is <code>sagan-lsp/1</code>.</p>
+<p>Limits matter: rename is restricted to proven local bindings. Formatter edits
+require strict source and preserve existing line breaks. Completion is
+conservative and has no independent package registry. Module diagnostics may
+have a generic location when an error originates in another file and the
+underlying compiler error lacks source provenance. Test discovery, build/run
+task requests, debugger attach, and Debug Adapter Protocol are not advertised.
+Cancelled requests return LSP <code>RequestCancelled</code>; obsolete diagnostics are
+not published for a newer open-document version. Phase 9 will stress rapid
+edits, large workspaces, repeated requests, logging, and cleanup before the
+server is considered release-ready.</p>
 
 
 

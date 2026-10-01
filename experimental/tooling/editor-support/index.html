@@ -16,7 +16,7 @@
         <link rel="prev" href="../cpp-backend/">
       
       
-        <link rel="next" href="../../design/status/">
+        <link rel="next" href="../language-server/">
       
       
         
@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2060,6 +2062,42 @@
 
       </a>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../language-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language server
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
     </li>
   
 
@@ -3795,15 +3833,16 @@ members, and mutating method names.</p>
 Tooling Status</strong> without enabling capabilities the compiler does not advertise.</p>
 <p>TextMate remains lexical and cannot resolve whether braces are blocks or
 dictionaries, or whether angle brackets are vectors or comparisons.</p>
-<p>There is no active language server, IntelliSense, completion,
-hover information, go-to-definition, formatter, refactoring, or semantic
-diagnostics. The extension should be evaluated as basic syntax coloring only.
+<p>The compiler now has a standalone <a href="../language-server/">language server</a>, but
+this extension has not yet connected to it. In the extension, IntelliSense,
+completion, hover, go-to-definition, formatting, refactoring, and live
+diagnostics remain unavailable. Evaluate the current extension as basic syntax
+coloring and compiler discovery only.
 See <a href="../../getting-started/editor-support/">getting-started editor support</a> for
 installation.</p>
-<p>Compiler-owned editor infrastructure is being built separately from the
-extension. Source snapshots, diagnostics, recovering syntax, workspace
-overlays, and stable semantic identities are available; position-based queries
-and LSP transport are not. Track the <a href="../extension-readiness/">editor feature readiness checklist</a>
+<p>Compiler-owned editor infrastructure is separate from the extension. Source
+snapshots, diagnostics, recovering syntax, overlays, semantic identities,
+position queries, and LSP transport are available. Track the <a href="../extension-readiness/">editor feature readiness checklist</a>
 and <a href="../language-server-capabilities/">language-server capability contract</a>.
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.</p>
