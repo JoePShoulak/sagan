@@ -2849,10 +2849,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#advertised-phase-8-capabilities" class="md-nav__link">
+  <a href="#advertised-capabilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Advertised Phase 8 capabilities
+        Advertised capabilities
       
     </span>
   </a>
@@ -2864,6 +2864,17 @@
     <span class="md-ellipsis">
       
         Capability discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification boundary
       
     </span>
   </a>
@@ -3900,10 +3911,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#advertised-phase-8-capabilities" class="md-nav__link">
+  <a href="#advertised-capabilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Advertised Phase 8 capabilities
+        Advertised capabilities
       
     </span>
   </a>
@@ -3915,6 +3926,17 @@
     <span class="md-ellipsis">
       
         Capability discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification boundary
       
     </span>
   </a>
@@ -3943,7 +3965,7 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="language-server-capabilities">Language-server capabilities</h1>
-<p><code>bin/sagan-lsp</code> now provides the Phase 8 stdio Language Server Protocol
+<p><code>bin/sagan-lsp</code> provides the stdio Language Server Protocol
 transport over the shared compiler library. Its <code>initialize</code> response is the
 authority for an individual client's enabled features. The protocol schema is
 <code>sagan-lsp/1</code>, and experimental capability discovery embeds
@@ -3951,7 +3973,7 @@ authority for an individual client's enabled features. The protocol schema is
 module resolution, documentation, formatting, and safe edits. See the
 <a href="../language-server/">language-server guide</a> for a runnable demo and limitations.</p>
 <h2 id="baseline-guarantees">Baseline guarantees</h2>
-<p>The current Phase 8 server:</p>
+<p>The current server:</p>
 <ul>
 <li>speak Language Server Protocol over stdio without non-protocol stdout;</li>
 <li>identify its compiler, language, service-schema, project-model, and available
@@ -3967,7 +3989,7 @@ module resolution, documentation, formatting, and safe edits. See the
   exclusively from reusable Sagan compiler libraries; and</li>
 <li>produce deterministic answers for identical snapshots and configuration.</li>
 </ul>
-<h2 id="advertised-phase-8-capabilities">Advertised Phase 8 capabilities</h2>
+<h2 id="advertised-capabilities">Advertised capabilities</h2>
 <p>The server advertises synchronization,
 diagnostics, hover, definition, type definition, implementations, references,
 highlights, signature help, completion, semantic tokens, document/workspace
@@ -4001,6 +4023,16 @@ and launch plans are true; test discovery, attach, and optimized-local
 evaluation are false.</p>
 <p>Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.</p>
+<h2 id="verification-boundary">Verification boundary</h2>
+<p>The compiler-library and executable protocol suites cover every advertised
+LSP handler, UTF-16 positions, unsaved overlays, cancellation, framing, and
+request lifecycle. The Phase 9 gate additionally covers multi-root workspaces,
+edit bursts, stale versions, malformed input, repeated queries, overlay
+cleanup, bounded frame size, and stderr-only optional logging. The
+<a href="../language-server/#reliability-gate">reliability guide</a> records repeatable
+commands and performance limits. These tests establish the extension-facing
+server contract; they do not make test discovery, build/run LSP requests,
+cross-file rename, or DAP available.</p>
 
 
 
