@@ -119,6 +119,14 @@ async function run() {
   const declarationRenameEdits = declarationRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
   assert(declarationRenameEdits.length >= 2 && declarationRenameEdits.every((edit) => edit.newText === "height"),
     "local-variable rename from its declaration did not cover the declaration and reference");
+  const beforeAppliedRename = document.getText();
+  assert(await vscode.workspace.applyEdit(declarationRename),
+    "local-variable declaration rename could not be applied atomically");
+  assert(document.getText().includes("let height =") && document.getText().includes("print(height)"),
+    "applied local-variable rename did not update every occurrence");
+  await vscode.commands.executeCommand("undo");
+  await waitFor(() => document.getText() === beforeAppliedRename || undefined,
+    "single-operation rename undo");
 
   let entryRenameRefused = false;
   try {

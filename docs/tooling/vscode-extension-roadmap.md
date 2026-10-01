@@ -29,7 +29,8 @@ covered for local variables, local constants, parameters, loop bindings, match
 bindings, and eligible functions. The server
 also advertises and implements `prepareRename`, so VS Code can select the exact
 identifier and show the compiler-owned reason when a known symbol is ineligible
-before prompting for a name.
+before prompting for a name. The live-host suite applies a declaration-based
+rename and verifies that one undo restores the complete document.
 The remaining critical work is expanding the same proof model to the symbol
 kinds and workspace cases below.
 
