@@ -58,6 +58,13 @@ function assertScoped(tokens, text, scope) {
   );
 }
 
+function assertLineScoped(tokens, line, text, scope) {
+  const matches = tokens.filter((token) => token.line === line && token.text === text);
+  assert(matches.length > 0, `Expected ${JSON.stringify(text)} on line ${line}`);
+  assert(matches.some((token) => token.scopes.some((candidate) => candidate === scope || candidate.startsWith(`${scope}.`))),
+    `Expected ${JSON.stringify(text)} on line ${line} to include ${scope}; got ${JSON.stringify(matches)}`);
+}
+
 function assertNeverScoped(tokens, text, scopeFragment) {
   const matches = tokens.filter((token) => token.text === text || token.text.includes(text));
   assert(matches.length > 0, `Expected token containing ${JSON.stringify(text)}`);
@@ -162,6 +169,21 @@ async function main() {
   assertNeverScoped(malformed, "event", "event");
   assert(!malformed.some((token) => [".5", "5."].includes(token.text) && token.scopes.includes("constant.numeric.float.sagan")));
   assertScoped(malformed, "5", "constant.numeric.integer.sagan");
+
+  const fibonacci = tokenize(grammar, readFixture("fibonacci.sagan"));
+  for (const name of ["i", "a", "b"])
+    assertLineScoped(fibonacci, 2, name, "variable.other.definition.sagan");
+  for (const name of ["low", "high"])
+    assertLineScoped(fibonacci, 8, name, "variable.other.definition.sagan");
+  assertLineScoped(fibonacci, 8, "Int8", "entity.name.type.sagan");
+  assertLineScoped(fibonacci, 8, "Int64", "entity.name.type.sagan");
+  assertScoped(fibonacci, "while", "keyword.control.loop.sagan");
+  assertScoped(fibonacci, "++", "keyword.operator.increment-decrement.sagan");
+  assertScoped(fibonacci, "times", "variable.other.property.sagan");
+  assertScoped(fibonacci, "round", "entity.name.function.member.sagan");
+  assertScoped(fibonacci, "^", "keyword.operator.arithmetic.sagan");
+  assert(fibonacci.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
+    "Fibonacci example contains invalid scopes");
 
   const astExample = fs.readFileSync(path.join(repositoryRoot, "examples", "ast.sagan"), "utf8");
   const parserTokens = tokenize(grammar, astExample);

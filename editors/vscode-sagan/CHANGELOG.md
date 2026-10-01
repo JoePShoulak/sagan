@@ -8,6 +8,12 @@
 - Use authoritative project-wide test execution when `testProjectRun` is
   advertised, including selections spanning multiple documents.
 - Consume recovered-source formatting through the existing LSP providers.
+- Use the compiler's root-file script entry model in the bundled executable
+  demo; `main` is now an ordinary function name.
+- Highlight every binding in a parallel `let` declaration while preserving
+  individual type annotations.
+- Refresh the compiler-valid demo and grammar fixture for compact Fibonacci,
+  integer `.times`, floating-point exponentiation, and `Int.round`.
 
 ## 0.3.4
 

@@ -26,6 +26,14 @@ Project test discovery is supported. When the server advertises project-wide
 execution, a selection spanning several modules runs as one cancellable project
 operation; older compatible servers retain document-grouped execution.
 
+The [demo](examples/demo.sagan) includes grouped `let` bindings, simultaneous
+Fibonacci reassignment, postfix increment, a brace-free loop, `5.times`,
+`PHI ^ n`, and `Int.round(...)`. The compiler and language server determine
+their meaning; TextMate supplies only lexical colors before semantic tokens
+arrive.
+The demo calls its helper from the root file and exits explicitly; Sagan no
+longer requires a `main` function.
+
 Run **Sagan: Show Tooling Status** from the Command Palette to inspect the compiler found for the current workspace. If discovery does not find it, set `sagan.compiler.path` to the compiler executable.
 
 The extension locates `sagan-lsp` beside the configured compiler, in the workspace `bin` directory, or on `PATH`. Set `sagan.server.path` to override discovery. Changes to server, compiler, or trace settings restart the client automatically; **Sagan: Restart Language Server** remains available for manual recovery. Optional sanitized protocol-method tracing is controlled by `sagan.server.trace`.

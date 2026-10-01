@@ -1,0 +1,15 @@
+fun fast_fibonacci(n: Int): Int {
+  let i, a, b = 0, 0, 1
+  while i++ <= n  a, b = b, a + b
+  return b
+}
+
+fun main(): Int {
+  let low: Int8, high: Int64 = 1, 2
+  let indices = 5.times
+  const PHI = (1 + 5 ^ 0.5) / 2
+  print(Int.round(PHI ^ high))
+  print(fast_fibonacci(10))
+  print(indices)
+  return 0
+}

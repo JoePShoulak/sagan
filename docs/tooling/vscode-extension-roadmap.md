@@ -91,10 +91,18 @@ for continued local extension development:
 
 ## Compiler- or protocol-blocked goals
 
-- Add debugging after a Debug Adapter Protocol implementation exists; current
-  source maps and debug metadata alone are not a live debugger.
-- Expand package/module completion after an external package catalog and its
-  compatibility rules are finalized.
+- Add debugging after a Debug Adapter Protocol implementation exists. The
+  compiler now advertises source maps, debug metadata, breakpoint mapping, and
+  a debug launch-plan foundation, and the extension reports those capabilities
+  during tooling discovery. It intentionally does not register a VS Code debug
+  type while `debugAdapter`, `debugLaunch`, breakpoints, stepping, variables,
+  evaluation, and exception capabilities remain false.
+- Expand package/module completion after dependency resolution and the
+  completion/navigation contracts are implemented. The compiler now advertises
+  its installed-source package catalog and query foundation, and the extension
+  reports them during tooling discovery. It intentionally does not synthesize
+  completion or auto-import results while `packageCompletion`,
+  `packageNavigation`, and `packageAutoImport` remain false.
 
 ## Deliberate non-goals
 

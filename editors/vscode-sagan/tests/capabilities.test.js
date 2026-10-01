@@ -22,9 +22,24 @@ function response(overrides = {}) {
 }
 
 async function main() {
-  const parsed = parseCapabilities(response({ recovery: true, semanticIndex: true }));
+  const parsed = parseCapabilities(response({
+    recovery: true,
+    semanticIndex: true,
+    packageCatalog: true,
+    debugLaunchPlan: true
+  }));
   assert.equal(parsed.capabilities.recovery, true);
   assert.equal(parsed.capabilities.languageServer, false);
+  assert.equal(parsed.capabilities.packageCatalog, true);
+  assert.equal(parsed.capabilities.debugLaunchPlan, true);
+  assert.equal(parsed.capabilities.packageCompletion, false);
+  assert.equal(parsed.capabilities.debugAdapter, false);
+
+  const legacy = JSON.parse(response());
+  delete legacy.capabilities.packageCatalog;
+  delete legacy.capabilities.debugLaunchPlan;
+  assert.equal(parseCapabilities(JSON.stringify(legacy)).capabilities.packageCatalog, false);
+  assert.equal(parseCapabilities(JSON.stringify(legacy)).capabilities.debugLaunchPlan, false);
 
   assert.throws(() => parseCapabilities("not json"), /invalid capability JSON/);
   assert.throws(() => parseCapabilities(JSON.stringify({ schema: "future/2" })), /Unsupported/);
