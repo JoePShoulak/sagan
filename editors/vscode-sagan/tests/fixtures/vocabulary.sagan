@@ -4,6 +4,7 @@ export Thing as PublicThing
 
 let value = true
 fun named(parameter: Float): Float => parameter
+test "named behavior" { let observed = named(1.0) }
 class Example<T> has First, Second { weak let .observer: Optional<T>
 let .hidden = 1
 new() {} }

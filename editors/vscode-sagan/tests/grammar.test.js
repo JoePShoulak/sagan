@@ -84,6 +84,7 @@ async function main() {
     weak: "storage.modifier.weak.sagan",
     hidden: "variable.other.definition.sagan",
     fun: "keyword.declaration.function.sagan",
+    test: "keyword.declaration.function.test.sagan",
     new: "keyword.declaration.constructor.sagan",
     class: "keyword.declaration.type.sagan",
     face: "keyword.declaration.type.sagan",
@@ -184,6 +185,12 @@ async function main() {
   assertScoped(fibonacci, "^", "keyword.operator.arithmetic.sagan");
   assert(fibonacci.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
     "Fibonacci example contains invalid scopes");
+
+  const executableFibonacci = tokenize(grammar,
+    fs.readFileSync(path.join(repositoryRoot, "examples", "fibonacci.sagan"), "utf8"));
+  assertScoped(executableFibonacci, "exit", "entity.name.function.call.sagan");
+  assert(executableFibonacci.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
+    "Executable root statements contain invalid scopes");
 
   const astExample = fs.readFileSync(path.join(repositoryRoot, "examples", "ast.sagan"), "utf8");
   const parserTokens = tokenize(grammar, astExample);

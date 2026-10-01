@@ -14,6 +14,8 @@
   individual type annotations.
 - Refresh the compiler-valid demo and grammar fixture for compact Fibonacci,
   integer `.times`, floating-point exponentiation, and `Int.round`.
+- Recognize `test` declarations and executable root statements in the base
+  grammar used before semantic tokens arrive.
 
 ## 0.3.4
 

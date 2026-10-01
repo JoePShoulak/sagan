@@ -173,6 +173,12 @@
     "declarations": {
       "patterns": [
         {
+          "match": "\\b(test)(?=\\s+[\"'])",
+          "captures": {
+            "1": { "name": "keyword.declaration.function.test.sagan" }
+          }
+        },
+        {
           "match": "\\b(new)(?=\\s*\\()",
           "captures": {
             "1": { "name": "keyword.declaration.constructor.sagan" }
@@ -343,7 +349,7 @@
         { "name": "keyword.operator.logical.sagan", "match": "\\b(?:and|or|not)\\b" },
         { "name": "keyword.operator.type.sagan", "match": "\\b(?:is|has)\\b" },
         { "name": "variable.language.self.sagan", "match": "\\bself\\b" },
-        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|new|class|face|enum|dimension|quantity|unit|affine|module)\\b" }
+        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|test|new|class|face|enum|dimension|quantity|unit|affine|module)\\b" }
       ]
     },
     "method-identifiers": {
