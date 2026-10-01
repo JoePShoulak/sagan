@@ -9,7 +9,7 @@ verified_by: null
 
 # Language-server capabilities
 
-`bin/sagan-lsp` now provides the Phase 8 stdio Language Server Protocol
+`bin/sagan-lsp` provides the stdio Language Server Protocol
 transport over the shared compiler library. Its `initialize` response is the
 authority for an individual client's enabled features. The protocol schema is
 `sagan-lsp/1`, and experimental capability discovery embeds
@@ -19,7 +19,7 @@ module resolution, documentation, formatting, and safe edits. See the
 
 ## Baseline guarantees
 
-The current Phase 8 server:
+The current server:
 
 - speak Language Server Protocol over stdio without non-protocol stdout;
 - identify its compiler, language, service-schema, project-model, and available
@@ -35,7 +35,7 @@ The current Phase 8 server:
   exclusively from reusable Sagan compiler libraries; and
 - produce deterministic answers for identical snapshots and configuration.
 
-## Advertised Phase 8 capabilities
+## Advertised capabilities
 
 The server advertises synchronization,
 diagnostics, hover, definition, type definition, implementations, references,
@@ -74,4 +74,16 @@ evaluation are false.
 
 Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.
+
+## Verification boundary
+
+The compiler-library and executable protocol suites cover every advertised
+LSP handler, UTF-16 positions, unsaved overlays, cancellation, framing, and
+request lifecycle. The Phase 9 gate additionally covers multi-root workspaces,
+edit bursts, stale versions, malformed input, repeated queries, overlay
+cleanup, bounded frame size, and stderr-only optional logging. The
+[reliability guide](language-server.md#reliability-gate) records repeatable
+commands and performance limits. These tests establish the extension-facing
+server contract; they do not make test discovery, build/run LSP requests,
+cross-file rename, or DAP available.
 

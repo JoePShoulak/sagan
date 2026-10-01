@@ -241,11 +241,16 @@ and executable; advertised capabilities match the
 
 ## Phase 9 — reliability and release gate
 
-**Status: in progress.** The first server-library stress fixture exercises
-alternating valid and incomplete edits across two open documents, repeated
-semantic requests, rejection of an out-of-order document version, malformed
-source diagnostics, and overlay cleanup. The remaining stress, benchmark,
-fuzzing, and release-gate items below are not yet complete.
+**Status: complete for the advertised Sagan 1.0 editor contract.** The library
+and executable fixtures exercise rapid edits, cancellation, stale versions,
+malformed source and JSON, two package roots, workspace removal and return,
+repeated queries, cleanup, UTF-16 cursor/edit boundaries, diagnostic recovery,
+oversized and truncated frames, and stderr-only logging. The transport has a
+16 MiB frame limit, a 256-message input queue, and no persistent semantic-query
+cache. The repeatable Windows benchmark uses a representative showcase file
+and package graphs; the [language-server guide](language-server.md#reliability-gate)
+publishes conservative regression thresholds. `bash scripts/test.sh` and
+`bash scripts/docs.sh check` pass on the supported Windows configuration.
 
 - Add rapid-edit, cancellation, stale-version, malformed-input, multi-workspace,
   cleanup, cache-budget, and repeated-request stress tests.
@@ -257,4 +262,8 @@ fuzzing, and release-gate items below are not yet complete.
 
 **Exit:** the supported-capabilities document is evidence-backed and the VS Code
 extension can enable each feature solely through negotiated server capabilities.
+
+**Exit met:** the extension can begin integration against `bin/sagan-lsp` and
+the advertised `initialize` capabilities. Deliberately unadvertised features
+remain blocked as listed in the [readiness checklist](extension-readiness.md).
 

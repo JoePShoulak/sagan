@@ -314,6 +314,49 @@ auto main() -> int
           "closing the rapidly edited document did not clean up its overlay");
   notify(service, "textDocument/didClose",
          J::object{{"textDocument", J::object{{"uri", neighbor_uri}}}});
+  for (int iteration = 0; iteration < 40; ++iteration)
+  {
+    const auto recycled_uri = "untitled:recycled-" + std::to_string(iteration);
+    const auto recycled_text = iteration % 5 == 0 ? "fun main( {\n" : "fun main(): Int => 0\n";
+    const auto recycled_opened = notify(service, "textDocument/didOpen",
+           J::object{{"textDocument", J::object{{"uri", recycled_uri}, {"version", 1},
+                                                {"text", recycled_text}}}});
+    require(recycled_opened.size() == 1 &&
+                recycled_opened.front().get("params")->get("diagnostics")->elements()->size() <= 32,
+            "short partial source produced unbounded diagnostics");
+    for (int character = -1; character <= 25; ++character)
+    {
+      const auto answer = service.handle(J::object{{"jsonrpc", "2.0"}, {"id", 1000 + character},
+          {"method", "textDocument/hover"}, {"params", at(recycled_uri, 0, character)}});
+      require(answer.size() == 1 && (answer.front().get("result") || answer.front().get("error")),
+              "cursor-boundary query did not return a bounded result");
+    }
+    notify(service, "textDocument/didClose",
+           J::object{{"textDocument", J::object{{"uri", recycled_uri}}}});
+    require(!service.documents().is_open(sagan::source::document_uri{recycled_uri}),
+            "repeated close retained an overlay");
+  }
+  const std::string edit_uri = "untitled:edit-boundaries";
+  notify(service, "textDocument/didOpen",
+         J::object{{"textDocument", J::object{{"uri", edit_uri}, {"version", 1},
+                                              {"text", "fun 🚀(): Int => 0\n"}}}});
+  int edit_version = 1;
+  for (int character = -2; character <= 40; ++character)
+  {
+    const auto edited = notify(service, "textDocument/didChange",
+        J::object{{"textDocument", J::object{{"uri", edit_uri}, {"version", edit_version + 1}}},
+                  {"contentChanges", J::array{J::object{
+                      {"range", J::object{{"start", J::object{{"line", 0}, {"character", character}}},
+                                          {"end", J::object{{"line", 0}, {"character", character}}}}},
+                      {"text", ""}}}}});
+    if (!edited.empty()) ++edit_version;
+    require(service.documents().read(sagan::source::document_uri{edit_uri}).value->version() ==
+                edit_version &&
+                (character != 5 || edited.empty()),
+            "UTF-16 edit boundary corrupted the document or split an emoji");
+  }
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", edit_uri}}}});
   request(service, "shutdown");
   notify(service, "exit");
   require(service.should_exit(), "exit did not stop the server");
@@ -333,6 +376,18 @@ auto main() -> int
   require(run(malformed_input, malformed_output, malformed) == 0 &&
               malformed_output.str().find("-32700") != std::string::npos,
           "invalid JSON did not receive a parse-error response");
+  server oversized;
+  std::istringstream oversized_input("Content-Length: 16777217\r\n\r\n");
+  std::ostringstream oversized_output;
+  require(run(oversized_input, oversized_output, oversized) == 1 &&
+              oversized_output.str().empty(),
+          "oversized protocol frame was not rejected before allocation");
+  server truncated;
+  std::istringstream truncated_input("Content-Length: 20\r\n\r\n{}");
+  std::ostringstream truncated_output;
+  require(run(truncated_input, truncated_output, truncated) == 1 &&
+              truncated_output.str().empty(),
+          "truncated protocol frame was not rejected");
   server lifecycle;
   const auto lifecycle_input =
       frame(J::object{{"jsonrpc", "2.0"}, {"id", 1}, {"method", "initialize"}}) +

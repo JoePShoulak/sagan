@@ -13,6 +13,11 @@ The extension project should use this checklist rather than infer readiness
 from compiler version numbers. “Blocked” means the authoritative shared service
 contract is not yet implemented; the extension must not reproduce it.
 
+**Handoff status:** the Phase 9 server reliability gate has passed on Windows.
+The extension chat can now wire up the LSP features advertised by `initialize`
+without duplicating Sagan compiler logic. Rows marked unavailable or blocked
+below are deliberate limits, not work for the extension to invent locally.
+
 | Editor feature | Compiler/service gate | Current state |
 | --- | --- | --- |
 | Open/change/save/close | Versioned document store and overlay resolver | **LSP available; dependency edits refresh open importers** |

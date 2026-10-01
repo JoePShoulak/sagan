@@ -189,6 +189,7 @@ test: $(TARGET) $(LANGUAGE_SERVER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) 
 	$(NATIVE_OPERATIONS_TEST)
 	$(LSP_TEST)
 	bash scripts/lsp_protocol_test.sh
+	bash scripts/lsp_reliability_test.sh
 	$(CONSTANTS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh

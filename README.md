@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.84.0](https://img.shields.io/badge/development-0.84.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.85.0](https://img.shields.io/badge/development-0.85.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 

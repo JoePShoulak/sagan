@@ -43,6 +43,25 @@ have a generic location when an error originates in another file and the
 underlying compiler error lacks source provenance. Test discovery, build/run
 task requests, debugger attach, and Debug Adapter Protocol are not advertised.
 Cancelled requests return LSP `RequestCancelled`; obsolete diagnostics are
-not published for a newer open-document version. Phase 9 will stress rapid
-edits, large workspaces, repeated requests, logging, and cleanup before the
-server is considered release-ready.
+not published for a newer open-document version.
+
+## Reliability gate
+
+Run `bash scripts/lsp_reliability_test.sh` after building `bin/sagan-lsp`.
+The full `make test` target runs it too. The gate uses the real stdio process,
+two package roots, a 159-line showcase file, 20 queued edits, repeated semantic
+requests, a stale edit, malformed JSON and source, workspace-folder removal and
+restoration, and document cleanup. A separate library fixture probes cursor
+boundaries, repeated open/close cycles, cancellation, and framing limits.
+
+The generous Windows CI regression limits are 15 seconds per request,
+30 seconds for ten showcase symbol requests, and 60 seconds for the 20-edit
+burst. The test prints observed timings, so a regression can be investigated
+before raising a limit. A protocol frame over 16 MiB is rejected before body
+allocation; the input queue is bounded to 256 messages. The language-server
+transport keeps no persistent semantic-query cache, and closing a document
+removes its in-memory overlay.
+
+To inspect protocol activity, set `SAGAN_LSP_LOG=stderr` when launching the
+server. Logs include only sanitized method names, never source text or
+protocol payloads. Standard output always remains reserved for LSP frames.

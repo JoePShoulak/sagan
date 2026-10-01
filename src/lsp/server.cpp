@@ -7,8 +7,10 @@
 #include <cctype>
 #include <charconv>
 #include <condition_variable>
+#include <cstdlib>
 #include <deque>
 #include <filesystem>
+#include <iostream>
 #include <mutex>
 #include <optional>
 #include <stdexcept>
@@ -181,14 +183,34 @@ namespace sagan::lsp
   auto run(std::istream &input, std::ostream &output, server &service) -> int
   {
     constexpr std::size_t max_message = 16 * 1024 * 1024;
+    const auto *log_setting = std::getenv("SAGAN_LSP_LOG");
+    const bool log_enabled = log_setting && std::string_view(log_setting) == "stderr";
     std::mutex queue_mutex;
     std::mutex output_mutex;
+    std::mutex log_mutex;
     std::condition_variable ready;
     std::deque<J> pending;
     bool input_done = false;
     int read_status = 0;
+    const auto log = [&](const std::string_view direction, const J &message)
+    {
+      if (!log_enabled) return;
+      const auto method = string_field(message, "method");
+      std::string safe_method;
+      for (const unsigned char ch : method)
+      {
+        if (safe_method.size() == 80) break;
+        if (std::isalnum(ch) || ch == '/' || ch == '$' || ch == '.' || ch == '_' || ch == '-')
+          safe_method.push_back(static_cast<char>(ch));
+        else safe_method.push_back('?');
+      }
+      std::scoped_lock lock(log_mutex);
+      std::cerr << "[sagan-lsp] " << direction << ' '
+                << (safe_method.empty() ? "response" : safe_method) << '\n';
+    };
     const auto send = [&](const J &message)
     {
+      log("send", message);
       const auto encoded = json::serialize(message);
       std::scoped_lock lock(output_mutex);
       output << "Content-Length: " << encoded.size() << "\r\n\r\n" << encoded;
@@ -248,6 +270,7 @@ namespace sagan::lsp
       try
       {
         auto message = json::parse(body);
+        log("receive", message);
         if (string_field(message, "method") == "$/cancelRequest")
         {
           if (const auto *id = field(message, "params").get("id")) service.cancel_request(*id);
