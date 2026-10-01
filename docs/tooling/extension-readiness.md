@@ -15,26 +15,26 @@ contract is not yet implemented; the extension must not reproduce it.
 
 | Editor feature | Compiler/service gate | Current state |
 | --- | --- | --- |
-| Open/change/save/close | Versioned document store and overlay resolver | **Compiler API available; LSP transport blocked** |
-| Diagnostics | Structured diagnostics, recovery, UTF-16 conversion, stale-version gate | **Compiler API available; publication/LSP transport blocked** |
-| Hover | Symbol/type/doc query plus semantic snapshot | **Compiler query and shared source/builtin documentation available; LSP transport blocked** |
-| Go to definition/type definition | Stable symbols and indexed locations | **Compiler queries available; LSP transport blocked** |
-| Implementations/conformances | Face/class conformance index | **Face implementation query available; LSP transport blocked** |
-| References/highlights | Identity-based workspace reference index | **Position queries available; LSP transport blocked** |
-| Signature help | Resolved overload/signature query | **Compiler query supports names, overload alternatives and conservative incomplete-call recovery; LSP transport blocked** |
-| Completion | Parser context, semantic scope/type state, module/catalog metadata | **Compiler query supports scope, members, modules, imports and contextual keywords; external package catalogs and LSP transport blocked** |
-| Semantic highlighting | Stable classification vocabulary and ranges | **Compiler classification query available; LSP semantic-token transport blocked** |
-| Document symbols | Hierarchical declaration index | **Hierarchy query available; LSP transport blocked** |
-| Workspace symbols | Workspace semantic index | **Workspace search query available; LSP transport blocked** |
-| Folding | Recovering lossless syntax tree | **Basic syntax/trivia ranges available; precise nested construct ranges and LSP transport blocked** |
-| Selection ranges | Syntax parent chains with precise ranges | **Typed-expression and recovering syntax expansion available; LSP transport blocked** |
-| Document links | Resolved import/module targets | **Resolved import link query available; LSP transport blocked** |
-| Inlay hints | Resolved types/parameters with suppression rules | **Compiler inferred-type and parameter-name hints available; LSP transport blocked** |
-| Rename | Versioned identity-based safe workspace edits | **Local-binding library rename available; cross-file/public rename and LSP transport blocked** |
-| Quick fixes/code actions | Structured fixes and proven refactoring actions | **Organize/add-import and compiler-issued diagnostic-fix library actions available; unsafe actions disabled; LSP transport blocked** |
-| Formatting | Lossless deterministic formatter API | **Strict-parse, token-preserving document/range/on-type library API available; wrapping and incomplete-source formatting unsupported; LSP transport blocked** |
-| Type hierarchy | Type/conformance semantic index | **Compiler query available for indexed conformances; LSP transport blocked** |
-| Call hierarchy | Resolved callable/call-site index | **Compiler query available for resolved calls; LSP transport blocked** |
+| Open/change/save/close | Versioned document store and overlay resolver | **LSP available; dependency edits refresh open importers** |
+| Diagnostics | Structured diagnostics, recovery, UTF-16 conversion, stale-version gate | **LSP publication available; cross-file errors can have generic source locations** |
+| Hover | Symbol/type/doc query plus semantic snapshot | **LSP available from shared source/builtin documentation** |
+| Go to definition/type definition | Stable symbols and indexed locations | **LSP available, including imported modules** |
+| Implementations/conformances | Face/class conformance index | **LSP available** |
+| References/highlights | Identity-based workspace reference index | **LSP available** |
+| Signature help | Resolved overload/signature query | **LSP available; ambiguous incomplete calls remain conservative** |
+| Completion | Parser context, semantic scope/type state, module/catalog metadata | **LSP available for compiler-known candidates; no external package catalog** |
+| Semantic highlighting | Stable classification vocabulary and ranges | **Full-document LSP semantic tokens available** |
+| Document symbols | Hierarchical declaration index | **LSP available** |
+| Workspace symbols | Workspace semantic index | **LSP available for package roots and open module graphs** |
+| Folding | Recovering lossless syntax tree | **LSP available for compiler-derived regions** |
+| Selection ranges | Syntax parent chains with precise ranges | **LSP available** |
+| Document links | Resolved import/module targets | **LSP available** |
+| Inlay hints | Resolved types/parameters with suppression rules | **LSP available** |
+| Rename | Versioned identity-based safe workspace edits | **LSP available for proven local rename; cross-file/public rename unavailable** |
+| Quick fixes/code actions | Structured fixes and proven refactoring actions | **LSP quick fixes and organize imports available; other unsafe actions disabled** |
+| Formatting | Lossless deterministic formatter API | **LSP document/range/on-type available for strict source; incomplete-source formatting unsupported** |
+| Type hierarchy | Type/conformance semantic index | **LSP available for indexed conformances** |
+| Call hierarchy | Resolved callable/call-site index | **LSP available for resolved calls** |
 | Check/build/run tasks | Structured cancellable operations | **Versioned check and native document/project build/run library operations available, with streams, artifacts, cancellation, overlays and stale-result checks; asynchronous orchestration and LSP transport blocked** |
 | Test explorer | Authoritative Sagan test discovery model | **Unavailable by design for now** |
 | Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Source maps, candidate breakpoints, scopes, value metadata and launch plan available; live debugger, attach, optimized-local evaluation and DAP blocked** |

@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.83.0](https://img.shields.io/badge/development-0.83.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.84.0](https://img.shields.io/badge/development-0.84.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -133,6 +133,10 @@ bin/sagan docs/examples/executable/hello.sagan
 Curious about what the compiler sees? It can display tokens, symbols, inferred
 types, generated C++, and syntax trees—including SVG and zoomable HTML trees.
 Start with the [compiler tooling guide](docs/tooling/compiler.md).
+For editor integration, the compiler now has a
+[language server](docs/tooling/language-server.md); `make lsp-demo` shows its
+hover, navigation, and live-diagnostic responses without installing an editor
+extension.
 
 ## Where Sagan is going
 

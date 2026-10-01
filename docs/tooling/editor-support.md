@@ -22,16 +22,17 @@ Tooling Status** without enabling capabilities the compiler does not advertise.
 TextMate remains lexical and cannot resolve whether braces are blocks or
 dictionaries, or whether angle brackets are vectors or comparisons.
 
-There is no active language server, IntelliSense, completion,
-hover information, go-to-definition, formatter, refactoring, or semantic
-diagnostics. The extension should be evaluated as basic syntax coloring only.
+The compiler now has a standalone [language server](language-server.md), but
+this extension has not yet connected to it. In the extension, IntelliSense,
+completion, hover, go-to-definition, formatting, refactoring, and live
+diagnostics remain unavailable. Evaluate the current extension as basic syntax
+coloring and compiler discovery only.
 See [getting-started editor support](../getting-started/editor-support.md) for
 installation.
 
-Compiler-owned editor infrastructure is being built separately from the
-extension. Source snapshots, diagnostics, recovering syntax, workspace
-overlays, and stable semantic identities are available; position-based queries
-and LSP transport are not. Track the [editor feature readiness checklist](extension-readiness.md)
+Compiler-owned editor infrastructure is separate from the extension. Source
+snapshots, diagnostics, recovering syntax, overlays, semantic identities,
+position queries, and LSP transport are available. Track the [editor feature readiness checklist](extension-readiness.md)
 and [language-server capability contract](language-server-capabilities.md).
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.

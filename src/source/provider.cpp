@@ -140,6 +140,9 @@ namespace sagan::source
         return failure(provider_error_code::already_open,
                        "A document overlay is already open for path: " + path.value->string());
       identity = identity_from_path(document_id{next_untitled_identity_++}, *path.value);
+        // Keep the editor's URI spelling while retaining the canonical path
+        // for overlay-first imports. LSP replies must address the opened URI.
+        identity.uri = uri;
       path_to_uri_[path_key(*path.value)] = uri.value;
     }
     else identity = document_identity{document_id{next_untitled_identity_++}, uri, {}};

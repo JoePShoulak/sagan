@@ -62,8 +62,9 @@ The extension can locate the compiler and validate its
 `sagan.language-service/1` capability response. TextMate coloring is lexical;
 it is not proof that code parses or type-checks. Semantic completion, hover,
 go-to-definition, refactoring, formatting, and live diagnostics remain
-unavailable until the compiler exposes and the extension consumes the required
-language-server capabilities.
+unavailable in the extension until it connects to the compiler's new
+[language server](../tooling/language-server.md). The extension is deliberately
+being updated separately.
 
 ## Development-host testing
 

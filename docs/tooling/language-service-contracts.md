@@ -302,10 +302,11 @@ transport remain future orchestration work.
 
 ## Protocol identity and discovery
 
-The initial service schema is `sagan.language-service/1`. Initialization
-returns compiler version, language version, schema version, position encodings,
-workspace/project model version, standard-library catalog version when present,
-and granular capabilities. JSON diagnostic/testing output uses the same schema.
-The LSP server negotiates UTF-16 and translates these records without embedding
-language behavior.
+The service schema is `sagan.language-service/1` and the transport schema is
+`sagan-lsp/1`. `initialize` returns the current build version in `serverInfo`,
+UTF-16 position encoding, implemented standard LSP capabilities, and the
+compiler's granular versioned capability JSON under `experimental.compiler`.
+There is no separately installed package or standard-library catalog version
+to report. JSON diagnostic/testing output uses the compiler schema. The LSP
+server translates these records without embedding language behavior.
 

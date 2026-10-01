@@ -215,6 +215,17 @@ candidate source locations; native debugger validation remains future work.
 
 ## Phase 8 — Language Server Protocol transport
 
+**Status: implementation and focused protocol fixtures in place; Phase 9 is
+the workload/release gate.** `bin/sagan-lsp` speaks JSON-RPC/LSP over stdio,
+uses versioned unsaved overlays and UTF-16 positions, handles workspace
+folders and file notifications, publishes diagnostics, and translates the
+completed compiler queries and safe edit actions. Requests can be cancelled
+with `$/cancelRequest`; protocol stdout contains frames only. The server does
+not implement build/run task requests or DAP. See the
+[language-server guide](language-server.md) for the exact advertised surface
+and limitations. `make lsp-demo` shows source, hover, navigation, and an edit
+diagnostic.
+
 - Add a dedicated stdio JSON-RPC/LSP executable.
 - Implement initialization and capability negotiation, workspace lifecycle,
   incremental document synchronization, diagnostics, all completed read-only
@@ -223,8 +234,10 @@ candidate source locations; native debugger validation remains future work.
 - Keep transport translation-only. Log to stderr or a configured file, never
   protocol stdout.
 
-**Exit:** lifecycle and request/response fixtures pass against the executable;
-advertised capabilities exactly match the service capability document.
+**Exit met:** lifecycle, request/response, overlay, Unicode, cancellation, error,
+hierarchy, edit, and framing fixtures pass against the shared server library
+and executable; advertised capabilities match the
+[capability document](language-server-capabilities.md).
 
 ## Phase 9 — reliability and release gate
 

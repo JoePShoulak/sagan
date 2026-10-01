@@ -28,6 +28,10 @@ LIBRARY_SOURCES := \
 	src/language_service/refactor_fixes.cpp \
 	src/language_service/refactor_imports.cpp \
 	src/language_service/workspace.cpp \
+	src/lsp/json.cpp \
+	src/lsp/server.cpp \
+	src/lsp/server_queries.cpp \
+	src/lsp/server_sync.cpp \
 	src/modules/resolver.cpp \
 	src/parser/ast_render.cpp \
 	src/parser/ast_node.cpp \
@@ -51,6 +55,7 @@ CLI_OBJECTS := obj/main.o obj/version.o
 OBJECTS := $(LIBRARY_OBJECTS) $(CLI_OBJECTS)
 DEPENDENCIES := $(OBJECTS:.o=.d)
 TARGET := bin/$(APPNAME)
+LANGUAGE_SERVER := bin/sagan-lsp
 COMPILER_LIBRARY := build/lib/libsagan-compiler.a
 SOURCE_DIAGNOSTICS_TEST := bin/source-diagnostics-test
 WORKSPACE_TEST := bin/workspace-test
@@ -61,6 +66,7 @@ OPERATIONS_TEST := bin/operations-test
 SOURCE_MAP_TEST := bin/source-map-test
 PROCESS_TEST := bin/process-test
 NATIVE_OPERATIONS_TEST := bin/native-operations-test
+LSP_TEST := bin/lsp-test
 CONSTANTS_TEST := bin/constants-test
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
 WINDOWS_LAUNCHER_RESOURCE := obj/launcher/sagan-resource.o
@@ -76,9 +82,13 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo run-demo geometry-demo units-demo editor-tooling-demo formatter-demo operations-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo run-demo geometry-demo units-demo editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
 
 all: $(TARGET)
+
+$(LANGUAGE_SERVER): src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 libraries: $(COMPILER_LIBRARY)
 
@@ -142,6 +152,10 @@ $(NATIVE_OPERATIONS_TEST): tests/native_operations_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
 
+$(LSP_TEST): tests/lsp_test.cpp obj/version.o $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(LDFLAGS)
+
 $(CONSTANTS_TEST): tests/constants_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
@@ -158,8 +172,9 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(CONSTANTS_TEST)
+test: $(TARGET) $(LANGUAGE_SERVER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(LSP_TEST) $(CONSTANTS_TEST)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
+	bash scripts/windows/check_runtime_imports.sh $(LANGUAGE_SERVER)
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
 	bash scripts/release_mirror_test.sh
@@ -172,6 +187,8 @@ test: $(TARGET) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TE
 	$(SOURCE_MAP_TEST)
 	$(PROCESS_TEST)
 	$(NATIVE_OPERATIONS_TEST)
+	$(LSP_TEST)
+	bash scripts/lsp_protocol_test.sh
 	$(CONSTANTS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
@@ -210,6 +227,10 @@ formatter-demo: $(LANGUAGE_EDITS_TEST)
 operations-demo: $(OPERATIONS_TEST) $(NATIVE_OPERATIONS_TEST)
 	$(OPERATIONS_TEST)
 	$(NATIVE_OPERATIONS_TEST)
+
+lsp-demo: $(LANGUAGE_SERVER) $(LSP_TEST)
+	$(LSP_TEST)
+	bash scripts/lsp_protocol_test.sh
 
 ast-demo: $(TARGET)
 	@mkdir -p build

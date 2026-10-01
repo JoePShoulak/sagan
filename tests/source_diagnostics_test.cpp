@@ -102,7 +102,7 @@ auto main() -> int
                       capabilities.contains("\"structuredDiagnostics\":true") &&
                       capabilities.contains("\"recovery\":true") &&
                       capabilities.contains("\"documentOverlays\":true") &&
-                      capabilities.contains("\"languageServer\":false") &&
+                      capabilities.contains("\"languageServer\":true") &&
                       capabilities.contains("\"documentationCatalog\":\"sagan-documentation-v1\"") &&
                       capabilities.contains("\"sourceEditsSchema\":\"sagan-source-edits-v1\"") &&
                       capabilities.contains("\"operationsSchema\":\"sagan-operations-v1\"") &&

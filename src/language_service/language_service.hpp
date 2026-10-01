@@ -3,6 +3,7 @@
 #include "../diagnostics/diagnostic.hpp"
 #include "../semantic/index.hpp"
 #include "../source/source.hpp"
+#include "../source/provider.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -54,8 +55,13 @@ namespace sagan::language_service
   auto analyze_document(const source::document_snapshot &document, check_options options = {},
                         diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<check_summary>;
+  auto analyze_project_document(const source::document_snapshot &document,
+                                const source::source_provider &provider,
+                                diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<check_summary>;
   auto index_document(const source::document_snapshot &document,
-                      diagnostics::cancellation_token cancellation = {})
+                      diagnostics::cancellation_token cancellation = {},
+                      std::optional<semantic::analysis_identity> identity = {})
     -> diagnostics::analysis_result<semantic_snapshot>;
 }
 

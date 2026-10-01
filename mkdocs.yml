@@ -134,6 +134,7 @@ nav:
       - Diagnostics: tooling/diagnostics.md
       - C++ backend: tooling/cpp-backend.md
       - Editor support: tooling/editor-support.md
+      - Language server: tooling/language-server.md
   - Project development:
       - Current implementation status: design/status.md
       - Compiler implementation:

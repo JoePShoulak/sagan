@@ -21,13 +21,13 @@ Current tooling includes:
   overlays, and a compiler-owned semantic index for future editor features;
 - structured check/build/run library operations, generated-code source maps,
   and debugger metadata for future integrations;
+- a dedicated [Sagan language server](language-server.md) for editor clients;
 - an early VS Code syntax-highlighting extension; and
 - MkDocs and Mike for experimental and released versioned documentation.
 
 There is no package registry, formatter for incomplete source, debugger integration,
-Language Server Protocol server, or REPL yet. Read-only compiler-library queries
-are available, and Phase 6 has a strict-parse formatter and proof-gated edit
-previews. These are not editor protocol features yet. The [readiness audit](language-service-audit.md),
+or REPL yet. The language server exposes the tested read-only queries and safe
+edit actions, but does not provide a debugger or build/run task protocol. The [readiness audit](language-service-audit.md),
 [contracts](language-service-contracts.md), [implementation roadmap](language-service-roadmap.md),
 [formatting/edit safety guide](formatting-and-edits.md), and
 [extension readiness checklist](extension-readiness.md) track what remains.

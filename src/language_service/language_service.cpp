@@ -7,6 +7,7 @@
 #include "../parser/parse_error.hpp"
 #include "../parser/parser.hpp"
 #include "../parser/tokenizer.hpp"
+#include "../modules/resolver.hpp"
 #include "../semantic/analyzer.hpp"
 #include "../semantic/semantic_error.hpp"
 #include "../semantic/type_checker.hpp"
@@ -72,7 +73,7 @@ namespace sagan::language_service
 
   auto supported_capabilities() -> capabilities
   {
-    return capabilities{diagnostics::schema_version, true, true, true, true, true, true, true, false};
+    return capabilities{diagnostics::schema_version, true, true, true, true, true, true, true, true};
   }
 
   auto capabilities_json() -> std::string
@@ -185,8 +186,59 @@ namespace sagan::language_service
     return check_document(document, options, cancellation);
   }
 
+  auto analyze_project_document(const source::document_snapshot &document,
+                                const source::source_provider &provider,
+                                const diagnostics::cancellation_token cancellation)
+    -> diagnostics::analysis_result<check_summary>
+  {
+    if (!document.identity().canonical_path)
+      return analyze_document(document, {.check_types = true}, cancellation);
+    auto syntax_result = syntax::analyze(document, syntax::analysis_options{true, 64}, cancellation);
+    if (syntax_result.state == diagnostics::result_state::cancelled) return cancelled(document);
+    if (syntax_result.state != diagnostics::result_state::complete)
+    {
+      for (auto &issue : syntax_result.diagnostics) attach_closing_brace_fix(document, issue);
+      return {syntax_result.state, {}, std::move(syntax_result.diagnostics), document.version()};
+    }
+    diagnostics::phase phase = diagnostics::phase::module;
+    std::size_t module_count = 0;
+    try
+    {
+      module_count = modules::resolve(*document.identity().canonical_path, provider).modules.size();
+      if (cancellation.is_cancelled()) return cancelled(document);
+      const auto tree = modules::link(*document.identity().canonical_path, provider);
+      phase = diagnostics::phase::semantic;
+      (void)semantic::analyze(tree);
+      if (cancellation.is_cancelled()) return cancelled(document);
+      phase = diagnostics::phase::type;
+      (void)semantic::check_types(tree);
+      if (cancellation.is_cancelled()) return cancelled(document);
+      check_summary summary;
+      summary.token_count = syntax_result.value ? syntax_result.value->tokens.size() : 0;
+      summary.statement_count = tree.statements.size();
+      return {diagnostics::result_state::complete, summary, {}, document.version()};
+    }
+    catch (const semantic::semantic_error &failure)
+    {
+      parser::span range{};
+      if ((failure.origin_path ? *failure.origin_path == *document.identity().canonical_path
+                               : module_count == 1) &&
+          failure.range.begin >= 0 && failure.range.end >= failure.range.begin &&
+          static_cast<std::size_t>(failure.range.end) <= document.text().size())
+        range = failure.range;
+      return {diagnostics::result_state::incomplete, {},
+              {make_diagnostic(document, phase, range, failure.what())}, document.version()};
+    }
+    catch (const std::exception &failure)
+    {
+      return {diagnostics::result_state::incomplete, {},
+              {make_diagnostic(document, phase, {}, failure.what())}, document.version()};
+    }
+  }
+
   auto index_document(const source::document_snapshot &document,
-                      const diagnostics::cancellation_token cancellation)
+                      const diagnostics::cancellation_token cancellation,
+                      const std::optional<semantic::analysis_identity> identity)
     -> diagnostics::analysis_result<semantic_snapshot>
   {
     diagnostics::phase active_phase = diagnostics::phase::syntax;
@@ -205,9 +257,10 @@ namespace sagan::language_service
                               : document.identity().uri.value;
       const bool recovered = !syntax_result.value->strict_ast;
       const auto &tree = recovered ? *syntax_result.value->recovered_ast : *syntax_result.value->strict_ast;
+      const auto selected_identity = identity.value_or(semantic::analysis_identity{"local", module});
       auto model = recovered
-                       ? semantic::analyze_partial(tree, semantic::analysis_identity{"local", module})
-                       : semantic::analyze(tree, semantic::analysis_identity{"local", module});
+                       ? semantic::analyze_partial(tree, selected_identity)
+                       : semantic::analyze(tree, selected_identity);
       std::optional<semantic::type_model> type_model;
       if (!recovered) type_model = semantic::check_types(tree);
       auto index = semantic::build_index(document, model, type_model ? &*type_model : nullptr);
