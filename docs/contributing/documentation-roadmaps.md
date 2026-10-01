@@ -9,10 +9,13 @@ verified_by: null
 
 # Documentation audit roadmap
 
-This audit prepares a frozen Sagan 1.0 documentation release while teaching the
-language from its simplest ideas to its most consequential design choices. Work
-through one stage at a time. Do not turn the roadmap itself into another large
-reference document.
+This page-by-page audit is the **first task after Sagan 1.0.0 is published**.
+The 1.0.0 compiler, release artifacts, and experimental documentation provide
+the starting evidence, not an assumption that every rule or explanation is
+already right. The audit teaches the language from its simplest ideas to its
+most consequential design choices and decides whether any language, tooling,
+or documentation changes are needed after 1.0. Work through one stage at a
+time. Do not turn the roadmap itself into another large reference document.
 
 ## How each stage works
 
@@ -28,13 +31,16 @@ For each stage:
 ### Page outcomes
 
 - **Work in progress:** not yet audited or still being revised.
-- **Complete:** confirmed for Sagan 1.0 by the current reviewer.
+- **Complete:** confirmed against the audited implementation by the current
+  reviewer.
 - **Needs review:** understandable enough to defer, but reserved for Zach's
   focused review.
 
-Only change a page's status after an explicit review decision. A
-complete page records `verified_in: 1.0.0`, the review date, and the reviewer's
-name. A page sent to Zach uses `status: review-needed` and remains
+Only change a page's status after an explicit review decision. A complete
+page records the version chosen for its audited publication in `verified_in`,
+the review date, and the reviewer's name. Do not retroactively describe the
+initial 1.0.0 release or its documentation as audited. A page sent to Zach
+uses `status: review-needed` and remains
 `publication_ready: false` until his questions are resolved.
 
 ## Stage 0 — site experience
@@ -47,7 +53,8 @@ Review the home page and the site as a whole.
 - Test navigation, search, version selection, page-status markers, and links.
 - Confirm that reader documentation is not cluttered with internal planning.
 
-**Decision:** is this the site structure and visual language we want for 1.0?
+**Decision:** is this the site structure and visual language we want to
+publish as audited documentation?
 
 ## Stage 1 — purpose and design principles
 
@@ -58,7 +65,8 @@ Read About Sagan, Design overview, Philosophy, and Goals and non-goals.
 - Make each formal term understandable to a reader without language-design
   experience.
 
-**Decision:** does this accurately explain what Sagan is and why it exists?
+**Decision:** does this accurately explain what Sagan 1.0 does and why it
+exists?
 
 ## Stage 2 — install, write, and run a program
 
@@ -145,7 +153,7 @@ the math, physics, and rendering boundaries.
 
 **Decision:** are Sagan's simulation guarantees useful, precise, and honest?
 
-## Stage 9 — Zach review and 1.0 freeze
+## Stage 9 — Zach review and audited follow-up
 
 Collect every page marked **Needs review** into a short queue. For each page,
 provide the disputed rule, a plain-language explanation, representative
@@ -154,14 +162,18 @@ record a precise 1.0 limitation.
 
 Then:
 
-1. pin the exact Sagan 1.0 source ref and `v1.0.0` tag;
-2. ensure every public 1.0 page is complete for `1.0.0`;
-3. run `bash scripts/docs.sh check` and the release documentation gate;
-4. publish and archive the immutable `1.0.0` documentation version; and
-5. return `experimental` to tracking continued development on `main`.
+1. compare each finding with the immutable `v1.0.0` source and release;
+2. decide whether it needs a documentation correction, a compiler fix, a
+   compatible addition, a breaking change, or a precise recorded limitation;
+3. assign the follow-up version using the ordinary release rules, and verify
+   every page intended for publication against that exact revision;
+4. run `bash scripts/docs.sh check` and the release documentation gate;
+5. publish and archive documentation from the matching follow-up release tag; and
+6. leave `experimental` tracking continued development on `main`.
 
-The archived 1.0 documentation must never be rewritten to match later language
-changes. Corrections belong in a new released documentation version.
+The 1.0.0 tag and assets must never be rewritten to match audit findings.
+Corrections belong in a new released version, with impact chosen from what the
+audit actually finds rather than assuming every finding is a patch.
 
 ## Start here
 

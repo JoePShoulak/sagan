@@ -170,7 +170,7 @@ nav:
           - Release lifecycle: contributing/release-lifecycle.md
           - Ecosystem release readiness: contributing/ecosystem-release-readiness.md
           - Documentation workflow: contributing/documentation.md
-          - Documentation roadmaps: contributing/documentation-roadmaps.md
+          - Post-1.0 documentation audit: contributing/documentation-roadmaps.md
           - Self-hosting: contributing/hosting.md
           - Testing: contributing/testing.md
           - Licensing and attribution: contributing/licensing-and-attribution.md

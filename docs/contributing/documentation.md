@@ -89,6 +89,10 @@ bash scripts/docs.sh check
 
 The unreleased documentation channel is named **experimental**. It is useful to
 project contributors and to anyone building from a clone of the live repository.
+The initial 1.0.0 release does not promote unaudited pages into a numbered
+documentation archive. The page-by-page owner audit begins immediately after
+that release and determines what needs correction before the first audited
+documentation version is published.
 Documentation changes on pull requests are validated on a GitHub-hosted runner.
 After a matching change reaches `main`, the same validation must pass before the
 experimental version is updated and the dedicated HP1 runner installs the
@@ -144,7 +148,8 @@ Zach. All unaudited pages remain `work-in-progress`.
 
 ## Version publication
 
-Every push to `main` refreshes only the `experimental` version. A manual
+Every documentation-relevant push to `main` refreshes only the `experimental`
+version. A manual
 documentation workflow run with a release version performs the publication
 gate, creates an immutable version, moves the `latest` alias to it, and makes
 `latest` the default served at the site root. Existing release directories are
@@ -154,6 +159,8 @@ Release documentation must be built from the matching Sagan release ref. Never
 overwrite an archived release merely to reflect the current repository; publish
 a new release version instead.
 
-The [documentation roadmaps](documentation-roadmaps.md) define the expansion
-plan leading into 1.0 and the ordered behavior-confirmation audit used to move
-pages from unaudited drafts to complete documentation.
+The [documentation audit roadmap](documentation-roadmaps.md) defines the first
+post-1.0 task and the ordered behavior-confirmation process used to move pages
+from unaudited drafts to complete documentation. Audit findings may require
+changes to the language or tooling as well as to the prose; the published
+1.0.0 tag and assets stay immutable.

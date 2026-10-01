@@ -9,10 +9,10 @@ verified_by: null
 
 # Self-hosting
 
-The canonical URL is `https://sagan.shoulak.org/`. HP1 serves released
-documentation archives, the continuously updated `experimental` version, and
-a verified stable-release mirror at `/downloads/` through an independently
-managed public route.
+The canonical URL is `https://sagan.shoulak.org/`. HP1 serves the continuously
+updated `experimental` documentation, can retain audited numbered archives
+after they are approved, and provides a verified stable-release mirror at
+`/downloads/` through an independently managed public route.
 
 ## Hermes ecosystem route
 
@@ -115,8 +115,8 @@ passwordless, narrowly scoped remote helpers; it does not prompt for `sudo`.
 
 ## Versioned publication sequence
 
-Every validated push to `main` updates only `experimental`. When a Sagan release
-and its documentation are approved:
+Every validated documentation-relevant push to `main` updates only
+`experimental`. When a Sagan release and its documentation are approved:
 
 1. review every page and record its verifier, date, and release documentation
    version;
@@ -130,6 +130,13 @@ and its documentation are approved:
 
 Versioned files can be installed on HP1 without system privileges. DNS,
 certificate issuance, and Frontdoor changes remain separate hosting steps.
+
+The initial 1.0.0 release intentionally skips this numbered-documentation
+sequence. Its pages remain on `experimental`; the owner audits them as the
+first post-1.0 task. Publish a numbered documentation version only from a
+matching follow-up release after the audit and release-check pass. Never
+retroactively publish or overwrite a 1.0.0 archive as though it had been
+audited before the 1.0.0 tag.
 
 ## Automatic deployment from GitHub Actions
 

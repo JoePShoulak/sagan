@@ -9,7 +9,8 @@ verified_by: null
 
 # Downloads
 
-Sagan's stable Windows releases are available from two locations:
+When stable Windows releases are published, they are available from two
+locations:
 
 - **[HP1 download mirror](https://sagan.shoulak.org/downloads/)** — installers,
   portable ZIP archives, VS Code extension packages, checksums, release
@@ -23,6 +24,11 @@ SHA-256 files are verified before listing; older releases without one receive a
 mirror-generated checksum alongside the unchanged asset. Release directories
 are immutable, so corrections receive a new version rather than replacing
 existing files.
+
+The first 1.0.0 installer is an approved unsigned exception and may show a
+Windows unknown-publisher warning. Check its SHA-256 sidecar and read its
+release notes before running it. Later signed installers and clean-machine
+acceptance are post-1.0 work, after the documentation audit.
 
 Windows is the only supported installation platform today. Start with the
 [installation guide](installation.md) for the installer, portable CLI setup,

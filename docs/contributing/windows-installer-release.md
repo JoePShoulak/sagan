@@ -37,18 +37,19 @@ bash scripts/windows/test_installer.sh
 ```
 
 The Windows Installer workflow performs the same package build and smoke test.
-An unsigned artifact is a development artifact regardless of version text.
+An unsigned artifact is normally a development artifact; the approved 1.0.0
+release is the single disclosed exception.
 
 ## Public-release signing gate
 
-Public installers and their embedded uninstallers require a trusted
-Authenticode signature. Sagan's own installed executables are signed as part of
-the same build. Release infrastructure supplies an Inno Setup sign-tool
-command through `SAGAN_SIGNTOOL_COMMAND`; the command must contain Inno's `$f`
-file placeholder. Certificate material and credentials must remain in protected
+The signed follow-up release and later public installers require trusted
+Authenticode signatures on the installer, embedded uninstaller, and Sagan
+executables. Release infrastructure will supply an Inno Setup sign-tool command
+through `SAGAN_SIGNTOOL_COMMAND`; the command must contain Inno's `$f` file
+placeholder. Certificate material and credentials must remain in protected
 release infrastructure, never in source control.
 
-Before publication, run:
+For a signed candidate, run before publication:
 
 ```bash
 bash scripts/windows/verify_installer_artifact.sh --release
@@ -56,11 +57,15 @@ bash scripts/windows/verify_installer_artifact.sh --release
 
 This verifies both the checksum and Windows trust validation. Verified signed
 tags trigger release builds; the signing provider and credentials must be
-configured in the protected `release-signing` environment before 1.0.
+configured in the protected `release-signing` environment for the signed
+post-1.0 patch and later releases.
 
-Unsigned artifacts built on ordinary `main` CI runs are development artifacts
-only. Both preview and stable GitHub Releases fail closed unless the trusted
-signature verifies.
+The initial 1.0.0 release is an explicit exception: its unsigned installer may
+be published after automated package tests and project-owner approval, with a
+prominent unknown-publisher warning in its release notes. The page-by-page
+documentation audit comes first after 1.0.0; signing is subsequent acceptance
+work. The signed-release gate must be restored and verified before claiming a
+later public installer meets this policy.
 
 ## Clean-machine acceptance gate
 
@@ -71,5 +76,6 @@ installer SHA-256, and results for interactive install, CLI execution, `.sagan`
 double-click and context-menu behavior, in-place upgrade, downgrade refusal,
 uninstall, and post-uninstall cleanup.
 
-This manual gate is currently **pending**. It may be deferred during development,
-but it blocks publishing Sagan 1.0.
+This manual gate is currently **pending**. It follows the initial 1.0.0
+publication and documentation audit, and becomes mandatory for the signed
+follow-up release that completes Windows distribution acceptance.

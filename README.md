@@ -97,9 +97,12 @@ pattern matching, reference-counted classes, modules, and packages.
 
 ## Install Sagan
 
-Windows x64 is the first supported platform. Download the available installers
-and portable archives from the **[Sagan download mirror](https://sagan.shoulak.org/downloads/)**.
-GitHub Releases remains the canonical release source.
+Windows x64 is the first supported platform. Check
+**[GitHub Releases](https://github.com/JoePShoulak/sagan/releases)** for current
+preview builds; the first stable release is still being prepared. Published
+stable installers and portable archives will also appear on the
+**[Sagan download mirror](https://sagan.shoulak.org/downloads/)**. GitHub
+Releases remains the canonical source.
 
 The installer includes the compiler toolchain, adds `sagan` to `PATH`, and can
 associate `.sagan` files with Sagan. After installation, open a new terminal:
@@ -111,7 +114,9 @@ sagan hello.sagan
 
 See the [installation guide](docs/getting-started/installation.md) for portable
 archives, file associations, windowed programs, upgrades, and building from
-source. Windows ARM64, Linux, and macOS remain future targets.
+source. The initial 1.0 installer will be an explicitly disclosed unsigned
+release, so Windows may show an unknown-publisher warning. Windows ARM64,
+Linux, and macOS remain future targets.
 
 ## Get started
 
@@ -154,6 +159,8 @@ For the honest line between implemented, planned, and deliberately deferred
 work, see [project status](docs/design/status.md). The full documentation is
 also hosted at **[sagan.shoulak.org](https://sagan.shoulak.org/)** and remains
 visibly work-in-progress until its human audit is complete.
+That page-by-page audit is the first task after 1.0 and may lead to follow-up
+changes; the 1.0 release itself will remain immutable.
 
 ## Origins and license
 

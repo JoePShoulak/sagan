@@ -92,9 +92,11 @@ bash scripts/windows/verify_installer_artifact.sh
 bash scripts/windows/test_installer.sh
 ```
 
-Development installers may be unsigned. A public release must be built with
-`SAGAN_SIGNTOOL_COMMAND` set to an Inno Setup-compatible Authenticode signing
-command and must pass:
+The initial 1.0.0 installer is an explicitly disclosed unsigned release and may
+show an unknown-publisher warning. After the first post-1.0 documentation
+audit, the signed follow-up and later public installers must be built with
+`SAGAN_SIGNTOOL_COMMAND` set to an Inno
+Setup-compatible Authenticode signing command and must pass:
 
 ```bash
 bash scripts/windows/verify_installer_artifact.sh --release
@@ -127,11 +129,11 @@ dispatch through `sagan-launch.exe`, file association, PATH registration, and
 clean uninstallation. This prevents a developer or CI MSYS2 installation from
 masking missing runtime dependencies in the packaged executables.
 
-CI and the isolated-path smoke test establish implementation readiness. Before
-publishing 1.0, the exact signed release candidate must still be installed,
-run, upgraded, associated with `.sagan`, and uninstalled on a clean Windows x64
-computer or VM. Until that evidence is recorded, installer acceptance remains
-pending even when automated checks pass.
+CI and the isolated-path smoke test establish implementation readiness. The
+exact signed follow-up candidate must still be installed, run, upgraded,
+associated with `.sagan`, and uninstalled on a clean Windows x64 computer or
+VM. Until that evidence is recorded, Windows distribution acceptance remains
+pending even after the initial 1.0.0 publication.
 
 For documentation tooling, install Python 3 and run:
 

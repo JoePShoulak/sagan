@@ -13,6 +13,7 @@ This page is the technical progress map. It distinguishes behavior that works
 today from planned libraries and external release gates. The `work-in-progress`
 metadata at the top means the prose still awaits the owner's documentation
 audit; it does not mean every listed compiler feature is unfinished.
+
 ## Roadmap snapshot
 
 | Area | Status | Evidence |
@@ -29,7 +30,7 @@ audit; it does not mean every listed compiler feature is unfinished.
 | Explicit constants | **Implemented as immutable bindings** | `const` plus ASCII SCREAMING_SNAKE_CASE, const-view mutation checks, class fields with declaration initializers, native execution and editor grammar tests; general compile-time evaluation deferred |
 | Deterministic execution | **1.0 hypercore contract settled** | exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
-| Editor-tooling foundation | **Read-only query work resumed** | reusable compiler archive, source identity/UTF-16 positions, diagnostics, recovery, overlays, invalidation, cancellation, stable semantic identities and indexes; no LSP server yet |
+| Editor tooling | **Usable language server and VS Code client** | reusable compiler library, source identity/UTF-16 positions, recovery, overlays, semantic queries, formatting, safe edits, stdio LSP, and the capability-aware VS Code 0.3.2 extension; debugger and test transport remain later work |
 
 Every release is a coordinated ecosystem freeze: compiler/language, included
 libraries, documentation, and extension must agree and pass together. See the
@@ -181,20 +182,24 @@ and show a native diagnostic dialog. Release artifacts will
 be published through GitHub's release/package facilities; HP1 may additionally
 host or mirror installer and package data where convenient.
 
-Installer policy is settled for 1.0: Windows x64 only, a self-contained offline
-package, in-place upgrades, refused downgrades, SHA-256 sidecars, and mandatory
-Authenticode signing for public releases. Development artifacts may remain
-unsigned. Automated isolated-environment testing is the implementation gate;
-a clean Windows x64 computer or VM run of the exact signed release candidate is
-a separate release-blocking acceptance gate and is currently pending.
+Installer policy is Windows x64 only, a self-contained offline package,
+in-place upgrades, refused downgrades, and SHA-256 sidecars. Initial 1.0.0
+publication explicitly permits an unsigned installer after automated
+isolated-environment testing and owner approval. Authenticode signing and a
+clean Windows x64 computer or VM run become post-publication acceptance work for
+a later patch release.
 
-The pre-1.0 lifecycle review is complete. Public releases are on demand from
-verified signed tags on `main`; previews publish after automated gates, while
-stable artifacts remain in a draft until the exact signed installer has clean-
-machine evidence and the project owner approves the protected publication
-environment. GitHub Releases is canonical, HP1 is a non-blocking verified
-mirror, artifacts and versioned documentation are immutable, and only the
-latest stable release receives best-effort support. Signing credentials and the
-final clean-machine run remain external 1.0 release gates.
-Full-functionality VS Code extension work has resumed; matching extension
-tests and compiler capabilities are part of every release gate.
+The pre-1.0 lifecycle review is complete. Every push to `main` now runs
+release-preparation CI. From 1.0 onward, a version-changing commit receives a
+CI-signed tag and release gates; a no-version-change commit runs CI without
+duplicating a release. Previews publish after automated gates, while stable
+artifacts remain in a draft until the project owner approves the protected
+publication environment. GitHub Releases is canonical and HP1 is a
+non-blocking verified mirror. Published artifacts and numbered documentation
+are immutable, and only the latest stable release receives best-effort support.
+The initial 1.0.0 documentation stays experimental; its page-by-page audit is
+the **first post-1.0 task** and will determine whether any language, tooling,
+or documentation changes are needed. Authenticode signing and a clean-machine
+run are subsequent Windows acceptance work. The VS Code 0.3.2 language client
+is usable today; matching extension tests and compiler capabilities are part
+of every release gate.

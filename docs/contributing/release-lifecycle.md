@@ -9,10 +9,15 @@ verified_by: null
 
 # Release lifecycle
 
-Sagan releases are on demand. The project has stable and preview channels;
-preview versions use SemVer identifiers such as `1.0.0-rc.1`. Only Joe P.
-Shoulak authorizes stable publication. Support is best effort, with no
-response-time SLA, and covers only the latest stable release.
+Every push to `main` runs release-preparation CI. Before 1.0, it checks the
+release signer but does not create a stable tag. From 1.0 onward, a new
+history-derived version on `main` gets a signed tag and enters the release
+gates; a docs, test, or maintenance commit with no version change does not
+create a duplicate release. Passing stable gates prepares a draft, **not** a
+public release. Only Joe P. Shoulak authorizes publication. Preview versions
+use SemVer identifiers such as `1.0.0-rc.1` and are started from signed preview
+tags. Support is best effort, with no response-time SLA, and covers only the
+latest stable release.
 
 ## Identity and compatibility
 
@@ -28,8 +33,10 @@ documentation are immutable. A failed candidate receives the next identifier;
 an urgent correction uses the ordinary patch pipeline rather than replacing or
 skipping gates.
 
-Release tags use the project owner's registered SSH signing key. A checkout can
-verify a candidate independently from GitHub with:
+Main-driven stable tags use a dedicated CI SSH signing key registered with
+GitHub; an authorized maintainer may also sign a preview tag. Both trusted
+public keys are in `.github/allowed_signers`. A checkout can verify a
+candidate independently from GitHub with:
 
 ```bash
 git -c gpg.ssh.allowedSignersFile=.github/allowed_signers verify-tag vVERSION
@@ -45,9 +52,9 @@ version before running:
 
 - the complete compiler and CLI tests;
 - the enforced 90% line-coverage floor;
-- strict documentation and release-readiness checks;
+- strict documentation build checks;
 - one canonical Windows staging build;
-- Authenticode signing and trust verification;
+- installer checksum and isolated-environment verification;
 - installer and portable-archive checksums;
 - isolated-PATH installer and portable compilation/execution tests;
 - in-place upgrade and downgrade-refusal tests;
@@ -62,7 +69,7 @@ formal incident-management commitment.
 
 Every Windows release contains:
 
-- `sagan-VERSION-windows-x64.exe`, the signed graphical installer;
+- `sagan-VERSION-windows-x64.exe`, the graphical installer;
 - `sagan-VERSION-windows-x64.zip`, a portable CLI archive;
 - `sagan-language-EXTENSION_VERSION.vsix`, the compatible VS Code extension;
 - SHA-256 sidecars for all three packages;
@@ -70,9 +77,9 @@ Every Windows release contains:
 - `sagan-VERSION-sbom.spdx.json`; and
 - reviewed release notes plus GitHub's source archives.
 
-The installer, embedded uninstaller, `sagan.exe`, and `sagan-launch.exe` must
-pass Authenticode verification. Unsigned CI artifacts are development builds
-and cannot be published as previews or stable releases.
+Beginning with the post-1.0 signing patch, the installer, embedded uninstaller,
+`sagan.exe`, and `sagan-launch.exe` must pass Authenticode verification. The
+initial 1.0.0 release is the documented unsigned exception.
 
 The portable ZIP reuses the installer build's `sagan.exe`, compiler toolchain,
 licenses, and version metadata. Its root contains `bin/`, `toolchain/`,
@@ -85,16 +92,25 @@ Signed preview tags publish automatically as GitHub prereleases after automated
 gates. Previews are best effort, may change incompatibly before stable release,
 and receive no backported fixes.
 
-A stable tag creates an unpublished GitHub draft containing the signed assets
-and generated release-note draft. The exact attached installer must then pass a
-clean Windows x64 computer or VM test. The tester records their identity, date,
-Windows version, installer SHA-256, and result in the draft. Publication remains
-behind the protected `stable-release` environment and requires Joe's approval.
+A stable tag creates an unpublished GitHub draft containing the release assets
+and generated release-note draft. Publication remains behind the protected
+`stable-release` environment and requires Joe's approval.
 
-Publishing promotes versioned documentation from the same tag and makes it the
-`latest` documentation version. GitHub Releases is canonical. HP1 mirrors and
-verifies stable assets afterward; mirror failure is reported and retried but
-does not invalidate or block the canonical release.
+For the initial 1.0.0 publication, the documentation audit, Authenticode
+signing, and clean-machine acceptance are explicit post-publication work. The
+release notes must say that the installer is unsigned, may trigger an
+unknown-publisher warning, and has not completed clean-machine acceptance. The
+documentation remains on the experimental channel. **The page-by-page
+documentation audit is the first task after 1.0.0.** It may identify language,
+tooling, or documentation corrections; decide those from the evidence and use
+the normal versioning rules for any follow-up release. Published 1.0.0 assets
+and tags remain immutable.
+
+After the documentation audit is complete, a later release promotes versioned
+documentation from its matching tag and makes it the `latest`
+documentation version. GitHub Releases is canonical. HP1 mirrors and verifies
+stable assets afterward; mirror failure is reported and retried but does not
+invalidate or block the canonical release.
 
 ## Withdrawal and security
 
@@ -108,17 +124,22 @@ the issue is validated privately and the patch release and advisory are
 published together. Only the latest stable release is supported; there are no
 guaranteed backports, deadlines, or service levels.
 
-## External 1.0 prerequisites
+## Post-publication 1.0 follow-ups
 
-The repository intentionally fails closed until release infrastructure has:
+After the initial 1.0.0 publication, audit the documentation first. Then
+complete the remaining distribution work before calling the Windows package
+fully accepted:
 
 - a trusted code-signing identity configured in the protected
   `release-signing` environment;
 - `SAGAN_SIGNTOOL_COMMAND` using SHA-256 Authenticode and an RFC 3161 SHA-256
   timestamp;
-- Joe as the required reviewer for `stable-release`; and
-- recorded clean-machine evidence for the exact signed 1.0.0 installer.
+- versioned documentation published from the matching follow-up release tag; and
+- recorded clean-machine evidence for the exact signed patch installer.
 
-Visual Studio Marketplace publication, semantic editor features, and the math,
-rendering, and physics libraries remain
-separate post-1.0 work.
+Joe remains the required reviewer for every `stable-release` publication,
+including the initial 1.0.0 release.
+
+Visual Studio Marketplace publication, further editor integrations, the
+debugger and test protocols, and the math, rendering, and physics libraries
+remain separate post-1.0 work.
