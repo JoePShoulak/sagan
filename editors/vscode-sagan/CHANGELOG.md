@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Verify PATH-based language-server discovery before reporting success.
+- Restart the language client after relevant configuration changes.
+- Add a working Extension Development Host launch configuration.
+- Refresh editor documentation and record the remaining extension roadmap.
+
 ## 0.3.0
 
 - Connect to `sagan-lsp` with the standard VS Code Language Client.

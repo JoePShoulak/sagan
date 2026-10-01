@@ -22,7 +22,8 @@ Current tooling includes:
 - structured check/build/run library operations, generated-code source maps,
   and debugger metadata for future integrations;
 - a dedicated [Sagan language server](language-server.md) for editor clients;
-- an early VS Code syntax-highlighting extension; and
+- a VS Code extension with tokenizer-aligned highlighting and LSP-backed
+  language features; and
 - MkDocs and Mike for experimental and released versioned documentation.
 
 There is no package registry, formatter for incomplete source, debugger integration,
@@ -31,3 +32,5 @@ edit actions, but does not provide a debugger or build/run task protocol. The [r
 [contracts](language-service-contracts.md), [implementation roadmap](language-service-roadmap.md),
 [formatting/edit safety guide](formatting-and-edits.md), and
 [extension readiness checklist](extension-readiness.md) track what remains.
+The [VS Code extension roadmap](vscode-extension-roadmap.md) separately tracks
+client validation, distribution, and integrations blocked on compiler services.

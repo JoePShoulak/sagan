@@ -5,6 +5,7 @@ const path = require("node:path");
 const {
   capabilityNames,
   discoverCompiler,
+  executableOnPath,
   executableCandidates,
   parseCapabilities,
   selectServerExecutable,
@@ -42,7 +43,9 @@ async function main() {
   assert.equal(servers[1], path.join(path.dirname(path.resolve("./compiler/sagan")), "sagan-lsp"));
   assert.equal(servers[2], path.join(path.resolve("workspace"), "bin", "sagan-lsp"));
   assert.equal(servers.at(-1), "sagan-lsp");
-  assert.equal(selectServerExecutable([path.resolve("missing-sagan-lsp"), "sagan-lsp"]), "sagan-lsp");
+  assert.equal(selectServerExecutable([path.resolve("missing-sagan-lsp")], "", "linux"), undefined);
+  assert.equal(selectServerExecutable([process.execPath]), process.execPath);
+  assert.equal(executableOnPath(path.basename(process.execPath), path.dirname(process.execPath)), process.execPath);
 
   const attempts = [];
   const discovered = await discoverCompiler(["missing", "working"], async (candidate) => {

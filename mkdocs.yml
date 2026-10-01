@@ -151,6 +151,7 @@ nav:
           - Language-service roadmap: tooling/language-service-roadmap.md
           - Formatting and source edits: tooling/formatting-and-edits.md
           - Editor feature readiness: tooling/extension-readiness.md
+          - VS Code extension roadmap: tooling/vscode-extension-roadmap.md
           - Language-server capabilities: tooling/language-server-capabilities.md
       - Design decisions:
           - Overview: decisions/index.md

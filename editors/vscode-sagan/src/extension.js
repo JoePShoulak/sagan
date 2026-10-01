@@ -109,6 +109,13 @@ async function activate(context) {
   context.subscriptions.push(output);
   context.subscriptions.push(vscode.commands.registerCommand("sagan.showToolingStatus", () => inspectTooling(output)));
   context.subscriptions.push(vscode.commands.registerCommand("sagan.restartLanguageServer", restartLanguageServer));
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration("sagan.server.path") ||
+        event.affectsConfiguration("sagan.compiler.path") ||
+        event.affectsConfiguration("sagan.server.trace")) {
+      void restartLanguageServer();
+    }
+  }));
   context.subscriptions.push({ dispose: () => { void stopLanguageServer(); } });
   output.appendLine("Sagan extension activated. Language features follow server capability negotiation.");
   try {

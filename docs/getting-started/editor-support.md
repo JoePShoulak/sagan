@@ -11,7 +11,7 @@ verified_by: null
 
 Sagan provides a VS Code extension that associates `.sagan` files with the
 language, supplies tokenizer-aligned TextMate highlighting, and discovers a
-compatible Sagan compiler. The extension has its own version number; the VSIX
+compatible Sagan compiler and language server. The extension has its own version number; the VSIX
 attached to a Sagan release is built from that same tagged source and is the
 recommended match for the release.
 
@@ -42,11 +42,12 @@ Use this route when working with Sagan's experimental branch:
 cd editors/vscode-sagan
 npm ci
 npm test
+npm run test:bundle
 npm run package
 code --install-extension sagan-language-*.vsix
 ```
 
-The repository's extension version is currently 0.2.0. Its version is
+The repository's extension version is currently 0.3.1. Its version is
 independent of the compiler version.
 
 ## Verify the installation
@@ -55,16 +56,18 @@ independent of the compiler version.
 2. Confirm comments, declarations, strings, interpolation, keywords, and types
    receive syntax coloring.
 3. Run **Sagan: Show Tooling Status** from the Command Palette.
-4. If the compiler is not discovered, set `sagan.compiler.path` to the Sagan
-   executable and run the command again.
+4. Confirm the **Sagan** output channel reports that the language server started.
+5. Try completion, hover, go to definition, diagnostics, formatting, and rename.
+6. If discovery fails, set `sagan.compiler.path` and `sagan.server.path` to the
+   matching executables. Relevant setting changes restart the server automatically.
 
-The extension can locate the compiler and validate its
-`sagan.language-service/1` capability response. TextMate coloring is lexical;
-it is not proof that code parses or type-checks. Semantic completion, hover,
-go-to-definition, refactoring, formatting, and live diagnostics remain
-unavailable in the extension until it connects to the compiler's new
-[language server](../tooling/language-server.md). The extension is deliberately
-being updated separately.
+The extension locates the compiler and [language server](../tooling/language-server.md),
+then enables only the capabilities advertised during LSP initialization.
+TextMate coloring remains lexical and is not proof that code parses or
+type-checks. The VSIX does not embed the native language-server executable; a
+matching Sagan installation must provide `sagan-lsp` on `PATH`, beside the
+configured compiler, in the repository `bin` directory, or through
+`sagan.server.path`.
 
 ## Development-host testing
 

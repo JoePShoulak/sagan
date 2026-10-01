@@ -7,7 +7,7 @@ const commands = new Map();
 const outputLines = [];
 const configuration = new Map([
   ["compiler.path", ""],
-  ["server.path", ""],
+  ["server.path", process.execPath],
   ["server.trace", false]
 ]);
 const output = {
@@ -16,6 +16,7 @@ const output = {
   dispose: () => {},
   show: () => {}
 };
+let configurationListener;
 const vscode = {
   commands: {
     registerCommand: (name, action) => {
@@ -31,6 +32,10 @@ const vscode = {
   },
   workspace: {
     getConfiguration: () => ({ get: (name, fallback) => configuration.get(name) ?? fallback }),
+    onDidChangeConfiguration: (listener) => {
+      configurationListener = listener;
+      return { dispose: () => { configurationListener = undefined; } };
+    },
     workspaceFolders: []
   }
 };
@@ -63,7 +68,7 @@ async function main() {
 
   assert.equal(FakeLanguageClient.instances.length, 1);
   const client = FakeLanguageClient.instances[0];
-  assert.equal(client.serverOptions.command, "sagan-lsp");
+  assert.equal(client.serverOptions.command, process.execPath);
   assert.equal(client.started, true);
   assert.deepEqual(client.clientOptions.documentSelector, [
     { scheme: "file", language: "sagan" },
@@ -71,7 +76,13 @@ async function main() {
   ]);
   assert(commands.has("sagan.showToolingStatus"));
   assert(commands.has("sagan.restartLanguageServer"));
+  assert.equal(typeof configurationListener, "function");
   assert(outputLines.some((line) => line.includes("language server started")));
+
+  configurationListener({ affectsConfiguration: (name) => name === "sagan.server.trace" });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(FakeLanguageClient.instances.length, 2);
+  assert.equal(client.stopped, true);
 
   await extension.deactivate();
   assert.equal(client.stopped, true);

@@ -73,8 +73,35 @@ function serverExecutableCandidates(configuredServerPath, configuredCompilerPath
   return [...new Set(candidates)];
 }
 
-function selectServerExecutable(candidates) {
-  return candidates.find((candidate) => !path.isAbsolute(candidate) || fs.existsSync(candidate));
+function executableOnPath(command, envPath = process.env.PATH || "", platform = process.platform,
+                          pathExtensions = process.env.PATHEXT || ".COM;.EXE;.BAT;.CMD") {
+  const extensions = platform === "win32" && !path.extname(command)
+    ? pathExtensions.split(";").filter(Boolean)
+    : [""];
+  for (const directory of envPath.split(path.delimiter).filter(Boolean)) {
+    const cleanDirectory = directory.replace(/^"|"$/g, "");
+    for (const extension of extensions) {
+      const candidate = path.join(cleanDirectory, `${command}${extension.toLowerCase()}`);
+      if (fs.existsSync(candidate)) return candidate;
+      if (extension) {
+        const originalCase = path.join(cleanDirectory, `${command}${extension}`);
+        if (fs.existsSync(originalCase)) return originalCase;
+      }
+    }
+  }
+  return undefined;
+}
+
+function selectServerExecutable(candidates, envPath, platform = process.platform, pathExtensions) {
+  for (const candidate of candidates) {
+    if (path.isAbsolute(candidate)) {
+      if (fs.existsSync(candidate)) return candidate;
+      continue;
+    }
+    const resolved = executableOnPath(candidate, envPath, platform, pathExtensions);
+    if (resolved) return resolved;
+  }
+  return undefined;
 }
 
 function runCapabilities(executable) {
@@ -114,6 +141,7 @@ async function discoverCompiler(candidates, probe = runCapabilities) {
 module.exports = {
   capabilityNames,
   discoverCompiler,
+  executableOnPath,
   executableCandidates,
   parseCapabilities,
   runCapabilities,

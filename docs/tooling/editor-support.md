@@ -8,25 +8,25 @@ verified_by: null
 ---
 
 # Editor support
-The version 0.2.0 VS Code extension in `editors/vscode-sagan/` associates
+The version 0.3.1 VS Code extension in `editors/vscode-sagan/` associates
 `.sagan` files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations (including explicit `const` and visibly invalid
 `let ALL_CAPS` names), keywords, types, literals, operators, punctuation,
 comments, strings and nested interpolation, Unicode identifiers, private
 members, and mutating method names.
 
-It also discovers a Sagan compiler, validates the versioned
-`sagan.language-service/1` capability response, and exposes **Sagan: Show
-Tooling Status** without enabling capabilities the compiler does not advertise.
+It discovers compatible Sagan compiler and language-server executables,
+validates the versioned `sagan.language-service/1` capability response, and
+exposes **Sagan: Show Tooling Status** and **Sagan: Restart Language Server**.
 
 TextMate remains lexical and cannot resolve whether braces are blocks or
 dictionaries, or whether angle brackets are vectors or comparisons.
 
-The compiler now has a standalone [language server](language-server.md), but
-this extension has not yet connected to it. In the extension, IntelliSense,
-completion, hover, go-to-definition, formatting, refactoring, and live
-diagnostics remain unavailable. Evaluate the current extension as basic syntax
-coloring and compiler discovery only.
+The extension connects to the standalone [language server](language-server.md)
+with VS Code's standard language client. Diagnostics, hover, completion,
+signature help, navigation, symbols, semantic tokens, folding, selection
+ranges, links, inlay hints, safe edits, formatting, and type/call hierarchies
+are enabled according to the server's `initialize` response.
 See [getting-started editor support](../getting-started/editor-support.md) for
 installation.
 
@@ -36,3 +36,6 @@ position queries, and LSP transport are available. Track the [editor feature rea
 and [language-server capability contract](language-server-capabilities.md).
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.
+
+The [VS Code extension roadmap](vscode-extension-roadmap.md) records remaining
+release validation, distribution, and compiler-blocked integrations.
