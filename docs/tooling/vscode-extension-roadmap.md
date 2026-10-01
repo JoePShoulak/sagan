@@ -14,6 +14,30 @@ advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 
+## Critical priority: dependable F2 rename
+
+Reliable rename is the highest-priority editor capability after the current
+release-validation work. The present implementation is deliberately narrow:
+it supports only compiler-proven local bindings and eligible non-entry
+functions within one document. It refuses exported or overloaded functions,
+members, imported symbols, entry points, and cross-file edits. This safe
+boundary is preferable to an incorrect edit, but it is not sufficient for
+normal project development.
+
+The compiler and language server must provide workspace-wide, identity-based
+rename with collision, shadowing, visibility, overload, import/export, and
+rebinding proofs. Requests must be versioned and cancellable, return either one
+complete atomic workspace edit or a specific unsupported reason, and never
+return a partial rename. VS Code should expose `prepareRename` eligibility and
+the compiler-owned refusal reason instead of silently appearing inoperative.
+
+The acceptance matrix must cover declarations and references for local
+variables, parameters, functions, types, classes, faces, members, enum cases,
+modules, imports, aliases, and exports across multiple files. It must also test
+name collisions, shadowing, stale documents, unsaved overlays, Unicode and
+emoji identifiers, mutating names ending in `!`, private names beginning with
+`.`, cancellation, and undo as one workspace operation.
+
 ## Extension-owned release work
 
 - Run a manual VS Code smoke-test matrix on Windows, Linux, and macOS covering
@@ -46,8 +70,6 @@ contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 - Add Test Explorer after Sagan defines and exposes an authoritative test model.
 - Add debugging after a Debug Adapter Protocol implementation exists; current
   source maps and debug metadata alone are not a live debugger.
-- Expand rename beyond proven local edits after safe public and cross-file
-  rename is available.
 - Expand package/module completion after an external package catalog and its
   compatibility rules are finalized.
 - Support formatting of incomplete source after the compiler formatter can do
