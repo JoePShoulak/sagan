@@ -25,7 +25,7 @@ output="$output_dir/sagan-language-$extension_version.vsix"
   npm run package -- --out "../../$output"
 )
 
-sha256sum "$output" > "$output.sha256"
+(cd "$output_dir" && sha256sum "$(basename "$output")" > "$(basename "$output").sha256")
 
 echo "Built build/release/$(basename "$output")"
 echo "Wrote build/release/$(basename "$output").sha256"

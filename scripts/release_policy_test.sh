@@ -35,6 +35,11 @@ grep -Fq '            mingw-w64-ucrt-x86_64-nodejs' "$workflow"
 grep -Fq 'authenticode-required-for-public-release' "$repo_root/scripts/release_metadata.sh"
 grep -Fq 'bash scripts/coverage_threshold.sh' "$workflow"
 grep -Fq 'sagan-${{ github.ref_name }}-release-assets' "$workflow"
+grep -Fq "find release-assets -type f -print0" "$workflow"
+if grep -Fq 'gh release create "$TAG" release-assets/*' "$workflow"; then
+  echo 'Release upload must pass files, not artifact directories.' >&2
+  exit 1
+fi
 grep -Fq 'build/release/*.vsix' "$workflow"
 grep -Fq 'scripts/vscode/build_release.sh' "$repo_root/scripts/windows/build_release_assets.sh"
 grep -Fq 'vscode-extension' "$repo_root/scripts/release_metadata.sh"

@@ -229,8 +229,10 @@ jobs:
           TAG: ${{ github.ref_name }}
           PREVIEW: ${{ needs.validate-tag.outputs.preview }}
         run: |
+          mapfile -d '' -t assets < <(find release-assets -type f -print0)
+          [[ ${#assets[@]} -gt 0 ]] || { echo 'No gated release files were downloaded.' >&2; exit 1; }
           if [[ "$PREVIEW" == true ]]; then
-            gh release create "$TAG" release-assets/* \
+            gh release create "$TAG" "${assets[@]}" \
               --repo "$GITHUB_REPOSITORY" --verify-tag --prerelease \
               --generate-notes --title "Sagan ${TAG#v}"
             if [[ "$TAG" == v0.88.0-rc.1 ]]; then
@@ -246,7 +248,7 @@ jobs:
               gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file release-notes.md
             fi
           else
-            gh release create "$TAG" release-assets/* \
+            gh release create "$TAG" "${assets[@]}" \
               --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
               --generate-notes --title "Sagan ${TAG#v}"
             body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
