@@ -138,9 +138,14 @@ auto main() -> int
   require(prepared_rename.get("range") && prepared_rename.get("placeholder") &&
               prepared_rename.get("placeholder")->string() == "answer",
           "F2 preparation did not select the local declaration name");
-  const auto refused_entry_rename = request(service, "textDocument/prepareRename", at(uri, 1, 4));
-  require(std::holds_alternative<std::nullptr_t>(refused_entry_rename.data),
-          "F2 preparation offered the main entry point");
+  const auto refused_entry_rename = service.handle(
+      J::object{{"jsonrpc", "2.0"}, {"id", 11}, {"method", "textDocument/prepareRename"},
+                {"params", at(uri, 1, 4)}});
+  require(refused_entry_rename.size() == 1 && refused_entry_rename.front().get("error") &&
+              refused_entry_rename.front().get("error")->get("message") &&
+              refused_entry_rename.front().get("error")->get("message")->string()->find(
+                  "non-entry functions") != std::string_view::npos,
+          "F2 preparation did not explain why the main entry point is ineligible");
   const auto renamed = request(service, "textDocument/rename",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"position", J::object{{"line", 3}, {"character", 9}}},

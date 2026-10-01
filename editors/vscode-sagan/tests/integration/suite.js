@@ -126,7 +126,7 @@ async function run() {
       "vscode.executeDocumentRenameProvider", document.uri, new vscode.Position(1, 5), "start");
     entryRenameRefused = entryRename === undefined;
   } catch (error) {
-    entryRenameRefused = /No result/.test(String(error));
+    entryRenameRefused = /No result|non-entry functions/.test(String(error));
   }
   assert(entryRenameRefused, "entry-point rename should be refused until workspace rename is proven");
   console.log("Sagan Extension Development Host integration test passed.");

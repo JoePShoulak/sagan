@@ -464,7 +464,7 @@ namespace sagan::lsp
       const auto symbol = queries.symbol_at(selected());
       if (!symbol.value) return nullptr;
       const auto result = rename_local(document, *index, selected(), symbol.value->name);
-      if (result.state != edit_state::ready) return nullptr;
+      if (result.state != edit_state::ready) throw std::invalid_argument(result.reason);
       return J::object{{"range", lsp_range(document, symbol.value->selection.bytes)},
                        {"placeholder", symbol.value->name}};
     }

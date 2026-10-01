@@ -27,7 +27,8 @@ normal project development.
 Declaration-position selection is now fixed at the compiler query boundary and
 covered for local variables, parameters, and eligible functions. The server
 also advertises and implements `prepareRename`, so VS Code can select the exact
-identifier and refuse known-ineligible symbols before prompting for a name.
+identifier and show the compiler-owned reason when a known symbol is ineligible
+before prompting for a name.
 The remaining critical work is expanding the same proof model to the symbol
 kinds and workspace cases below.
 
