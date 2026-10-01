@@ -3950,6 +3950,16 @@ preserves the exact URI an editor opened; the compiler retains byte offsets
 and a canonical filesystem path internally. Multiple unsaved modules resolve
 through in-memory overlays before disk files. An edit to one open module
 refreshes diagnostics for all open files, including importers.</p>
+<p>The server accepts the current core syntax in unsaved buffers, including
+<code>a, b = b, a + b</code>, integer <code>.times</code> arrays, exponentiation with a
+floating-point base and integer exponent (<code>PHI ^ n</code>), and explicit
+<code>Int.round(value)</code> conversion. Diagnostics and inferred
+types come from the same compiler checks as the CLI. Member completion offers
+<code>times</code> on integer receivers. Hover, semantic classification, the array result
+type, and runtime-error documentation use the compiler's built-in member
+metadata. It is a property, so the insertion is <code>.times</code>, not <code>.times()</code>.
+Completion also offers <code>Int.round(</code> on the built-in <code>Int</code> type, with hover
+and signature documentation for its tie rule and invalid-conversion error.</p>
 <p>The server currently advertises incremental synchronization, diagnostics,
 hover, definition/type definition, implementations, references and highlights,
 signature help, completion, document/workspace symbols, full semantic tokens,

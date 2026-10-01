@@ -4267,9 +4267,9 @@ isolated-environment testing and owner approval. Authenticode signing and a
 clean Windows x64 computer or VM run become post-publication acceptance work for
 a later patch release.</p>
 <p>The pre-1.0 lifecycle review is complete. Every push to <code>main</code> now runs
-release-preparation CI. From 1.0 onward, a version-changing commit receives a
-CI-signed tag and release gates; a no-version-change commit runs CI without
-duplicating a release. Previews publish after automated gates, while stable
+release-preparation CI. A new 0.x version receives a signed <code>-rc.1</code> preview
+tag, while a new 1.x version receives a signed stable tag. A no-version-change
+commit runs CI without duplicating a release. Previews publish after automated gates, while stable
 artifacts remain in a draft until the project owner approves the protected
 publication environment. GitHub Releases is canonical and HP1 is a
 non-blocking verified mirror. Published artifacts and numbered documentation

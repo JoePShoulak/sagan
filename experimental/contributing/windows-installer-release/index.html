@@ -4004,10 +4004,11 @@ distribution remain future work.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bash<span class="w"> </span>scripts/windows/test_installer.sh
 </span></code></pre></div>
 <p>The Windows Installer workflow performs the same package build and smoke test.
-An unsigned artifact is normally a development artifact; the approved 1.0.0
-release is the single disclosed exception.</p>
+An unsigned artifact is normally a development artifact. The experimental
+<code>v0.87.0-rc.1</code> preview and planned initial 1.0.0 release are the two narrowly
+disclosed exceptions.</p>
 <h2 id="public-release-signing-gate">Public-release signing gate</h2>
-<p>The signed follow-up release and later public installers require trusted
+<p>Other public releases require trusted
 Authenticode signatures on the installer, embedded uninstaller, and Sagan
 executables. Release infrastructure will supply an Inno Setup sign-tool command
 through <code>SAGAN_SIGNTOOL_COMMAND</code>; the command must contain Inno's <code>$f</code> file
