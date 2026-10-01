@@ -39,6 +39,16 @@ async function run() {
     "vscode.executeDefinitionProvider", document.uri, callPosition);
   assert(definitions && definitions.length > 0, "definition provider returned no locations");
 
+  const references = await vscode.commands.executeCommand(
+    "vscode.executeReferenceProvider", document.uri, callPosition);
+  assert(references && references.length >= 2,
+    "reference provider did not include the function declaration and call");
+
+  const highlights = await vscode.commands.executeCommand(
+    "vscode.executeDocumentHighlights", document.uri, callPosition);
+  assert(highlights && highlights.length >= 2,
+    "document highlights did not include the function declaration and call");
+
   const completions = await vscode.commands.executeCommand(
     "vscode.executeCompletionItemProvider", document.uri, new vscode.Position(3, 8));
   assert(completions && completions.items.length > 0, "completion provider returned no items");
@@ -50,6 +60,25 @@ async function run() {
   const symbols = await vscode.commands.executeCommand(
     "vscode.executeDocumentSymbolProvider", document.uri);
   assert(symbols && symbols.length > 0, "document symbol provider returned no symbols");
+
+  const workspaceSymbols = await vscode.commands.executeCommand(
+    "vscode.executeWorkspaceSymbolProvider", "main");
+  assert(workspaceSymbols && workspaceSymbols.some((symbol) => symbol.name === "main"),
+    "workspace symbol provider did not return main");
+
+  const foldingRanges = await vscode.commands.executeCommand(
+    "vscode.executeFoldingRangeProvider", document.uri);
+  assert(foldingRanges && foldingRanges.length > 0, "folding provider returned no ranges");
+
+  const selectionRanges = await vscode.commands.executeCommand(
+    "vscode.executeSelectionRangeProvider", document.uri, [callPosition]);
+  assert(selectionRanges && selectionRanges.length === 1,
+    "selection range provider did not return the requested position");
+
+  const semanticTokens = await vscode.commands.executeCommand(
+    "vscode.provideDocumentSemanticTokens", document.uri);
+  assert(semanticTokens && semanticTokens.data && semanticTokens.data.length > 0,
+    "semantic token provider returned no tokens");
 
   const edits = await vscode.commands.executeCommand(
     "vscode.executeFormatDocumentProvider", document.uri, { tabSize: 2, insertSpaces: true });
@@ -75,6 +104,23 @@ async function run() {
   const renameEdits = rename.entries().flatMap(([, editsForDocument]) => editsForDocument);
   assert(renameEdits.length >= 2 && renameEdits.every((edit) => edit.newText === "launch"),
     "rename did not cover the function declaration and call");
+
+  const localRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", document.uri, new vscode.Position(3, 8), "altitude");
+  assert(localRename instanceof vscode.WorkspaceEdit, "local-variable rename did not return a workspace edit");
+  const localRenameEdits = localRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
+  assert(localRenameEdits.length >= 2 && localRenameEdits.every((edit) => edit.newText === "altitude"),
+    "local-variable rename did not cover the declaration and reference");
+
+  let entryRenameRefused = false;
+  try {
+    const entryRename = await vscode.commands.executeCommand(
+      "vscode.executeDocumentRenameProvider", document.uri, new vscode.Position(1, 5), "start");
+    entryRenameRefused = entryRename === undefined;
+  } catch (error) {
+    entryRenameRefused = /No result/.test(String(error));
+  }
+  assert(entryRenameRefused, "entry-point rename should be refused until workspace rename is proven");
   console.log("Sagan Extension Development Host integration test passed.");
 }
 

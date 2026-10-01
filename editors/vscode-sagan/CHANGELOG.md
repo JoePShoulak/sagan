@@ -6,6 +6,7 @@
 - Validate the packaged demonstration with the matching compiler during integration tests.
 - Add a repeatable Linux build, integration, and packaging acceptance script.
 - Record the clean Pop!_OS acceptance results and clarify that `sagan-lsp` is a separate build target.
+- Expand real VS Code integration coverage for references, highlights, workspace symbols, folding, selection ranges, semantic tokens, local-variable rename, and safe entry-point rename refusal.
 
 ## 0.3.3
 

@@ -24,6 +24,11 @@ members, imported symbols, entry points, and cross-file edits. This safe
 boundary is preferable to an incorrect edit, but it is not sufficient for
 normal project development.
 
+The first critical defect is declaration-position selection: a proven local
+variable rename currently succeeds when F2 is invoked on a reference but
+returns no result when invoked on that variable's declaration. Fix and cover
+that normal F2 workflow before expanding to additional symbol kinds.
+
 The compiler and language server must provide workspace-wide, identity-based
 rename with collision, shadowing, visibility, overload, import/export, and
 rebinding proofs. Requests must be versioned and cancellable, return either one
