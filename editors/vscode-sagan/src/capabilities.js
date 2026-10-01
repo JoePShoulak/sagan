@@ -58,6 +58,25 @@ function executableCandidates(configuredPath, workspaceFolders, platform = proce
   return [...new Set(candidates)];
 }
 
+function serverExecutableCandidates(configuredServerPath, configuredCompilerPath, workspaceFolders,
+                                    platform = process.platform) {
+  const serverName = platform === "win32" ? "sagan-lsp.exe" : "sagan-lsp";
+  const candidates = [];
+  if (configuredServerPath && configuredServerPath.trim()) {
+    candidates.push(path.resolve(configuredServerPath.trim()));
+  }
+  if (configuredCompilerPath && configuredCompilerPath.trim()) {
+    candidates.push(path.join(path.dirname(path.resolve(configuredCompilerPath.trim())), serverName));
+  }
+  for (const folder of workspaceFolders) candidates.push(path.join(folder, "bin", serverName));
+  candidates.push("sagan-lsp");
+  return [...new Set(candidates)];
+}
+
+function selectServerExecutable(candidates) {
+  return candidates.find((candidate) => !path.isAbsolute(candidate) || fs.existsSync(candidate));
+}
+
 function runCapabilities(executable) {
   return new Promise((resolve, reject) => {
     execFile(executable, ["--capabilities-json"], { timeout: 5000, maxBuffer: 1024 * 1024, windowsHide: true },
@@ -98,6 +117,8 @@ module.exports = {
   executableCandidates,
   parseCapabilities,
   runCapabilities,
+  selectServerExecutable,
+  serverExecutableCandidates,
   schema,
   validateCapabilities
 };

@@ -2,7 +2,7 @@
   "name": "sagan-language",
   "displayName": "Sagan Language",
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "sagan-language",
   "icon": "images/sagan-logo.png",
   "repository": {
@@ -13,10 +13,11 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "main": "./src/extension.js",
+  "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:sagan",
-    "onCommand:sagan.showToolingStatus"
+    "onCommand:sagan.showToolingStatus",
+    "onCommand:sagan.restartLanguageServer"
   ],
   "categories": [
     "Programming Languages"
@@ -27,11 +28,15 @@
     "syntax-highlighting"
   ],
   "scripts": {
+    "build": "node scripts/build-extension.js",
+    "vscode:prepublish": "npm run build",
     "test": "node tests/run-tests.js",
-    "package": "vsce package"
+    "test:bundle": "npm run build && node tests/bundle.test.js",
+    "package": "npm run build && vsce package"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.6.2",
+    "esbuild": "^0.25.10",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.2.1"
   },
@@ -40,6 +45,10 @@
       {
         "command": "sagan.showToolingStatus",
         "title": "Sagan: Show Tooling Status"
+      },
+      {
+        "command": "sagan.restartLanguageServer",
+        "title": "Sagan: Restart Language Server"
       }
     ],
     "configuration": {
@@ -50,6 +59,18 @@
           "default": "",
           "scope": "machine-overridable",
           "description": "Absolute path to the Sagan compiler. When empty, the extension checks the workspace bin directory and PATH."
+        },
+        "sagan.server.path": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Absolute path to the Sagan language server. When empty, the extension checks beside the configured compiler, the workspace bin directory, and PATH."
+        },
+        "sagan.server.trace": {
+          "type": "boolean",
+          "default": false,
+          "scope": "window",
+          "description": "Write sanitized Sagan language-server protocol method tracing to the extension output channel."
         }
       }
     },
@@ -73,5 +94,8 @@
         "path": "./syntaxes/sagan.tmLanguage.json"
       }
     ]
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   }
 }

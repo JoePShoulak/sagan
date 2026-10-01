@@ -4,22 +4,26 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for the experimental Sagan programming language. Version 0.2.1 tracks the tokenizer and parser grammar, including constants and native measurement declarations, and provides capability-aware compiler discovery.
+VS Code language support for Sagan. Version 0.3.0 connects to the compiler's tested language server and enables every editor feature it advertises.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
 
-The extension provides syntax-based TextMate highlighting and a capability-aware runtime foundation. It can locate a Sagan compiler, validate the `sagan.language-service/1` capability response, and report the available tooling without registering semantic providers that the compiler does not advertise. Live semantic editor features remain disabled until the compiler ships its language server.
+The extension provides TextMate highlighting plus live diagnostics, hover, navigation, references, completion, signature help, symbols, semantic tokens, folding, selection ranges, import links, inlay hints, safe local rename and quick fixes, formatting, and type/call hierarchies through `sagan-lsp`. VS Code registers only the capabilities advertised by the running server.
 
 Run **Sagan: Show Tooling Status** from the Command Palette to inspect the compiler found for the current workspace. If discovery does not find it, set `sagan.compiler.path` to the compiler executable.
 
+The extension locates `sagan-lsp` beside the configured compiler, in the workspace `bin` directory, or on `PATH`. Set `sagan.server.path` to override discovery, and use **Sagan: Restart Language Server** after changing the configured executable. Optional sanitized protocol-method tracing is controlled by `sagan.server.trace`.
+
 ## Local development
 
-1. Open the Sagan repository in VS Code.
-2. Press `F5` and choose **Run Sagan Extension** if prompted.
-3. The Extension Development Host opens `examples/demo.sagan` from this extension.
-4. Confirm the status bar identifies the file as **Sagan**.
+1. Build the repository so `bin/sagan-lsp` is available.
+2. Run `npm ci` and `npm run build` in `editors/vscode-sagan`.
+3. Open the Sagan repository in VS Code.
+4. Press `F5` and choose **Run Sagan Extension** if prompted.
+5. The Extension Development Host opens `examples/demo.sagan` from this extension.
+6. Confirm the status bar identifies the file as **Sagan** and the Sagan output channel reports that the language server started.
 
-No compiler build is required for development-host testing. TextMate grammar changes require restarting the Extension Development Host.
+TextMate grammar or bundled-client changes require rebuilding and restarting the Extension Development Host.
 
 ## Test
 
@@ -30,7 +34,7 @@ npm ci
 npm test
 ```
 
-The tests use VS Code's TextMate and Oniguruma engines to verify scopes for the current vocabulary, Unicode and emoji identifiers, strings and interpolation, nested and documentation comments, enum documentation, yields, exceptions, operators, and retired Schematic constructs.
+The tests use VS Code's TextMate and Oniguruma engines to verify syntax scopes and mocked lifecycle tests to verify server discovery, client startup, command registration, and shutdown. `npm run test:bundle` additionally builds and checks the packaged entry point.
 
 ## Package
 
@@ -48,4 +52,4 @@ The extension is not currently published to the Visual Studio Marketplace.
 
 ## Grammar limits
 
-TextMate highlighting is lexical and cannot fully resolve context-sensitive constructs. In particular, braces may delimit blocks or dictionaries, and angle brackets may delimit vectors or serve as comparison operators. The grammar gives their tokens stable scopes while leaving those grammatical distinctions and all semantic validation to the compiler or a future parser-backed language service.
+TextMate highlighting is lexical and cannot fully resolve context-sensitive constructs before semantic tokens arrive. In particular, braces may delimit blocks or dictionaries, and angle brackets may delimit vectors or serve as comparison operators. The language server supplies compiler-owned semantic validation and classifications after startup.

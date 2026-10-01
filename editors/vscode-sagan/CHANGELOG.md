@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Connect to `sagan-lsp` with the standard VS Code Language Client.
+- Enable diagnostics, hover, navigation, references, completion, signature help, symbols, semantic tokens, folding, selection ranges, links, hints, safe edits, formatting, and hierarchies according to server-advertised capabilities.
+- Discover the server beside the compiler, in workspace `bin`, or on `PATH`, with an explicit override setting.
+- Add a language-server restart command and optional sanitized server tracing.
+- Add focused server-discovery and extension-lifecycle tests.
+- Bundle the standard language client into the VSIX for a self-contained installation.
+
 ## 0.2.1
 
 - Highlight `dimension`, `quantity`, `unit`, and `affine unit` declarations with contextual declaration-name scopes.
