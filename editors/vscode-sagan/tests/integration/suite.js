@@ -196,6 +196,42 @@ async function run() {
   const privateFieldEdits = privateFieldRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
   assert(privateFieldEdits.length === 4 && privateFieldEdits.every((edit) => edit.newText === "count"),
     "private field rename did not cover its declaration and every self reference");
+
+  const aliasMain = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(
+    vscode.workspace.workspaceFolders[0].uri, "alias_rename", "main.sagan"));
+  const aliasOwner = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(
+    vscode.workspace.workspaceFolders[0].uri, "alias_rename", "guidance.sagan"));
+  await vscode.window.showTextDocument(aliasMain);
+  const importLine = aliasMain.lineAt(2).text;
+  const publicNamePosition = new vscode.Position(2, importLine.indexOf("course") + 1);
+  const aliasMainBeforeRename = aliasMain.getText();
+  const aliasOwnerBeforeRename = aliasOwner.getText();
+  const aliasRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", aliasMain.uri, publicNamePosition, "route");
+  assert(aliasRename instanceof vscode.WorkspaceEdit,
+    "exported public-name rename did not return a workspace edit from its import");
+  assert.equal(aliasRename.entries().flatMap(([, editsForDocument]) => editsForDocument).length, 2,
+    "exported public-name rename did not cover its export and import spellings exactly once");
+  assert(await vscode.workspace.applyEdit(aliasRename),
+    "exported public-name rename could not be applied atomically");
+  assert(aliasMain.getText().includes("import route from guidance as calculate_course") &&
+         aliasMain.getText().includes("calculate_course(21)") &&
+         aliasOwner.getText().includes("export calculate as route"),
+    "exported public-name rename changed an independent alias or missed a public spelling");
+  await vscode.commands.executeCommand("undo");
+  await waitFor(() => aliasMain.getText() === aliasMainBeforeRename &&
+                      aliasOwner.getText() === aliasOwnerBeforeRename || undefined,
+    "single-operation exported-name rename undo");
+
+  let collisionRefused = false;
+  try {
+    const collision = await vscode.commands.executeCommand(
+      "vscode.executeDocumentRenameProvider", aliasMain.uri, publicNamePosition, "trajectory");
+    collisionRefused = collision === undefined;
+  } catch (error) {
+    collisionRefused = /rename|result|element/i.test(String(error));
+  }
+  assert(collisionRefused, "exported-name rename accepted a colliding public name");
   console.log("Sagan Extension Development Host integration test passed.");
 }
 

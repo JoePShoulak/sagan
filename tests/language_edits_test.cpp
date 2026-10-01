@@ -423,8 +423,21 @@ auto main() -> int
   const auto public_rename = language_service::rename_workspace(
       *guidance_document.value, guidance_module->index, workspace_index, disk,
       static_cast<source::byte_offset>(guidance_document.value->text().find("course")), "trajectory");
+  const auto main_document = disk.read_path("tests/fixtures/modules/module_demo/main.sagan");
+  const auto main_module = std::find_if(workspace_index.modules().begin(),
+                                        workspace_index.modules().end(), [](const auto &entry)
+  { return entry.name == "main"; });
+  require(main_document.value.has_value() && main_module != workspace_index.modules().end(),
+          "workspace import-site rename fixture was unavailable");
+  const auto import_public_name = static_cast<source::byte_offset>(
+      main_document.value->text().find("course from guidance"));
+  const auto import_site_rename = language_service::rename_workspace(
+      *main_document.value, main_module->index, workspace_index, disk,
+      import_public_name, "trajectory");
   require(public_rename.state == language_service::edit_state::ready &&
-              public_rename.edits.documents.size() == 2,
+              public_rename.edits.documents.size() == 2 &&
+              import_site_rename.state == language_service::edit_state::ready &&
+              import_site_rename.edits.documents.size() == 2,
           "workspace public export rename did not produce an atomic two-document edit");
   std::vector<source::document_snapshot> workspace_documents;
   std::vector<const source::document_snapshot *> workspace_document_views;

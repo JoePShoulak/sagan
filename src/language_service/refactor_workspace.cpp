@@ -137,7 +137,15 @@ namespace sagan::language_service
     const semantic::indexed_symbol *symbol = selected.value ? workspace.find(selected.value->id) : nullptr;
     const semantic::import_link *selected_import = nullptr;
     for (const auto &entry : workspace.imports())
+    {
       if (symbol && entry.binding == symbol->id) { selected_import = &entry; break; }
+      if (entry.declaration.document != document.identity().id) continue;
+      const auto imported_token = identifier_token(current->second, entry.declaration,
+                                                    entry.imported_name);
+      if (imported_token && position >= imported_token->bytes.begin &&
+          position <= imported_token->bytes.end)
+      { selected_import = &entry; break; }
+    }
 
     std::optional<semantic::exported_symbol> exported_storage;
     const semantic::exported_symbol *exported = nullptr;

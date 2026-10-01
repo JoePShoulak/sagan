@@ -28,12 +28,13 @@ workspace edits, revalidates renamed identity groups, and refuses collisions,
 ambiguous receiver types, stale snapshots, incomplete source, and other cases
 it cannot prove safe. The live Extension Development Host suite covers local
 and declaration-position rename, imported public-member navigation, cross-file
-public-member rename, emoji identifiers, private fields, private mutating
-methods, and one-step undo of both single- and multi-file edits.
+public-member rename, exported names with independent import aliases, collision
+refusal, emoji identifiers, private fields, private mutating methods, and
+one-step undo of both single- and multi-file edits.
 
 Remaining rename readiness work is acceptance-matrix expansion rather than a
-missing core provider: add live-host cases for exports and aliases, collisions,
-unsaved overlays, cancellation, and explicit compiler-owned refusal messages.
+missing core provider: add live-host cases for unsaved overlays, cancellation,
+and explicit compiler-owned refusal messages.
 
 ## Extension-owned release work
 
