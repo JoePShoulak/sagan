@@ -17,7 +17,10 @@
   "activationEvents": [
     "onLanguage:sagan",
     "onCommand:sagan.showToolingStatus",
-    "onCommand:sagan.restartLanguageServer"
+    "onCommand:sagan.restartLanguageServer",
+    "onCommand:sagan.check",
+    "onCommand:sagan.build",
+    "onCommand:sagan.run"
   ],
   "categories": [
     "Programming Languages"
@@ -51,6 +54,40 @@
       {
         "command": "sagan.restartLanguageServer",
         "title": "Sagan: Restart Language Server"
+      },
+      {
+        "command": "sagan.check",
+        "title": "Sagan: Check"
+      },
+      {
+        "command": "sagan.build",
+        "title": "Sagan: Build"
+      },
+      {
+        "command": "sagan.run",
+        "title": "Sagan: Run"
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "sagan",
+        "required": ["operation"],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": ["check", "build", "run"]
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["document", "project"],
+            "default": "project"
+          },
+          "profile": {
+            "type": "string",
+            "enum": ["debug", "optimized"],
+            "default": "debug"
+          }
+        }
       }
     ],
     "configuration": {

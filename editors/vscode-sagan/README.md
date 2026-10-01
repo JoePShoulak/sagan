@@ -10,7 +10,20 @@ The extension associates `.sagan` files with Sagan and provides TextMate highlig
 
 The Sagan galaxy-pie logo is registered as the default `.sagan` language icon. VS Code uses it when the active file-icon theme permits language-provided icons and does not define its own `.sagan` icon.
 
-The extension provides TextMate highlighting plus live diagnostics, hover, navigation, references, completion, signature help, symbols, semantic tokens, folding, selection ranges, import links, inlay hints, safe local rename and quick fixes, formatting, and type/call hierarchies through `sagan-lsp`. VS Code registers only the capabilities advertised by the running server.
+The extension provides TextMate highlighting plus live diagnostics, hover,
+navigation, references, completion, signature help, symbols, semantic tokens,
+folding, selection ranges, import links, inlay hints, safe rename and quick
+fixes, recovered-source formatting, type/call hierarchies, cancellable
+check/build/run commands and tasks, and Sagan Test Explorer integration through
+`sagan-lsp`. VS Code registers only the capabilities advertised by the running
+server.
+
+Use **Sagan: Check**, **Sagan: Build**, or **Sagan: Run** for the active Sagan
+document. The `sagan` task type also provides document and project variants.
+When the server advertises the Sagan test contracts, Test Explorer discovers
+tests by their compiler-issued stable IDs and can run all or selected tests.
+Project test discovery is supported; execution is grouped into authoritative
+document runs until the server advertises project-wide test execution.
 
 Run **Sagan: Show Tooling Status** from the Command Palette to inspect the compiler found for the current workspace. If discovery does not find it, set `sagan.compiler.path` to the compiler executable.
 

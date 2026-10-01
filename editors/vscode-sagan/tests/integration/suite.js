@@ -28,6 +28,13 @@ async function run() {
   assert.equal(document.languageId, "sagan");
   await vscode.window.showTextDocument(document);
 
+  const registeredCommands = await vscode.commands.getCommands(true);
+  assert(registeredCommands.includes("sagan.check"),
+    "check command was not registered from the advertised operation transport");
+  assert(registeredCommands.includes("sagan.build") && registeredCommands.includes("sagan.run"),
+    "native build/run commands were not registered from advertised capabilities");
+  await vscode.commands.executeCommand("sagan.check");
+
   const callPosition = new vscode.Position(2, 15);
   const hovers = await waitFor(
     () => vscode.commands.executeCommand("vscode.executeHoverProvider", document.uri, callPosition)

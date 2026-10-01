@@ -74,17 +74,27 @@ for continued local extension development:
   quarantined executables, and platform runtime dependencies as real failures
   are observed.
 
+## Capability-driven extension features
+
+- The compiler library and LSP now expose cancellable check/build/run
+  operations with versioned results and progress. The extension consumes them
+  through cancellable commands and document/project tasks; the server currently
+  serializes requests rather than scheduling concurrent operations.
+- Test Explorer consumes compiler-issued stable IDs, UTF-16 ranges, document
+  and project discovery, selected document execution, structured outcomes, and
+  cancellation. Project-wide execution remains disabled until
+  `testProjectRun` is advertised.
+- Recovered-source document, range, and on-type formatting uses the existing
+  LSP providers when `recoveredFormatting` is advertised; uncertain regions
+  receive no speculative edits.
+
 ## Compiler- or protocol-blocked goals
 
-- Add check/build/run commands and VS Code tasks after the server exposes
-  asynchronous, cancellable operation transport.
-- Add Test Explorer after Sagan defines and exposes an authoritative test model.
 - Add debugging after a Debug Adapter Protocol implementation exists; current
   source maps and debug metadata alone are not a live debugger.
 - Expand package/module completion after an external package catalog and its
   compatibility rules are finalized.
-- Support formatting of incomplete source after the compiler formatter can do
-  so without unsafe or destructive edits.
+- Enable project-wide Test Explorer runs when `testProjectRun` is advertised.
 
 ## Deliberate non-goals
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add capability-gated, cancellable check/build/run commands and Sagan tasks.
+- Add Test Explorer discovery and selected document test execution using the
+  compiler-owned `sagan-tests-v1` contract.
+- Consume recovered-source formatting through the existing LSP providers.
+
 ## 0.3.4
 
 - Replace the parser-only demonstration with a compiler-valid, diagnostic-free Sagan program.

@@ -5,10 +5,13 @@ const { LanguageClient, RevealOutputChannelOn } = require("vscode-languageclient
 const {
   capabilityNames, discoverCompiler, executableCandidates, selectServerExecutable, serverExecutableCandidates
 } = require("./capabilities");
+const { registerOperations } = require("./operations");
+const { registerTesting } = require("./testing");
 
 let client;
 let clientContext;
 let clientOutput;
+let clientFeatureDisposables = [];
 
 function enabledCapabilities(capabilities) {
   return capabilityNames.filter((name) => capabilities[name]);
@@ -49,6 +52,7 @@ async function inspectTooling(output) {
 }
 
 async function stopLanguageServer() {
+  for (const disposable of clientFeatureDisposables.splice(0)) disposable.dispose();
   if (!client) return;
   const stopping = client;
   client = undefined;
@@ -85,6 +89,14 @@ async function startLanguageServer(output) {
   client = new LanguageClient("sagan", "Sagan Language Server", serverOptions, clientOptions);
   output.appendLine(`Starting Sagan language server: ${server}`);
   await client.start();
+  const compilerContract = client.initializeResult?.experimental?.compiler ||
+    client.initializeResult?.capabilities?.experimental?.compiler;
+  const compilerCapabilities = compilerContract?.capabilities || {};
+  const featureContext = { subscriptions: clientFeatureDisposables };
+  registerOperations(featureContext, client, output, compilerCapabilities);
+  registerTesting(featureContext, client, output, compilerCapabilities);
+  const enabled = enabledCapabilities(compilerCapabilities);
+  output.appendLine(`Compiler capabilities: ${enabled.join(", ") || "none"}`);
   output.appendLine("Sagan language server started; VS Code registered its advertised capabilities.");
   return true;
 }
