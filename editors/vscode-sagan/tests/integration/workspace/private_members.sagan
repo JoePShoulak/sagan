@@ -1,0 +1,19 @@
+class Counter {
+  let .value: Int
+
+  new(initial: Int) {
+    self.value = initial
+  }
+
+  fun .advance!(): Int {
+    self.value++
+    return self.value
+  }
+
+  fun run!(): Int => self.advance!()
+}
+
+fun main(): Int {
+  let counter = Counter(1)
+  return counter.run!()
+}

@@ -173,6 +173,29 @@ async function run() {
   const mainRenameEdits = mainRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
   assert(mainRenameEdits.length === 1 && mainRenameEdits[0].newText === "start",
     "ordinary function named main did not rename its declaration exactly once");
+
+  const privateMembers = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(
+    vscode.workspace.workspaceFolders[0].uri, "private_members.sagan"));
+  await vscode.window.showTextDocument(privateMembers);
+  const privateMethodLine = privateMembers.lineAt(12).text;
+  const privateMethodPosition = new vscode.Position(12, privateMethodLine.indexOf("advance!") + 1);
+  const privateMethodRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", privateMembers.uri, privateMethodPosition, "step!");
+  assert(privateMethodRename instanceof vscode.WorkspaceEdit,
+    "private mutating method rename did not return a workspace edit");
+  const privateMethodEdits = privateMethodRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
+  assert(privateMethodEdits.length === 2 && privateMethodEdits.every((edit) => edit.newText === "step!"),
+    "private mutating method rename did not preserve the ! spelling across declaration and call");
+
+  const privateFieldLine = privateMembers.lineAt(4).text;
+  const privateFieldPosition = new vscode.Position(4, privateFieldLine.indexOf("value") + 1);
+  const privateFieldRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", privateMembers.uri, privateFieldPosition, "count");
+  assert(privateFieldRename instanceof vscode.WorkspaceEdit,
+    "private field rename did not return a workspace edit");
+  const privateFieldEdits = privateFieldRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
+  assert(privateFieldEdits.length === 4 && privateFieldEdits.every((edit) => edit.newText === "count"),
+    "private field rename did not cover its declaration and every self reference");
   console.log("Sagan Extension Development Host integration test passed.");
 }
 
