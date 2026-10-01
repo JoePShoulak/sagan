@@ -173,6 +173,8 @@ namespace sagan::lsp
     }
     catch (const request_cancelled &failure)
     { return id ? std::vector<J>{error(*id, -32800, failure.what())} : std::vector<J>{}; }
+    catch (const request_failed &failure)
+    { return id ? std::vector<J>{error(*id, -32803, failure.what())} : std::vector<J>{}; }
     catch (const std::invalid_argument &failure)
     { return id ? std::vector<J>{error(*id, -32602, failure.what())} : std::vector<J>{}; }
     catch (const std::out_of_range &failure)

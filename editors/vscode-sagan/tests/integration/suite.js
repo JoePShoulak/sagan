@@ -246,9 +246,10 @@ async function run() {
       "vscode.executeDocumentRenameProvider", aliasMain.uri, publicNamePosition, "trajectory");
     collisionRefused = collision === undefined;
   } catch (error) {
-    collisionRefused = /rename|result|element/i.test(String(error));
+    collisionRefused = String(error).includes("Proposed public name is already exported by this module");
   }
-  assert(collisionRefused, "exported-name rename accepted a colliding public name");
+  assert(collisionRefused,
+    "exported-name rename did not surface the compiler-owned collision explanation");
   console.log("Sagan Extension Development Host integration test passed.");
 }
 

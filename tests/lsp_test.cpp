@@ -167,6 +167,26 @@ auto main() -> int
               renamed_function.get("documentChanges")->elements()->size() == 1 &&
               renamed_function.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
           "F2 function rename did not include the declaration and call");
+  const auto invalid_rename = service.handle(J::object{
+      {"jsonrpc", "2.0"}, {"id", 11}, {"method", "textDocument/rename"},
+      {"params", J::object{{"textDocument", J::object{{"uri", uri}}},
+                            {"position", J::object{{"line", 2}, {"character", 8}}},
+                            {"newName", "return"}}}});
+  require(invalid_rename.size() == 1 && invalid_rename.front().get("error") &&
+              invalid_rename.front().get("error")->get("code")->integer() == -32803 &&
+              invalid_rename.front().get("error")->get("message")->string() ==
+                  "Proposed name is not a valid binding identifier",
+          "F2 invalid-name refusal did not preserve the compiler-owned explanation");
+  const auto conflicting_rename = service.handle(J::object{
+      {"jsonrpc", "2.0"}, {"id", 12}, {"method", "textDocument/rename"},
+      {"params", J::object{{"textDocument", J::object{{"uri", uri}}},
+                            {"position", J::object{{"line", 2}, {"character", 8}}},
+                            {"newName", "main"}}}});
+  require(conflicting_rename.size() == 1 && conflicting_rename.front().get("error") &&
+              conflicting_rename.front().get("error")->get("code")->integer() == -32803 &&
+              conflicting_rename.front().get("error")->get("message")->string() ==
+                  "Proposed name already exists in the semantic scope set",
+          "F2 collision refusal did not preserve the compiler-owned explanation");
   const auto actions = request(service, "textDocument/codeAction",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"context", J::object{{"diagnostics", J::array{}}}},

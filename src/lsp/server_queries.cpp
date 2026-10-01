@@ -489,7 +489,7 @@ namespace sagan::lsp
           : edit_plan{edit_state::unsupported, "Workspace export requires workspace proof", {}};
       if (result.state == edit_state::unsupported && workspace)
         result = rename_workspace(document, *index, *workspace, *documents_, selected(), placeholder);
-      if (result.state != edit_state::ready) throw std::invalid_argument(result.reason);
+      if (result.state != edit_state::ready) throw request_failed(result.reason);
       return J::object{{"range", lsp_range(document, selection)}, {"placeholder", placeholder}};
     }
     if (method == "textDocument/rename")
@@ -498,7 +498,8 @@ namespace sagan::lsp
       if (result.state == edit_state::unsupported && workspace)
         result = rename_workspace(document, *index, *workspace, *documents_, selected(),
                                   string_field(params, "newName"));
-      return result.state == edit_state::ready ? text_edits(*documents_, result.edits) : J(nullptr);
+      if (result.state != edit_state::ready) throw request_failed(result.reason);
+      return text_edits(*documents_, result.edits);
     }
     if (method == "textDocument/prepareTypeHierarchy" ||
         method == "textDocument/prepareCallHierarchy")

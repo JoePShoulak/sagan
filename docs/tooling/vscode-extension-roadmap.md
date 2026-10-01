@@ -32,12 +32,16 @@ public-member rename, exported names with independent import aliases, collision
 refusal, emoji identifiers, private fields, private mutating methods, and
 one-step undo of both single- and multi-file edits.
 
-Remaining rename readiness work is acceptance-matrix refinement rather than a
-missing core provider: preserve protocol cancellation coverage and expose more
-specific compiler-owned refusal messages through VS Code where the client API
-permits it.
+Rename refusals use the LSP `RequestFailed` response and preserve the
+compiler-owned explanation, allowing VS Code to show actionable messages for
+invalid names, collisions, ambiguous identities, stale snapshots, and other
+unsafe cases. Remaining rename readiness work is acceptance-matrix refinement
+rather than a missing core provider: preserve protocol cancellation coverage.
 
-## Extension-owned release work
+## Deferred external release validation
+
+These items are intentionally saved for much later and are not prerequisites
+for continued local extension development:
 
 - Run a manual VS Code smoke-test matrix on Windows, Linux, and macOS covering
   activation, diagnostics, completion, hover, navigation, signature help,
@@ -45,7 +49,8 @@ permits it.
   automated Windows integration path is now verified; platform-specific visual
   behavior, including file-icon theme interaction, and features outside its
   representative request set remain.
-- Keep the automated Extension Development Host integration suite passing on
+- Observe the first hosted run of the automated Extension Development Host
+  integration suite after the relevant commits are pushed. Keep it passing on
   each supported CI platform. The dedicated workflow builds the matching
   compiler and server and runs unit, bundle, and live-host tests on Windows,
   Linux, and macOS; its first hosted run remains to be observed. The suite
@@ -56,12 +61,15 @@ permits it.
   Extension Development Host integration, VSIX installation, activation,
   file-icon, highlighting, diagnostic, and tooling-discovery checks; CI and
   the complete manual Linux feature matrix remain.
+- Decide whether to publish through the Visual Studio Marketplace. Until then,
+  distribute the VSIX with matching Sagan release assets.
+
+## Extension-owned release work
+
 - Release automation includes the matching native compiler and language server
   in Windows installer/portable payloads, verifies the VSIX checksum and
   contents, installs the packaged VSIX into an isolated VS Code profile, and
   activates the extension against that native pair before publication.
-- Decide whether to publish through the Visual Studio Marketplace. Until then,
-  distribute the VSIX with matching Sagan release assets.
 - Add user-facing troubleshooting for server crashes, incompatible schemas,
   quarantined executables, and platform runtime dependencies as real failures
   are observed.

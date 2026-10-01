@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace sagan::lsp
@@ -19,6 +20,11 @@ namespace sagan::lsp
   struct request_cancelled : std::runtime_error
   {
     request_cancelled() : std::runtime_error("LSP request cancelled") {}
+  };
+
+  struct request_failed : std::runtime_error
+  {
+    explicit request_failed(std::string message) : std::runtime_error(std::move(message)) {}
   };
 
   class server
