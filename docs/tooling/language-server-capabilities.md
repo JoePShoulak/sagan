@@ -84,6 +84,7 @@ edit bursts, stale versions, malformed input, repeated queries, overlay
 cleanup, bounded frame size, and stderr-only optional logging. The
 [reliability guide](language-server.md#reliability-gate) records repeatable
 commands and performance limits. These tests establish the extension-facing
-server contract; they do not make test discovery, build/run LSP requests,
-cross-file rename, or DAP available.
+server contract; they do not make test discovery, build/run LSP requests, or
+DAP available. Cross-file rename is available only for compiler-proven identity
+groups; ambiguous identities are deliberately refused.
 

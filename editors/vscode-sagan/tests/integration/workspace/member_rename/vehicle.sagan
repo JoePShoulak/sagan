@@ -1,0 +1,7 @@
+module vehicle
+
+class Probe {
+  fun sample(): Int => 42
+}
+
+export Probe

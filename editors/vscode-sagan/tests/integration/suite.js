@@ -128,6 +128,34 @@ async function run() {
   await waitFor(() => document.getText() === beforeAppliedRename || undefined,
     "single-operation rename undo");
 
+  const memberMain = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(
+    vscode.workspace.workspaceFolders[0].uri, "member_rename", "main.sagan"));
+  const memberOwner = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(
+    vscode.workspace.workspaceFolders[0].uri, "member_rename", "vehicle.sagan"));
+  await vscode.window.showTextDocument(memberMain);
+  const memberPosition = new vscode.Position(4, memberMain.lineAt(4).text.indexOf("sample") + 1);
+  const memberMainBeforeRename = memberMain.getText();
+  const memberOwnerBeforeRename = memberOwner.getText();
+  const memberRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", memberMain.uri, memberPosition, "measure");
+  assert(memberRename instanceof vscode.WorkspaceEdit,
+    "cross-file public-member rename did not return a workspace edit");
+  const memberRenameEntries = memberRename.entries();
+  assert.equal(memberRenameEntries.length, 2,
+    "cross-file public-member rename did not cover both module documents");
+  assert.equal(memberRenameEntries.flatMap(([, editsForDocument]) => editsForDocument).length, 3,
+    "cross-file public-member rename did not cover the declaration and both calls");
+  assert(await vscode.workspace.applyEdit(memberRename),
+    "cross-file public-member rename could not be applied atomically");
+  assert(memberMain.getText().includes("probe.measure()") &&
+         memberMain.getText().includes("sensor.measure()") &&
+         memberOwner.getText().includes("fun measure()"),
+    "applied cross-file public-member rename missed an identity-resolved occurrence");
+  await vscode.commands.executeCommand("undo");
+  await waitFor(() => memberMain.getText() === memberMainBeforeRename &&
+                      memberOwner.getText() === memberOwnerBeforeRename || undefined,
+    "single-operation cross-file rename undo");
+
   let entryRenameRefused = false;
   try {
     const entryRename = await vscode.commands.executeCommand(

@@ -35,7 +35,7 @@ below are deliberate limits, not work for the extension to invent locally.
 | Selection ranges | Syntax parent chains with precise ranges | **LSP available** |
 | Document links | Resolved import/module targets | **LSP available** |
 | Inlay hints | Resolved types/parameters with suppression rules | **LSP available** |
-| Rename | Versioned identity-based safe workspace edits | **LSP available for proven local rename; cross-file/public rename unavailable** |
+| Rename | Versioned identity-based safe workspace edits | **LSP available for proven local, private-member, exported-symbol, and imported public-member identities; ambiguous identities are refused** |
 | Quick fixes/code actions | Structured fixes and proven refactoring actions | **LSP quick fixes and organize imports available; other unsafe actions disabled** |
 | Formatting | Lossless deterministic formatter API | **LSP document/range/on-type available for strict source; incomplete-source formatting unsupported** |
 | Type hierarchy | Type/conformance semantic index | **LSP available for indexed conformances** |
