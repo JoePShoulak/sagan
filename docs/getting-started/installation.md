@@ -92,7 +92,7 @@ bash scripts/windows/verify_installer_artifact.sh
 bash scripts/windows/test_installer.sh
 ```
 
-The experimental `v0.87.1-rc.1` preview installer and planned initial 1.0.0
+The experimental `v0.87.2-rc.1` preview installer and planned initial 1.0.0
 installer are explicitly disclosed unsigned exceptions and may show an
 unknown-publisher warning. After the first post-1.0 documentation
 audit, the signed follow-up and later public installers must be built with
@@ -112,9 +112,9 @@ keys, shortcuts, file associations, or PATH entries. From Git Bash, substitute
 the release version and run:
 
 ```bash
-gh release download v0.87.1-rc.1 --pattern 'sagan-0.87.1-windows-x64.zip'
+gh release download v0.87.2-rc.1 --pattern 'sagan-0.87.2-windows-x64.zip'
 mkdir -p "$HOME/.local/sagan"
-unzip sagan-0.87.1-windows-x64.zip -d "$HOME/.local/sagan"
+unzip sagan-0.87.2-windows-x64.zip -d "$HOME/.local/sagan"
 export PATH="$HOME/.local/sagan/bin:$PATH"
 sagan --version
 ```

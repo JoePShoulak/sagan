@@ -11,7 +11,7 @@ fi
 signature_policy="authenticode-required-for-public-release"
 if [[ "$version" == 1.0.0 ]]; then
   signature_policy="unsigned-initial-1.0-exception"
-elif [[ "${SAGAN_RELEASE_TAG:-}" == v0.87.1-rc.1 && "$version" == 0.87.1 ]]; then
+elif [[ "${SAGAN_RELEASE_TAG:-}" == v0.87.2-rc.1 && "$version" == 0.87.2 ]]; then
   signature_policy="unsigned-experimental-0.x-preview-exception"
 fi
 commit="$(git -C "$repo_root" rev-parse HEAD)"

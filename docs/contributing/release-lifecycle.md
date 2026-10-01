@@ -75,7 +75,7 @@ Every Windows release contains:
 - `sagan-VERSION-sbom.spdx.json`; and
 - reviewed release notes plus GitHub's source archives.
 
-The `v0.87.1-rc.1` experimental prerelease is a one-time unsigned-installer
+The `v0.87.2-rc.1` experimental prerelease is a one-time unsigned-installer
 exception; Windows may show an unknown-publisher warning. The initial 1.0.0
 release also has a separately documented unsigned exception. Other release
 installers, embedded uninstallers, `sagan.exe`, and `sagan-launch.exe` must
@@ -92,7 +92,7 @@ Signed preview tags publish automatically as GitHub prereleases after automated
 gates. Previews are best effort, may change incompatibly before stable release,
 and receive no backported fixes.
 
-For the single `v0.87.1-rc.1` preview, the page-by-page documentation audit
+For the single `v0.87.2-rc.1` preview, the page-by-page documentation audit
 remains open, and the docs remain visibly experimental. The preview still
 requires strict docs-build, compiler, coverage, installer/portable, checksum,
 and vulnerability-scan gates. Its unsigned installer is not the accepted

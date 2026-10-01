@@ -25,7 +25,7 @@ mirror-generated checksum alongside the unchanged asset. Release directories
 are immutable, so corrections receive a new version rather than replacing
 existing files.
 
-The experimental `v0.87.1-rc.1` preview and planned first 1.0.0 installer are
+The experimental `v0.87.2-rc.1` preview and planned first 1.0.0 installer are
 approved unsigned exceptions and may show a Windows unknown-publisher warning.
 Check the SHA-256 sidecar and read the release notes before running either.
 Later signed installers and clean-machine
