@@ -241,6 +241,12 @@ and executable; advertised capabilities match the
 
 ## Phase 9 — reliability and release gate
 
+**Status: in progress.** The first server-library stress fixture exercises
+alternating valid and incomplete edits across two open documents, repeated
+semantic requests, rejection of an out-of-order document version, malformed
+source diagnostics, and overlay cleanup. The remaining stress, benchmark,
+fuzzing, and release-gate items below are not yet complete.
+
 - Add rapid-edit, cancellation, stale-version, malformed-input, multi-workspace,
   cleanup, cache-budget, and repeated-request stress tests.
 - Benchmark representative files and package graphs and publish regression

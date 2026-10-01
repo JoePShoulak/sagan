@@ -267,6 +267,53 @@ auto main() -> int
           "incomplete document lost its compiler-issued quick fix");
   notify(service, "textDocument/didClose",
          J::object{{"textDocument", J::object{{"uri", incomplete_uri}}}});
+  // Repeated incomplete edits must not leak an older diagnostic or overwrite a
+  // newer overlay, even while another document remains open in the workspace.
+  const std::string rapid_uri = "untitled:rapid-lsp";
+  const std::string neighbor_uri = "untitled:neighbor-lsp";
+  notify(service, "textDocument/didOpen",
+         J::object{{"textDocument", J::object{{"uri", rapid_uri}, {"version", 1},
+                                              {"text", "fun main(): Int => 0\n"}}}});
+  notify(service, "textDocument/didOpen",
+         J::object{{"textDocument", J::object{{"uri", neighbor_uri}, {"version", 1},
+                                              {"text", "fun neighbor(): Int => 1\n"}}}});
+  for (int version = 2; version <= 25; ++version)
+  {
+    const std::string source = version % 2 == 0 ? "fun main(): Int => missing\n"
+                                                : "fun main(): Int => 0\n";
+    const auto updates = notify(service, "textDocument/didChange",
+        J::object{{"textDocument", J::object{{"uri", rapid_uri}, {"version", version}}},
+                  {"contentChanges", J::array{J::object{{"text", source}}}}});
+    require(updates.size() == 2 &&
+                updates.front().get("params")->get("version")->integer() == version &&
+                (updates.front().get("params")->get("diagnostics")->elements()->empty() ==
+                 (version % 2 != 0)) &&
+                updates.back().get("params")->get("version")->integer() == 1 &&
+                updates.back().get("params")->get("diagnostics")->elements()->empty(),
+            "rapid edit published stale or cross-document diagnostics");
+    request(service, "textDocument/semanticTokens/full",
+            J::object{{"textDocument", J::object{{"uri", rapid_uri}}}});
+  }
+  const auto stale = notify(service, "textDocument/didChange",
+      J::object{{"textDocument", J::object{{"uri", rapid_uri}, {"version", 24}}},
+                {"contentChanges", J::array{J::object{{"text", "fun main(): Int => 99\n"}}}}});
+  require(stale.empty() &&
+              service.documents().read(sagan::source::document_uri{rapid_uri}).value->version() == 25,
+          "out-of-order edit changed the newer document version");
+  const auto malformed_updates = notify(service, "textDocument/didChange",
+      J::object{{"textDocument", J::object{{"uri", rapid_uri}, {"version", 26}}},
+                {"contentChanges", J::array{J::object{{"text", "fun main( {\n"}}}}});
+  require(malformed_updates.size() == 2 &&
+              !malformed_updates.front().get("params")->get("diagnostics")->elements()->empty(),
+          "malformed partial source did not produce a bounded diagnostic response");
+  const auto rapid_closed = notify(service, "textDocument/didClose",
+                                   J::object{{"textDocument", J::object{{"uri", rapid_uri}}}});
+  require(rapid_closed.size() == 2 &&
+              rapid_closed.front().get("params")->get("diagnostics")->elements()->empty() &&
+              !service.documents().is_open(sagan::source::document_uri{rapid_uri}),
+          "closing the rapidly edited document did not clean up its overlay");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", neighbor_uri}}}});
   request(service, "shutdown");
   notify(service, "exit");
   require(service.should_exit(), "exit did not stop the server");
