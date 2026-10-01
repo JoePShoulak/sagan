@@ -56,11 +56,10 @@ permits it.
   Extension Development Host integration, VSIX installation, activation,
   file-icon, highlighting, diagnostic, and tooling-discovery checks; CI and
   the complete manual Linux feature matrix remain.
-- Release automation now includes the matching native compiler and language
-  server in Windows installer/portable payloads, verifies the VSIX checksum and
-  contents, and activates the extension against that native pair. A final clean
-  environment installation of the packaged VSIX itself remains before
-  publication.
+- Release automation includes the matching native compiler and language server
+  in Windows installer/portable payloads, verifies the VSIX checksum and
+  contents, installs the packaged VSIX into an isolated VS Code profile, and
+  activates the extension against that native pair before publication.
 - Decide whether to publish through the Visual Studio Marketplace. Until then,
   distribute the VSIX with matching Sagan release assets.
 - Add user-facing troubleshooting for server crashes, incompatible schemas,

@@ -44,6 +44,7 @@ fi
 grep -Fq 'build/release/*.vsix' "$workflow"
 grep -Fq 'scripts/vscode/build_release.sh' "$repo_root/scripts/windows/build_release_assets.sh"
 grep -Fq 'scripts/vscode/test_release.sh' "$workflow"
+grep -Fq 'install_release_test.js' "$repo_root/scripts/vscode/test_release.sh"
 grep -Fq 'sagan-lsp.exe' "$repo_root/scripts/windows/stage_installer.sh"
 grep -Fq 'sagan-lsp.exe' "$repo_root/scripts/windows/test_portable.sh"
 grep -Fq 'vscode-extension' "$repo_root/scripts/release_metadata.sh"

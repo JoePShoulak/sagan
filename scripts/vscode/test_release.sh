@@ -21,8 +21,9 @@ mkdir -p "$unpack_dir"
 unzip -q "$vsix" -d "$unpack_dir"
 node "$repo_root/scripts/vscode/verify_release.js" \
   "$unpack_dir/extension/package.json" "$extension_version"
+node "$repo_root/scripts/vscode/install_release_test.js" "$vsix" "$extension_version"
 
 cd "$extension_dir"
 SAGAN_COMPILER_PATH="$compiler" SAGAN_LSP_PATH="$server" npm run test:integration
 
-echo "VSIX checksum, contents, and matching native-tooling activation checks passed."
+echo "VSIX checksum, contents, isolated installation, and matching native-tooling activation checks passed."
