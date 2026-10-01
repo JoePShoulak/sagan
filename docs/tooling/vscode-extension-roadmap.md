@@ -54,9 +54,11 @@ unsaved overlays, cancellation, and explicit compiler-owned refusal messages.
   Extension Development Host integration, VSIX installation, activation,
   file-icon, highlighting, diagnostic, and tooling-discovery checks; CI and
   the complete manual Linux feature matrix remain.
-- Make release automation build the matching native compiler/server and VSIX,
-  install them together in a clean environment, and verify checksums and basic
-  activation before publishing assets.
+- Release automation now includes the matching native compiler and language
+  server in Windows installer/portable payloads, verifies the VSIX checksum and
+  contents, and activates the extension against that native pair. A final clean
+  environment installation of the packaged VSIX itself remains before
+  publication.
 - Decide whether to publish through the Visual Studio Marketplace. Until then,
   distribute the VSIX with matching Sagan release assets.
 - Add user-facing troubleshooting for server crashes, incompatible schemas,

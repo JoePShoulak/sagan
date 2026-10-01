@@ -177,6 +177,7 @@ jobs:
           fi
           bash scripts/windows/test_installer.sh
           bash scripts/windows/test_portable.sh
+          bash scripts/vscode/test_release.sh
       - name: Upload gated release assets
         uses: actions/upload-artifact@v7
         with:

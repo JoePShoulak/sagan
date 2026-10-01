@@ -21,8 +21,9 @@ fi
 rm -rf "$stage_dir"
 mkdir -p "$stage_dir/bin" "$stage_dir/toolchain/ucrt64" "$stage_dir/assets" "$stage_dir/licenses"
 
-make -C "$repo_root" all windows-launcher OS=Windows_NT SAGAN_VERSION="$version"
+make -C "$repo_root" all bin/sagan-lsp windows-launcher OS=Windows_NT SAGAN_VERSION="$version"
 cp "$repo_root/bin/sagan" "$stage_dir/bin/sagan.exe"
+cp "$repo_root/bin/sagan-lsp" "$stage_dir/bin/sagan-lsp.exe"
 cp "$repo_root/bin/sagan-launch.exe" "$stage_dir/bin/sagan-launch.exe"
 cp "$repo_root/packaging/windows/sagan.ico" "$stage_dir/assets/sagan.ico"
 cp "$repo_root/editors/vscode-sagan/LICENSE.txt" "$stage_dir/licenses/Sagan-GPL-3.0.txt"
