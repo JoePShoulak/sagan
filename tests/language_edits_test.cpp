@@ -32,6 +32,8 @@ auto main() -> int
               action("diagnostic.fix") != actions.end() && action("diagnostic.fix")->available &&
               action("imports.add") != actions.end() && action("imports.add")->available &&
               action("rename.function") != actions.end() && action("rename.function")->available &&
+              action("rename.privateMember") != actions.end() &&
+              action("rename.privateMember")->available &&
               action("rename.workspace") != actions.end() && !action("rename.workspace")->available &&
               !action("rename.workspace")->limitation.empty() &&
               action("extract.function") != actions.end() && !action("extract.function")->available,
@@ -296,6 +298,46 @@ auto main() -> int
   require(match_rename.state == language_service::edit_state::ready &&
               match_rename.edits.documents.front().edits.size() == 2,
           "match-binding rename failed from the declaration position");
+  const source::document_snapshot private_member_document(
+      {{source::document_id{112}, source::document_uri{"untitled:private-member-rename"}, {}}, 1,
+       "class Counter {\n"
+       "let .value: Int\n"
+       "new(start: Int) { self.value = start }\n"
+       "fun .advance!(): Int {\n"
+       "self.value += 1\n"
+       "return self.value\n"
+       "}\n"
+       "fun run!(): Int => self.advance!()\n"
+       "}\n"
+       "fun main(): Int {\n"
+       "let counter = Counter(0)\n"
+       "return counter.run!()\n"
+       "}\n"});
+  const auto indexed_private_member = language_service::index_document(private_member_document);
+  require(indexed_private_member.value.has_value(), "private-member rename fixture did not index");
+  const auto private_field_declaration = static_cast<source::byte_offset>(
+      private_member_document.text().find("value: Int"));
+  const auto private_field_rename = language_service::rename_local(
+      private_member_document, indexed_private_member.value->index,
+      private_field_declaration, "count");
+  require(private_field_rename.state == language_service::edit_state::ready &&
+              private_field_rename.edits.documents.front().edits.size() == 4,
+          "private-field rename did not cover its declaration and typed references");
+  const auto private_method_declaration = static_cast<source::byte_offset>(
+      private_member_document.text().find("advance!():"));
+  const auto private_method_rename = language_service::rename_local(
+      private_member_document, indexed_private_member.value->index,
+      private_method_declaration, "step!");
+  require(private_method_rename.state == language_service::edit_state::ready &&
+              private_method_rename.edits.documents.front().edits.size() == 2,
+          "private mutating-method rename did not cover its declaration and reference");
+  const auto public_method_declaration = static_cast<source::byte_offset>(
+      private_member_document.text().find("run!():"));
+  require(language_service::rename_local(private_member_document,
+                                         indexed_private_member.value->index,
+                                         public_method_declaration, "execute!").state ==
+              language_service::edit_state::unsupported,
+          "public member rename was offered without workspace proof");
   const source::document_snapshot exported_document(
       {{source::document_id{108}, source::document_uri{"untitled:exported-rename"}, {}}, 1,
        "module helper\nfun double(value: Int): Int => value + value\nexport double\n"});

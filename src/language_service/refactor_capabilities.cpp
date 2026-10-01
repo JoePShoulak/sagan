@@ -9,6 +9,7 @@ namespace sagan::language_service
         {"format.range", true, "Strict source only; complete intersecting lines are formatted"},
         {"format.onType", true, "Only closing brace and newline triggers"},
         {"rename.local", true, "Only one proven local symbol and its indexed references"},
+        {"rename.privateMember", true, "Only uniquely resolved members confined to one document"},
         {"rename.function", true, "Only non-exported, non-overloaded, non-entry functions in one document"},
         {"rename.workspace", false, "Cross-module rebinding and visibility proof is not available"},
         {"imports.organize", true, "Only one uninterrupted comment-free block"},

@@ -54,9 +54,14 @@ namespace sagan::language_service
       return {edit_state::unsupported, "Only source declarations can be renamed safely", {}};
     const bool local = local_binding(symbol->kind) && symbol->scope_id != 0;
     const bool function = symbol->kind == semantic::symbol_kind::function && symbol->name != "main";
-    if (!local && !function)
-      return {edit_state::unsupported, "Only local bindings and non-entry functions can be renamed safely", {}};
-    if (function)
+    const bool private_member = symbol->visibility == semantic::symbol_visibility::private_access &&
+        (symbol->kind == semantic::symbol_kind::field ||
+         symbol->kind == semantic::symbol_kind::constant_field ||
+         symbol->kind == semantic::symbol_kind::method);
+    if (!local && !function && !private_member)
+      return {edit_state::unsupported,
+              "Only local bindings, private members, and non-entry functions can be renamed safely", {}};
+    if (function || symbol->kind == semantic::symbol_kind::method)
     {
       if (std::any_of(index.references().begin(), index.references().end(), [&](const auto &reference)
           { return reference.target == symbol->id &&
@@ -104,6 +109,19 @@ namespace sagan::language_service
         replacement = *declaration_name;
         declaration_token_begin = replacement.bytes.begin;
       }
+      else if (unicode::normalize_nfc(document.text().substr(
+                   replacement.bytes.begin, replacement.bytes.end - replacement.bytes.begin)) != symbol->name)
+      {
+        std::optional<source::byte_range> reference_name;
+        for (const auto &token : syntax.value->tokens)
+          if ((token.kind == tokens::IDENTIFIER || token.kind == tokens::METHOD_IDENTIFIER) &&
+              token.range.begin >= replacement.bytes.begin && token.range.end <= replacement.bytes.end &&
+              unicode::normalize_nfc(token.source_text) == symbol->name)
+            reference_name = token.range;
+        if (!reference_name)
+          return {edit_state::unsupported, "A reference cannot be rewritten as one identifier", {}};
+        replacement.bytes = *reference_name;
+      }
       if (replacement.document != document.identity().id ||
           !document.to_utf16(replacement.bytes.begin) || !document.to_utf16(replacement.bytes.end) ||
           unicode::normalize_nfc(document.text().substr(
@@ -124,13 +142,14 @@ namespace sagan::language_service
     const semantic::indexed_symbol *renamed = nullptr;
     for (const auto &candidate : checked.value->index.symbols())
       if (candidate.origin == semantic::symbol_origin::source && candidate.name == new_name &&
-          candidate.kind == symbol->kind)
+          candidate.kind == symbol->kind && candidate.owner_type == symbol->owner_type)
       {
         if (renamed) return {edit_state::unsupported, "Renamed declaration is ambiguous", {}};
         renamed = &candidate;
       }
     if (!renamed || checked.value->index.references_to(renamed->id, true).size() != occurrences.size())
       return {edit_state::unsupported, "Reference set changed after rename", {}};
+    const document_queries changed_queries(changed, checked.value->index);
     std::int64_t delta = 0;
     for (const auto &replacement : edits.documents.front().edits)
     {
@@ -138,15 +157,9 @@ namespace sagan::language_service
           static_cast<std::int64_t>(replacement.range.bytes.begin) + delta);
       if (!declaration_token_begin || replacement.range.bytes.begin != *declaration_token_begin)
       {
-        const auto rebound = std::any_of(checked.value->index.references().begin(),
-                                         checked.value->index.references().end(),
-                                         [&](const auto &reference)
-                                         {
-                                           return reference.target == renamed->id &&
-                                                  reference.location.bytes.begin == mapped &&
-                                                  reference.location.bytes.end == mapped + new_name.size();
-                                         });
-        if (!rebound) return {edit_state::unsupported, "Reference identity changed after rename", {}};
+        const auto rebound = changed_queries.symbol_at(mapped);
+        if (!rebound.value || rebound.value->id != renamed->id)
+          return {edit_state::unsupported, "Reference identity changed after rename", {}};
       }
       delta += static_cast<std::int64_t>(new_name.size()) -
                static_cast<std::int64_t>(replacement.range.bytes.end - replacement.range.bytes.begin);

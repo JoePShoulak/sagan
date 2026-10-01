@@ -254,6 +254,40 @@ auto main() -> int
   require(sugar_inlay.elements(), "LSP inlay query failed for mixed exponentiation");
   notify(service, "textDocument/didClose",
          J::object{{"textDocument", J::object{{"uri", sugar_uri}}}});
+  const std::string private_uri = "file:///lsp-private-member.sagan";
+  const std::string private_text =
+      "class Counter {\n"
+      "  let .value: Int\n"
+      "  new(start: Int) { self.value = start }\n"
+      "  fun .advance!(): Int {\n"
+      "    self.value += 1\n"
+      "    return self.value\n"
+      "  }\n"
+      "  fun run!(): Int => self.advance!()\n"
+      "}\n"
+      "fun main(): Int {\n"
+      "  let counter = Counter(0)\n"
+      "  return counter.run!()\n"
+      "}\n";
+  const auto private_opened = notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", private_uri},
+                                             {"version", 1}, {"text", private_text}}}});
+  require(private_opened.size() == 1 &&
+              private_opened.front().get("params")->get("diagnostics")->elements()->empty(),
+          "private-member LSP fixture produced diagnostics");
+  const auto prepared_private = request(service, "textDocument/prepareRename", at(private_uri, 3, 7));
+  require(prepared_private.get("placeholder") &&
+              prepared_private.get("placeholder")->string() == "advance!",
+          "F2 preparation did not select the private mutating method");
+  const auto renamed_private = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", private_uri}}},
+                {"position", J::object{{"line", 3}, {"character", 7}}},
+                {"newName", "step!"}});
+  require(renamed_private.get("documentChanges") &&
+              renamed_private.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 private mutating-method rename did not include its declaration and reference");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", private_uri}}}});
   const sagan::source::disk_source_provider disk;
   const auto module = disk.read_path("tests/fixtures/modules/module_demo/main.sagan");
   require(static_cast<bool>(module), "module fixture missing");

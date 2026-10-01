@@ -18,16 +18,16 @@ contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 
 Reliable rename is the highest-priority editor capability after the current
 release-validation work. The present implementation is deliberately narrow:
-it supports only compiler-proven local bindings and eligible non-entry
-functions within one document. It refuses exported or overloaded functions,
-members, imported symbols, entry points, and cross-file edits. This safe
-boundary is preferable to an incorrect edit, but it is not sufficient for
-normal project development.
+it supports compiler-proven local bindings, private members, and eligible
+non-entry functions within one document. It refuses exported or overloaded
+functions, public members, imported symbols, entry points, and cross-file
+edits. This safe boundary is preferable to an incorrect edit, but it is not
+sufficient for normal project development.
 
 Declaration-position selection is now fixed at the compiler query boundary and
 covered for local variables, local constants, parameters, loop bindings, match
-bindings, and eligible functions. The server
-also advertises and implements `prepareRename`, so VS Code can select the exact
+bindings, private fields, private mutating methods, and eligible functions. The
+server also advertises and implements `prepareRename`, so VS Code can select the exact
 identifier and show the compiler-owned reason when a known symbol is ineligible
 before prompting for a name. The live-host suite applies a declaration-based
 rename and verifies that one undo restores the complete document.

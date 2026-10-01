@@ -213,6 +213,10 @@ namespace semantic
       if (const auto declaration = definition(id)) result.push_back(*declaration);
     for (const auto &entry : references_)
       if (entry.target == id) result.push_back(entry.location);
+    for (const auto &entry : member_resolutions_)
+      if (entry.candidates.size() == 1 && entry.candidates.front() == id &&
+          std::find(result.begin(), result.end(), entry.use) == result.end())
+        result.push_back(entry.use);
     return result;
   }
 
