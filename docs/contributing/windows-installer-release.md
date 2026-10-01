@@ -38,7 +38,7 @@ bash scripts/windows/test_installer.sh
 
 The Windows Installer workflow performs the same package build and smoke test.
 An unsigned artifact is normally a development artifact. The experimental
-`v0.87.2-rc.1` preview and planned initial 1.0.0 release are the two narrowly
+`v0.88.0-rc.1` preview and planned initial 1.0.0 release are the two narrowly
 disclosed exceptions.
 
 ## Public-release signing gate

@@ -111,6 +111,14 @@ def main():
         definition = next_message(received)
         assert definition["id"] == 3 and definition["result"][0]["uri"] == uri
 
+        send(process, {"jsonrpc": "2.0", "id": 6, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": uri}, "position": point, "newName": "launch",
+        }})
+        renamed = next_message(received)
+        assert renamed["id"] == 6
+        assert len(renamed["result"]["documentChanges"]) == 1
+        assert len(renamed["result"]["documentChanges"][0]["edits"]) == 2
+
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 2},
             "contentChanges": [{"text": "fun main(): Int => missing\n"}],
@@ -125,7 +133,7 @@ def main():
         process.stdin.close()
         assert process.wait(timeout=10) == 0
         assert process.stderr.read() == b""
-        print("Sagan executable LSP framing, hover, navigation, and diagnostics passed.")
+        print("Sagan executable LSP framing, hover, navigation, F2 rename, and diagnostics passed.")
     finally:
         if process.poll() is None:
             process.kill()

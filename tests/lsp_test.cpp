@@ -137,6 +137,14 @@ auto main() -> int
                                          {"position", J::object{{"line", 3}, {"character", 9}}},
                                          {"newName", "result"}});
   require(renamed.get("documentChanges"), "safe local rename was not converted to workspace edits");
+  const auto renamed_function = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", uri}}},
+                {"position", J::object{{"line", 2}, {"character", 15}}},
+                {"newName", "launch"}});
+  require(renamed_function.get("documentChanges") &&
+              renamed_function.get("documentChanges")->elements()->size() == 1 &&
+              renamed_function.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 function rename did not include the declaration and call");
   const auto actions = request(service, "textDocument/codeAction",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"context", J::object{{"diagnostics", J::array{}}}},

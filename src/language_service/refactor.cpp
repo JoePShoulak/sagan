@@ -45,9 +45,22 @@ namespace sagan::language_service
       return {edit_state::stale, "Semantic index belongs to another document version", {}};
     if (!document.to_utf16(position)) return {edit_state::invalid, "Invalid source position", {}};
     const auto *symbol = index.symbol_at(position);
-    if (!symbol || symbol->origin != semantic::symbol_origin::source || !local_binding(symbol->kind) ||
-        symbol->scope_id == 0)
-      return {edit_state::unsupported, "Only local source bindings can be renamed safely", {}};
+    if (!symbol || symbol->origin != semantic::symbol_origin::source)
+      return {edit_state::unsupported, "Only source declarations can be renamed safely", {}};
+    const bool local = local_binding(symbol->kind) && symbol->scope_id != 0;
+    const bool function = symbol->kind == semantic::symbol_kind::function && symbol->name != "main";
+    if (!local && !function)
+      return {edit_state::unsupported, "Only local bindings and non-entry functions can be renamed safely", {}};
+    if (function)
+    {
+      if (std::any_of(index.references().begin(), index.references().end(), [&](const auto &reference)
+          { return reference.target == symbol->id &&
+                   reference.kind == semantic::reference_kind::export_reference; }))
+        return {edit_state::unsupported, "Exported functions require a workspace-wide rename proof", {}};
+      if (std::any_of(index.overloads().begin(), index.overloads().end(), [&](const auto &overload)
+          { return overload.name == symbol->name && overload.candidates.size() > 1; }))
+        return {edit_state::unsupported, "Overloaded functions require a whole-set rename proof", {}};
+    }
     if (new_name == symbol->name)
       return {edit_state::ready, {}, {{{document.identity().uri, document.version(), {}}}}};
     if (new_name.empty() || unicode::normalize_nfc(new_name) != new_name ||

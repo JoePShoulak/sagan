@@ -224,7 +224,9 @@ identities, UTF boundaries, and non-overlap, then returns proposed text without
 writing. The strict-parse formatter applies token-preserving two-space
 indentation, canonical proven gaps, and safe trailing-whitespace cleanup; it
 preserves existing line breaks and declines ambiguous or incomplete source.
-`rename_local` rechecks and rebinds proposed source by symbol identity.
+`rename_local` rechecks and rebinds proposed source by symbol identity; it
+supports proven local bindings and one-document, non-exported, non-overloaded
+function names. Exported, entry-point, and workspace-wide rename are refused.
 `organize_imports` handles only an uninterrupted, comment-free top-level
 import block. `add_missing_import` uses an exact public workspace symbol ID,
 then validates the new binding. `plan_diagnostic_fix` accepts only a

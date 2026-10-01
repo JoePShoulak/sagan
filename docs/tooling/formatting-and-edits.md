@@ -35,12 +35,14 @@ UTF-8/UTF-16 boundaries, and deterministic non-overlapping ranges before
 returning the proposed text. It never writes the editor buffer or disk file.
 When a check fails, it returns `stale`, `invalid`, or `conflict` with a reason.
 
-`rename_local` is the first proof-gated refactoring. It handles only a local
-source binding with an identity-indexed reference set. It validates the new
+`rename_local` is a proof-gated refactoring. VS Code's F2 can rename local
+bindings and non-exported, non-overloaded functions in one document. It uses
+the identity-indexed reference set, validates the new
 identifier and naming convention, refuses existing names, reindexes the
 previewed source, and verifies that every reference still resolves to the one
-renamed declaration. Public, imported, member, and cross-file rename remain
-unavailable.
+renamed declaration. Entry-point `main`, exported and overloaded functions,
+imported symbols, members, and cross-file rename remain unavailable: the
+compiler refuses these rather than risking a broken project.
 
 `organize_imports` sorts one uninterrupted top-of-file block of plain imports.
 It preserves each original line and its line endings, then rechecks the result.

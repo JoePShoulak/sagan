@@ -31,6 +31,7 @@ auto main() -> int
               action("format.document") != actions.end() && action("format.document")->available &&
               action("diagnostic.fix") != actions.end() && action("diagnostic.fix")->available &&
               action("imports.add") != actions.end() && action("imports.add")->available &&
+              action("rename.function") != actions.end() && action("rename.function")->available &&
               action("rename.workspace") != actions.end() && !action("rename.workspace")->available &&
               !action("rename.workspace")->limitation.empty() &&
               action("extract.function") != actions.end() && !action("extract.function")->available,
@@ -201,7 +202,34 @@ auto main() -> int
           "rename accepted a name already present in scope");
   require(language_service::rename_local(document, indexed.value->index, 4, "launch").state ==
               language_service::edit_state::unsupported,
-          "rename offered a public function without a workspace proof");
+          "rename offered the main entry function");
+  const source::document_snapshot function_document(
+      {{source::document_id{107}, source::document_uri{"untitled:function-rename"}, {}}, 1,
+       "fun double(value: Int): Int => value + value\n"
+       "fun main(): Int => double(21)\n"});
+  const auto indexed_function = language_service::index_document(function_document);
+  require(indexed_function.value.has_value(), "function rename fixture did not index");
+  const auto function_use = static_cast<source::byte_offset>(function_document.text().find("double(21)"));
+  const auto function_rename = language_service::rename_local(
+      function_document, indexed_function.value->index, function_use, "twice");
+  require(function_rename.state == language_service::edit_state::ready &&
+              function_rename.edits.documents.front().edits.size() == 2,
+          "function rename did not include declaration and call");
+  const auto function_preview = language_service::preview_edits(function_rename.edits, {&function_document});
+  require(function_preview.state == language_service::edit_state::ready &&
+              function_preview.documents.front().text.find("fun twice(") != std::string::npos &&
+              function_preview.documents.front().text.find("=> twice(21)") != std::string::npos,
+          "function rename preview did not update both uses");
+  const source::document_snapshot exported_document(
+      {{source::document_id{108}, source::document_uri{"untitled:exported-rename"}, {}}, 1,
+       "module helper\nfun double(value: Int): Int => value + value\nexport double\n"});
+  const auto indexed_exported = language_service::index_document(exported_document);
+  require(indexed_exported.value.has_value(), "exported function fixture did not index");
+  const auto exported_name = static_cast<source::byte_offset>(exported_document.text().find("double"));
+  require(language_service::rename_local(exported_document, indexed_exported.value->index,
+                                         exported_name, "twice").state ==
+              language_service::edit_state::unsupported,
+          "function rename offered exported symbol without workspace proof");
   const source::document_snapshot newer(document.identity(), 8, std::string(document.text()));
   require(language_service::rename_local(newer, indexed.value->index, use, "altitude").state ==
               language_service::edit_state::stale,
