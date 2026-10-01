@@ -35,6 +35,7 @@ namespace modules
   {
     std::string local_name;
     std::string public_name;
+    parser::span declaration;
   };
 
   struct import_edge
@@ -43,6 +44,7 @@ namespace modules
     std::string imported_name;
     std::string binding_name;
     bool whole_module;
+    parser::span declaration;
   };
 
   struct module_info

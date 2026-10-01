@@ -34,7 +34,7 @@ auto main() -> int
               action("rename.function") != actions.end() && action("rename.function")->available &&
               action("rename.privateMember") != actions.end() &&
               action("rename.privateMember")->available &&
-              action("rename.workspace") != actions.end() && !action("rename.workspace")->available &&
+              action("rename.workspace") != actions.end() && action("rename.workspace")->available &&
               !action("rename.workspace")->limitation.empty() &&
               action("extract.function") != actions.end() && !action("extract.function")->available,
           "source-edit capability contract advertised an unsafe action or omitted a safe action");
@@ -399,6 +399,79 @@ auto main() -> int
   { return entry.module == "guidance" && entry.public_name == "course"; });
   require(course != exports.end() && course->targets.size() == 1,
           "workspace fixture did not expose one public course symbol");
+  require(course->local_name == "calculate" &&
+              course->declaration.document.value != 0 &&
+              course->declaration.bytes.end > course->declaration.bytes.begin,
+          "workspace export lost its local identity or declaration range");
+  const auto &workspace_imports = workspace_index.imports();
+  const auto course_import = std::find_if(workspace_imports.begin(), workspace_imports.end(), [](const auto &entry)
+  {
+    return entry.source_module == "guidance" && entry.imported_name == "course";
+  });
+  require(course_import != workspace_imports.end() &&
+              course_import->binding_name == "calculate_course" &&
+              course_import->targets == course->targets &&
+              course_import->declaration.bytes.end > course_import->declaration.bytes.begin,
+          "workspace import lost its public name, alias, target, or declaration range");
+  const auto guidance_document = disk.read_path("tests/fixtures/modules/module_demo/guidance.sagan");
+  require(guidance_document.value.has_value(), "workspace rename fixture source was not readable");
+  const auto guidance_module = std::find_if(workspace_index.modules().begin(),
+                                             workspace_index.modules().end(), [](const auto &entry)
+  { return entry.name == "guidance"; });
+  require(guidance_module != workspace_index.modules().end(),
+          "workspace rename fixture module was not indexed");
+  const auto public_rename = language_service::rename_workspace(
+      *guidance_document.value, guidance_module->index, workspace_index, disk,
+      static_cast<source::byte_offset>(guidance_document.value->text().find("course")), "trajectory");
+  require(public_rename.state == language_service::edit_state::ready &&
+              public_rename.edits.documents.size() == 2,
+          "workspace public export rename did not produce an atomic two-document edit");
+  std::vector<source::document_snapshot> workspace_documents;
+  std::vector<const source::document_snapshot *> workspace_document_views;
+  for (const auto &module : workspace_index.modules())
+  {
+    const auto loaded = disk.read(module.index.document().uri);
+    require(loaded.value.has_value(), "workspace rename preview source was not readable");
+    workspace_documents.push_back(*loaded.value);
+  }
+  for (const auto &loaded : workspace_documents) workspace_document_views.push_back(&loaded);
+  const auto public_preview = language_service::preview_edits(public_rename.edits,
+                                                               workspace_document_views);
+  require(public_preview.state == language_service::edit_state::ready,
+          "workspace public export rename could not be previewed atomically");
+  const auto renamed_guidance = std::find_if(public_preview.documents.begin(),
+                                              public_preview.documents.end(), [](const auto &entry)
+  { return entry.text.find("export calculate as trajectory") != std::string::npos; });
+  const auto renamed_import = std::find_if(public_preview.documents.begin(),
+                                            public_preview.documents.end(), [](const auto &entry)
+  {
+    return entry.text.find("import trajectory from guidance as calculate_course") != std::string::npos &&
+           entry.text.find("calculate_course(40)") != std::string::npos;
+  });
+  require(renamed_guidance != public_preview.documents.end() &&
+              renamed_import != public_preview.documents.end(),
+          "workspace rename failed to preserve an explicit import alias");
+  const auto telemetry_document = disk.read_path("tests/fixtures/modules/module_demo/telemetry.sagan");
+  const auto telemetry_module = std::find_if(workspace_index.modules().begin(),
+                                              workspace_index.modules().end(), [](const auto &entry)
+  { return entry.name == "telemetry"; });
+  require(telemetry_document.value.has_value() && telemetry_module != workspace_index.modules().end(),
+          "grouped exported-type rename fixture was unavailable");
+  const auto type_rename = language_service::rename_workspace(
+      *telemetry_document.value, telemetry_module->index, workspace_index, disk,
+      static_cast<source::byte_offset>(telemetry_document.value->text().find("Signal")), "Beacon");
+  const auto type_preview = language_service::preview_edits(type_rename.edits,
+                                                             workspace_document_views);
+  require(type_rename.state == language_service::edit_state::ready &&
+              type_preview.state == language_service::edit_state::ready &&
+              std::any_of(type_preview.documents.begin(), type_preview.documents.end(), [](const auto &entry)
+              {
+                return entry.text.find("enum Beacon") != std::string::npos &&
+                       entry.text.find("export Beacon") != std::string::npos;
+              }) &&
+              std::any_of(type_preview.documents.begin(), type_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("flight_data.Beacon.nominal") != std::string::npos; }),
+          "workspace type/constructor identity group was not renamed through namespace references");
   const source::document_snapshot needs_import(
       {{source::document_id{112}, source::document_uri{"untitled:needs-import"}, {}}, 1,
        "module scratch\nfun main(): Int => 0\n"});

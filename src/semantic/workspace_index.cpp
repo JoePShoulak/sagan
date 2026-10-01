@@ -48,8 +48,10 @@ namespace semantic
   workspace_semantic_index::workspace_semantic_index(
       std::vector<indexed_module> modules, std::vector<import_link> imports,
       std::unordered_map<std::string, std::vector<symbol_id>> exports,
+      std::vector<exported_symbol> exported_symbols,
       std::vector<external_reference> external_references)
       : modules_(std::move(modules)), imports_(std::move(imports)), exports_(std::move(exports)),
+        exported_symbols_(std::move(exported_symbols)),
         external_references_(std::move(external_references)) {}
 
   auto workspace_semantic_index::modules() const -> const std::vector<indexed_module> & { return modules_; }
@@ -113,13 +115,7 @@ namespace semantic
 
   auto workspace_semantic_index::exported_symbols() const -> std::vector<exported_symbol>
   {
-    std::vector<exported_symbol> result;
-    for (const auto &[encoded, targets] : exports_)
-    {
-      const auto separator = encoded.find('\n');
-      if (separator == std::string::npos) continue;
-      result.push_back({encoded.substr(0, separator), encoded.substr(separator + 1), targets});
-    }
+    auto result = exported_symbols_;
     std::sort(result.begin(), result.end(), [](const auto &left, const auto &right)
     {
       if (left.public_name != right.public_name) return left.public_name < right.public_name;
@@ -144,6 +140,7 @@ namespace semantic
     }
 
     std::unordered_map<std::string, std::vector<symbol_id>> exports;
+    std::vector<exported_symbol> exported_symbols;
     for (const auto &module : graph.modules)
     {
       const auto indexed_module = std::find_if(indexed.begin(), indexed.end(), [&](const auto &candidate)
@@ -151,8 +148,16 @@ namespace semantic
         return candidate.name == module.name;
       });
       for (const auto &entry : module.exports)
-        exports.insert_or_assign(key(module.name, entry.public_name),
-                                 top_level(indexed_module->index, entry.local_name));
+      {
+        auto targets = top_level(indexed_module->index, entry.local_name);
+        exports.insert_or_assign(key(module.name, entry.public_name), targets);
+        exported_symbols.push_back(exported_symbol{
+            module.name, entry.local_name, entry.public_name, std::move(targets),
+            {indexed_module->index.document().id,
+             {static_cast<sagan::source::byte_offset>(std::max(entry.declaration.begin, 0)),
+              static_cast<sagan::source::byte_offset>(std::max(entry.declaration.end,
+                                                                entry.declaration.begin))}}});
+      }
     }
 
     std::vector<import_link> imports;
@@ -172,7 +177,13 @@ namespace semantic
           const auto found = exports.find(key(entry.module_name, entry.imported_name));
           if (found != exports.end()) targets = found->second;
         }
-        imports.push_back(import_link{binding->id, entry.module_name, std::move(targets), entry.whole_module});
+        imports.push_back(import_link{
+            binding->id, entry.module_name, entry.imported_name, entry.binding_name,
+            std::move(targets), entry.whole_module,
+            {indexed_module->index.document().id,
+             {static_cast<sagan::source::byte_offset>(std::max(entry.declaration.begin, 0)),
+              static_cast<sagan::source::byte_offset>(std::max(entry.declaration.end,
+                                                                entry.declaration.begin))}}});
       }
     }
     std::vector<external_reference> external_references;
@@ -194,6 +205,7 @@ namespace semantic
               member.kind});
       }
     return workspace_semantic_index(std::move(indexed), std::move(imports), std::move(exports),
+                                    std::move(exported_symbols),
                                     std::move(external_references));
   }
 }

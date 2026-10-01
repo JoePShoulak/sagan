@@ -20,8 +20,11 @@ namespace semantic
   {
     symbol_id binding;
     std::string source_module;
+    std::string imported_name;
+    std::string binding_name;
     std::vector<symbol_id> targets;
     bool whole_module{};
+    sagan::source::source_range declaration;
   };
 
   struct external_reference
@@ -34,8 +37,10 @@ namespace semantic
   struct exported_symbol
   {
     std::string module;
+    std::string local_name;
     std::string public_name;
     std::vector<symbol_id> targets;
+    sagan::source::source_range declaration;
   };
 
   class workspace_semantic_index
@@ -43,11 +48,13 @@ namespace semantic
     std::vector<indexed_module> modules_;
     std::vector<import_link> imports_;
     std::unordered_map<std::string, std::vector<symbol_id>> exports_;
+    std::vector<exported_symbol> exported_symbols_;
     std::vector<external_reference> external_references_;
 
   public:
     workspace_semantic_index(std::vector<indexed_module> modules, std::vector<import_link> imports,
                              std::unordered_map<std::string, std::vector<symbol_id>> exports,
+                             std::vector<exported_symbol> exported_symbols,
                              std::vector<external_reference> external_references);
 
     auto modules() const -> const std::vector<indexed_module> &;

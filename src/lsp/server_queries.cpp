@@ -6,6 +6,7 @@
 #include "../language_service/queries.hpp"
 #include "../language_service/refactor.hpp"
 #include "../modules/resolver.hpp"
+#include "../parser/tokens.hpp"
 #include "../syntax/syntax.hpp"
 
 #include <algorithm>
@@ -87,15 +88,16 @@ namespace sagan::lsp
                        {"selectionRange", lsp_range(document, symbol.symbol.selection.bytes)},
                        {"children", std::move(children)}};
     }
-    auto text_edits(const source::document_snapshot &document, const workspace_edit &edits) -> J
+    auto text_edits(const source::source_provider &source, const workspace_edit &edits) -> J
     {
       J::array changes;
       for (const auto &group : edits.documents)
       {
-        if (group.uri != document.identity().uri || group.expected_version != document.version())
-          throw std::invalid_argument("Source edit requires another or a newer document");
+        const auto loaded = source.read(group.uri);
+        if (!loaded || group.expected_version != loaded.value->version())
+          throw std::invalid_argument("Source edit requires an unavailable or newer document");
         J::array entries;
-        for (const auto &edit : group.edits) entries.push_back(lsp_edit(document, edit));
+        for (const auto &edit : group.edits) entries.push_back(lsp_edit(*loaded.value, edit));
         changes.push_back(J::object{{"textDocument", J::object{{"uri", group.uri.value},
                                                                  {"version", group.expected_version}}},
                                     {"edits", std::move(entries)}});
@@ -196,7 +198,7 @@ namespace sagan::lsp
         if (plan.state == edit_state::ready && !plan.edits.documents.empty())
           actions.push_back(J::object{{"title", "Organize Sagan imports"},
                                       {"kind", "source.organizeImports"},
-                                      {"edit", text_edits(document, plan.edits)}});
+                                      {"edit", text_edits(*documents_, plan.edits)}});
       }
       const bool fixes_requested = !only || std::any_of(only->begin(), only->end(), [](const auto &kind)
       { return kind.string() == "quickfix"; });
@@ -209,7 +211,7 @@ namespace sagan::lsp
             const auto plan = plan_diagnostic_fix(document, checked, index, fix);
             if (plan.state == edit_state::ready)
               actions.push_back(J::object{{"title", checked.diagnostics[index].fixes[fix].title},
-                                          {"kind", "quickfix"}, {"edit", text_edits(document, plan.edits)}});
+                                          {"kind", "quickfix"}, {"edit", text_edits(*documents_, plan.edits)}});
           }
       }
       return actions;
@@ -462,17 +464,41 @@ namespace sagan::lsp
     if (method == "textDocument/prepareRename")
     {
       const auto symbol = queries.symbol_at(selected());
-      if (!symbol.value) return nullptr;
-      const auto result = rename_local(document, *index, selected(), symbol.value->name);
+      std::string placeholder;
+      source::byte_range selection;
+      if (symbol.value)
+      {
+        placeholder = symbol.value->name;
+        selection = symbol.value->selection.bytes;
+      }
+      else
+      {
+        const auto parsed = syntax::analyze(document);
+        if (!parsed.value) return nullptr;
+        const auto token = std::find_if(parsed.value->tokens.begin(), parsed.value->tokens.end(),
+            [&](const auto &candidate)
+            { return candidate.range.begin <= selected() && selected() <= candidate.range.end &&
+                     (candidate.kind == tokens::IDENTIFIER ||
+                      candidate.kind == tokens::METHOD_IDENTIFIER); });
+        if (token == parsed.value->tokens.end()) return nullptr;
+        placeholder = token->source_text;
+        selection = token->range;
+      }
+      auto result = symbol.value
+          ? rename_local(document, *index, selected(), placeholder)
+          : edit_plan{edit_state::unsupported, "Workspace export requires workspace proof", {}};
+      if (result.state == edit_state::unsupported && workspace)
+        result = rename_workspace(document, *index, *workspace, *documents_, selected(), placeholder);
       if (result.state != edit_state::ready) throw std::invalid_argument(result.reason);
-      return J::object{{"range", lsp_range(document, symbol.value->selection.bytes)},
-                       {"placeholder", symbol.value->name}};
+      return J::object{{"range", lsp_range(document, selection)}, {"placeholder", placeholder}};
     }
     if (method == "textDocument/rename")
     {
-      const auto result = rename_local(document, *index,
-                                       selected(), string_field(params, "newName"));
-      return result.state == edit_state::ready ? text_edits(document, result.edits) : J(nullptr);
+      auto result = rename_local(document, *index, selected(), string_field(params, "newName"));
+      if (result.state == edit_state::unsupported && workspace)
+        result = rename_workspace(document, *index, *workspace, *documents_, selected(),
+                                  string_field(params, "newName"));
+      return result.state == edit_state::ready ? text_edits(*documents_, result.edits) : J(nullptr);
     }
     if (method == "textDocument/prepareTypeHierarchy" ||
         method == "textDocument/prepareCallHierarchy")

@@ -27,6 +27,7 @@ LIBRARY_SOURCES := \
 	src/language_service/refactor_capabilities.cpp \
 	src/language_service/refactor_fixes.cpp \
 	src/language_service/refactor_imports.cpp \
+	src/language_service/refactor_workspace.cpp \
 	src/language_service/workspace.cpp \
 	src/lsp/json.cpp \
 	src/lsp/server.cpp \

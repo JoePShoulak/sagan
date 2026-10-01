@@ -254,7 +254,8 @@ namespace modules
             const std::string public_name = exported->alias.value_or(exported->exported_name);
             if (!public_names.insert(public_name).second)
               throw std::runtime_error("Module '" + name + "' exports duplicate public name '" + public_name + "'");
-            current.exports.push_back(export_symbol{exported->exported_name, public_name});
+            current.exports.push_back(export_symbol{exported->exported_name, public_name,
+                                                     exported->range});
           }
         }
 
@@ -285,7 +286,8 @@ namespace modules
               throw std::runtime_error("Module '" + dependency + "' does not export '" +
                                        imported_value->imported_name + "'");
           }
-          current.imports.push_back(import_edge{dependency, imported_value->imported_name, binding, whole_module});
+          current.imports.push_back(import_edge{dependency, imported_value->imported_name, binding,
+                                                whole_module, imported_value->range});
         }
 
         stack.pop_back();
