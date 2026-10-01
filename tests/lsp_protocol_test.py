@@ -2,7 +2,7 @@
 
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from queue import Queue
 import subprocess
 import sys
@@ -10,7 +10,19 @@ from threading import Thread
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVER = ROOT / "bin" / ("sagan-lsp.exe" if os.name == "nt" else "sagan-lsp")
+WINDOWS_SERVER = os.name == "nt" or bool(os.environ.get("MSYSTEM"))
+SERVER = ROOT / "bin" / ("sagan-lsp.exe" if WINDOWS_SERVER else "sagan-lsp")
+
+
+def server_file_uri(path):
+    """Use the native server's Windows paths when Python runs inside MSYS2."""
+    resolved = path.resolve()
+    if WINDOWS_SERVER and os.name != "nt":
+        windows_path = subprocess.check_output(
+            ["cygpath", "-w", str(resolved)], text=True
+        ).strip()
+        return PureWindowsPath(windows_path).as_uri()
+    return resolved.as_uri()
 
 
 def send(process, message):
@@ -62,7 +74,7 @@ def main():
     reader = Thread(target=read_frames, args=(process.stdout, received), daemon=True)
     reader.start()
     try:
-        package_uri = (ROOT / "examples" / "package").resolve().as_uri()
+        package_uri = server_file_uri(ROOT / "examples" / "package")
         send(process, {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
             "workspaceFolders": [{"uri": package_uri, "name": "package"}],
         }})

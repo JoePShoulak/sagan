@@ -10,7 +10,7 @@ import tempfile
 from threading import Thread
 from time import monotonic
 
-from lsp_protocol_test import ROOT, SERVER, next_message, read_frames, send
+from lsp_protocol_test import ROOT, SERVER, next_message, read_frames, send, server_file_uri
 
 
 MAX_QUERY_SECONDS = 15.0
@@ -50,7 +50,7 @@ def check_reliability(logging=False):
     process, received, logs, log_reader = start_server(logging)
     workspace = tempfile.TemporaryDirectory(prefix="sagan-lsp-workspace-")
     try:
-        package = (ROOT / "examples" / "package").resolve().as_uri()
+        package = server_file_uri(ROOT / "examples" / "package")
         second_root = Path(workspace.name)
         (second_root / "src").mkdir()
         (second_root / "sagan.toml").write_text(
@@ -61,7 +61,7 @@ def check_reliability(logging=False):
             "module main\nfun second_workspace(): Int => 1\nexport second_workspace\n"
             "fun main(): Int => second_workspace()\n", encoding="utf-8",
         )
-        module = second_root.resolve().as_uri()
+        module = server_file_uri(second_root)
         result, _ = response(process, received, 1, "initialize", {
             "workspaceFolders": [{"uri": package, "name": "package"},
                                  {"uri": module, "name": "module"}],
@@ -70,7 +70,7 @@ def check_reliability(logging=False):
         symbols, graph_seconds = response(process, received, 2, "workspace/symbol", {"query": "second_workspace"})
         assert any(item["name"] == "second_workspace" for item in symbols), symbols
         showcase = ROOT / "examples" / "showcase.sagan"
-        showcase_uri = showcase.resolve().as_uri()
+        showcase_uri = server_file_uri(showcase)
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
             "textDocument": {"uri": showcase_uri, "languageId": "sagan", "version": 1,
                              "text": showcase.read_text(encoding="utf-8")},

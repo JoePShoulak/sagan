@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.87.0](https://img.shields.io/badge/development-0.87.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.87.1](https://img.shields.io/badge/development-0.87.1-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -116,7 +116,7 @@ sagan hello.sagan
 
 See the [installation guide](docs/getting-started/installation.md) for portable
 archives, file associations, windowed programs, upgrades, and building from
-source. The experimental `v0.87.0-rc.1` preview and the planned initial 1.0
+source. The experimental `v0.87.1-rc.1` preview and the planned initial 1.0
 installer are disclosed unsigned exceptions, so Windows may show an
 unknown-publisher warning. Windows ARM64,
 Linux, and macOS remain future targets.
