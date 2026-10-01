@@ -4258,9 +4258,8 @@ compiler runtime directories from <code>PATH</code> before exercising the CLI, g
 program, and Explorer launcher. An optional <code>[application] mode</code> selects
 <code>console</code> or <code>windowed</code> Explorer launch, loose files default to <code>console</code>, and
 context-menu verbs override either choice. Windowed failures retain a local log
-and show a native diagnostic dialog. Release artifacts will
-be published through GitHub's release/package facilities; HP1 may additionally
-host or mirror installer and package data where convenient.</p>
+and show a native diagnostic dialog. Published release artifacts use GitHub
+Releases as the canonical source; HP1 provides a verified mirror.</p>
 <p>Installer policy is Windows x64 only, a self-contained offline package,
 in-place upgrades, refused downgrades, and SHA-256 sidecars. Initial 1.0.0
 publication explicitly permits an unsigned installer after automated

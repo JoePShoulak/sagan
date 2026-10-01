@@ -3894,7 +3894,8 @@ own <code>break</code> and <code>continue</code> statements.</p>
 <p>The built-in <code>RuntimeError</code> enum converts native failures into ordinary
 Sagan exception values. Its current cases are <code>integer_overflow</code>,
 <code>division_by_zero</code>, <code>modulo_by_zero</code>, <code>undefined_exponentiation</code>,
-<code>negative_integer_exponent</code>, <code>index_out_of_bounds</code>, and <code>missing_key</code>.</p>
+<code>negative_integer_exponent</code>, <code>index_out_of_bounds</code>, <code>invalid_range</code>, and
+<code>missing_key</code>.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hope print(values[values_count])
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>unless RuntimeError.index_out_of_bounds print("No such value")
 </span></code></pre></div>

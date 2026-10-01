@@ -3890,6 +3890,18 @@ bodies. An executable program enters through <code>fun main()</code>.</p>
 <p>Compound assignment is statement-only, like ordinary <code>=</code> reassignment. Its
 target must be assignable, and the result must convert losslessly back into the
 target's type.</p>
+<p>Parallel reassignment uses one <code>=</code> with comma-separated variable names and
+the same number of values:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let a = 0
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>let b = 1
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>a, b = b, a + b
+</span></code></pre></div>
+<p>Every right-hand expression is evaluated from left to right before any target
+changes. Then the variables are assigned from left to right, so the example
+leaves <code>a</code> as <code>1</code> and <code>b</code> as <code>1</code>. Targets must be distinct, mutable variable
+names; fields, indexes, compound operators, and mismatched list lengths are
+not supported in this form. This is reassignment, not a declaration or tuple
+expression.</p>
 <p><code>unless</code> is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.</p>
 <p><code>yield expression</code> and bare <code>yield</code> are syntactically valid inside function

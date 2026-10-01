@@ -4129,7 +4129,9 @@ notation, and <code>_</code> separators placed strictly between digits.</p>
 <code>.5e2</code>, and <code>5.e2</code> are lexical errors. Binary, octal, and hexadecimal numeric
 literals are not supported. A numeric or geometry literal
 may be followed by a separately tokenized unit name; the parser, rather than the
-lexer, forms the measured expression.</p>
+lexer, forms the measured expression.
+An integer immediately followed by <code>.</code> and an identifier is tokenized as
+member access, so <code>5.times</code> is valid while a bare <code>5.</code> remains invalid.</p>
 <h2 id="strings">Strings</h2>
 <p>Single and double quotes create strings. Triple double quotes create multiline
 strings. Non-raw strings support escapes and <code>${...}</code> interpolation; raw

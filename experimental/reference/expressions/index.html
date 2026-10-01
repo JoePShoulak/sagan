@@ -4101,8 +4101,12 @@ interpolate; <code>${literal_text}</code> in the raw example is ordinary text.</
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>let radial_position = s(100.0, 0.5, 1.0)
 </span></code></pre></div>
 <p>Arrays and dictionaries may be empty. Dictionary keys accept any expression;
-semantic analysis will determine whether a key's type is hashable. Cartesian
-vectors and points require at least two elements, so <code>&lt;&gt;</code>, <code>&lt;1&gt;</code>, and <code>(1,)</code>
+semantic analysis will determine whether a key's type is hashable.
+An integer's <code>.times</code> property eagerly constructs an <code>Array&lt;Int&gt;</code> containing
+the zero-based indices below that integer: <code>5.times</code> is <code>[0, 1, 2, 3, 4]</code>,
+and <code>0.times</code> is <code>[]</code>. A negative count raises <code>RuntimeError.invalid_range</code>.
+The count is evaluated once; this is an actual array, not a lazy sequence.</p>
+<p>Cartesian vectors and points require at least two elements, so <code>&lt;&gt;</code>, <code>&lt;1&gt;</code>, and <code>(1,)</code>
 are syntax errors. <code>(value)</code> remains a grouped expression. Spherical vectors
 and points require exactly three components in the order shown. The <code>s</code> must be
 adjacent to the delimiter: <code>s(...)</code> is a spherical point, while <code>s (...)</code> calls
