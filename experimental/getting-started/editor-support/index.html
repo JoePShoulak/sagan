@@ -4053,13 +4053,16 @@ release asset or build it from source.</p>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>npm<span class="w"> </span>run<span class="w"> </span>package
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>code<span class="w"> </span>--install-extension<span class="w"> </span>sagan-language-*.vsix
 </span></code></pre></div>
-<p>The repository's extension version is currently 0.3.2. Its version is
+<p>The repository's extension version is currently 0.3.3. Its version is
 independent of the compiler version.</p>
 <h2 id="verify-the-installation">Verify the installation</h2>
 <ol>
 <li>Open a <code>.sagan</code> file and confirm VS Code identifies it as <strong>Sagan</strong>.</li>
 <li>Confirm comments, declarations, strings, interpolation, keywords, and types
    receive syntax coloring.</li>
+<li>Confirm <code>.sagan</code> files show the Sagan logo when the active file-icon theme
+   supports language-provided default icons. A theme-specific icon or generic
+   icon may override this contribution.</li>
 <li>Run <strong>Sagan: Show Tooling Status</strong> from the Command Palette.</li>
 <li>Confirm the <strong>Sagan</strong> output channel reports that the language server started.</li>
 <li>Try completion, hover, go to definition, diagnostics, formatting, and rename.</li>

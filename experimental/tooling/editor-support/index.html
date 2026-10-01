@@ -3860,12 +3860,14 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="editor-support">Editor support</h1>
-<p>The version 0.3.2 VS Code extension in <code>editors/vscode-sagan/</code> associates
+<p>The version 0.3.3 VS Code extension in <code>editors/vscode-sagan/</code> associates
 <code>.sagan</code> files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations (including explicit <code>const</code> and visibly invalid
 <code>let ALL_CAPS</code> names), keywords, types, literals, operators, punctuation,
 comments, strings and nested interpolation, Unicode identifiers, private
-members, and mutating method names.</p>
+members, and mutating method names.
+It also contributes the Sagan logo as the default language icon for <code>.sagan</code>
+files when the active VS Code file-icon theme accepts language defaults.</p>
 <p>It discovers compatible Sagan compiler and language-server executables,
 validates the versioned <code>sagan.language-service/1</code> capability response, and
 exposes <strong>Sagan: Show Tooling Status</strong> and <strong>Sagan: Restart Language Server</strong>.</p>
