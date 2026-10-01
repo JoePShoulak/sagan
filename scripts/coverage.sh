@@ -24,7 +24,7 @@ cleanup() {
 trap cleanup EXIT
 
 make \
-  CXXFLAGS="-std=c++23 -Wall -Wextra -Wpedantic -Werror -DUNI_ALGO_STATIC_DATA -Ithird_party/uni-algo/include --coverage -O0 -g" \
+  CXXFLAGS="-std=c++23 -Wall -Wextra -Wpedantic -Werror -DUNI_ALGO_STATIC_DATA -Ithird_party/uni-algo/include --coverage -fprofile-update=atomic -O0 -g" \
   LDFLAGS="--coverage" \
   test
 
