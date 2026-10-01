@@ -21,6 +21,28 @@ printf 'preview' > "$test_root/v1.3.0-rc.1/sagan-1.3.0-rc.1-windows-x64.zip"
 python3 deploy/releases/index.py --root "$test_root"
 python3 deploy/releases/github.py --help >/dev/null
 
+checksum_root="$test_root/checksums"
+mkdir -p "$checksum_root"
+printf 'extension' > "$checksum_root/sagan-language-0.3.2.vsix"
+printf '%s  build/release/sagan-language-0.3.2.vsix\n' \
+  "$(sha256sum "$checksum_root/sagan-language-0.3.2.vsix" | cut -d ' ' -f 1)" \
+  > "$checksum_root/sagan-language-0.3.2.vsix.sha256"
+python3 deploy/releases/verify.py "$checksum_root"
+
+printf 'changed' > "$checksum_root/sagan-language-0.3.2.vsix"
+if python3 deploy/releases/verify.py "$checksum_root" >/dev/null 2>&1; then
+  echo "A changed asset must fail checksum verification." >&2
+  exit 1
+fi
+printf 'extension' > "$checksum_root/sagan-language-0.3.2.vsix"
+printf '%s  build/release/other.vsix\n' \
+  "$(sha256sum "$checksum_root/sagan-language-0.3.2.vsix" | cut -d ' ' -f 1)" \
+  > "$checksum_root/sagan-language-0.3.2.vsix.sha256"
+if python3 deploy/releases/verify.py "$checksum_root" >/dev/null 2>&1; then
+  echo "A sidecar naming another asset must fail verification." >&2
+  exit 1
+fi
+
 grep -Fq '<h2>v1.3.0-rc.1 <span class="badge">Latest</span> <span class="badge preview">Preview</span>' "$test_root/index.html"
 grep -Fq 'sagan-1.2.0-windows-x64.exe' "$test_root/index.html"
 grep -Fq 'Windows installer' "$test_root/index.html"

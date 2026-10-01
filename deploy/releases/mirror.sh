@@ -48,7 +48,7 @@ python3 "$script_dir/github.py" download "$tag" "$staging"
   shopt -s nullglob
   checksums=(./*.sha256)
   if [[ ${#checksums[@]} -gt 0 ]]; then
-    sha256sum -c "${checksums[@]}"
+    python3 "$script_dir/verify.py" .
   else
     assets=(./*)
     [[ ${#assets[@]} -gt 0 ]] || { echo "GitHub release $tag has no downloadable assets." >&2; exit 1; }
