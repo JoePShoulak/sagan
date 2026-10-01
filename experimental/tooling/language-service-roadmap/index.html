@@ -4307,6 +4307,11 @@ hierarchy, edit, and framing fixtures pass against the shared server library
 and executable; advertised capabilities match the
 <a href="../language-server-capabilities/">capability document</a>.</p>
 <h2 id="phase-9-reliability-and-release-gate">Phase 9 — reliability and release gate</h2>
+<p><strong>Status: in progress.</strong> The first server-library stress fixture exercises
+alternating valid and incomplete edits across two open documents, repeated
+semantic requests, rejection of an out-of-order document version, malformed
+source diagnostics, and overlay cleanup. The remaining stress, benchmark,
+fuzzing, and release-gate items below are not yet complete.</p>
 <ul>
 <li>Add rapid-edit, cancellation, stale-version, malformed-input, multi-workspace,
   cleanup, cache-budget, and repeated-request stress tests.</li>
