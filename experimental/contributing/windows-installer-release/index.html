@@ -3597,7 +3597,7 @@
   <span class="md-ellipsis">
     
   
-    Documentation roadmaps
+    Post-1.0 documentation audit
   
 
     
@@ -4004,23 +4004,28 @@ distribution remain future work.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bash<span class="w"> </span>scripts/windows/test_installer.sh
 </span></code></pre></div>
 <p>The Windows Installer workflow performs the same package build and smoke test.
-An unsigned artifact is a development artifact regardless of version text.</p>
+An unsigned artifact is normally a development artifact; the approved 1.0.0
+release is the single disclosed exception.</p>
 <h2 id="public-release-signing-gate">Public-release signing gate</h2>
-<p>Public installers and their embedded uninstallers require a trusted
-Authenticode signature. Sagan's own installed executables are signed as part of
-the same build. Release infrastructure supplies an Inno Setup sign-tool
-command through <code>SAGAN_SIGNTOOL_COMMAND</code>; the command must contain Inno's <code>$f</code>
-file placeholder. Certificate material and credentials must remain in protected
+<p>The signed follow-up release and later public installers require trusted
+Authenticode signatures on the installer, embedded uninstaller, and Sagan
+executables. Release infrastructure will supply an Inno Setup sign-tool command
+through <code>SAGAN_SIGNTOOL_COMMAND</code>; the command must contain Inno's <code>$f</code> file
+placeholder. Certificate material and credentials must remain in protected
 release infrastructure, never in source control.</p>
-<p>Before publication, run:</p>
+<p>For a signed candidate, run before publication:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bash<span class="w"> </span>scripts/windows/verify_installer_artifact.sh<span class="w"> </span>--release
 </span></code></pre></div>
 <p>This verifies both the checksum and Windows trust validation. Verified signed
 tags trigger release builds; the signing provider and credentials must be
-configured in the protected <code>release-signing</code> environment before 1.0.</p>
-<p>Unsigned artifacts built on ordinary <code>main</code> CI runs are development artifacts
-only. Both preview and stable GitHub Releases fail closed unless the trusted
-signature verifies.</p>
+configured in the protected <code>release-signing</code> environment for the signed
+post-1.0 patch and later releases.</p>
+<p>The initial 1.0.0 release is an explicit exception: its unsigned installer may
+be published after automated package tests and project-owner approval, with a
+prominent unknown-publisher warning in its release notes. The page-by-page
+documentation audit comes first after 1.0.0; signing is subsequent acceptance
+work. The signed-release gate must be restored and verified before claiming a
+later public installer meets this policy.</p>
 <h2 id="clean-machine-acceptance-gate">Clean-machine acceptance gate</h2>
 <p>Automation cannot prove that a developer workstation is not masking an
 installer defect. The exact signed release candidate must therefore be tested
@@ -4028,8 +4033,9 @@ on a clean Windows x64 computer or VM. Record the tester, date, Windows version,
 installer SHA-256, and results for interactive install, CLI execution, <code>.sagan</code>
 double-click and context-menu behavior, in-place upgrade, downgrade refusal,
 uninstall, and post-uninstall cleanup.</p>
-<p>This manual gate is currently <strong>pending</strong>. It may be deferred during development,
-but it blocks publishing Sagan 1.0.</p>
+<p>This manual gate is currently <strong>pending</strong>. It follows the initial 1.0.0
+publication and documentation audit, and becomes mandatory for the signed
+follow-up release that completes Windows distribution acceptance.</p>
 
 
 

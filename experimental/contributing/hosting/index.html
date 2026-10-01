@@ -3509,7 +3509,7 @@
   <span class="md-ellipsis">
     
   
-    Documentation roadmaps
+    Post-1.0 documentation audit
   
 
     
@@ -4081,10 +4081,10 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="self-hosting">Self-hosting</h1>
-<p>The canonical URL is <code>https://sagan.shoulak.org/</code>. HP1 serves released
-documentation archives, the continuously updated <code>experimental</code> version, and
-a verified stable-release mirror at <code>/downloads/</code> through an independently
-managed public route.</p>
+<p>The canonical URL is <code>https://sagan.shoulak.org/</code>. HP1 serves the continuously
+updated <code>experimental</code> documentation, can retain audited numbered archives
+after they are approved, and provides a verified stable-release mirror at
+<code>/downloads/</code> through an independently managed public route.</p>
 <h2 id="hermes-ecosystem-route">Hermes ecosystem route</h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>public DNS
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  -&gt; Frontdoor VIP 192.168.20.10
@@ -4165,8 +4165,8 @@ in a temporary directory, and deploys that package. Local uncommitted Frontdoor
 work is neither changed nor deployed. The update uses that project's existing
 passwordless, narrowly scoped remote helpers; it does not prompt for <code>sudo</code>.</p>
 <h2 id="versioned-publication-sequence">Versioned publication sequence</h2>
-<p>Every validated push to <code>main</code> updates only <code>experimental</code>. When a Sagan release
-and its documentation are approved:</p>
+<p>Every validated documentation-relevant push to <code>main</code> updates only
+<code>experimental</code>. When a Sagan release and its documentation are approved:</p>
 <ol>
 <li>review every page and record its verifier, date, and release documentation
    version;</li>
@@ -4180,6 +4180,12 @@ and its documentation are approved:</p>
 </ol>
 <p>Versioned files can be installed on HP1 without system privileges. DNS,
 certificate issuance, and Frontdoor changes remain separate hosting steps.</p>
+<p>The initial 1.0.0 release intentionally skips this numbered-documentation
+sequence. Its pages remain on <code>experimental</code>; the owner audits them as the
+first post-1.0 task. Publish a numbered documentation version only from a
+matching follow-up release after the audit and release-check pass. Never
+retroactively publish or overwrite a 1.0.0 archive as though it had been
+audited before the 1.0.0 tag.</p>
 <h2 id="automatic-deployment-from-github-actions">Automatic deployment from GitHub Actions</h2>
 <p>The <code>Documentation</code> workflow has three deliberately separate jobs:</p>
 <ol>

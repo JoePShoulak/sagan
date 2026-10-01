@@ -3519,7 +3519,7 @@
   <span class="md-ellipsis">
     
   
-    Documentation roadmaps
+    Post-1.0 documentation audit
   
 
     
@@ -3863,27 +3863,37 @@
 </div>
 <h1 id="ecosystem-release-readiness">Ecosystem release readiness</h1>
 <p>A Sagan release is one coordinated freeze. The compiler/language, every library
-included in that release, the versioned documentation, and the VS Code
+included in that release, the documentation snapshot, and the VS Code
 extension must agree on the same syntax and behavior and pass their respective
-checks before the release is ready. Passing a compiler build alone is not a
-release gate. An optional library that is not shipped must be explicitly listed
+automated checks before the release is ready. Passing a compiler build alone
+is not a release gate. An optional library that is not shipped must be listed
 as excluded; it must not be presented in the docs or extension as available.</p>
-<p>Before tagging or publishing, verify the exact candidate revision and assets:</p>
+<p>The initial 1.0.0 release is a disclosed exception to the usual documentation
+publication gate: its documentation remains <code>experimental</code> and visibly
+work-in-progress. The owner performs the page-by-page audit as the <strong>first
+post-1.0 task</strong>, then decides whether the evidence calls for documentation,
+compiler, or language changes. Do not describe the 1.0.0 pages as audited or
+publish a numbered 1.0.0 documentation archive afterward.</p>
+<p>The main-push workflow tags a new stable version before running the release
+gates. Before approving publication, verify the exact tagged revision and
+assets:</p>
 <ol>
 <li>Run the compiler and native execution suite with <code>bash scripts/test.sh</code>.</li>
 <li>Run each included core-library test suite against that compiler revision.</li>
-<li>Run <code>bash scripts/docs.sh check</code> and review examples and feature-status
-   claims against executable behavior.</li>
+<li>Run <code>bash scripts/docs.sh check</code> and verify executable examples and
+   feature-status claims. The separate human page audit is deferred only for
+   the initial 1.0.0 release.</li>
 <li>Run the VS Code extension tests in <code>editors/vscode-sagan</code> with <code>npm test</code>,
    and verify its grammar, capability negotiation, and packaged version against
    the candidate compiler.</li>
 <li>Freeze and publish the matching artifact set together. If any component
-   changes after verification, repeat the affected checks and reconfirm the
-   full ecosystem agreement before publication.</li>
+   changes after verification, create a new version and repeat the affected
+   checks; do not move or rebuild the existing tag or assets.</li>
 </ol>
 <p>This checklist describes the release gate, not an instruction to publish an
-internal or work-in-progress documentation page. Human documentation audit and
-the repository's separate release approval rules still apply.</p>
+internal or work-in-progress documentation page. After the audit, release
+documentation requires the normal page metadata and <code>release-check</code> gate.
+Joe's separate stable-publication approval applies to every stable release.</p>
 
 
 

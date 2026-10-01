@@ -3525,10 +3525,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#external-10-prerequisites" class="md-nav__link">
+  <a href="#post-publication-10-follow-ups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        External 1.0 prerequisites
+        Post-publication 1.0 follow-ups
       
     </span>
   </a>
@@ -3630,7 +3630,7 @@
   <span class="md-ellipsis">
     
   
-    Documentation roadmaps
+    Post-1.0 documentation audit
   
 
     
@@ -4015,10 +4015,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#external-10-prerequisites" class="md-nav__link">
+  <a href="#post-publication-10-follow-ups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        External 1.0 prerequisites
+        Post-publication 1.0 follow-ups
       
     </span>
   </a>
@@ -4047,10 +4047,15 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="release-lifecycle">Release lifecycle</h1>
-<p>Sagan releases are on demand. The project has stable and preview channels;
-preview versions use SemVer identifiers such as <code>1.0.0-rc.1</code>. Only Joe P.
-Shoulak authorizes stable publication. Support is best effort, with no
-response-time SLA, and covers only the latest stable release.</p>
+<p>Every push to <code>main</code> runs release-preparation CI. Before 1.0, it checks the
+release signer but does not create a stable tag. From 1.0 onward, a new
+history-derived version on <code>main</code> gets a signed tag and enters the release
+gates; a docs, test, or maintenance commit with no version change does not
+create a duplicate release. Passing stable gates prepares a draft, <strong>not</strong> a
+public release. Only Joe P. Shoulak authorizes publication. Preview versions
+use SemVer identifiers such as <code>1.0.0-rc.1</code> and are started from signed preview
+tags. Support is best effort, with no response-time SLA, and covers only the
+latest stable release.</p>
 <h2 id="identity-and-compatibility">Identity and compatibility</h2>
 <p>Every public release starts from a verified signed annotated <code>vVERSION</code> tag on
 <code>main</code> and has one matching GitHub Release. Stable 1.x releases preserve source
@@ -4062,8 +4067,10 @@ boundary.</p>
 documentation are immutable. A failed candidate receives the next identifier;
 an urgent correction uses the ordinary patch pipeline rather than replacing or
 skipping gates.</p>
-<p>Release tags use the project owner's registered SSH signing key. A checkout can
-verify a candidate independently from GitHub with:</p>
+<p>Main-driven stable tags use a dedicated CI SSH signing key registered with
+GitHub; an authorized maintainer may also sign a preview tag. Both trusted
+public keys are in <code>.github/allowed_signers</code>. A checkout can verify a
+candidate independently from GitHub with:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>-c<span class="w"> </span>gpg.ssh.allowedSignersFile<span class="o">=</span>.github/allowed_signers<span class="w"> </span>verify-tag<span class="w"> </span>vVERSION
 </span></code></pre></div>
 <p>The release workflow requires that local verification and GitHub's verified-tag
@@ -4074,9 +4081,9 @@ version before running:</p>
 <ul>
 <li>the complete compiler and CLI tests;</li>
 <li>the enforced 90% line-coverage floor;</li>
-<li>strict documentation and release-readiness checks;</li>
+<li>strict documentation build checks;</li>
 <li>one canonical Windows staging build;</li>
-<li>Authenticode signing and trust verification;</li>
+<li>installer checksum and isolated-environment verification;</li>
 <li>installer and portable-archive checksums;</li>
 <li>isolated-PATH installer and portable compilation/execution tests;</li>
 <li>in-place upgrade and downgrade-refusal tests;</li>
@@ -4089,7 +4096,7 @@ formal incident-management commitment.</p>
 <h2 id="windows-assets">Windows assets</h2>
 <p>Every Windows release contains:</p>
 <ul>
-<li><code>sagan-VERSION-windows-x64.exe</code>, the signed graphical installer;</li>
+<li><code>sagan-VERSION-windows-x64.exe</code>, the graphical installer;</li>
 <li><code>sagan-VERSION-windows-x64.zip</code>, a portable CLI archive;</li>
 <li><code>sagan-language-EXTENSION_VERSION.vsix</code>, the compatible VS Code extension;</li>
 <li>SHA-256 sidecars for all three packages;</li>
@@ -4097,9 +4104,9 @@ formal incident-management commitment.</p>
 <li><code>sagan-VERSION-sbom.spdx.json</code>; and</li>
 <li>reviewed release notes plus GitHub's source archives.</li>
 </ul>
-<p>The installer, embedded uninstaller, <code>sagan.exe</code>, and <code>sagan-launch.exe</code> must
-pass Authenticode verification. Unsigned CI artifacts are development builds
-and cannot be published as previews or stable releases.</p>
+<p>Beginning with the post-1.0 signing patch, the installer, embedded uninstaller,
+<code>sagan.exe</code>, and <code>sagan-launch.exe</code> must pass Authenticode verification. The
+initial 1.0.0 release is the documented unsigned exception.</p>
 <p>The portable ZIP reuses the installer build's <code>sagan.exe</code>, compiler toolchain,
 licenses, and version metadata. Its root contains <code>bin/</code>, <code>toolchain/</code>,
 <code>licenses/</code>, and <code>VERSION</code>. It deliberately omits <code>sagan-launch.exe</code>, registry
@@ -4108,15 +4115,23 @@ changes, file associations, shortcuts, and automatic PATH changes.</p>
 <p>Signed preview tags publish automatically as GitHub prereleases after automated
 gates. Previews are best effort, may change incompatibly before stable release,
 and receive no backported fixes.</p>
-<p>A stable tag creates an unpublished GitHub draft containing the signed assets
-and generated release-note draft. The exact attached installer must then pass a
-clean Windows x64 computer or VM test. The tester records their identity, date,
-Windows version, installer SHA-256, and result in the draft. Publication remains
-behind the protected <code>stable-release</code> environment and requires Joe's approval.</p>
-<p>Publishing promotes versioned documentation from the same tag and makes it the
-<code>latest</code> documentation version. GitHub Releases is canonical. HP1 mirrors and
-verifies stable assets afterward; mirror failure is reported and retried but
-does not invalidate or block the canonical release.</p>
+<p>A stable tag creates an unpublished GitHub draft containing the release assets
+and generated release-note draft. Publication remains behind the protected
+<code>stable-release</code> environment and requires Joe's approval.</p>
+<p>For the initial 1.0.0 publication, the documentation audit, Authenticode
+signing, and clean-machine acceptance are explicit post-publication work. The
+release notes must say that the installer is unsigned, may trigger an
+unknown-publisher warning, and has not completed clean-machine acceptance. The
+documentation remains on the experimental channel. <strong>The page-by-page
+documentation audit is the first task after 1.0.0.</strong> It may identify language,
+tooling, or documentation corrections; decide those from the evidence and use
+the normal versioning rules for any follow-up release. Published 1.0.0 assets
+and tags remain immutable.</p>
+<p>After the documentation audit is complete, a later release promotes versioned
+documentation from its matching tag and makes it the <code>latest</code>
+documentation version. GitHub Releases is canonical. HP1 mirrors and verifies
+stable assets afterward; mirror failure is reported and retried but does not
+invalidate or block the canonical release.</p>
 <h2 id="withdrawal-and-security">Withdrawal and security</h2>
 <p>A faulty stable release is preserved, marked withdrawn, and removed from the
 recommended/latest position. The prior good release becomes the recommendation
@@ -4126,19 +4141,23 @@ replaced in place.</p>
 the issue is validated privately and the patch release and advisory are
 published together. Only the latest stable release is supported; there are no
 guaranteed backports, deadlines, or service levels.</p>
-<h2 id="external-10-prerequisites">External 1.0 prerequisites</h2>
-<p>The repository intentionally fails closed until release infrastructure has:</p>
+<h2 id="post-publication-10-follow-ups">Post-publication 1.0 follow-ups</h2>
+<p>After the initial 1.0.0 publication, audit the documentation first. Then
+complete the remaining distribution work before calling the Windows package
+fully accepted:</p>
 <ul>
 <li>a trusted code-signing identity configured in the protected
   <code>release-signing</code> environment;</li>
 <li><code>SAGAN_SIGNTOOL_COMMAND</code> using SHA-256 Authenticode and an RFC 3161 SHA-256
   timestamp;</li>
-<li>Joe as the required reviewer for <code>stable-release</code>; and</li>
-<li>recorded clean-machine evidence for the exact signed 1.0.0 installer.</li>
+<li>versioned documentation published from the matching follow-up release tag; and</li>
+<li>recorded clean-machine evidence for the exact signed patch installer.</li>
 </ul>
-<p>Visual Studio Marketplace publication, semantic editor features, and the math,
-rendering, and physics libraries remain
-separate post-1.0 work.</p>
+<p>Joe remains the required reviewer for every <code>stable-release</code> publication,
+including the initial 1.0.0 release.</p>
+<p>Visual Studio Marketplace publication, further editor integrations, the
+debugger and test protocols, and the math, rendering, and physics libraries
+remain separate post-1.0 work.</p>
 
 
 
