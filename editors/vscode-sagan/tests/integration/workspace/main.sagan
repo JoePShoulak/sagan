@@ -1,0 +1,6 @@
+fun 🚀(value: Int): Int => value + 2
+fun main(): Int {
+  let answer = 🚀(40)
+  print(answer)
+    return 0
+}

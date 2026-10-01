@@ -2,7 +2,7 @@
   "name": "sagan-language",
   "displayName": "Sagan Language",
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "sagan-language",
   "icon": "images/sagan-logo.png",
   "repository": {
@@ -32,9 +32,11 @@
     "vscode:prepublish": "npm run build",
     "test": "node tests/run-tests.js",
     "test:bundle": "npm run build && node tests/bundle.test.js",
+    "test:integration": "npm run build && node tests/integration/run.js",
     "package": "npm run build && vsce package"
   },
   "devDependencies": {
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.6.2",
     "esbuild": "^0.25.10",
     "vscode-oniguruma": "^2.0.1",

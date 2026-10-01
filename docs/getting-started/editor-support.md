@@ -43,11 +43,12 @@ cd editors/vscode-sagan
 npm ci
 npm test
 npm run test:bundle
+npm run test:integration
 npm run package
 code --install-extension sagan-language-*.vsix
 ```
 
-The repository's extension version is currently 0.3.1. Its version is
+The repository's extension version is currently 0.3.2. Its version is
 independent of the compiler version.
 
 ## Verify the installation
@@ -69,9 +70,28 @@ matching Sagan installation must provide `sagan-lsp` on `PATH`, beside the
 configured compiler, in the repository `bin` directory, or through
 `sagan.server.path`.
 
+## Troubleshooting
+
+- Open **View: Output**, choose **Sagan**, and look for the resolved server path
+  or the first startup error. **Sagan: Restart Language Server** retries startup.
+- If discovery fails, configure absolute paths for `sagan.compiler.path` and
+  `sagan.server.path`; do not point both settings at the same executable.
+- An unsupported `sagan.language-service/1` schema means the extension and
+  native Sagan installation are from incompatible releases. Install matching
+  artifacts rather than bypassing the check.
+- On Windows, a missing runtime DLL or an execution-quarantine warning belongs
+  to the native Sagan installation, not the JavaScript extension. Reinstall the
+  matching official compiler/server package and verify its checksum.
+- Enable `sagan.server.trace` only while diagnosing protocol lifecycle issues.
+  It logs sanitized method names to stderr and never source payloads.
+
 ## Development-host testing
 
 Open `editors/vscode-sagan/` in VS Code, press `F5`, and choose **Run Sagan
 Extension** if prompted. The Extension Development Host opens the bundled
 demonstration file. This is intended for extension development, not ordinary
 installation.
+
+The opt-in `npm run test:integration` command downloads or reuses a supported
+VS Code test runtime and requires a built `bin/sagan-lsp` (or an explicit
+`SAGAN_LSP_PATH`). Ordinary `npm test` remains offline and deterministic.

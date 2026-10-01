@@ -4,7 +4,7 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for Sagan. Version 0.3.1 connects to the compiler's tested language server and enables every editor feature it advertises.
+VS Code language support for Sagan. Version 0.3.2 connects to the compiler's tested language server and enables every editor feature it advertises.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
 
@@ -32,9 +32,11 @@ Install the pinned development dependencies and run the grammar against focused 
 ```bash
 npm ci
 npm test
+npm run test:bundle
+npm run test:integration
 ```
 
-The tests use VS Code's TextMate and Oniguruma engines to verify syntax scopes and mocked lifecycle tests to verify server discovery, client startup, command registration, and shutdown. `npm run test:bundle` additionally builds and checks the packaged entry point.
+The tests use VS Code's TextMate and Oniguruma engines to verify syntax scopes and mocked lifecycle tests to verify server discovery, client startup, command registration, and shutdown. `npm run test:bundle` additionally builds and checks the packaged entry point. The opt-in integration test launches a real VS Code Extension Development Host against a built `bin/sagan-lsp`; set `SAGAN_LSP_PATH` to use another compatible server.
 
 ## Package
 

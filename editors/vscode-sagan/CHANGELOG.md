@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+- Add an opt-in real VS Code Extension Development Host integration suite.
+- Exercise activation, diagnostics, hover, definition, completion, signature help, symbols, and formatting against `sagan-lsp`.
+- Document server discovery, schema mismatch, native runtime, and tracing troubleshooting.
+
 ## 0.3.1
 
 - Verify PATH-based language-server discovery before reporting success.
