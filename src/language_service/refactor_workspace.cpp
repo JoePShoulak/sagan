@@ -1,6 +1,7 @@
 #include "refactor.hpp"
 
 #include "queries.hpp"
+#include "../modules/resolver.hpp"
 #include "../parser/tokens.hpp"
 #include "../parser/unicode.hpp"
 #include "../syntax/syntax.hpp"
@@ -11,6 +12,7 @@
 #include <optional>
 #include <set>
 #include <tuple>
+#include <unordered_map>
 
 namespace sagan::language_service
 {
@@ -58,6 +60,50 @@ namespace sagan::language_service
     {
       return std::find(values.begin(), values.end(), value) != values.end();
     }
+
+    class preview_source final : public source::source_provider
+    {
+      const source::source_provider &fallback_;
+      std::unordered_map<std::string, source::document_snapshot> documents_;
+
+    public:
+      preview_source(const source::source_provider &fallback,
+                     const std::vector<preview_document> &previews,
+                     const std::map<std::uint64_t, loaded_document> &loaded)
+          : fallback_(fallback)
+      {
+        for (const auto &preview : previews)
+          for (const auto &[id, document] : loaded)
+            if (document.snapshot.identity().uri == preview.uri)
+              documents_.emplace(preview.uri.value,
+                  source::document_snapshot(document.snapshot.identity(), preview.expected_version,
+                                            preview.text));
+      }
+
+      auto read(const source::document_uri &uri) const -> source::provider_result<source::document_snapshot> override
+      {
+        const auto found = documents_.find(uri.value);
+        return found == documents_.end() ? fallback_.read(uri) :
+                                           source::provider_result<source::document_snapshot>{found->second, {}};
+      }
+
+      auto read_path(const std::filesystem::path &path) const
+        -> source::provider_result<source::document_snapshot> override
+      {
+        const auto original = fallback_.read_path(path);
+        if (!original) return original;
+        const auto found = documents_.find(original.value->identity().uri.value);
+        return found == documents_.end() ? original :
+                                           source::provider_result<source::document_snapshot>{found->second, {}};
+      }
+
+      auto exists_path(const std::filesystem::path &path) const -> bool override
+      { return fallback_.exists_path(path); }
+
+      auto canonicalize(const source::document_uri &uri) const
+        -> source::provider_result<std::filesystem::path> override
+      { return fallback_.canonicalize(uri); }
+    };
   }
 
   auto rename_workspace(const source::document_snapshot &document,
@@ -93,6 +139,7 @@ namespace sagan::language_service
     for (const auto &entry : workspace.imports())
       if (symbol && entry.binding == symbol->id) { selected_import = &entry; break; }
 
+    std::optional<semantic::exported_symbol> exported_storage;
     const semantic::exported_symbol *exported = nullptr;
     semantic::symbol_id target;
     bool public_api = false;
@@ -133,7 +180,8 @@ namespace sagan::language_service
         {
           if (candidate.targets.empty())
             return {edit_state::unsupported, "Export has no resolved workspace target", {}};
-          exported = &candidate;
+          exported_storage = candidate;
+          exported = &*exported_storage;
           target = candidate.targets.front();
           public_api = true;
           break;
@@ -143,7 +191,12 @@ namespace sagan::language_service
     if (target.value.empty()) return {edit_state::unsupported, "No renameable workspace symbol was selected", {}};
     if (!exported)
       for (const auto &candidate : workspace.exported_symbols())
-        if (contains(candidate.targets, target)) { exported = &candidate; break; }
+        if (contains(candidate.targets, target))
+        {
+          exported_storage = candidate;
+          exported = &*exported_storage;
+          break;
+        }
     if (!exported)
       return {edit_state::unsupported, "Selected symbol is not a public workspace export", {}};
     const auto &rename_targets = exported->targets;
@@ -268,7 +321,39 @@ namespace sagan::language_service
       { return left.range.bytes.begin < right.range.bytes.begin; });
       result.documents.push_back(std::move(group));
     }
-    return result.documents.empty() ? edit_plan{edit_state::unsupported, "No workspace edits were produced", {}} :
-                                      edit_plan{edit_state::ready, {}, std::move(result)};
+    if (result.documents.empty())
+      return {edit_state::unsupported, "No workspace edits were produced", {}};
+    std::vector<const source::document_snapshot *> snapshots;
+    for (const auto &[id, loaded] : documents) snapshots.push_back(&loaded.snapshot);
+    const auto preview = preview_edits(result, snapshots);
+    if (preview.state != edit_state::ready) return {preview.state, preview.reason, {}};
+    try
+    {
+      const preview_source changed(source, preview.documents, documents);
+      bool public_identity_verified = !(public_api || exported->local_name == exported->public_name);
+      for (const auto &group : result.documents)
+      {
+        const auto loaded = changed.read(group.uri);
+        if (!loaded || !loaded.value->identity().canonical_path)
+          return {edit_state::unsupported, "Workspace rename requires canonical module paths", {}};
+        const auto graph = modules::resolve(*loaded.value->identity().canonical_path, changed);
+        const auto checked = semantic::build_workspace_index(graph, changed);
+        if (public_api || exported->local_name == exported->public_name)
+        {
+          const auto rebound = checked.exported(exported->module, std::string(new_name));
+          if (!rebound.empty() && rebound.size() != rename_targets.size())
+            return {edit_state::unsupported, "Export identity set changed after workspace rename", {}};
+          public_identity_verified = public_identity_verified || rebound.size() == rename_targets.size();
+        }
+      }
+      if (!public_identity_verified)
+        return {edit_state::unsupported, "Renamed public export was not found during workspace reanalysis", {}};
+    }
+    catch (const std::exception &error)
+    {
+      return {edit_state::unsupported,
+              "Renamed workspace did not pass strict module analysis: " + std::string(error.what()), {}};
+    }
+    return {edit_state::ready, {}, std::move(result)};
   }
 }
