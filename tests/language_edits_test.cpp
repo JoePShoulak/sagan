@@ -472,6 +472,81 @@ auto main() -> int
               std::any_of(type_preview.documents.begin(), type_preview.documents.end(), [](const auto &entry)
               { return entry.text.find("flight_data.Beacon.nominal") != std::string::npos; }),
           "workspace type/constructor identity group was not renamed through namespace references");
+  const auto member_graph = modules::resolve(
+      "tests/fixtures/modules/workspace_member_rename/main.sagan", disk);
+  const auto member_workspace = semantic::build_workspace_index(member_graph, disk);
+  const auto vehicle_module = std::find_if(member_workspace.modules().begin(),
+                                            member_workspace.modules().end(), [](const auto &entry)
+  { return entry.name == "vehicle"; });
+  const auto vehicle_document = disk.read_path(
+      "tests/fixtures/modules/workspace_member_rename/vehicle.sagan");
+  require(vehicle_module != member_workspace.modules().end() && vehicle_document.value.has_value(),
+          "public-member workspace rename fixture was unavailable");
+  const auto member_rename = language_service::rename_workspace(
+      *vehicle_document.value, vehicle_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(vehicle_document.value->text().find("sample")), "measure");
+  const auto member_main_module = std::find_if(member_workspace.modules().begin(),
+                                                member_workspace.modules().end(), [](const auto &entry)
+  { return entry.name == "main"; });
+  const auto member_main_document = disk.read_path(
+      "tests/fixtures/modules/workspace_member_rename/main.sagan");
+  require(member_main_module != member_workspace.modules().end() && member_main_document.value.has_value(),
+          "imported public-member invocation fixture was unavailable");
+  const auto invoked_member_rename = language_service::rename_workspace(
+      *member_main_document.value, member_main_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(member_main_document.value->text().find("sample")), "measure");
+  std::vector<source::document_snapshot> member_documents;
+  std::vector<const source::document_snapshot *> member_document_views;
+  for (const auto &module : member_workspace.modules())
+  {
+    const auto loaded = disk.read(module.index.document().uri);
+    require(loaded.value.has_value(), "public-member rename preview source was unavailable");
+    member_documents.push_back(*loaded.value);
+  }
+  for (const auto &loaded : member_documents) member_document_views.push_back(&loaded);
+  const auto member_preview = language_service::preview_edits(member_rename.edits,
+                                                               member_document_views);
+  require(member_rename.state == language_service::edit_state::ready &&
+              invoked_member_rename.state == language_service::edit_state::ready &&
+              invoked_member_rename.edits.documents.size() == member_rename.edits.documents.size() &&
+              member_preview.state == language_service::edit_state::ready &&
+              std::any_of(member_preview.documents.begin(), member_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("fun measure()") != std::string::npos; }) &&
+              std::any_of(member_preview.documents.begin(), member_preview.documents.end(), [](const auto &entry)
+              {
+                return entry.text.find("probe.measure()") != std::string::npos &&
+                       entry.text.find("sensor.measure()") != std::string::npos;
+              }),
+          "F2 did not rename a public method through annotated and inferred imported receivers");
+  const auto field_rename = language_service::rename_workspace(
+      *vehicle_document.value, vehicle_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(vehicle_document.value->text().find("reading")), "value");
+  const auto field_preview = language_service::preview_edits(field_rename.edits,
+                                                              member_document_views);
+  require(field_rename.state == language_service::edit_state::ready &&
+              field_preview.state == language_service::edit_state::ready &&
+              std::any_of(field_preview.documents.begin(), field_preview.documents.end(), [](const auto &entry)
+              {
+                return entry.text.find("let value: Int") != std::string::npos &&
+                       entry.text.find("self.value") != std::string::npos;
+              }) &&
+              std::any_of(field_preview.documents.begin(), field_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("probe.value") != std::string::npos; }),
+          "F2 did not rename a public field through an imported receiver");
+  const auto enum_case_rename = language_service::rename_workspace(
+      *telemetry_document.value, telemetry_module->index, workspace_index, disk,
+      static_cast<source::byte_offset>(telemetry_document.value->text().find("nominal")), "active");
+  const auto enum_case_preview = language_service::preview_edits(enum_case_rename.edits,
+                                                                 workspace_document_views);
+  require(enum_case_rename.state == language_service::edit_state::ready &&
+              enum_case_preview.state == language_service::edit_state::ready &&
+              std::any_of(enum_case_preview.documents.begin(), enum_case_preview.documents.end(),
+                          [](const auto &entry)
+              { return entry.text.find("\n  active\n") != std::string::npos; }) &&
+              std::any_of(enum_case_preview.documents.begin(), enum_case_preview.documents.end(),
+                          [](const auto &entry)
+              { return entry.text.find("flight_data.Signal.active") != std::string::npos; }),
+          "F2 did not rename an exported enum case through a namespace-qualified type");
   const source::document_snapshot needs_import(
       {{source::document_id{112}, source::document_uri{"untitled:needs-import"}, {}}, 1,
        "module scratch\nfun main(): Int => 0\n"});

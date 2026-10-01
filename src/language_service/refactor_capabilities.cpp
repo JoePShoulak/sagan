@@ -12,7 +12,7 @@ namespace sagan::language_service
         {"rename.privateMember", true, "Only uniquely resolved members confined to one document"},
         {"rename.function", true, "Only non-exported, non-overloaded, non-entry functions in one document"},
         {"rename.workspace", true,
-         "Exported identity groups are supported; imported public-member receiver identities remain unavailable"},
+         "Exported identity groups and exact imported public-member receivers are supported"},
         {"imports.organize", true, "Only one uninterrupted comment-free block"},
         {"imports.add", true, "Requires one selected public workspace symbol and a module header"},
         {"imports.removeUnused", false, "Module initialization effects are not proven absent"},

@@ -1,0 +1,10 @@
+module main
+
+import Probe from vehicle
+
+fun inspect(probe: Probe): Int => probe.sample() + probe.reading
+
+fun main(): Int {
+  let sensor = Probe()
+  return inspect(sensor) + sensor.sample()
+}

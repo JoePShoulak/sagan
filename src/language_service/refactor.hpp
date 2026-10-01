@@ -28,9 +28,9 @@ namespace sagan::language_service
   auto rename_local(const source::document_snapshot &document, const semantic::semantic_index &index,
                     source::byte_offset position, std::string_view new_name) -> edit_plan;
 
-  // Rename an exported source symbol, its public export/import spelling, and
-  // every identity-resolved workspace reference. Explicit export and import
-  // aliases remain independent bindings.
+  // Rename an exported source symbol or public member and every
+  // identity-resolved workspace reference. Explicit export and import aliases
+  // remain independent bindings; ambiguous receiver types are refused.
   auto rename_workspace(const source::document_snapshot &document,
                         const semantic::semantic_index &index,
                         const semantic::workspace_semantic_index &workspace,

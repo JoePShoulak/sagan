@@ -127,6 +127,28 @@ def main():
         assert changed["params"]["version"] == 2
         assert changed["params"]["diagnostics"][0]["code"] == "SAG-SEM-0001"
 
+        member_path = ROOT / "tests" / "fixtures" / "modules" / "workspace_member_rename" / "main.sagan"
+        member_uri = server_file_uri(member_path)
+        member_source = member_path.read_text(encoding="utf-8")
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": member_uri, "languageId": "sagan", "version": 1,
+                             "text": member_source},
+        }})
+        member_diagnostics = next_message(received)
+        assert member_diagnostics["method"] == "textDocument/publishDiagnostics"
+        member_line = member_source.splitlines()[4]
+        member_point = {"line": 4, "character": member_line.index("sample") + 1}
+        send(process, {"jsonrpc": "2.0", "id": 7, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": member_uri}, "position": member_point, "newName": "measure",
+        }})
+        member_renamed = next_message(received)
+        while "id" not in member_renamed:
+            member_renamed = next_message(received)
+        assert member_renamed["id"] == 7
+        member_changes = member_renamed["result"]["documentChanges"]
+        assert len(member_changes) == 2
+        assert sum(len(change["edits"]) for change in member_changes) == 3
+
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "shutdown", "params": {}})
         assert next_message(received)["id"] == 4
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

@@ -143,6 +143,7 @@ namespace sagan::language_service
     const semantic::exported_symbol *exported = nullptr;
     semantic::symbol_id target;
     bool public_api = false;
+    bool public_member_api = false;
     if (selected_import)
     {
       const auto imported_token = identifier_token(current->second, selected_import->declaration,
@@ -169,7 +170,41 @@ namespace sagan::language_service
       public_api = true;
     }
     else if (symbol)
+    {
       target = symbol->id;
+      public_member_api = symbol->visibility == semantic::symbol_visibility::public_access &&
+          (symbol->kind == semantic::symbol_kind::field ||
+           symbol->kind == semantic::symbol_kind::constant_field ||
+           symbol->kind == semantic::symbol_kind::method ||
+           symbol->kind == semantic::symbol_kind::enum_case);
+      if (public_member_api)
+      {
+        std::string module_name;
+        std::vector<semantic::symbol_id> members;
+        bool owner_exported = false;
+        for (const auto &module : workspace.modules())
+          if (module.index.document().id == symbol->declaration.document)
+          {
+            module_name = module.name;
+            for (const auto &candidate : module.index.symbols())
+              if (candidate.owner_type == symbol->owner_type && candidate.name == symbol->name &&
+                  candidate.kind == symbol->kind) members.push_back(candidate.id);
+            for (const auto &candidate : workspace.exported_symbols())
+              if (candidate.module == module.name)
+                for (const auto &exported_target : candidate.targets)
+                  if (const auto *owner = workspace.find(exported_target);
+                      owner && owner->kind == semantic::symbol_kind::type &&
+                      owner->name == symbol->owner_type) owner_exported = true;
+            break;
+          }
+        if (!owner_exported)
+          return {edit_state::unsupported, "Public member owner is not an exported workspace type", {}};
+        exported_storage = semantic::exported_symbol{
+            module_name, symbol->name, symbol->name, std::move(members), symbol->declaration};
+        exported = &*exported_storage;
+        public_api = true;
+      }
+    }
     else
     {
       for (const auto &candidate : workspace.exported_symbols())
@@ -221,7 +256,7 @@ namespace sagan::language_service
       return {edit_state::ready, {}, {}};
 
     for (const auto &candidate : workspace.exported_symbols())
-      if (candidate.module == exported->module && candidate.public_name == new_name &&
+      if (!public_member_api && candidate.module == exported->module && candidate.public_name == new_name &&
           std::none_of(candidate.targets.begin(), candidate.targets.end(), [&](const auto &id)
           { return contains(rename_targets, id); }))
         return {edit_state::conflict, "Proposed public name is already exported by this module", {}};
@@ -280,7 +315,7 @@ namespace sagan::language_service
           identifier_token(owner->second, exported->declaration, exported->public_name, true);
       if (!export_public || !add(*export_public, new_name))
         return {edit_state::unsupported, "Public export token was not found", {}};
-      for (const auto &imported : workspace.imports())
+      if (!public_member_api) for (const auto &imported : workspace.imports())
       {
         if (std::none_of(imported.targets.begin(), imported.targets.end(), [&](const auto &id)
             { return contains(rename_targets, id); })) continue;
@@ -338,7 +373,18 @@ namespace sagan::language_service
           return {edit_state::unsupported, "Workspace rename requires canonical module paths", {}};
         const auto graph = modules::resolve(*loaded.value->identity().canonical_path, changed);
         const auto checked = semantic::build_workspace_index(graph, changed);
-        if (public_api || exported->local_name == exported->public_name)
+        if (public_member_api)
+        {
+          std::size_t rebound = 0;
+          for (const auto &checked_module : checked.modules())
+            for (const auto &candidate : checked_module.index.symbols())
+              if (candidate.owner_type == target_symbol->owner_type && candidate.name == new_name &&
+                  candidate.kind == target_symbol->kind) ++rebound;
+          if (rebound != 0 && rebound != rename_targets.size())
+            return {edit_state::unsupported, "Public member identity set changed after workspace rename", {}};
+          public_identity_verified = public_identity_verified || rebound == rename_targets.size();
+        }
+        else if (public_api || exported->local_name == exported->public_name)
         {
           const auto rebound = checked.exported(exported->module, std::string(new_name));
           if (!rebound.empty() && rebound.size() != rename_targets.size())
