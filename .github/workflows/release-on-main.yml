@@ -23,6 +23,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify CI tag signing without publishing a tag
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY }}
+        run: |
+          [[ -n "$SIGNING_KEY" ]] || {
+            echo 'Configure the SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY repository secret before releasing.' >&2
+            exit 1
+          }
+          key_file="$RUNNER_TEMP/sagan-release-tag-key"
+          smoke_tag="sagan-ci-signing-smoke-${GITHUB_RUN_ID}"
+          umask 077
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s\n' "$SIGNING_KEY" > "$key_file"
+          public_key="$(ssh-keygen -y -f "$key_file" | awk '{print $1 " " $2}')"
+          grep -Fq " $public_key" .github/allowed_signers || {
+            echo 'The release signing key is not in .github/allowed_signers.' >&2
+            exit 1
+          }
+          git config user.name 'Sagan Release Bot'
+          git config user.email 'joepshoulak2@gmail.com'
+          git -c gpg.format=ssh -c user.signingkey="$key_file" tag -s "$smoke_tag" -m 'Sagan CI signing smoke test'
+          git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile=.github/allowed_signers verify-tag "$smoke_tag"
+          git tag -d "$smoke_tag"
+
       - name: Determine whether main needs a release
         id: candidate
         shell: bash
