@@ -87,14 +87,16 @@ jobs:
       - name: Set up documentation environment
         shell: msys2 {0}
         run: bash scripts/docs.sh setup
-      - name: Validate documentation and release metadata
+      - name: Validate work-in-progress documentation
+        shell: msys2 {0}
+        run: bash scripts/docs.sh check
+      - name: Validate versioned documentation after the 1.0 exception
+        if: needs.validate-tag.outputs.version != '1.0.0'
         shell: msys2 {0}
         env:
           SAGAN_DOCS_VERSION: ${{ needs.validate-tag.outputs.version }}
           SAGAN_DOCS_CHANNEL: released
-        run: |
-          bash scripts/docs.sh check
-          bash scripts/docs.sh release-check
+        run: bash scripts/docs.sh release-check
 
   coverage:
     name: Enforce coverage floor
@@ -112,13 +114,13 @@ jobs:
           bash scripts/coverage_threshold.sh
 
   build-windows:
-    name: Build signed Windows release assets
+    name: Build Windows release assets
     needs:
       - validate-tag
       - test
       - coverage
     runs-on: windows-latest
-    environment: release-signing
+    environment: ${{ needs.validate-tag.outputs.version == '1.0.0' && 'initial-unsigned-release' || 'release-signing' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -145,13 +147,14 @@ jobs:
       - name: Install Inno Setup
         shell: cmd
         run: choco install innosetup --yes --no-progress
-      - name: Require configured signing command
+      - name: Require configured signing command after the 1.0 exception
+        if: needs.validate-tag.outputs.version != '1.0.0'
         shell: msys2 {0}
         env:
           SIGN_COMMAND: ${{ secrets.SAGAN_SIGNTOOL_COMMAND }}
         run: |
           [[ -n "$SIGN_COMMAND" ]] || {
-            echo "Public releases require the release-signing environment's SAGAN_SIGNTOOL_COMMAND secret." >&2
+            echo "Post-1.0 releases require the release-signing environment's SAGAN_SIGNTOOL_COMMAND secret." >&2
             exit 1
           }
       - name: Build installer, portable ZIP, checksums, manifest, and SBOM
@@ -159,10 +162,14 @@ jobs:
         env:
           SAGAN_SIGNTOOL_COMMAND: ${{ secrets.SAGAN_SIGNTOOL_COMMAND }}
         run: bash scripts/windows/build_release_assets.sh
-      - name: Verify Authenticode and package behavior
+      - name: Verify checksums and package behavior
         shell: msys2 {0}
         run: |
-          bash scripts/windows/verify_installer_artifact.sh --release
+          if [[ '${{ needs.validate-tag.outputs.version }}' == '1.0.0' ]]; then
+            bash scripts/windows/verify_installer_artifact.sh
+          else
+            bash scripts/windows/verify_installer_artifact.sh --release
+          fi
           bash scripts/windows/test_installer.sh
           bash scripts/windows/test_portable.sh
       - name: Upload gated release assets
@@ -228,9 +235,17 @@ jobs:
             body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
             {
               printf '%s\n\n' "$body"
-              printf '%s\n' '## Stable-release acceptance'
-              printf '%s\n' 'Clean-machine evidence: PENDING'
-              printf '%s\n' 'Test the exact signed installer attached to this draft, then replace PENDING with VERIFIED, tester, date, Windows version, and installer SHA-256 before approving publication.'
+              if [[ "$TAG" == v1.0.0 ]]; then
+                printf '%s\n' '## Sagan 1.0 follow-up status'
+                printf '%s\n' 'This initial Windows installer is not Authenticode-signed. Windows may display an unknown-publisher warning.'
+                printf '%s\n' 'Clean-machine acceptance: PENDING (post-publication follow-up).'
+                printf '%s\n' 'Documentation audit: PENDING; current documentation remains experimental and work-in-progress.'
+                printf '%s\n' 'These deferred gates will be completed in a later patch release rather than replacing immutable 1.0.0 assets.'
+              else
+                printf '%s\n' '## Stable-release acceptance'
+                printf '%s\n' 'Clean-machine evidence: PENDING'
+                printf '%s\n' 'Test the exact signed installer attached to this draft, then replace PENDING with VERIFIED, tester, date, Windows version, and installer SHA-256 before approving publication.'
+              fi
             } > release-notes.md
             gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file release-notes.md
           fi
@@ -247,20 +262,24 @@ jobs:
       contents: write
       actions: write
     steps:
-      - name: Require recorded clean-machine evidence and publish
+      - name: Publish after project-owner approval
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           VERSION: ${{ needs.validate-tag.outputs.version }}
         run: |
-          body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
-          grep -Eq '^Clean-machine evidence: VERIFIED' <<<"$body" || {
-            echo "Record clean-machine evidence in the draft release before approving stable publication." >&2
-            exit 1
-          }
+          if [[ "$TAG" != v1.0.0 ]]; then
+            body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
+            grep -Eq '^Clean-machine evidence: VERIFIED' <<<"$body" || {
+              echo "Record clean-machine evidence in the draft release before approving stable publication." >&2
+              exit 1
+            }
+          fi
           gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
-          gh workflow run documentation.yml --repo "$GITHUB_REPOSITORY" \
-            --ref "$TAG" -f "release_version=$VERSION"
+          if [[ "$TAG" != v1.0.0 ]]; then
+            gh workflow run documentation.yml --repo "$GITHUB_REPOSITORY" \
+              --ref "$TAG" -f "release_version=$VERSION"
+          fi
 
   mirror-hp1:
     name: Mirror published stable release to HP1

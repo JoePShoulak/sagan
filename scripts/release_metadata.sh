@@ -3,6 +3,10 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$(bash "$repo_root/scripts/version.sh" numeric)"
+signature_policy="authenticode-required-for-public-release"
+if [[ "$version" == 1.0.0 ]]; then
+  signature_policy="unsigned-initial-1.0-exception"
+fi
 commit="$(git -C "$repo_root" rev-parse HEAD)"
 installer="$repo_root/build/installer/sagan-$version-windows-x64.exe"
 archive="$repo_root/build/release/sagan-$version-windows-x64.zip"
@@ -34,7 +38,7 @@ printf '%s\n' \
   "  \"version\": \"$version\"," \
   "  \"tag\": \"v$version\"," \
   "  \"commit\": \"$commit\"," \
-  '  "signature_policy": "authenticode-required-for-public-release",' \
+  "  \"signature_policy\": \"$signature_policy\"," \
   '  "artifacts": [' \
   "    {\"name\": \"$(basename "$installer")\", \"role\": \"windows-installer\", \"media_type\": \"application/vnd.microsoft.portable-executable\", \"size\": $installer_size, \"sha256\": \"$installer_hash\"}," \
   "    {\"name\": \"$(basename "$archive")\", \"role\": \"windows-portable\", \"media_type\": \"application/zip\", \"size\": $archive_size, \"sha256\": \"$archive_hash\"}," \
