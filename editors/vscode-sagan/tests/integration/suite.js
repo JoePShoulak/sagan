@@ -166,6 +166,23 @@ async function run() {
                       memberOwner.getText() === memberOwnerBeforeRename || undefined,
     "single-operation cross-file rename undo");
 
+  const overlayEdit = new vscode.WorkspaceEdit();
+  overlayEdit.insert(memberMain.uri, memberMain.positionAt(memberMain.getText().length),
+    "\nfun inspect_again(probe: Probe): Int => probe.sample()\n");
+  assert(await vscode.workspace.applyEdit(overlayEdit),
+    "could not add the unsaved rename occurrence");
+  const overlayOffset = memberMain.getText().lastIndexOf("sample");
+  const overlayRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", memberMain.uri,
+    memberMain.positionAt(overlayOffset + 1), "measure");
+  assert(overlayRename instanceof vscode.WorkspaceEdit,
+    "rename did not resolve the unsaved public-member occurrence");
+  assert.equal(overlayRename.entries().flatMap(([, editsForDocument]) => editsForDocument).length, 4,
+    "rename omitted an unsaved public-member occurrence from the atomic workspace edit");
+  await vscode.commands.executeCommand("undo");
+  await waitFor(() => memberMain.getText() === memberMainBeforeRename || undefined,
+    "unsaved rename fixture undo");
+
   const mainRename = await vscode.commands.executeCommand(
     "vscode.executeDocumentRenameProvider", document.uri, new vscode.Position(1, 5), "start");
   assert(mainRename instanceof vscode.WorkspaceEdit,

@@ -32,9 +32,10 @@ public-member rename, exported names with independent import aliases, collision
 refusal, emoji identifiers, private fields, private mutating methods, and
 one-step undo of both single- and multi-file edits.
 
-Remaining rename readiness work is acceptance-matrix expansion rather than a
-missing core provider: add live-host cases for unsaved overlays, cancellation,
-and explicit compiler-owned refusal messages.
+Remaining rename readiness work is acceptance-matrix refinement rather than a
+missing core provider: preserve protocol cancellation coverage and expose more
+specific compiler-owned refusal messages through VS Code where the client API
+permits it.
 
 ## Extension-owned release work
 
