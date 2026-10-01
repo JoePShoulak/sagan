@@ -48,6 +48,8 @@ auto main() -> int
   require(initialized.get("capabilities") &&
               initialized.get("capabilities")->get("hoverProvider") &&
               initialized.get("capabilities")->get("hoverProvider")->boolean() == true &&
+              initialized.get("capabilities")->get("renameProvider")->get("prepareProvider") &&
+              initialized.get("capabilities")->get("renameProvider")->get("prepareProvider")->boolean() == true &&
               initialized.get("capabilities")->get("positionEncoding")->string() == "utf-16" &&
               initialized.get("experimental")->get("compiler")->get("capabilities")
                   ->get("languageServer")->boolean() == true,
@@ -132,11 +134,26 @@ auto main() -> int
       J::object{{"textDocument", J::object{{"uri", uri}}},
                 {"position", J::object{{"line", 5}, {"character", 1}}}, {"ch", "}"}});
   require(on_type.elements(), "on-type formatting handler failed");
+  const auto prepared_rename = request(service, "textDocument/prepareRename", at(uri, 2, 8));
+  require(prepared_rename.get("range") && prepared_rename.get("placeholder") &&
+              prepared_rename.get("placeholder")->string() == "answer",
+          "F2 preparation did not select the local declaration name");
+  const auto refused_entry_rename = request(service, "textDocument/prepareRename", at(uri, 1, 4));
+  require(std::holds_alternative<std::nullptr_t>(refused_entry_rename.data),
+          "F2 preparation offered the main entry point");
   const auto renamed = request(service, "textDocument/rename",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"position", J::object{{"line", 3}, {"character", 9}}},
                                          {"newName", "result"}});
   require(renamed.get("documentChanges"), "safe local rename was not converted to workspace edits");
+  const auto renamed_declaration = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", uri}}},
+                {"position", J::object{{"line", 2}, {"character", 8}}},
+                {"newName", "altitude"}});
+  require(renamed_declaration.get("documentChanges") &&
+              renamed_declaration.get("documentChanges")->elements()->size() == 1 &&
+              renamed_declaration.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 local rename from the declaration did not include the declaration and use");
   const auto renamed_function = request(service, "textDocument/rename",
       J::object{{"textDocument", J::object{{"uri", uri}}},
                 {"position", J::object{{"line", 2}, {"character", 15}}},

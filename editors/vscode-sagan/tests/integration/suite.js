@@ -112,6 +112,14 @@ async function run() {
   assert(localRenameEdits.length >= 2 && localRenameEdits.every((edit) => edit.newText === "altitude"),
     "local-variable rename did not cover the declaration and reference");
 
+  const declarationRename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", document.uri, new vscode.Position(2, 8), "height");
+  assert(declarationRename instanceof vscode.WorkspaceEdit,
+    "local-variable rename from its declaration did not return a workspace edit");
+  const declarationRenameEdits = declarationRename.entries().flatMap(([, editsForDocument]) => editsForDocument);
+  assert(declarationRenameEdits.length >= 2 && declarationRenameEdits.every((edit) => edit.newText === "height"),
+    "local-variable rename from its declaration did not cover the declaration and reference");
+
   let entryRenameRefused = false;
   try {
     const entryRename = await vscode.commands.executeCommand(

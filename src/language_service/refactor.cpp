@@ -1,5 +1,6 @@
 #include "refactor.hpp"
 #include "language_service.hpp"
+#include "queries.hpp"
 #include "../parser/tokens.hpp"
 #include "../semantic/analyzer.hpp"
 #include "../syntax/syntax.hpp"
@@ -44,7 +45,9 @@ namespace sagan::language_service
     if (document.version() != index.version() || document.identity().id != index.document().id)
       return {edit_state::stale, "Semantic index belongs to another document version", {}};
     if (!document.to_utf16(position)) return {edit_state::invalid, "Invalid source position", {}};
-    const auto *symbol = index.symbol_at(position);
+    const document_queries queries(document, index);
+    const auto selected = queries.symbol_at(position);
+    const auto *symbol = selected.value ? index.find(selected.value->id) : nullptr;
     if (!symbol || symbol->origin != semantic::symbol_origin::source)
       return {edit_state::unsupported, "Only source declarations can be renamed safely", {}};
     const bool local = local_binding(symbol->kind) && symbol->scope_id != 0;
@@ -79,6 +82,16 @@ namespace sagan::language_service
         return {edit_state::conflict, "Proposed name already occurs in source", {}};
     const auto occurrences = index.references_to(symbol->id, true);
     if (occurrences.empty()) return {edit_state::unsupported, "No complete reference set", {}};
+    const auto definitions = queries.definitions(position);
+    std::optional<source::source_range> declaration_name;
+    if (definitions.value)
+      for (const auto &location : *definitions.value)
+        if (location.document == document.identity().id)
+        {
+          declaration_name = location;
+          break;
+        }
+    if (!declaration_name) return {edit_state::unsupported, "Declaration name was not found", {}};
     versioned_document_edits document_edit{document.identity().uri, document.version(), {}};
     std::optional<source::byte_offset> declaration_token_begin;
     for (const auto &location : occurrences)
@@ -86,17 +99,7 @@ namespace sagan::language_service
       auto replacement = location;
       if (location == symbol->declaration)
       {
-        const syntax::lossless_token *name_token = nullptr;
-        for (const auto &token : syntax.value->tokens)
-          if (token.kind == tokens::IDENTIFIER &&
-              token.range.begin >= location.bytes.begin && token.range.end <= location.bytes.end &&
-              unicode::normalize_nfc(token.source_text) == symbol->name)
-          {
-            if (name_token) return {edit_state::unsupported, "Declaration name is ambiguous", {}};
-            name_token = &token;
-          }
-        if (!name_token) return {edit_state::unsupported, "Declaration name was not found", {}};
-        replacement.bytes = name_token->range;
+        replacement = *declaration_name;
         declaration_token_begin = replacement.bytes.begin;
       }
       if (replacement.document != document.identity().id ||

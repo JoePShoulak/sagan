@@ -181,7 +181,13 @@ auto main() -> int
           "workspace edit accepted invalid UTF-8 replacement text");
   const auto indexed = language_service::index_document(document);
   require(indexed.value.has_value(), "rename fixture did not index");
+  const auto declaration = static_cast<source::byte_offset>(document.text().find("value ="));
   const auto use = static_cast<source::byte_offset>(document.text().find("return value") + 7);
+  const auto declaration_rename = language_service::rename_local(
+      document, indexed.value->index, declaration, "altitude");
+  require(declaration_rename.state == language_service::edit_state::ready &&
+              declaration_rename.edits.documents.front().edits.size() == 2,
+          "identity-based local rename failed from the declaration position");
   const auto rename = language_service::rename_local(document, indexed.value->index, use, "altitude");
   require(rename.state == language_service::edit_state::ready &&
               rename.edits.documents.front().edits.size() == 2,
@@ -209,7 +215,14 @@ auto main() -> int
        "fun main(): Int => double(21)\n"});
   const auto indexed_function = language_service::index_document(function_document);
   require(indexed_function.value.has_value(), "function rename fixture did not index");
+  const auto function_declaration = static_cast<source::byte_offset>(
+      function_document.text().find("double(value"));
   const auto function_use = static_cast<source::byte_offset>(function_document.text().find("double(21)"));
+  const auto function_declaration_rename = language_service::rename_local(
+      function_document, indexed_function.value->index, function_declaration, "twice");
+  require(function_declaration_rename.state == language_service::edit_state::ready &&
+              function_declaration_rename.edits.documents.front().edits.size() == 2,
+          "function rename failed from the declaration position");
   const auto function_rename = language_service::rename_local(
       function_document, indexed_function.value->index, function_use, "twice");
   require(function_rename.state == language_service::edit_state::ready &&
@@ -220,6 +233,13 @@ auto main() -> int
               function_preview.documents.front().text.find("fun twice(") != std::string::npos &&
               function_preview.documents.front().text.find("=> twice(21)") != std::string::npos,
           "function rename preview did not update both uses");
+  const auto parameter_declaration = static_cast<source::byte_offset>(
+      function_document.text().find("value: Int"));
+  const auto parameter_rename = language_service::rename_local(
+      function_document, indexed_function.value->index, parameter_declaration, "input");
+  require(parameter_rename.state == language_service::edit_state::ready &&
+              parameter_rename.edits.documents.front().edits.size() == 3,
+          "parameter rename failed from the declaration position");
   const source::document_snapshot exported_document(
       {{source::document_id{108}, source::document_uri{"untitled:exported-rename"}, {}}, 1,
        "module helper\nfun double(value: Int): Int => value + value\nexport double\n"});

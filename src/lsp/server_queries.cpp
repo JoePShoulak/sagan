@@ -459,6 +459,15 @@ namespace sagan::lsp
       }
       return J::object{{"data", std::move(data)}};
     }
+    if (method == "textDocument/prepareRename")
+    {
+      const auto symbol = queries.symbol_at(selected());
+      if (!symbol.value) return nullptr;
+      const auto result = rename_local(document, *index, selected(), symbol.value->name);
+      if (result.state != edit_state::ready) return nullptr;
+      return J::object{{"range", lsp_range(document, symbol.value->selection.bytes)},
+                       {"placeholder", symbol.value->name}};
+    }
     if (method == "textDocument/rename")
     {
       const auto result = rename_local(document, *index,
