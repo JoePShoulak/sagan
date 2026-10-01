@@ -4,9 +4,11 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for Sagan. Version 0.3.2 connects to the compiler's tested language server and enables every editor feature it advertises.
+VS Code language support for Sagan. Version 0.3.3 connects to the compiler's tested language server and enables every editor feature it advertises.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
+
+The Sagan galaxy-pie logo is registered as the default `.sagan` language icon. VS Code uses it when the active file-icon theme permits language-provided icons and does not define its own `.sagan` icon.
 
 The extension provides TextMate highlighting plus live diagnostics, hover, navigation, references, completion, signature help, symbols, semantic tokens, folding, selection ranges, import links, inlay hints, safe local rename and quick fixes, formatting, and type/call hierarchies through `sagan-lsp`. VS Code registers only the capabilities advertised by the running server.
 

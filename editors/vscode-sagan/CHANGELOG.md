@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3
+
+- Register the Sagan galaxy-pie logo as the default light and dark `.sagan` file icon.
+- Verify the icon contribution and packaged asset during bundle tests.
+- Exercise safe non-exported function rename through a real VS Code Extension Development Host.
+
 ## 0.3.2
 
 - Add an opt-in real VS Code Extension Development Host integration suite.

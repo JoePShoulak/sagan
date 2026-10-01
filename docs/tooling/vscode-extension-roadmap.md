@@ -9,7 +9,7 @@ verified_by: null
 
 # VS Code extension roadmap
 
-Version 0.3.2 is a usable language client for the capabilities currently
+Version 0.3.3 is a usable language client for the capabilities currently
 advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.
@@ -20,7 +20,8 @@ contracts rather than reproduce parsing, semantics, project rules, or catalogs.
   activation, diagnostics, completion, hover, navigation, signature help,
   semantic tokens, formatting, rename, code actions, and hierarchies. The
   automated Windows integration path is now verified; platform-specific visual
-  behavior and features outside its representative request set remain.
+  behavior, including file-icon theme interaction, and features outside its
+  representative request set remain.
 - Run the automated Extension Development Host integration suite on each
   supported CI platform. The opt-in local suite now covers real activation,
   diagnostics, hover, definition, completion, signature help, symbols, and

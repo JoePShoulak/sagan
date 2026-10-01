@@ -48,7 +48,7 @@ npm run package
 code --install-extension sagan-language-*.vsix
 ```
 
-The repository's extension version is currently 0.3.2. Its version is
+The repository's extension version is currently 0.3.3. Its version is
 independent of the compiler version.
 
 ## Verify the installation
@@ -56,10 +56,13 @@ independent of the compiler version.
 1. Open a `.sagan` file and confirm VS Code identifies it as **Sagan**.
 2. Confirm comments, declarations, strings, interpolation, keywords, and types
    receive syntax coloring.
-3. Run **Sagan: Show Tooling Status** from the Command Palette.
-4. Confirm the **Sagan** output channel reports that the language server started.
-5. Try completion, hover, go to definition, diagnostics, formatting, and rename.
-6. If discovery fails, set `sagan.compiler.path` and `sagan.server.path` to the
+3. Confirm `.sagan` files show the Sagan logo when the active file-icon theme
+   supports language-provided default icons. A theme-specific icon or generic
+   icon may override this contribution.
+4. Run **Sagan: Show Tooling Status** from the Command Palette.
+5. Confirm the **Sagan** output channel reports that the language server started.
+6. Try completion, hover, go to definition, diagnostics, formatting, and rename.
+7. If discovery fails, set `sagan.compiler.path` and `sagan.server.path` to the
    matching executables. Relevant setting changes restart the server automatically.
 
 The extension locates the compiler and [language server](../tooling/language-server.md),

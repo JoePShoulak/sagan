@@ -2,7 +2,7 @@
   "name": "sagan-language",
   "displayName": "Sagan Language",
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publisher": "sagan-language",
   "icon": "images/sagan-logo.png",
   "repository": {
@@ -86,7 +86,11 @@
         "extensions": [
           ".sagan"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./images/sagan-logo.png",
+          "dark": "./images/sagan-logo.png"
+        }
       }
     ],
     "grammars": [

@@ -68,6 +68,13 @@ async function run() {
   assert(await vscode.workspace.applyEdit(repairEdit), "could not repair the diagnostic fixture");
   await waitFor(() => vscode.languages.getDiagnostics(document.uri).length === 0 || undefined,
     "diagnostic clearing");
+
+  const rename = await vscode.commands.executeCommand(
+    "vscode.executeDocumentRenameProvider", document.uri, callPosition, "launch");
+  assert(rename instanceof vscode.WorkspaceEdit, "rename provider did not return a workspace edit");
+  const renameEdits = rename.entries().flatMap(([, editsForDocument]) => editsForDocument);
+  assert(renameEdits.length >= 2 && renameEdits.every((edit) => edit.newText === "launch"),
+    "rename did not cover the function declaration and call");
   console.log("Sagan Extension Development Host integration test passed.");
 }
 
