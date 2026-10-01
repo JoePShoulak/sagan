@@ -4,7 +4,7 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for Sagan. Version 0.3.3 connects to the compiler's tested language server and enables every editor feature it advertises.
+VS Code language support for Sagan. Version 0.3.4 connects to the compiler's tested language server and enables every editor feature it advertises.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
 
@@ -18,7 +18,8 @@ The extension locates `sagan-lsp` beside the configured compiler, in the workspa
 
 ## Local development
 
-1. Build the repository so `bin/sagan-lsp` is available.
+1. Build the repository with `make all bin/sagan-lsp` so both the compiler and
+   language server are available.
 2. Run `npm ci` and `npm run build` in `editors/vscode-sagan`.
 3. Open the Sagan repository in VS Code.
 4. Press `F5` and choose **Run Sagan Extension** if prompted.
@@ -39,6 +40,21 @@ npm run test:integration
 ```
 
 The tests use VS Code's TextMate and Oniguruma engines to verify syntax scopes and mocked lifecycle tests to verify server discovery, client startup, command registration, and shutdown. `npm run test:bundle` additionally builds and checks the packaged entry point. The opt-in integration test launches a real VS Code Extension Development Host against a built `bin/sagan-lsp`; set `SAGAN_LSP_PATH` to use another compatible server.
+
+The integration test also validates `examples/demo.sagan` with the matching
+compiler and requires it to be diagnostic-free. Set `SAGAN_COMPILER_PATH` when
+testing against a compiler outside the repository's `bin` directory.
+
+On Linux, run the complete clean-build, test, integration, and packaging gate
+from the repository with:
+
+```bash
+bash editors/vscode-sagan/scripts/linux-acceptance.sh
+```
+
+Pass an output path as the first argument to choose where the VSIX is written.
+Automated acceptance does not replace visual verification of theme-dependent
+syntax colors, file icons, hover rendering, completion UI, or editor actions.
 
 ## Package
 

@@ -9,7 +9,7 @@ verified_by: null
 
 # VS Code extension roadmap
 
-Version 0.3.3 is a usable language client for the capabilities currently
+Version 0.3.4 is a usable language client for the capabilities currently
 advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.
@@ -25,7 +25,11 @@ contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 - Run the automated Extension Development Host integration suite on each
   supported CI platform. The opt-in local suite now covers real activation,
   diagnostics, hover, definition, completion, signature help, symbols, and
-  formatting without making ordinary unit tests network-dependent.
+  formatting without making ordinary unit tests network-dependent. A clean
+  Pop!_OS 24.04 VM has passed the compiler/server build, extension tests,
+  Extension Development Host integration, VSIX installation, activation,
+  file-icon, highlighting, diagnostic, and tooling-discovery checks; CI and
+  the complete manual Linux feature matrix remain.
 - Make release automation build the matching native compiler/server and VSIX,
   install them together in a clean environment, and verify checksums and basic
   activation before publishing assets.

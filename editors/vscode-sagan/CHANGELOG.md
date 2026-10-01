@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4
+
+- Replace the parser-only demonstration with a compiler-valid, diagnostic-free Sagan program.
+- Validate the packaged demonstration with the matching compiler during integration tests.
+- Add a repeatable Linux build, integration, and packaging acceptance script.
+- Record the clean Pop!_OS acceptance results and clarify that `sagan-lsp` is a separate build target.
+
 ## 0.3.3
 
 - Register the Sagan galaxy-pie logo as the default light and dark `.sagan` file icon.
