@@ -541,6 +541,11 @@ namespace semantic
           expression(*assignment->target);
           expression(*assignment->value);
         }
+        else if (const auto *parallel = dynamic_cast<const parser::parallel_assignment_statement *>(&value))
+        {
+          for (const auto &target : parallel->targets) expression(*target);
+          for (const auto &entry : parallel->values) expression(*entry);
+        }
         else if (const auto *nested = dynamic_cast<const parser::block_statement *>(&value))
         {
           block(*nested);
@@ -641,7 +646,7 @@ namespace semantic
       {
         model.scopes.push_back(scope{0, no_parent, "program", {}, {}});
         names.emplace_back();
-        for (const std::string_view builtin : {"Bool", "Float", "Float32", "Float64", "Frame",
+        for (const std::string_view builtin : {"Array", "Bool", "Dictionary", "Float", "Float32", "Float64", "Frame",
                                                "Int", "Int8", "Int16", "Int32", "Int64", "Optional", "RuntimeError", "String",
                                                "Point", "SphericalPoint", "SphericalVector", "Vector", "Void"})
         {

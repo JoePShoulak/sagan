@@ -1,0 +1,6 @@
+fun main(): Int {
+  let values = [0, 1]
+  let a = 0
+  values[0], a = 1, 2
+  return a
+}

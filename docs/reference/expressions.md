@@ -27,8 +27,33 @@ the old value and then mutates.
 `^` is mathematical exponentiation, and `^=` assigns its result; neither is a
 bitwise operation. Integer exponentiation requires a non-negative exponent and
 raises a runtime error when the result overflows its checked type. Floating-
-point bases permit negative exponents. `0 ^ 0` is a runtime error for every
-numeric type.
+point bases permit negative exponents. A floating-point base with an integer
+exponent keeps the base's floating-point type (`Float32 ^ Int` produces
+`Float32`, and `Float64 ^ Int` produces `Float64`), without converting the
+integer exponent to a float first. An integer base with a floating-point
+exponent produces the floating-point type. This makes both `5 ^ 0.5` and
+`PHI ^ n` valid when `PHI` is floating-point and `n` is an integer. `0 ^ 0`
+is a runtime error for every numeric type; a floating-point zero raised to a
+negative integer exponent raises `RuntimeError.division_by_zero`.
+
+Exponentiation does not implicitly turn its floating-point result into an
+integer return value. Use `Int.round(value)` for an explicit Float-to-Int
+conversion. It rounds to the nearest integer, with exact halfway values away
+from zero (`Int.round(2.5)` is `3`; `Int.round(-2.5)` is `-3`). It accepts a
+`Float32` or `Float64` and returns `Int64`. NaN, infinity, and values whose
+rounded result is outside `Int64` raise `RuntimeError.invalid_conversion`.
+
+For example, Binet's Fibonacci formula can keep its integer return type:
+
+```sagan
+fun fibonacci_binet(n: Int): Int {
+  const PHI = (1 + 5 ^ 0.5) / 2
+  return Int.round((PHI ^ n - (-PHI) ^ (-n)) / 5 ^ 0.5)
+}
+```
+
+Floating-point rounding can lose exactness for sufficiently large Fibonacci
+indices; use an integer algorithm when exact results matter.
 
 The native executable subset checks signed integer addition, subtraction,
 multiplication, division, remainder, unary negation, increment, and decrement.
@@ -140,8 +165,13 @@ let radial_position = s(100.0, 0.5, 1.0)
 ```
 
 Arrays and dictionaries may be empty. Dictionary keys accept any expression;
-semantic analysis will determine whether a key's type is hashable. Cartesian
-vectors and points require at least two elements, so `<>`, `<1>`, and `(1,)`
+semantic analysis will determine whether a key's type is hashable.
+An integer's `.times` property eagerly constructs an `Array<Int>` containing
+the zero-based indices below that integer: `5.times` is `[0, 1, 2, 3, 4]`,
+and `0.times` is `[]`. A negative count raises `RuntimeError.invalid_range`.
+The count is evaluated once; this is an actual array, not a lazy sequence.
+
+Cartesian vectors and points require at least two elements, so `<>`, `<1>`, and `(1,)`
 are syntax errors. `(value)` remains a grouped expression. Spherical vectors
 and points require exactly three components in the order shown. The `s` must be
 adjacent to the delimiter: `s(...)` is a spherical point, while `s (...)` calls

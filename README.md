@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 0.86.3](https://img.shields.io/badge/development-0.86.3-2563eb)](docs/contributing/versioning.md)
+[![Development version 0.87.0](https://img.shields.io/badge/development-0.87.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -18,8 +18,8 @@ value must say that it might be missing. An emoji, however, is a perfectly good
 function name.
 
 > [!WARNING]
-> Sagan is approaching its first release. It can compile and run real programs,
-> but it is not ready for production software yet.
+> Sagan 1.0 can compile and run real programs on Windows x64. It remains an
+> experimental language and is not recommended for production software yet.
 
 ## Hello, universe
 
@@ -95,12 +95,14 @@ missing values. `hope`, `unless`, `finally`, and `scream` handle failures.
 Sagan also supports checked arithmetic, generics, payload enums, collections,
 pattern matching, reference-counted classes, modules, and packages.
 
+Small conveniences stay readable: `5.times` makes `[0, 1, 2, 3, 4]`, and
+`a, b = b, a + b` updates both variables from their old values.
+
 ## Install Sagan
 
 Windows x64 is the first supported platform. Check
-**[GitHub Releases](https://github.com/JoePShoulak/sagan/releases)** for current
-preview builds; the first stable release is still being prepared. Published
-stable installers and portable archives will also appear on the
+**[GitHub Releases](https://github.com/JoePShoulak/sagan/releases)** for
+published builds. Stable installers and portable archives also appear on the
 **[Sagan download mirror](https://sagan.shoulak.org/downloads/)**. GitHub
 Releases remains the canonical source.
 
@@ -114,8 +116,9 @@ sagan hello.sagan
 
 See the [installation guide](docs/getting-started/installation.md) for portable
 archives, file associations, windowed programs, upgrades, and building from
-source. The initial 1.0 installer will be an explicitly disclosed unsigned
-release, so Windows may show an unknown-publisher warning. Windows ARM64,
+source. The experimental `v0.87.0-rc.1` preview and the planned initial 1.0
+installer are disclosed unsigned exceptions, so Windows may show an
+unknown-publisher warning. Windows ARM64,
 Linux, and macOS remain future targets.
 
 ## Get started

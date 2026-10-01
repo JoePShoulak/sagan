@@ -27,6 +27,7 @@ declaration := let_declaration | const_declaration | function_declaration | face
              | class_declaration | enum_declaration | module_declaration
              | import_declaration | export_declaration
 statement   := let_declaration | const_declaration | assignment_statement | expression_statement
+             | parallel_assignment_statement
              | if_statement | for_statement | condition_loop | loop_control
              | return_statement | yield_statement | match_statement
              | hope_statement | scream_statement
@@ -34,6 +35,7 @@ let_declaration := "let" identifier (":" type)? ("=" expression)?
 const_declaration := "const" constant_identifier (":" type)? "=" expression
 constant_identifier := ASCII_SCREAMING_SNAKE_CASE
 array       := "[" (expression ("," expression)* ","?)? "]"
+parallel_assignment_statement := identifier ("," identifier)+ "=" expression ("," expression)+
 dictionary  := "{" (dictionary_entry ("," dictionary_entry)* ","?)? "}"
 dictionary_entry := expression ":" expression | spread
 vector      := "<" expression "," expression ("," expression)* ","? ">"

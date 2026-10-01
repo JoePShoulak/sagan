@@ -9,15 +9,13 @@ verified_by: null
 
 # Release lifecycle
 
-Every push to `main` runs release-preparation CI. Before 1.0, it checks the
-release signer but does not create a stable tag. From 1.0 onward, a new
-history-derived version on `main` gets a signed tag and enters the release
-gates; a docs, test, or maintenance commit with no version change does not
-create a duplicate release. Passing stable gates prepares a draft, **not** a
-public release. Only Joe P. Shoulak authorizes publication. Preview versions
-use SemVer identifiers such as `1.0.0-rc.1` and are started from signed preview
-tags. Support is best effort, with no response-time SLA, and covers only the
-latest stable release.
+Every push to `main` runs release-preparation CI. A new history-derived 0.x
+version gets a signed `-rc.1` preview tag; a new 1.x version gets a signed
+stable tag. A docs, test, or maintenance commit with no version change does
+not create a duplicate release. Passing stable gates prepares a draft,
+**not** a public release. Only Joe P. Shoulak authorizes stable publication.
+Previews are automatically published after their gates pass. Support is best effort,
+with no response-time SLA, and covers only the latest stable release.
 
 ## Identity and compatibility
 
@@ -77,9 +75,11 @@ Every Windows release contains:
 - `sagan-VERSION-sbom.spdx.json`; and
 - reviewed release notes plus GitHub's source archives.
 
-Beginning with the post-1.0 signing patch, the installer, embedded uninstaller,
-`sagan.exe`, and `sagan-launch.exe` must pass Authenticode verification. The
-initial 1.0.0 release is the documented unsigned exception.
+The `v0.87.0-rc.1` experimental prerelease is a one-time unsigned-installer
+exception; Windows may show an unknown-publisher warning. The initial 1.0.0
+release also has a separately documented unsigned exception. Other release
+installers, embedded uninstallers, `sagan.exe`, and `sagan-launch.exe` must
+pass the applicable Authenticode verification gate.
 
 The portable ZIP reuses the installer build's `sagan.exe`, compiler toolchain,
 licenses, and version metadata. Its root contains `bin/`, `toolchain/`,
@@ -91,6 +91,12 @@ changes, file associations, shortcuts, and automatic PATH changes.
 Signed preview tags publish automatically as GitHub prereleases after automated
 gates. Previews are best effort, may change incompatibly before stable release,
 and receive no backported fixes.
+
+For the single `v0.87.0-rc.1` preview, the page-by-page documentation audit
+remains open, and the docs remain visibly experimental. The preview still
+requires strict docs-build, compiler, coverage, installer/portable, checksum,
+and vulnerability-scan gates. Its unsigned installer is not the accepted
+final Windows distribution; do not present this preview as Sagan 1.0.
 
 A stable tag creates an unpublished GitHub draft containing the release assets
 and generated release-note draft. Publication remains behind the protected

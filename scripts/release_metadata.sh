@@ -3,9 +3,16 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$(bash "$repo_root/scripts/version.sh" numeric)"
+release_tag="${SAGAN_RELEASE_TAG:-v$version}"
+if [[ "$release_tag" != "v$version" && "$release_tag" != "v$version-rc.1" ]]; then
+  echo "Release tag $release_tag does not match numeric version $version." >&2
+  exit 1
+fi
 signature_policy="authenticode-required-for-public-release"
 if [[ "$version" == 1.0.0 ]]; then
   signature_policy="unsigned-initial-1.0-exception"
+elif [[ "${SAGAN_RELEASE_TAG:-}" == v0.87.0-rc.1 && "$version" == 0.87.0 ]]; then
+  signature_policy="unsigned-experimental-0.x-preview-exception"
 fi
 commit="$(git -C "$repo_root" rev-parse HEAD)"
 installer="$repo_root/build/installer/sagan-$version-windows-x64.exe"
@@ -36,7 +43,7 @@ printf '%s\n' \
   '{' \
   '  "schema": "sagan.release-manifest/1",' \
   "  \"version\": \"$version\"," \
-  "  \"tag\": \"v$version\"," \
+  "  \"tag\": \"$release_tag\"," \
   "  \"commit\": \"$commit\"," \
   "  \"signature_policy\": \"$signature_policy\"," \
   '  "artifacts": [' \
@@ -46,7 +53,7 @@ printf '%s\n' \
   '  ]' \
   '}' > "$manifest"
 
-namespace="https://github.com/JoePShoulak/sagan/releases/v$version/sbom/$commit"
+namespace="https://github.com/JoePShoulak/sagan/releases/$release_tag/sbom/$commit"
 printf '%s\n' \
   '{' \
   '  "spdxVersion": "SPDX-2.3",' \

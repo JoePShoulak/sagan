@@ -178,9 +178,8 @@ compiler runtime directories from `PATH` before exercising the CLI, generated
 program, and Explorer launcher. An optional `[application] mode` selects
 `console` or `windowed` Explorer launch, loose files default to `console`, and
 context-menu verbs override either choice. Windowed failures retain a local log
-and show a native diagnostic dialog. Release artifacts will
-be published through GitHub's release/package facilities; HP1 may additionally
-host or mirror installer and package data where convenient.
+and show a native diagnostic dialog. Published release artifacts use GitHub
+Releases as the canonical source; HP1 provides a verified mirror.
 
 Installer policy is Windows x64 only, a self-contained offline package,
 in-place upgrades, refused downgrades, and SHA-256 sidecars. Initial 1.0.0
@@ -190,9 +189,9 @@ clean Windows x64 computer or VM run become post-publication acceptance work for
 a later patch release.
 
 The pre-1.0 lifecycle review is complete. Every push to `main` now runs
-release-preparation CI. From 1.0 onward, a version-changing commit receives a
-CI-signed tag and release gates; a no-version-change commit runs CI without
-duplicating a release. Previews publish after automated gates, while stable
+release-preparation CI. A new 0.x version receives a signed `-rc.1` preview
+tag, while a new 1.x version receives a signed stable tag. A no-version-change
+commit runs CI without duplicating a release. Previews publish after automated gates, while stable
 artifacts remain in a draft until the project owner approves the protected
 publication environment. GitHub Releases is canonical and HP1 is a
 non-blocking verified mirror. Published artifacts and numbered documentation

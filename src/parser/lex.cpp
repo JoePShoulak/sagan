@@ -454,7 +454,14 @@ namespace
     };
 
     scan_digits();
-    if (state.index < static_cast<int>(state.text.size()) && state.text[state.index] == '.')
+    if (state.index + 2 < static_cast<int>(state.text.size()) && state.text[state.index] == '.' &&
+        (state.text[state.index + 1] == 'e' || state.text[state.index + 1] == 'E') &&
+        (std::isdigit(static_cast<unsigned char>(state.text[state.index + 2])) != 0 ||
+         state.text[state.index + 2] == '+' || state.text[state.index + 2] == '-'))
+      fail("A decimal point requires digits on both sides", begin, state.index + 1);
+    if (state.index < static_cast<int>(state.text.size()) && state.text[state.index] == '.' &&
+        !(state.index + 1 < static_cast<int>(state.text.size()) &&
+          identifier_start_length(state, state.index + 1) > 0))
     {
       if (state.index + 1 >= static_cast<int>(state.text.size()) ||
           std::isdigit(static_cast<unsigned char>(state.text[state.index + 1])) == 0)

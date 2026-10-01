@@ -27,6 +27,17 @@ and a canonical filesystem path internally. Multiple unsaved modules resolve
 through in-memory overlays before disk files. An edit to one open module
 refreshes diagnostics for all open files, including importers.
 
+The server accepts the current core syntax in unsaved buffers, including
+`a, b = b, a + b`, integer `.times` arrays, exponentiation with a
+floating-point base and integer exponent (`PHI ^ n`), and explicit
+`Int.round(value)` conversion. Diagnostics and inferred
+types come from the same compiler checks as the CLI. Member completion offers
+`times` on integer receivers. Hover, semantic classification, the array result
+type, and runtime-error documentation use the compiler's built-in member
+metadata. It is a property, so the insertion is `.times`, not `.times()`.
+Completion also offers `Int.round(` on the built-in `Int` type, with hover
+and signature documentation for its tie rule and invalid-conversion error.
+
 The server currently advertises incremental synchronization, diagnostics,
 hover, definition/type definition, implementations, references and highlights,
 signature help, completion, document/workspace symbols, full semantic tokens,

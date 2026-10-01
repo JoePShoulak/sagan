@@ -20,6 +20,8 @@ tests=(
   generic_class_test.sh
   closure_test.sh
   constants_test.sh
+  array_times_parallel_test.sh
+  mixed_exponent_test.sh
 )
 
 for test_script in "${tests[@]}"; do

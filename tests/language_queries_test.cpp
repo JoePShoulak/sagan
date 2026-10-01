@@ -153,6 +153,67 @@ auto main() -> int
   require(stale.selection_ranges(emoji_use).state == diagnostics::result_state::stale,
           "selection expansion accepted an old semantic index");
 
+  const std::string sugar_source =
+      "fun main(): Int {\n"
+      "  let a = 0\n"
+      "  let b = 1\n"
+      "  let indices = 5.times\n"
+      "  let phi = (1 + 5 ^ 0.5) / 2\n"
+      "  let raised = phi ^ b\n"
+      "  let rounded = Int.round(raised)\n"
+      "  a, b = b, a + b\n"
+      "  return indices[0] + a + b + rounded\n"
+      "}\n";
+  const source::document_snapshot sugar_document(
+      source::document_identity{source::document_id{89}, source::document_uri{"untitled:sugar"}, {}},
+      1, sugar_source);
+  const auto sugar_index = language_service::index_document(sugar_document);
+  require(sugar_index.value && sugar_index.value->types,
+          "new syntax did not produce compiler-backed language queries");
+  const language_service::document_queries sugar_query(sugar_document, sugar_index.value->index,
+                                                       nullptr, &sugar_index.value->model,
+                                                       &*sugar_index.value->types);
+  const auto times_completion = sugar_query.completions(at(sugar_source, "5.times") + 4);
+  require(times_completion.value && times_completion.value->size() == 1 &&
+              times_completion.value->front().label == "times" &&
+              times_completion.value->front().detail == "Array<Int64>" &&
+              !times_completion.value->front().documentation.empty(),
+          "integer member completion did not expose the compiler's times metadata");
+  const auto times_hover = sugar_query.hover(at(sugar_source, "5.times") + 2);
+  require(times_hover.value && times_hover.value->type == "Array<Int64>" &&
+              times_hover.value->symbol.origin == semantic::symbol_origin::builtin &&
+              !times_hover.value->documentation.empty(),
+          "integer times hover did not expose compiler-owned documentation");
+  const auto sugar_classifications = sugar_query.semantic_classifications();
+  require(sugar_classifications.value &&
+              std::any_of(sugar_classifications.value->begin(), sugar_classifications.value->end(),
+                          [&](const auto &entry)
+                          {
+                            return entry.range.bytes.begin == at(sugar_source, "5.times") + 2 &&
+                                   entry.builtin && !entry.unresolved;
+                          }),
+          "semantic tokens marked the built-in times member unresolved");
+  const auto raised_type = sugar_query.resolved_type(at(sugar_source, "phi ^ b"));
+  require(raised_type.value && *raised_type.value == "Float64",
+          "mixed float/integer exponent was not typed for the editor");
+  const auto round_completion = sugar_query.completions(at(sugar_source, "Int.round") + 6);
+  require(round_completion.value && round_completion.value->size() == 1 &&
+              round_completion.value->front().label == "round" &&
+              round_completion.value->front().detail == "(Float) => Int64",
+          "built-in Int.round completion was not available");
+  const auto round_hover = sugar_query.hover(at(sugar_source, "Int.round") + 4);
+  require(round_hover.value && round_hover.value->type == "Int64" &&
+              round_hover.value->symbol.kind == semantic::symbol_kind::method,
+          "built-in Int.round hover was not available");
+  const auto round_signature = sugar_query.signature_help(at(sugar_source, "Int.round(raised)") + 10);
+  require(round_signature.value && round_signature.value->parameter_names ==
+              std::vector<std::string>{"value"} &&
+              round_signature.value->result_type == "Int64" &&
+              !round_signature.value->documentation.empty(),
+          "built-in Int.round signature help omitted compiler metadata");
+  require(sugar_query.symbol_at(at(sugar_source, "a, b =")).value.has_value(),
+          "parallel reassignment targets were not indexed");
+
   const std::string composition =
       "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
       "class Probe is Readable { fun read(): Int => 1 }\n"

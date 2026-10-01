@@ -179,6 +179,51 @@ auto main() -> int
                              J::object{{"textDocument", J::object{{"uri", uri}}}});
   require(closed.size() == 1 && closed.front().get("params")->get("diagnostics")->elements()->empty(),
           "didClose did not clear diagnostics");
+  const std::string sugar_uri = "file:///lsp-sugar.sagan";
+  const std::string sugar_text =
+      "fun main(): Int {\n"
+      "  let a = 0\n"
+      "  let b = 1\n"
+      "  let indices = 5.times\n"
+      "  let phi = (1 + 5 ^ 0.5) / 2\n"
+      "  let raised = phi ^ b\n"
+      "  let rounded = Int.round(raised)\n"
+      "  a, b = b, a + b\n"
+      "  return indices[0] + a + b + rounded\n"
+      "}\n";
+  const auto sugar_opened = notify(service, "textDocument/didOpen",
+                                   J::object{{"textDocument", J::object{{"uri", sugar_uri},
+                                                                        {"version", 1}, {"text", sugar_text}}}});
+  require(sugar_opened.size() == 1 && sugar_opened.front().get("params")->get("diagnostics") &&
+              sugar_opened.front().get("params")->get("diagnostics")->elements()->empty(),
+          "LSP rejected parallel reassignment, times, or mixed exponentiation");
+  const auto sugar_completion = request(service, "textDocument/completion", at(sugar_uri, 3, 18));
+  require(sugar_completion.elements() && sugar_completion.elements()->size() == 1 &&
+              sugar_completion.elements()->front().get("label")->string() == "times",
+          "LSP did not offer the integer times member");
+  const auto sugar_hover = request(service, "textDocument/hover", at(sugar_uri, 3, 18));
+  require(sugar_hover.get("contents") &&
+              sagan::lsp::json::serialize(sugar_hover).find("Array<Int64>") != std::string::npos,
+          "LSP hover did not describe the built-in times array");
+  const auto round_completion = request(service, "textDocument/completion", at(sugar_uri, 6, 20));
+  require(round_completion.elements() && round_completion.elements()->size() == 1 &&
+              round_completion.elements()->front().get("label")->string() == "round",
+          "LSP did not offer Int.round completion");
+  const auto round_hover = request(service, "textDocument/hover", at(sugar_uri, 6, 20));
+  require(round_hover.get("contents") &&
+              sagan::lsp::json::serialize(round_hover).find("Int64") != std::string::npos,
+          "LSP hover did not describe Int.round");
+  const auto round_signature = request(service, "textDocument/signatureHelp", at(sugar_uri, 6, 26));
+  require(round_signature.get("signatures") &&
+              sagan::lsp::json::serialize(round_signature).find("Int64") != std::string::npos,
+          "LSP signature help did not describe Int.round");
+  const auto sugar_inlay = request(service, "textDocument/inlayHint",
+      J::object{{"textDocument", J::object{{"uri", sugar_uri}}},
+                {"range", J::object{{"start", J::object{{"line", 0}, {"character", 0}}},
+                                    {"end", J::object{{"line", 9}, {"character", 1}}}}}});
+  require(sugar_inlay.elements(), "LSP inlay query failed for mixed exponentiation");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", sugar_uri}}}});
   const sagan::source::disk_source_provider disk;
   const auto module = disk.read_path("tests/fixtures/modules/module_demo/main.sagan");
   require(static_cast<bool>(module), "module fixture missing");

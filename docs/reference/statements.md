@@ -44,6 +44,22 @@ Compound assignment is statement-only, like ordinary `=` reassignment. Its
 target must be assignable, and the result must convert losslessly back into the
 target's type.
 
+Parallel reassignment uses one `=` with comma-separated variable names and
+the same number of values:
+
+```sagan
+let a = 0
+let b = 1
+a, b = b, a + b
+```
+
+Every right-hand expression is evaluated from left to right before any target
+changes. Then the variables are assigned from left to right, so the example
+leaves `a` as `1` and `b` as `1`. Targets must be distinct, mutable variable
+names; fields, indexes, compound operators, and mismatched list lengths are
+not supported in this form. This is reassignment, not a declaration or tuple
+expression.
+
 `unless` is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.
 

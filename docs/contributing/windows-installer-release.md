@@ -37,12 +37,13 @@ bash scripts/windows/test_installer.sh
 ```
 
 The Windows Installer workflow performs the same package build and smoke test.
-An unsigned artifact is normally a development artifact; the approved 1.0.0
-release is the single disclosed exception.
+An unsigned artifact is normally a development artifact. The experimental
+`v0.87.0-rc.1` preview and planned initial 1.0.0 release are the two narrowly
+disclosed exceptions.
 
 ## Public-release signing gate
 
-The signed follow-up release and later public installers require trusted
+Other public releases require trusted
 Authenticode signatures on the installer, embedded uninstaller, and Sagan
 executables. Release infrastructure will supply an Inno Setup sign-tool command
 through `SAGAN_SIGNTOOL_COMMAND`; the command must contain Inno's `$f` file

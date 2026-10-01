@@ -501,6 +501,8 @@ namespace codegen
         }
         if (const auto *literal = dynamic_cast<const parser::literal_expression *>(&value))
         {
+          if (literal->spelling == "nan") return "std::numeric_limits<double>::quiet_NaN()";
+          if (literal->spelling == "inf") return "std::numeric_limits<double>::infinity()";
           std::string spelling = literal->spelling;
           spelling.erase(std::remove(spelling.begin(), spelling.end(), '_'), spelling.end());
           return spelling;
@@ -637,6 +639,8 @@ namespace codegen
           {
             if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get()))
             {
+              if (target->name == "Int" && member->member_name == "round")
+                return "sagan_round_int(" + expression(*call->arguments.front()) + ")";
               const std::size_t open = target->name.find('<');
               const std::string base = open == std::string::npos ? target->name : target->name.substr(0, open);
               if (const auto found = enum_cases.find(member->member_name);
@@ -726,6 +730,10 @@ namespace codegen
             return identifier(base) + "::" + identifier(member->member_name);
           }
           const std::string target_type = expression_type(*member->target);
+          if (member->member_name == "times" &&
+              (target_type == "Int" || target_type == "Int8" || target_type == "Int16" ||
+               target_type == "Int32" || target_type == "Int64"))
+            return "sagan_times(" + expression(*member->target) + ")";
           if (std::string_view{target_type}.starts_with("Vector") ||
               std::string_view{target_type}.starts_with("Point") ||
               std::string_view{target_type}.starts_with("Spherical"))
@@ -958,6 +966,23 @@ namespace codegen
           else
             output << assignable(*assignment->target) << ' ' << assignment->operation << ' '
                    << converted_expression(*assignment->value, expression_type(*assignment->target)) << ";\n";
+        }
+        else if (const auto *parallel = dynamic_cast<const parser::parallel_assignment_statement *>(&value))
+        {
+          std::vector<std::string> snapshots;
+          for (std::size_t index = 0; index < parallel->values.size(); ++index)
+          {
+            std::string snapshot = "sagan_parallel_" + std::to_string(temporary_index++);
+            output << "auto " << snapshot << " = "
+                   << converted_expression(*parallel->values[index], expression_type(*parallel->targets[index]))
+                   << ";\n" << indentation();
+            snapshots.push_back(std::move(snapshot));
+          }
+          for (std::size_t index = 0; index < parallel->targets.size(); ++index)
+          {
+            output << assignable(*parallel->targets[index]) << " = " << snapshots[index] << ";\n";
+            if (index + 1 < parallel->targets.size()) output << indentation();
+          }
         }
         else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
         {
@@ -1654,6 +1679,8 @@ namespace codegen
                   "  undefined_exponentiation,\n"
                   "  negative_integer_exponent,\n"
                   "  index_out_of_bounds,\n"
+                  "  invalid_range,\n"
+                  "  invalid_conversion,\n"
                   "  missing_key\n"
                   "};\n\n";
         if (map_enabled)
@@ -1683,6 +1710,25 @@ namespace codegen
                   "{ throw sagan_exception{std::move(value), std::type_index(typeid(T)), \"Uncaught Sagan exception\"}; }\n\n"
                   "[[noreturn]] void sagan_runtime_failure(const sagan_runtime_error error, std::string message)\n"
                   "{ throw sagan_exception{error, std::type_index(typeid(sagan_runtime_error)), std::move(message)}; }\n\n"
+                  "template <typename Float>\n"
+                  "std::int64_t sagan_round_int(const Float value)\n"
+                  "{\n"
+                  "  static_assert(std::is_floating_point_v<Float>);\n"
+                  "  if (!std::isfinite(value))\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::invalid_conversion, \"Int.round requires a finite Float\");\n"
+                  "  const long double rounded = std::round(static_cast<long double>(value));\n"
+                  "  const long double lower = static_cast<long double>(std::numeric_limits<std::int64_t>::min());\n"
+                  "  if (rounded < lower || rounded >= -lower)\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::invalid_conversion, \"Int.round result is outside Int64\");\n"
+                  "  return static_cast<std::int64_t>(rounded);\n"
+                  "}\n\n"
+                  "std::vector<std::int64_t> sagan_times(const std::int64_t count)\n"
+                  "{\n"
+                  "  if (count < 0) sagan_runtime_failure(sagan_runtime_error::invalid_range, \"times requires a non-negative integer\");\n"
+                  "  std::vector<std::int64_t> values;\n"
+                  "  for (std::int64_t index = 0; index < count; ++index) values.push_back(index);\n"
+                  "  return values;\n"
+                  "}\n\n"
                   "template <typename T>\n"
                   "bool sagan_exception_matches(const sagan_exception &error, const T &pattern)\n"
                   "{\n"
@@ -2050,6 +2096,26 @@ namespace codegen
                   "Result sagan_power(const Base base_value, const Exponent exponent_value)\n"
                   "{\n"
                   "  const Result base = static_cast<Result>(base_value);\n"
+                  "  if constexpr (std::is_floating_point_v<Result> && std::is_integral_v<Exponent>)\n"
+                  "  {\n"
+                  "    if (base == Result{0} && exponent_value == Exponent{0})\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::undefined_exponentiation, \"Sagan exponentiation does not define 0 ^ 0\");\n"
+                  "    if (base == Result{0} && exponent_value < Exponent{0})\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::division_by_zero, \"Sagan zero cannot have a negative exponent\");\n"
+                  "    using Unsigned = std::make_unsigned_t<Exponent>;\n"
+                  "    Unsigned remaining = exponent_value < Exponent{0}\n"
+                  "        ? Unsigned{0} - static_cast<Unsigned>(exponent_value)\n"
+                  "        : static_cast<Unsigned>(exponent_value);\n"
+                  "    Result factor = base;\n"
+                  "    Result result = Result{1};\n"
+                  "    while (remaining != 0)\n"
+                  "    {\n"
+                  "      if ((remaining & Unsigned{1}) != 0) result *= factor;\n"
+                  "      remaining >>= 1;\n"
+                  "      if (remaining != 0) factor *= factor;\n"
+                  "    }\n"
+                  "    return exponent_value < Exponent{0} ? Result{1} / result : result;\n"
+                  "  }\n"
                   "  const Result exponent = static_cast<Result>(exponent_value);\n"
                   "  if (base == Result{0} && exponent == Result{0})\n"
                   "    sagan_runtime_failure(sagan_runtime_error::undefined_exponentiation, \"Sagan exponentiation does not define 0 ^ 0\");\n"

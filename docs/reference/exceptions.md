@@ -50,7 +50,8 @@ own `break` and `continue` statements.
 The built-in `RuntimeError` enum converts native failures into ordinary
 Sagan exception values. Its current cases are `integer_overflow`,
 `division_by_zero`, `modulo_by_zero`, `undefined_exponentiation`,
-`negative_integer_exponent`, `index_out_of_bounds`, and `missing_key`.
+`negative_integer_exponent`, `index_out_of_bounds`, `invalid_range`,
+`invalid_conversion`, and `missing_key`.
 
 ```sagan
 hope print(values[values_count])

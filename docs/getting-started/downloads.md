@@ -25,9 +25,10 @@ mirror-generated checksum alongside the unchanged asset. Release directories
 are immutable, so corrections receive a new version rather than replacing
 existing files.
 
-The first 1.0.0 installer is an approved unsigned exception and may show a
-Windows unknown-publisher warning. Check its SHA-256 sidecar and read its
-release notes before running it. Later signed installers and clean-machine
+The experimental `v0.87.0-rc.1` preview and planned first 1.0.0 installer are
+approved unsigned exceptions and may show a Windows unknown-publisher warning.
+Check the SHA-256 sidecar and read the release notes before running either.
+Later signed installers and clean-machine
 acceptance are post-1.0 work, after the documentation audit.
 
 Windows is the only supported installation platform today. Start with the

@@ -7,7 +7,7 @@ release_workflow="$repo_root/.github/workflows/release.yml"
 
 grep -Fq '      - main' "$main_workflow"
 grep -Fq 'bash scripts/version.sh check-badge' "$main_workflow"
-grep -Fq '[[ "$version" != 0.* ]]' "$main_workflow"
+grep -Fq 'tag="${tag}-rc.1"' "$main_workflow"
 grep -Fq 'git show-ref --verify --quiet "refs/tags/$tag"' "$main_workflow"
 grep -Fq 'secrets.SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY' "$main_workflow"
 grep -Fq 'sagan-ci-signing-smoke-${GITHUB_RUN_ID}' "$main_workflow"

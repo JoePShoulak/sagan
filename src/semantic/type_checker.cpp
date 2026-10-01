@@ -1,5 +1,6 @@
 #include "type_checker.hpp"
 
+#include "builtin_members.hpp"
 #include "semantic_error.hpp"
 #include "units.hpp"
 
@@ -658,6 +659,10 @@ namespace semantic
           require(is_numeric(left) && is_numeric(right),
                   "Operator '" + operation + "' requires numeric operands, but received " + left + " and " + right,
                   range);
+          if (operation == "^" && float_width(left) >= 0 && integer_width(right) >= 0)
+            return left;
+          if (operation == "^" && integer_width(left) >= 0 && float_width(right) >= 0)
+            return right;
           return common_type(left, right, range, "Operator operands");
         }
 
@@ -1313,6 +1318,20 @@ namespace semantic
             if (member->member_name.ends_with('!')) require_mutable_root(*member->target);
             if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get()))
             {
+              if (const auto builtin = integer_builtin_static_method(target->name, member->member_name);
+                  builtin && !member->safe)
+              {
+                require(arguments.size() == 1, "Int.round expects one Float argument", value.range);
+                require(float_width(arguments.front()) >= 0,
+                        "Int.round requires Float, but received " + arguments.front(),
+                        call->arguments.front()->range);
+                static_cast<void>(record(*member->target, "Type"));
+                static_cast<void>(record(*call->callee, "Function"));
+                model.members.push_back(resolved_member{member->range, "Int", member->member_name});
+                model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                    {arguments.front()}, "Int64"});
+                return record(value, std::string(builtin->result_type));
+              }
               const auto qualified = generic_instance(target->name);
               if (const auto enum_case = enum_cases.find(member->member_name);
                   enum_case != enum_cases.end() && enum_case->second.enum_name == qualified.base)
@@ -1618,6 +1637,12 @@ namespace semantic
             }
           }
           const std::string target = expression(*member->target);
+          if (!member->safe)
+            if (const auto builtin = integer_builtin_member(target, member->member_name))
+            {
+              model.members.push_back(resolved_member{member->range, target, member->member_name});
+              return record(value, std::string(builtin->result_type));
+            }
           const auto optional_target = optional_element(target);
           const std::string accessed_target = optional_target.value_or(target);
           if (const auto shaped = dimensioned(target))
@@ -2182,6 +2207,24 @@ namespace semantic
           else require_compatible(target, assigned, assignment->range, "Assignment");
           mark_initialized(*assignment->target);
         }
+        else if (const auto *parallel = dynamic_cast<const parser::parallel_assignment_statement *>(&value))
+        {
+          std::unordered_set<std::string> names;
+          std::vector<std::string> target_types;
+          for (const auto &target : parallel->targets)
+          {
+            const auto *name = dynamic_cast<const parser::identifier_expression *>(target.get());
+            require(name != nullptr, "Parallel assignment targets must be variables", target->range);
+            require(names.insert(name->name).second,
+                    "Parallel assignment cannot target '" + name->name + "' twice", target->range);
+            require_mutable_root(*target);
+            target_types.push_back(assignment_target(*target));
+          }
+          for (std::size_t index = 0; index < parallel->values.size(); ++index)
+            require_compatible(target_types[index], expression(*parallel->values[index]),
+                               parallel->values[index]->range, "Parallel assignment");
+          for (const auto &target : parallel->targets) mark_initialized(*target);
+        }
         else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
         {
           require_compatible("Bool", expression(*conditional->condition), conditional->condition->range,
@@ -2408,7 +2451,7 @@ namespace semantic
         add_binding("RuntimeError", binding{"Type", {}});
         enums["RuntimeError"] = {"integer_overflow", "division_by_zero", "modulo_by_zero",
                                   "undefined_exponentiation", "negative_integer_exponent",
-                                  "index_out_of_bounds", "missing_key"};
+                                  "index_out_of_bounds", "invalid_range", "invalid_conversion", "missing_key"};
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);

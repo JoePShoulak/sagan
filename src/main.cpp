@@ -654,6 +654,12 @@ namespace
     passed &= expect_error("malformed exponent", "let value = 1e\n");
     passed &= expect_error("leading decimal point", "let value = .5\n");
     passed &= expect_error("trailing decimal point", "let value = 5.\n");
+    passed &= expect_error("decimal point before exponent", "let value = 5.e2\n");
+    passed &= expect_ids(
+        "integer member access",
+        "let values = 5.times\n",
+        {tokens::KWD_LET, tokens::IDENTIFIER, tokens::EQUAL, tokens::INTEGER, tokens::DOT,
+         tokens::IDENTIFIER, tokens::NEWLINE});
     passed &= expect_error("misplaced digit separator", "let value = 1__000\n");
     passed &= expect_error("unknown character", "let value = @tag\n");
     passed &= expect_error("unterminated string", "let value = \"missing\n");

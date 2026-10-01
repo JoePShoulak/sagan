@@ -283,6 +283,16 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct parallel_assignment_statement final : statement
+  {
+    std::vector<expression_ref> targets;
+    std::vector<expression_ref> values;
+
+    parallel_assignment_statement(span source_range, std::vector<expression_ref> assigned_targets,
+                                  std::vector<expression_ref> assigned_values);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct block_statement final : statement
   {
     std::vector<statement_ref> statements;

@@ -254,6 +254,13 @@ namespace parser
         node->children.push_back(make_expression_node(*assignment->value));
         return node;
       }
+      if (const auto *parallel = dynamic_cast<const parallel_assignment_statement *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Parallel assignment", "statement"});
+        for (const auto &target : parallel->targets) node->children.push_back(make_expression_node(*target));
+        for (const auto &entry : parallel->values) node->children.push_back(make_expression_node(*entry));
+        return node;
+      }
       if (const auto *block = dynamic_cast<const block_statement *>(&value))
       {
         auto node = std::make_unique<visual_node>(

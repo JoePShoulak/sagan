@@ -69,6 +69,7 @@ jobs:
           install: >-
             git
             make
+            python
             mingw-w64-ucrt-x86_64-binutils
             mingw-w64-ucrt-x86_64-cc-libs
             mingw-w64-ucrt-x86_64-crt
@@ -91,7 +92,7 @@ jobs:
         shell: msys2 {0}
         run: bash scripts/docs.sh check
       - name: Validate versioned documentation after the 1.0 exception
-        if: needs.validate-tag.outputs.version != '1.0.0'
+        if: needs.validate-tag.outputs.version != '1.0.0' && github.ref_name != 'v0.87.0-rc.1'
         shell: msys2 {0}
         env:
           SAGAN_DOCS_VERSION: ${{ needs.validate-tag.outputs.version }}
@@ -120,7 +121,7 @@ jobs:
       - test
       - coverage
     runs-on: windows-latest
-    environment: ${{ needs.validate-tag.outputs.version == '1.0.0' && 'initial-unsigned-release' || 'release-signing' }}
+    environment: ${{ (needs.validate-tag.outputs.version == '1.0.0' || github.ref_name == 'v0.87.0-rc.1') && 'initial-unsigned-release' || 'release-signing' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -148,7 +149,7 @@ jobs:
         shell: cmd
         run: choco install innosetup --yes --no-progress
       - name: Require configured signing command after the 1.0 exception
-        if: needs.validate-tag.outputs.version != '1.0.0'
+        if: needs.validate-tag.outputs.version != '1.0.0' && github.ref_name != 'v0.87.0-rc.1'
         shell: msys2 {0}
         env:
           SIGN_COMMAND: ${{ secrets.SAGAN_SIGNTOOL_COMMAND }}
@@ -161,11 +162,13 @@ jobs:
         shell: msys2 {0}
         env:
           SAGAN_SIGNTOOL_COMMAND: ${{ secrets.SAGAN_SIGNTOOL_COMMAND }}
+          SAGAN_RELEASE_TAG: ${{ github.ref_name }}
         run: bash scripts/windows/build_release_assets.sh
       - name: Verify checksums and package behavior
         shell: msys2 {0}
         run: |
-          if [[ '${{ needs.validate-tag.outputs.version }}' == '1.0.0' ]]; then
+          if [[ '${{ needs.validate-tag.outputs.version }}' == '1.0.0' ||
+                '${{ github.ref_name }}' == 'v0.87.0-rc.1' ]]; then
             bash scripts/windows/verify_installer_artifact.sh
           else
             bash scripts/windows/verify_installer_artifact.sh --release
@@ -228,6 +231,18 @@ jobs:
             gh release create "$TAG" release-assets/* \
               --repo "$GITHUB_REPOSITORY" --verify-tag --prerelease \
               --generate-notes --title "Sagan ${TAG#v}"
+            if [[ "$TAG" == v0.87.0-rc.1 ]]; then
+              body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
+              {
+                printf '%s\n\n' "$body"
+                printf '%s\n' '## Experimental preview status'
+                printf '%s\n' 'This is a pre-1.0 preview, not the Sagan 1.0 release.'
+                printf '%s\n' 'The Windows installer is unsigned and may trigger an unknown-publisher warning.'
+                printf '%s\n' 'The documentation remains experimental and has not completed its page-by-page audit.'
+                printf '%s\n' 'Clean-machine acceptance remains outstanding; report problems before relying on this build.'
+              } > release-notes.md
+              gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file release-notes.md
+            fi
           else
             gh release create "$TAG" release-assets/* \
               --repo "$GITHUB_REPOSITORY" --verify-tag --draft \

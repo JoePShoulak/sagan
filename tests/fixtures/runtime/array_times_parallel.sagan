@@ -1,0 +1,22 @@
+fun main(): Int {
+  let indices: Array<Int> = 5.times
+  let extended = [...indices, 5]
+  let a = 0
+  let b = 1
+  for index in indices {
+    print("index ${index}: ${a}")
+    a, b = b, a + b
+  }
+  for ignored in 0.times return 1
+  hope {
+    let invalid = (-1).times
+    return 2
+  } unless RuntimeError.invalid_range {
+    print("negative count rejected")
+  }
+  let one_value = [1]
+  hope a, b = 99, one_value[9]
+  unless RuntimeError.index_out_of_bounds print("failed reassignment kept ${a}, ${b}")
+  if a == 5 and b == 8 and indices[4] == 4 and extended[5] == 5 return 0
+  else return 3
+}

@@ -62,6 +62,8 @@ A decimal point requires a digit on both sides. Consequently `.5`, `5.`,
 literals are not supported. A numeric or geometry literal
 may be followed by a separately tokenized unit name; the parser, rather than the
 lexer, forms the measured expression.
+An integer immediately followed by `.` and an identifier is tokenized as
+member access, so `5.times` is valid while a bare `5.` remains invalid.
 
 ## Strings
 

@@ -55,11 +55,14 @@ jobs:
           bash scripts/version.sh check-badge
           version="$(bash scripts/version.sh numeric)"
           tag="v$version"
-          if [[ "$version" != 0.* ]] && ! git show-ref --verify --quiet "refs/tags/$tag"; then
+          if [[ "$version" == 0.* ]]; then
+            tag="${tag}-rc.1"
+          fi
+          if ! git show-ref --verify --quiet "refs/tags/$tag"; then
             printf 'create=true\n' >> "$GITHUB_OUTPUT"
             printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
           else
-            echo "No new stable release: $tag is pre-1.0 or already tagged."
+            echo "No new release: $tag is already tagged."
             printf 'create=false\n' >> "$GITHUB_OUTPUT"
           fi
 

@@ -1,0 +1,29 @@
+fun fibonacci_binet(n: Int): Int {
+  const PHI = (1 + 5 ^ 0.5) / 2
+  return Int.round((PHI ^ n - (-PHI) ^ (-n)) / 5 ^ 0.5)
+}
+
+fun power(base: Float64, exponent: Int): Float64 => base ^ exponent
+fun root(base: Int, exponent: Float64): Float64 => base ^ exponent
+
+fun main(): Int {
+  let value = fibonacci_binet(10)
+  print("Binet integer: ${value}")
+  let large_odd = 9007199254740993
+  if value != 55 return 1
+  if power(2.0, -2) != 0.25 return 2
+  if power(-1.0, large_odd) != -1.0 return 3
+  if root(9, 0.5) != 3.0 return 4
+  if Int.round(2.5) != 3 return 6
+  if Int.round(-2.5) != -3 return 7
+  hope Int.round(nan)
+  unless RuntimeError.invalid_conversion print("nonfinite rounding rejected")
+  hope Int.round(9223372036854775808.0)
+  unless RuntimeError.invalid_conversion print("out-of-range rounding rejected")
+  hope power(0.0, -1)
+  unless RuntimeError.division_by_zero {
+    print("zero negative power rejected")
+    return 0
+  }
+  return 5
+}

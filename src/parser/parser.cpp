@@ -674,6 +674,30 @@ namespace parser
   auto syntax_parser::parse_expression_statement() -> statement_ref
   {
     auto target = parse_expression();
+    if (match(tokens::COMMA))
+    {
+      std::vector<expression_ref> targets;
+      targets.push_back(std::move(target));
+      do
+      {
+        if (check(tokens::EQUAL) || check(tokens::NEWLINE) || at_end())
+          throw parse_error("Expected a variable after ',' in parallel assignment", previous().range);
+        targets.push_back(parse_expression());
+      } while (match(tokens::COMMA));
+      const token &assignment = expect(tokens::EQUAL, "'=' after parallel assignment targets");
+      std::vector<expression_ref> values;
+      do
+      {
+        if (at_end() || check(tokens::NEWLINE) || check(tokens::RBRACE))
+          throw parse_error("Expected a value in parallel assignment", assignment.range);
+        values.push_back(parse_expression());
+      } while (match(tokens::COMMA));
+      if (values.size() != targets.size())
+        throw parse_error("Parallel assignment requires the same number of targets and values",
+                          span{targets.front()->range.begin, values.back()->range.end});
+      const span range{targets.front()->range.begin, values.back()->range.end};
+      return std::make_unique<parallel_assignment_statement>(range, std::move(targets), std::move(values));
+    }
     if (!match(tokens::EQUAL) && !match(tokens::PLUS_EQUAL) && !match(tokens::MINUS_EQUAL) &&
         !match(tokens::STAR_EQUAL) && !match(tokens::SLASH_EQUAL) && !match(tokens::PERCENT_EQUAL) &&
         !match(tokens::CARET_EQUAL))

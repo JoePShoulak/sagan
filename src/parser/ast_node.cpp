@@ -397,6 +397,21 @@ namespace parser
     value->print(stream, indent + 2);
   }
 
+  parallel_assignment_statement::parallel_assignment_statement(
+      const span source_range, std::vector<expression_ref> assigned_targets,
+      std::vector<expression_ref> assigned_values)
+      : statement(source_range), targets(std::move(assigned_targets)), values(std::move(assigned_values))
+  {
+  }
+
+  auto parallel_assignment_statement::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "ParallelAssignment\n";
+    for (const auto &target : targets) target->print(stream, indent + 2);
+    for (const auto &value : values) value->print(stream, indent + 2);
+  }
+
   block_statement::block_statement(const span source_range, std::vector<statement_ref> body)
       : statement(source_range), statements(std::move(body))
   {
