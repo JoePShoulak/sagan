@@ -2541,6 +2541,8 @@
       
         
       
+        
+      
     
     
     
@@ -2742,6 +2744,42 @@
     
   
     Editor feature readiness
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vscode-extension-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code extension roadmap
   
 
     
@@ -3822,22 +3860,22 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="editor-support">Editor support</h1>
-<p>The version 0.2.0 VS Code extension in <code>editors/vscode-sagan/</code> associates
+<p>The version 0.3.1 VS Code extension in <code>editors/vscode-sagan/</code> associates
 <code>.sagan</code> files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations (including explicit <code>const</code> and visibly invalid
 <code>let ALL_CAPS</code> names), keywords, types, literals, operators, punctuation,
 comments, strings and nested interpolation, Unicode identifiers, private
 members, and mutating method names.</p>
-<p>It also discovers a Sagan compiler, validates the versioned
-<code>sagan.language-service/1</code> capability response, and exposes <strong>Sagan: Show
-Tooling Status</strong> without enabling capabilities the compiler does not advertise.</p>
+<p>It discovers compatible Sagan compiler and language-server executables,
+validates the versioned <code>sagan.language-service/1</code> capability response, and
+exposes <strong>Sagan: Show Tooling Status</strong> and <strong>Sagan: Restart Language Server</strong>.</p>
 <p>TextMate remains lexical and cannot resolve whether braces are blocks or
 dictionaries, or whether angle brackets are vectors or comparisons.</p>
-<p>The compiler now has a standalone <a href="../language-server/">language server</a>, but
-this extension has not yet connected to it. In the extension, IntelliSense,
-completion, hover, go-to-definition, formatting, refactoring, and live
-diagnostics remain unavailable. Evaluate the current extension as basic syntax
-coloring and compiler discovery only.
+<p>The extension connects to the standalone <a href="../language-server/">language server</a>
+with VS Code's standard language client. Diagnostics, hover, completion,
+signature help, navigation, symbols, semantic tokens, folding, selection
+ranges, links, inlay hints, safe edits, formatting, and type/call hierarchies
+are enabled according to the server's <code>initialize</code> response.
 See <a href="../../getting-started/editor-support/">getting-started editor support</a> for
 installation.</p>
 <p>Compiler-owned editor infrastructure is separate from the extension. Source
@@ -3846,6 +3884,8 @@ position queries, and LSP transport are available. Track the <a href="../extensi
 and <a href="../language-server-capabilities/">language-server capability contract</a>.
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.</p>
+<p>The <a href="../vscode-extension-roadmap/">VS Code extension roadmap</a> records remaining
+release validation, distribution, and compiler-blocked integrations.</p>
 
 
 
