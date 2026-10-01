@@ -55,10 +55,13 @@ emoji identifiers, mutating names ending in `!`, private names beginning with
   automated Windows integration path is now verified; platform-specific visual
   behavior, including file-icon theme interaction, and features outside its
   representative request set remain.
-- Run the automated Extension Development Host integration suite on each
-  supported CI platform. The opt-in local suite now covers real activation,
-  diagnostics, hover, definition, completion, signature help, symbols, and
-  formatting without making ordinary unit tests network-dependent. A clean
+- Keep the automated Extension Development Host integration suite passing on
+  each supported CI platform. The dedicated workflow builds the matching
+  compiler and server and runs unit, bundle, and live-host tests on Windows,
+  Linux, and macOS; its first hosted run remains to be observed. The suite
+  covers real activation, diagnostics, hover, definition, completion,
+  signature help, symbols, and formatting without making ordinary unit tests
+  network-dependent. A clean
   Pop!_OS 24.04 VM has passed the compiler/server build, extension tests,
   Extension Development Host integration, VSIX installation, activation,
   file-icon, highlighting, diagnostic, and tooling-discovery checks; CI and

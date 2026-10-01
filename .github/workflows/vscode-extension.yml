@@ -1,0 +1,113 @@
+name: VS Code Extension
+
+on:
+  push:
+    paths:
+      - ".github/workflows/vscode-extension.yml"
+      - "editors/vscode-sagan/**"
+      - "makefile"
+      - "scripts/version.sh"
+      - "src/**"
+      - "third_party/uni-algo/**"
+  pull_request:
+    paths:
+      - ".github/workflows/vscode-extension.yml"
+      - "editors/vscode-sagan/**"
+      - "makefile"
+      - "scripts/version.sh"
+      - "src/**"
+      - "third_party/uni-algo/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux extension host
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install virtual display support
+        run: sudo apt-get update && sudo apt-get install --yes xvfb
+      - name: Build compiler and language server
+        run: make all bin/sagan-lsp
+      - name: Install extension dependencies
+        working-directory: editors/vscode-sagan
+        run: npm ci
+      - name: Run extension unit tests
+        working-directory: editors/vscode-sagan
+        run: npm test
+      - name: Verify extension bundle
+        working-directory: editors/vscode-sagan
+        run: npm run test:bundle
+      - name: Run Extension Development Host integration
+        working-directory: editors/vscode-sagan
+        run: xvfb-run --auto-servernum npm run test:integration
+
+  macos:
+    name: macOS extension host
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Build compiler and language server
+        run: make CXX=clang++ all bin/sagan-lsp
+      - name: Install extension dependencies
+        working-directory: editors/vscode-sagan
+        run: npm ci
+      - name: Run extension unit tests
+        working-directory: editors/vscode-sagan
+        run: npm test
+      - name: Verify extension bundle
+        working-directory: editors/vscode-sagan
+        run: npm run test:bundle
+      - name: Run Extension Development Host integration
+        working-directory: editors/vscode-sagan
+        run: npm run test:integration
+
+  windows:
+    name: Windows extension host
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up MSYS2 UCRT64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            make
+            mingw-w64-ucrt-x86_64-binutils
+            mingw-w64-ucrt-x86_64-gcc
+      - name: Build compiler and language server
+        shell: msys2 {0}
+        run: make all bin/sagan-lsp
+      - name: Install extension dependencies
+        shell: msys2 {0}
+        working-directory: editors/vscode-sagan
+        run: npm ci
+      - name: Run extension unit tests
+        shell: msys2 {0}
+        working-directory: editors/vscode-sagan
+        run: npm test
+      - name: Verify extension bundle
+        shell: msys2 {0}
+        working-directory: editors/vscode-sagan
+        run: npm run test:bundle
+      - name: Run Extension Development Host integration
+        shell: msys2 {0}
+        working-directory: editors/vscode-sagan
+        run: npm run test:integration
