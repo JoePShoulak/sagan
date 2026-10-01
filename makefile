@@ -177,6 +177,7 @@ test: $(TARGET) $(LANGUAGE_SERVER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) 
 	bash scripts/windows/check_runtime_imports.sh $(LANGUAGE_SERVER)
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
+	bash scripts/main_release_policy_test.sh
 	bash scripts/release_mirror_test.sh
 	$(SOURCE_DIAGNOSTICS_TEST)
 	$(WORKSPACE_TEST)

@@ -45,6 +45,21 @@ The helper changes only the README badge. It does not stage files, create a
 commit, or push. Documentation-only and maintenance commits have no version
 impact and do not require a badge update.
 
+Every push to `main` runs the release-preparation workflow. It checks the
+history-derived version and README badge. Before 1.0, or when that version
+already has a tag, it does not create another release. For a new stable version
+from 1.0 onward, CI signs a tag using its dedicated release key and runs the
+release gates. Passing gates creates a draft; publication remains behind the
+project owner's approval. A documentation, test, or maintenance commit that
+does not change the version still runs CI but does not create a duplicate tag.
+
+The private CI signing key belongs in the `SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY`
+GitHub Actions secret, never in the repository. Its public key must be
+registered as a GitHub SSH signing key and listed in
+`.github/allowed_signers`. GitHub's `GITHUB_TOKEN` does not trigger a workflow
+from its own tag push, so the main-push workflow explicitly dispatches the
+release workflow at the signed tag.
+
 The repository convention uses the compact `type:description` subject style
 shown above. Before committing, propose escalation if a change appears to need
 a higher impact than originally expected; then prepare the approved impact.
