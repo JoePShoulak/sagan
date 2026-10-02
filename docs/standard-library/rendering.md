@@ -145,11 +145,14 @@ captured 1180 by 720 frame. Trail sampling is a presentation concern and does
 not feed state back into the physics solver.
 
 `make solar-lagrange-demo` keeps the same Earth-Moon-centered Lagrange view,
-colors, trails, controls, and error presentation while adding the Sun as a
-third mutually gravitating massive body. All six massless tracers feel the
-Sun, Earth, and Moon. A gold direction marker keeps the off-screen Sun legible,
-and a heliocentric inset shows the Earth-Moon group orbiting the Sun without
-shrinking the local Lagrange geometry to a pixel.
+colors, trails, rotating polygonal Lagrange guide, controls, and error
+presentation while adding the Sun as a third mutually gravitating massive
+body. The guide is reconstructed from the current perturbed Earth-Moon axis,
+so it remains the live ideal reference rather than a fixed screen decoration.
+All six massless tracers feel the Sun, Earth, and Moon. A gold direction marker
+keeps the off-screen Sun legible, and a heliocentric inset shows the Earth-Moon
+group orbiting the Sun without shrinking the local Lagrange geometry to a
+pixel.
 
 The deterministic solar window fixture advances 600 20-millisecond frames to
 the same 60-day state as the headless fixture and captures the rendered frame.

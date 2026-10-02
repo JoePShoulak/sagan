@@ -132,6 +132,19 @@ fun local_point(position: Point2<Float64, meter>,
   display_coordinates(position, snapshot.earth_moon_barycenter(),
                       kilometers_per_pixel * 1000.0 meter)
 
+fun lagrange_target(snapshot: SolarLagrangeSnapshot,
+                    index: Int64): Point2<Float64, meter> {
+  let separation_vector = snapshot.moon().position() -
+    snapshot.earth().position()
+  let separation = length(separation_vector)
+  let axis = normalized(separation_vector)
+  let perpendicular = <-axis.y, axis.x>
+  let body = snapshot.tertiary(index)
+  return snapshot.earth_moon_barycenter() +
+    axis * (body.reference_x() * separation) +
+    perpendicular * (body.reference_y() * separation)
+}
+
 fun draw_trail(trail: Trail8, red: Int64, green: Int64, blue: Int64): Void {
   line(trail.point_one().x, trail.point_one().y, trail.point_two().x, trail.point_two().y, 2.0, red, green, blue)
   line(trail.point_two().x, trail.point_two().y, trail.point_three().x, trail.point_three().y, 2.0, red, green, blue)
@@ -231,12 +244,35 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
     let l4_point = local_point(current.tertiary(3).position(), current, kilometers_per_pixel)
     let l5_point = local_point(current.tertiary(4).position(), current, kilometers_per_pixel)
     let control_point = local_point(current.tertiary(5).position(), current, kilometers_per_pixel)
+    let l1_target = local_point(lagrange_target(current, 0), current,
+                                kilometers_per_pixel)
+    let l2_target = local_point(lagrange_target(current, 1), current,
+                                kilometers_per_pixel)
+    let l3_target = local_point(lagrange_target(current, 2), current,
+                                kilometers_per_pixel)
+    let l4_target = local_point(lagrange_target(current, 3), current,
+                                kilometers_per_pixel)
+    let l5_target = local_point(lagrange_target(current, 4), current,
+                                kilometers_per_pixel)
     let sun_direction = normalized(current.sun().position() -
                                    current.earth_moon_barycenter())
     line(0.0, 0.0, sun_direction.x * 250.0, sun_direction.y * 250.0,
          3.0, 255, 182, 46)
     text(sun_direction.x * 270.0, sun_direction.y * 270.0,
          "Sun", 12, 255, 182, 46)
+    // Reconstruct the ideal Earth-Moon rotating-frame guide from the current
+    // perturbed Earth-Moon axis so departures remain visually comparable.
+    line(l3_target.x, l3_target.y, l2_target.x, l2_target.y,
+         1.0, 70, 105, 105)
+    line(earth.x, earth.y, l4_target.x, l4_target.y, 1.0, 70, 105, 105)
+    line(l4_target.x, l4_target.y, moon.x, moon.y, 1.0, 70, 105, 105)
+    line(earth.x, earth.y, l5_target.x, l5_target.y, 1.0, 70, 105, 105)
+    line(l5_target.x, l5_target.y, moon.x, moon.y, 1.0, 70, 105, 105)
+    circle(l1_target.x, l1_target.y, 2.0, 112, 160, 160)
+    circle(l2_target.x, l2_target.y, 2.0, 112, 160, 160)
+    circle(l3_target.x, l3_target.y, 2.0, 112, 160, 160)
+    circle(l4_target.x, l4_target.y, 2.0, 112, 160, 160)
+    circle(l5_target.x, l5_target.y, 2.0, 112, 160, 160)
     draw_trail(earth_trail, 76, 151, 255)
     draw_trail(moon_trail, 210, 220, 235)
     draw_trail(first_trail, 244, 114, 182)
