@@ -97,7 +97,7 @@ render-frame rate cannot alter the simulation's result. **Demo:** proposed
 `make two-body-demo` shows the actual physics-driven orbit, readable text,
 responsive input, and a clean close. Record its source and a short capture.
 
-**Status: implemented, pending named-commit acceptance.** `sagan-render` 0.3.0
+**Status: implemented at `8f27ed5` and verified on 2026-10-01.** `sagan-render` 0.3.0
 adds monotonic elapsed time and consumed key presses without taking ownership
 of physics. The Sagan demo advances `sagan-physics` 0.1.0 only through fixed
 300-second solver steps, draws each immutable snapshot, supports pause and
