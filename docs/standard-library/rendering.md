@@ -89,6 +89,7 @@ From a source checkout with the documented MSYS2 UCRT64 toolchain, run:
 make window-demo
 make shape-text-demo
 make two-body-demo
+make lagrange-demo
 ```
 
 The command compiles the Sagan package and its private native bridge, then opens
@@ -114,6 +115,21 @@ milliseconds. Both represent two real seconds and must produce the identical
 fixed-step snapshot at simulation time 172800 seconds. The test also captures
 and validates the displayed 960 by 540 frame. The deterministic timing controls
 are private test environment settings, not public Sagan APIs.
+
+`make lagrange-demo` reuses the same renderer and frame scheduler for
+`sagan-physics` 0.2.0's restricted-three-body snapshots. It displays the two
+massive primaries, L1 through L5, and an off-point control as eight distinctly
+colored bodies. Each massless tracer has an eight-sample trail and a matching
+numeric rotating-frame error. The representative capture below is the 60-day
+snapshot; it visibly distinguishes the small L4/L5 errors from the unstable L1
+and off-point control without claiming that every Lagrange point is stable.
+
+![R3 Lagrange stability frame](../assets/images/render-r3-lagrange.bmp)
+
+`make lagrange-demo-test` runs 100 frames at 20 milliseconds and 20 frames at
+100 milliseconds. Both schedules must produce the same 60-day physics result
+and the test validates the captured 1180 by 720 frame. Trail sampling is a
+presentation concern and does not feed state back into the physics solver.
 
 Version 0.3.0 supports Windows only and links the
 system `user32` and `gdi32` libraries. The demo statically links its GCC/C++

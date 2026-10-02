@@ -97,7 +97,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test two-body-demo two-body-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test lagrange-numeric-demo lagrange-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test two-body-demo two-body-demo-test lagrange-demo lagrange-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test lagrange-numeric-demo lagrange-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -277,6 +277,12 @@ two-body-demo: $(TARGET)
 
 two-body-demo-test: $(TARGET)
 	bash tests/integration/two_body_window_test.sh
+
+lagrange-demo: $(TARGET)
+	bash scripts/lagrange_demo.sh
+
+lagrange-demo-test: $(TARGET)
+	bash tests/integration/lagrange_window_test.sh
 
 run-demo: $(TARGET)
 	bash scripts/run_demo.sh
