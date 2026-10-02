@@ -271,6 +271,49 @@ namespace sagan::language_service
     return result;
   }
 
+  auto query_import_export_target(const source::document_snapshot &document,
+                                  const source::byte_offset offset,
+                                  const source::source_provider &provider,
+                                  const diagnostics::cancellation_token cancellation,
+                                  const modules::package_resolution_options &options)
+    -> import_export_target_result
+  {
+    import_export_target_result result;
+    if (!document.identity().canonical_path || !document.to_utf16(offset)) return result;
+    const auto parsed = syntax::analyze(document, {}, cancellation);
+    if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
+    if (!parsed.value) return result;
+    const auto line = document.to_utf16(offset)->line;
+    const syntax::lossless_token *import_token = nullptr;
+    const syntax::lossless_token *name_token = nullptr;
+    bool has_from = false;
+    for (const auto &token : parsed.value->tokens)
+    {
+      const auto position = document.to_utf16(token.range.begin);
+      if (!position || position->line != line) continue;
+      if (token.kind == tokens::KWD_IMPORT)
+      { import_token = &token; name_token = nullptr; has_from = false; continue; }
+      if (!import_token) continue;
+      if (!name_token && token.kind == tokens::IDENTIFIER) name_token = &token;
+      if (token.kind == tokens::KWD_FROM) has_from = true;
+    }
+    if (!import_token || !name_token || !has_from ||
+        offset < name_token->range.begin || offset > name_token->range.end) return result;
+    result.applicable = true;
+    result.selection = {document.identity().id, name_token->range};
+    const auto exports = query_import_exports(document, name_token->range.end, provider,
+                                              cancellation, options);
+    if (exports.cancelled || cancellation.is_cancelled())
+    { result.cancelled = true; return result; }
+    result.error = exports.error;
+    if (!exports.applicable || !result.error.empty()) return result;
+    const auto name = unicode::normalize_nfc(name_token->source_text);
+    const auto target = std::find_if(exports.candidates.begin(), exports.candidates.end(),
+        [&](const auto &candidate) { return candidate.public_name == name; });
+    if (target != exports.candidates.end()) result.target = *target;
+    return result;
+  }
+
   auto query_package_catalog(const std::filesystem::path &index_path,
                              const std::string_view compiler_version,
                              const std::string_view prefix,

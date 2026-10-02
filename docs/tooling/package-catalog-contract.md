@@ -78,7 +78,12 @@ capability.
 Go-to-definition on a module path in an `import` statement resolves to the
 module's source URI and UTF-16 `module` declaration range, including installed
 package modules. The same query honors source overlays and prefers the local
-module for an unqualified name. This does not yet cover every package alias,
+module for an unqualified name. Go-to-definition and hover on the exported
+name in a selective import also resolve through the locked module's explicit
+exports, even when the importing document is otherwise incomplete. Hover uses
+the compiler's exported signature and documentation; a missing export has no
+invented target. These queries honor the installed source overlay and reject
+cancelled or stale document versions. This does not yet cover every package alias,
 member, and source-unavailable navigation context, so `packageNavigation`
 remains false.
 

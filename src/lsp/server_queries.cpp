@@ -463,6 +463,19 @@ namespace sagan::lsp
     }
     if (method == "textDocument/definition")
     {
+      const auto imported = query_import_export_target(document,
+          offset(document, field(params, "position")), *documents_, cancellation);
+      if (imported.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
+      if (imported.applicable)
+      {
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        if (!imported.target) return J::array{};
+        return J::array{J::object{{"uri", imported.target->source_uri.value},
+                                  {"range", J::object{{"start", lsp_position(imported.target->start)},
+                                                       {"end", lsp_position(imported.target->end)}}}}};
+      }
       const auto target = query_import_module_target(document, offset(document, field(params, "position")),
                                                      *documents_, cancellation);
       if (target.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
@@ -526,6 +539,24 @@ namespace sagan::lsp
                                                          {"sourceUri", candidate.source_uri.value}}}});
         }
         return J::object{{"isIncomplete", exports.incomplete}, {"items", entries}};
+      }
+    }
+    if (method == "textDocument/hover")
+    {
+      const auto imported = query_import_export_target(document,
+          offset(document, field(params, "position")), *documents_, cancellation);
+      if (imported.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
+      if (imported.applicable)
+      {
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        if (!imported.target) return nullptr;
+        const auto &target = *imported.target;
+        const auto description = target.public_name + target.signature +
+            (target.documentation.empty() ? "" : "\n\n" + target.documentation);
+        return J::object{{"contents", J::object{{"kind", "markdown"}, {"value", description}}},
+                         {"range", lsp_range(document, imported.selection.bytes)}};
       }
     }
     std::optional<semantic::workspace_semantic_index> workspace;

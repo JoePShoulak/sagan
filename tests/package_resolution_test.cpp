@@ -99,6 +99,21 @@ auto main() -> int
                           { return item.public_name == "orbit_answer" &&
                                    !item.symbol_id.empty() && !item.source_uri.value.empty(); }),
           "Incomplete selective import did not offer installed package exports");
+  const std::string exact_export = "module main\nimport orbit_answer from orbit_tools.main\n";
+  const sagan::source::document_snapshot exact_document(entry.value->identity(), 8, exact_export);
+  const auto export_target = sagan::language_service::query_import_export_target(
+      exact_document, static_cast<sagan::source::byte_offset>(exact_export.find("orbit_answer") + 2),
+      source, {}, options);
+  require(export_target.applicable && export_target.target &&
+              export_target.target->public_name == "orbit_answer" &&
+              export_target.target->source_uri == sagan::source::identity_from_path(
+                  {}, "tests/fixtures/catalog/orbit-tools/src/main.sagan").uri,
+          "Selective import name did not navigate to the installed export");
+  const auto alias_target = sagan::language_service::query_import_export_target(
+      exact_document, static_cast<sagan::source::byte_offset>(exact_export.find("orbit_tools.main") + 2),
+      source, {}, options);
+  require(!alias_target.applicable,
+          "Export navigation incorrectly captured the import module path");
   const auto imported_target = sagan::language_service::query_import_module_target(
       export_document, static_cast<sagan::source::byte_offset>(partial_export.find("orbit_tools.main") + 2),
       source, {}, options);
@@ -138,6 +153,49 @@ auto main() -> int
               overlay_completion.candidates.size() == 1 &&
               overlay_completion.candidates.front().public_name == "overlay_answer",
           "Installed-package completion ignored the newer in-memory source overlay");
+  const std::string overlay_exact = "module main\nimport overlay_answer from orbit_tools.main\n";
+  const sagan::source::document_snapshot overlay_exact_document(entry.value->identity(), 9,
+                                                                  overlay_exact);
+  const auto overlay_target = sagan::language_service::query_import_export_target(
+      overlay_exact_document,
+      static_cast<sagan::source::byte_offset>(overlay_exact.find("overlay_answer") + 2),
+      overlays, {}, options);
+  require(overlay_target.applicable && overlay_target.target &&
+              overlay_target.target->public_name == "overlay_answer" &&
+              overlay_target.target->source_uri == installed_uri,
+          "Selective import navigation ignored the installed-source overlay");
+  sagan::diagnostics::cancellation_source cancelled_export_target;
+  cancelled_export_target.cancel();
+  const auto cancelled_target_name = sagan::language_service::query_import_export_target(
+      overlay_exact_document,
+      static_cast<sagan::source::byte_offset>(overlay_exact.find("overlay_answer") + 2),
+      overlays, cancelled_export_target.token(), options);
+  require(cancelled_target_name.cancelled && !cancelled_target_name.target,
+          "Cancelled selective import navigation exposed a source target");
+  const std::string missing_export = "module main\nimport hidden_answer from orbit_tools.main\n";
+  const sagan::source::document_snapshot missing_document(entry.value->identity(), 10,
+                                                            missing_export);
+  const auto missing_target = sagan::language_service::query_import_export_target(
+      missing_document,
+      static_cast<sagan::source::byte_offset>(missing_export.find("hidden_answer") + 2),
+      overlays, {}, options);
+  require(missing_target.applicable && !missing_target.target,
+          "Selective import navigation invented a non-exported symbol");
+  sagan::source::document_store unicode_overlays;
+  require(static_cast<bool>(unicode_overlays.open(installed_uri, 1,
+      "module main\nfun 🚀(): Int => 7\nexport 🚀\n")),
+      "Could not open the Unicode installed-module overlay");
+  const std::string unicode_import = "module main\nimport 🚀 from orbit_tools.main\n";
+  const sagan::source::document_snapshot unicode_document(entry.value->identity(), 11,
+                                                            unicode_import);
+  const auto unicode_target = sagan::language_service::query_import_export_target(
+      unicode_document,
+      static_cast<sagan::source::byte_offset>(unicode_import.find("🚀")),
+      unicode_overlays, {}, options);
+  require(unicode_target.applicable && unicode_target.target &&
+              unicode_target.target->public_name == "🚀" &&
+              unicode_target.target->start.line == 1,
+          "Emoji export navigation did not preserve UTF-16 source positions");
   std::string many_exports = "module main\n";
   for (int index = 0; index < 270; ++index)
   {

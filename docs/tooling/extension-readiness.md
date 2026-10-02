@@ -60,7 +60,8 @@ The remaining compiler-side milestones, in dependency order, are:
    transitive imports, and navigation/hover for imported package symbols now
    work. The compiler also supplies module-path candidates and bounded
    selective-export candidates for incomplete imports, plus definition targets
-   for module paths. Export/member completion in every context, safe import edits,
+   for module paths and definition/hover targets for selective import names.
+   Export/member completion in every context, safe import edits,
    missing-source documentation targets, and multi-root collision behavior
    still need implementation and focused tests. No unfinished package
    capability is advertised.

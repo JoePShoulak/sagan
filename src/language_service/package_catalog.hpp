@@ -93,6 +93,24 @@ namespace sagan::language_service
     source::utf16_position end;
   };
 
+  struct import_export_target_result
+  {
+    bool applicable{};
+    bool cancelled{};
+    std::string error;
+    source::source_range selection;
+    std::optional<catalog_export> target;
+  };
+
+  // Resolves the exported name in a selective import, including an import
+  // whose surrounding document is not yet a complete program.
+  auto query_import_export_target(const source::document_snapshot &document,
+                                  source::byte_offset offset,
+                                  const source::source_provider &provider,
+                                  diagnostics::cancellation_token cancellation = {},
+                                  const modules::package_resolution_options &options = {})
+    -> import_export_target_result;
+
   auto query_import_module_target(const source::document_snapshot &document,
                                   source::byte_offset offset,
                                   const source::source_provider &provider,

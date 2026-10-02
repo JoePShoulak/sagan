@@ -275,9 +275,10 @@ current `sagan-documentation-v1` schema is discoverable through
 `--capabilities-json`. Compiler declarations are the sole built-in catalog.
 An experimental installed-source package catalog separately reports real
 exports and source ranges. `query_import_modules`, `query_import_exports`, and
-`query_import_module_target` provide narrow, overlay-aware compiler-owned
-queries for incomplete module paths, selective exported names, and module
-definition targets. The selective-export query is bounded to 256 results and
+`query_import_module_target`, and `query_import_export_target` provide narrow,
+overlay-aware compiler-owned queries for incomplete module paths, selective
+exported names, and module/export definition and hover targets. The
+selective-export query is bounded to 256 results and
 reports truncation. These tested contexts do not yet constitute complete
 package completion, navigation, or auto-import.
 Editors must not carry a parallel list.
