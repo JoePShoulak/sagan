@@ -14,6 +14,26 @@ advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 
+## Paused compiler handoff checkpoint
+
+Extension work is paused against Sagan development version 1.8.0 at compiler
+commit `dc52099`. This is a stable development checkpoint, not the final
+compiler-to-extension handoff: it has not been pushed or released, and the
+extension must not enable capabilities that discovery still reports as false.
+
+Most ordinary editor support is ready. The language server supplies compiler-
+backed diagnostics, formatting, hover, definition, references, completion,
+signature help, symbols, semantic tokens, rename, hierarchies, code actions,
+and cancellable build/run/test operations. Offline package resolution through
+manifest aliases and `sagan.lock` is also available. Imported package symbols
+have tested hover, definition, and completion paths, and incomplete selective
+and module imports have compiler-owned suggestions and navigation.
+
+Reaching the next extension handoff requires several focused compiler-side
+increments followed by a release-payload validation pass. The preferred order
+is package completion and safe auto-import first, then debugger values and
+runtime-failure mapping, then debugger packaging and cross-platform validation.
+
 ## Dependable F2 rename
 
 F2 rename is available for compiler-proven local bindings, constants,
@@ -91,18 +111,37 @@ for continued local extension development:
 
 ## Compiler- or protocol-blocked goals
 
-- Add debugging after a Debug Adapter Protocol implementation exists. The
-  compiler now advertises source maps, debug metadata, breakpoint mapping, and
-  a debug launch-plan foundation, and the extension reports those capabilities
-  during tooling discovery. It intentionally does not register a VS Code debug
-  type while `debugAdapter`, `debugLaunch`, breakpoints, stepping, variables,
-  evaluation, and exception capabilities remain false.
-- Expand package/module completion after dependency resolution and the
-  completion/navigation contracts are implemented. The compiler now advertises
-  its installed-source package catalog and query foundation, and the extension
-  reports them during tooling discovery. It intentionally does not synthesize
-  completion or auto-import results while `packageCompletion`,
-  `packageNavigation`, and `packageAutoImport` remain false.
+- Finish package completion in every relevant import, export, qualified-name,
+  type, expression, and receiver context. Add compiler-owned safe auto-import
+  edits, alias and collision handling, navigation when installed source is
+  missing, and focused multi-root conflict tests. Existing lockfile resolution,
+  selective-import navigation, catalog queries, and tested package hover,
+  definition, and completion cases are foundations rather than the completed
+  contract. Keep `packageCompletion`, `packageNavigation`, and
+  `packageAutoImport` false until their individual end-to-end gates pass.
+- Finish the experimental Debug Adapter Protocol implementation. `sagan-dap`
+  can launch programs and exercise breakpoints, mapped stacks, and source-level
+  stepping, but it still needs reliable Sagan values, runtime-failure and
+  exception mapping, broader source-context and cleanup coverage, Linux
+  execution validation, and release packaging of GDB and its runtime verified
+  outside an MSYS2 environment. The extension must not register a supported
+  Sagan debug type while all granular debugger capability flags remain false.
+
+## Resume sequence
+
+When compiler work resumes, complete and advertise each capability separately
+rather than waiting for one large final patch:
+
+1. Complete contextual package completion and its protocol tests.
+2. Complete safe package auto-import edits, aliases, and multi-root conflicts.
+3. Complete missing-source package navigation behavior.
+4. Complete Sagan debugger values and runtime-failure/exception mapping.
+5. Expand DAP source-context, cancellation, termination, and cleanup tests.
+6. Package the debugger backend and validate Windows outside MSYS2 plus Linux.
+7. Hand the tested schemas, executable-discovery contract, capability truth
+   table, runtime dependencies, and validation results back to the extension.
+8. Register only the newly advertised VS Code features, rebuild the VSIX, and
+   rerun unit, bundle, isolated-install, activation, and live-host tests.
 
 ## Deliberate non-goals
 
