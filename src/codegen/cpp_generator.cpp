@@ -594,8 +594,14 @@ namespace codegen
             return "sagan_multiply<" + checked_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
           if (binary->operator_text == "/")
-            return "sagan_divide<" + checked_type + ">(" + expression(*binary->left) + ", " +
+          {
+            const std::string left_type = expression_type(*binary->left);
+            const std::string division_type = std::string_view{left_type}.starts_with("Vector")
+                                                  ? type_name(left_type, binary->left->range)
+                                                  : checked_type;
+            return "sagan_divide<" + division_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
+          }
           if (binary->operator_text == "%")
             return "sagan_modulo<" + checked_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
