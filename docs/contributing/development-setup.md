@@ -13,6 +13,7 @@ Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.
 ```bash
 git clone <repository-url>
 cd sagan
+git switch dev
 bash scripts/test.sh
 ```
 
@@ -38,6 +39,17 @@ bash scripts/docs.sh check
 
 Generated compiler and documentation artifacts live under ignored build/output
 directories and should not be committed.
+
+## Branch workflow
+
+Routine development is committed directly to `dev`. Sagan does not require a
+new branch for each feature or fix. Keep the shared `dev` checkout current,
+make focused commits there, and push them to `origin/dev` after their relevant
+checks pass.
+
+`main` is the publication branch. Move validated `dev` history to `main` only
+as a deliberate release promotion; a push to `main` starts release-preparation
+automation. Do not use `main` for ordinary work in progress.
 
 ## Development build versions
 

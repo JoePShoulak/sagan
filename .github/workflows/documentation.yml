@@ -3,6 +3,7 @@ name: Documentation
 on:
   push:
     branches:
+      - dev
       - main
     paths:
       - "docs/**"
@@ -66,7 +67,7 @@ jobs:
 
   publish-version:
     name: Publish documentation version
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     needs: validate
     runs-on: ubuntu-latest
     permissions:

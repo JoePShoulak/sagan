@@ -9,6 +9,10 @@ verified_by: null
 
 # Release lifecycle
 
+Development is integrated directly on `dev`. The project owner promotes a
+validated `dev` commit to `main` only when intentionally preparing a release;
+ordinary feature and fix work does not land directly on `main`.
+
 Every push to `main` runs release-preparation CI. A new history-derived 0.x
 version gets a signed `-rc.1` preview tag; a new 1.x version gets a signed
 stable tag. A docs, test, or maintenance commit with no version change does
