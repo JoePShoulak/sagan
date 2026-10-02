@@ -280,8 +280,8 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     line(control_trail.point_six().x, control_trail.point_six().y, control_trail.point_seven().x, control_trail.point_seven().y, 2.0, 248, 113, 113)
     line(control_trail.point_seven().x, control_trail.point_seven().y, control_trail.point_eight().x, control_trail.point_eight().y, 2.0, 248, 113, 113)
 
-    circle(primary.x, primary.y, 10.0, 250, 204, 21)
-    circle(secondary.x, secondary.y, 7.0, 96, 165, 250)
+    circle(primary.x, primary.y, 14.0, 250, 204, 21)
+    circle(secondary.x, secondary.y, 10.0, 96, 165, 250)
     circle(first.x, first.y, 5.0, 244, 114, 182)
     circle(second.x, second.y, 5.0, 251, 146, 60)
     circle(third.x, third.y, 5.0, 167, 139, 250)
