@@ -36,6 +36,7 @@ coordinated 2.0 publication decision.
 | Deterministic execution | **1.0 hypercore contract settled** | exact hypercore operations and runtime failures are deterministic; floating/toolchain/host boundaries are explicitly excluded |
 | Module and package resolution | **Executable package foundation implemented** | strict manifests, qualified modules mapped to nested files, package-root containment, loose-module compatibility, declaration/export validation, namespaces, aliases, ordering, cycle diagnostics, native package demo |
 | Editor tooling | **Usable language server and VS Code client; advanced support in progress** | reusable compiler library, source identity/UTF-16 positions, recovery, overlays, semantic queries, recovered-source formatting, safe edits, stdio LSP, cancellable check/build/run operations, document/project test execution, installed package imports, and experimental DAP; full package completion and debugger release support remain gated |
+| Unified Sagan errors | **Deferred; not complete** | Keep the agreed terminal/editor presentation, stable per-error codes, multi-error recovery, Sagan call-site tracebacks, safe hints, and native-failure mapping on the roadmap; see [diagnostics](../tooling/diagnostics.md) and [language-service Phase 1](../tooling/language-service-roadmap.md#phase-1--source-identity-and-structured-diagnostics) |
 
 Every release is a coordinated ecosystem freeze: compiler/language, included
 libraries, documentation, and extension must agree and pass together. See the

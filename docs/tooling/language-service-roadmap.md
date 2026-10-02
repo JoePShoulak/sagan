@@ -37,6 +37,15 @@ checking, and capability discovery are implemented. Existing module, project,
 build, entry-point, and runtime paths still need to migrate from textual
 exceptions to distinct structured codes.
 
+**Deferred follow-up: unified Sagan errors.** Do not treat the diagnostic
+foundation as completion of the agreed error experience. Resume with stable
+codes for individual failures across every compiler/runtime phase, multiple
+independent semantic/type diagnostics with cascade suppression, Sagan call-site
+tracebacks and an expanded trace option, accurate captured values, reliable
+fix hints, and honest source mapping for native/toolchain failures. Keep terminal,
+JSON, LSP, and debugger presentations backed by the same structured facts. See
+the [diagnostics contract](diagnostics.md) for the agreed tone and format.
+
 - Implement URI/path identity, immutable snapshots, document versions, UTF-8
   byte ranges, UTF-16 positions, and a tested line index.
 - Add structured result states, cancellation tokens, diagnostics, related
