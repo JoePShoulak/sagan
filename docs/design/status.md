@@ -19,6 +19,11 @@ Current development commits are preparation for a future 2.0 release. Their
 or release gates are complete. The major-version commit is reserved for the
 coordinated 2.0 publication decision.
 
+The current units work also preserves compound-denominator grouping and shows
+the selected unit in native `print` output and string interpolation. Named
+derived units such as `newton` and `watt` retain their catalog dimensions; the
+[units reference](../reference/units.md) includes executable examples.
+
 ## Roadmap snapshot
 
 | Area | Status | Evidence |

@@ -31,6 +31,10 @@ fun main(): Int {
   let constrained = ruler.half(normalize(1 kilometer))
   let budget: Float64<credit> = 2 kilocredit
   let orbital_angle: Float64<radian> = 180 degree
+  let force = 5 newton
+  let power = 7 watt
+  let mixed_distance = 1 meter + 100 centimeter
+  let inverse_square = 6.67430e-11 (meter^3 / kilogram / second^2)
 
   print(distance)
   print(speed)
@@ -40,6 +44,10 @@ fun main(): Int {
   print(constrained)
   print(budget)
   print(orbital_angle)
+  print(force)
+  print("Power: ${power}")
+  print(mixed_distance)
+  print(inverse_square)
   return 0
 }
 
