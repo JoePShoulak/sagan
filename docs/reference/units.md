@@ -93,7 +93,23 @@ let orbit: Float64<meter> = 1 astronomicalUnit
 let bearing: Float64<radian> = 90 degree
 let chamber: Float64<pascal> = 1 standardAtmosphere
 let warmer = 20 Celsius + 5 Δ<Celsius>
+let force = 5 newton
+let power = 7 watt
+print(force)                  // 5 newton
+print("Power: ${power}")      // Power: 7 watt
+print(1 meter + 100 centimeter) // 2 meter
 ```
+
+Named derived units carry their full dimensions: `newton` is force and `watt`
+is power, so they participate in dimensional checking just like their expanded
+forms. Printing or interpolating a measured value includes its unit spelling.
+For addition or subtraction with different compatible units, the result uses
+the left operand's unit. A declared target unit or explicit `as` conversion
+selects a different display unit; the numeric value is converted accordingly.
+For example, `let distance: Float64<meter> = 200 centimeter` prints
+`2 meter`. Compound denominators remain grouped when a result type is
+carried into another declaration: `meter^3 / (kilogram * second^2)` is not
+misread as `meter^3 / kilogram * second^2`.
 
 Run the executable catalog and conversion demonstration with:
 

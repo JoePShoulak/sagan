@@ -497,6 +497,27 @@ namespace codegen
         return escaped.str();
       }
 
+      auto displayed_expression(const parser::expression &value) -> std::string
+      {
+        const std::string type = expression_type(value);
+        std::optional<semantic::units::measured_type> measured =
+            semantic::units::parse_measured_type(type, unit_registry, value.range);
+        if (!measured && (type.starts_with("Vector") || type.starts_with("Point") ||
+                          type.starts_with("SphericalVector") || type.starts_with("SphericalPoint")))
+        {
+          const auto arguments = generic_arguments(type);
+          if (arguments.size() == 1)
+            measured = semantic::units::parse_measured_type(arguments.front(), unit_registry, value.range);
+          else if (arguments.size() == 2)
+            measured = semantic::units::parse_measured_type(arguments.front() + '<' + arguments.back() + '>',
+                                                            unit_registry, value.range);
+        }
+        std::string result = expression(value);
+        if (measured)
+          result = "sagan_display_unit(" + result + ", " + escaped_string(measured->unit.name) + ")";
+        return result;
+      }
+
       auto operation(const std::string &value, const parser::span range) const -> std::string
       {
         if (value == "and") return "&&";
@@ -538,7 +559,7 @@ namespace codegen
           for (const auto &part : string->parts)
           {
             result += part.interpolation
-                          ? " + sagan_stringify(" + expression(*part.interpolation) + ")"
+                          ? " + sagan_stringify(" + displayed_expression(*part.interpolation) + ")"
                           : " + std::string{" + escaped_string(part.text) + "}";
           }
           return "(" + result + ")";
@@ -617,6 +638,8 @@ namespace codegen
         if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
         {
           const auto *called_name = dynamic_cast<const parser::identifier_expression *>(call->callee.get());
+          if (called_name && called_name->name == "print" && call->arguments.size() == 1)
+            return "sagan_print(" + displayed_expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "sqrt")
             return "sagan_math_sqrt(" + expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "squared_length")
@@ -2019,6 +2042,14 @@ namespace codegen
                   "  }\n"
                   "  return stream << ')';\n"
                   "}\n\n"
+                  "template <typename T>\n"
+                  "struct sagan_displayed_unit { T value; const char *unit; };\n\n"
+                  "template <typename T>\n"
+                  "sagan_displayed_unit<T> sagan_display_unit(T value, const char *unit)\n"
+                  "{ return {std::move(value), unit}; }\n\n"
+                  "template <typename T>\n"
+                  "std::ostream &operator<<(std::ostream &stream, const sagan_displayed_unit<T> &value)\n"
+                  "{ sagan_stream_component(stream, value.value); return stream << ' ' << value.unit; }\n\n"
                   "template <typename T>\n"
                   "void sagan_print(const T &value)\n"
                   "{\n"
