@@ -157,6 +157,17 @@ do not describe all five points as stable. **Demo:** proposed
 `make lagrange-numeric-demo` prints a time series comparing all six errors,
 then hands the same snapshot contract to R3.
 
+**Status: implemented at `abbc147` and locally verified on 2026-10-01.**
+`sagan-physics` 0.2.0 adds `physics.restricted_three_body`, retaining P0's
+massive pair while advancing six independent massless tracers. The checked
+60-day fixture uses a 300-second step and an Earth-Moon-like circular pair;
+the primary snapshots remain bit-identical to a separate P0 reference run.
+At day 60, the L4 and L5 rotating-frame errors are approximately 13 micrometres
+and 71 micrometres, versus 962 million metres for the off-point control. The
+collinear-point traces remain available for comparison without claiming that
+L1, L2, or L3 are stable. R3 can consume these immutable snapshots without
+adding physics to the renderer.
+
 ## Math chat
 
 **M0 — Minimal orbital math.** Audit the existing `Float64`, `Point2`,
