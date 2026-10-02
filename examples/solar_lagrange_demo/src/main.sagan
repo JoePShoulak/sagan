@@ -70,6 +70,12 @@ class Trail8 {
     Trail8(self.two, self.three, self.four, self.five,
            self.six, self.seven, self.eight, point)
 
+  fun scaled(factor: Float64): Trail8 =>
+    Trail8(self.one * factor, self.two * factor,
+           self.three * factor, self.four * factor,
+           self.five * factor, self.six * factor,
+           self.seven * factor, self.eight * factor)
+
   fun point_one(): Vector2<Float64> => self.one
   fun point_two(): Vector2<Float64> => self.two
   fun point_three(): Vector2<Float64> => self.three
@@ -197,8 +203,28 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
       simulation_seconds_per_real_second = simulation_seconds_per_real_second / 2.0
     }
     let wheel = scroll_y()
-    if wheel > 0.0 { kilometers_per_pixel = kilometers_per_pixel * 0.8 }
-    if wheel < 0.0 { kilometers_per_pixel = kilometers_per_pixel * 1.25 }
+    let previous_kilometers_per_pixel = kilometers_per_pixel
+    while wheel >= 1.0 {
+      kilometers_per_pixel = kilometers_per_pixel * 0.8
+      wheel = wheel - 1.0
+    }
+    while wheel <= -1.0 {
+      kilometers_per_pixel = kilometers_per_pixel * 1.25
+      wheel = wheel + 1.0
+    }
+    if kilometers_per_pixel < 250.0 { kilometers_per_pixel = 250.0 }
+    if kilometers_per_pixel > 20000.0 { kilometers_per_pixel = 20000.0 }
+    if kilometers_per_pixel != previous_kilometers_per_pixel {
+      let trail_scale = previous_kilometers_per_pixel / kilometers_per_pixel
+      earth_trail = earth_trail.scaled(trail_scale)
+      moon_trail = moon_trail.scaled(trail_scale)
+      first_trail = first_trail.scaled(trail_scale)
+      second_trail = second_trail.scaled(trail_scale)
+      third_trail = third_trail.scaled(trail_scale)
+      fourth_trail = fourth_trail.scaled(trail_scale)
+      fifth_trail = fifth_trail.scaled(trail_scale)
+      control_trail = control_trail.scaled(trail_scale)
+    }
     if key_pressed("r") {
       solver = create_solver()
       current = solver.snapshot()
