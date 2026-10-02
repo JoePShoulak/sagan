@@ -82,7 +82,7 @@ decision, not a prerequisite for the first visible orbit. **Demo:** proposed
 `make shape-text-demo` shows two stationary circles, trails/axes, names, and a
 text legend. Record a screenshot and the exact source used to produce it.
 
-**Status: implemented, pending named-commit acceptance.** `sagan-render` 0.2.0
+**Status: implemented at `b153000` and verified on 2026-10-01.** `sagan-render` 0.2.0
 adds the `render.canvas` frame lifecycle, centered orthographic transform,
 filled circles, line segments, world and screen text, RGB colors, resize-aware
 back buffering, DPI-scaled Segoe UI text, `make shape-text-demo`, a BMP capture
