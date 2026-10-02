@@ -1815,6 +1815,8 @@
       
         
       
+        
+      
     
     
     
@@ -2103,6 +2105,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2237,6 +2275,8 @@
       
         
       
+        
+      
     
     
     
@@ -2311,6 +2351,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2543,6 +2619,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2636,6 +2716,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3228,6 +3380,8 @@
       
         
       
+        
+      
     
     
     
@@ -3374,6 +3528,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3866,10 +4056,11 @@ smallest pieces recognized from the text, while the AST flags show the parsed
 structure as text, DOT, SVG, or interactive HTML. AST means <em>abstract syntax
 tree</em>: a tree-shaped representation of the program's grammar.
 It can also analyze lexical scopes and print symbols and resolved references.
-The <code>--types</code> mode prints the implemented scalar/function type model.
-The <code>--entry</code> mode validates whether a fully checked unit has a legal executable
-entry point.
-The <code>--emit-cpp</code> mode emits C++ for the executable subset, and <code>--run-package</code>
+The <code>--types</code> mode prints inferred and declared types, including collections,
+geometry, units, and callable types.
+The <code>--entry</code> mode checks the selected root file as an executable program;
+no specially named function is required.
+The <code>--emit-cpp</code> mode emits checked C++, and <code>--run-package</code>
 runs the entry selected by a package manifest.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>all
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bin/sagan<span class="w"> </span>examples/showcase.sagan

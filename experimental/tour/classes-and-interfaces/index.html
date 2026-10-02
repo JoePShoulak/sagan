@@ -1827,6 +1827,8 @@
       
         
       
+        
+      
     
     
     
@@ -2105,6 +2107,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2239,6 +2277,8 @@
       
         
       
+        
+      
     
     
     
@@ -2313,6 +2353,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2545,6 +2621,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2638,6 +2718,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3230,6 +3382,8 @@
       
         
       
+        
+      
     
     
     
@@ -3376,6 +3530,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3866,6 +4056,12 @@
 interface describes behavior without choosing how it is stored. Sagan calls an
 interface a <code>face</code>; <code>class</code> introduces stored objects. <code>is</code> and <code>has</code> are
 interchangeable words for declaring that a class or face provides other faces.</p>
+<p>The important idea is dependency direction: code asks for the smallest face it
+needs, while a class can assemble several faces into one concrete object. This
+makes behavior reusable without forcing unrelated objects into one family tree.
+It also makes dependencies and test substitutes easier to see: a function that
+accepts <code>Renderable</code> does not need to know whether the value is a spacecraft,
+plot, or future simulation view.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>face Renderable {
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  fun render()
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>}
@@ -3931,6 +4127,11 @@ expired targets read as <code>None</code>.</p>
 <p>All-strong reference cycles are not collected automatically; use <code>weak let</code> for
 the back edge of an ownership relationship. Borrowing and implementation
 inheritance are outside the 1.0 language.</p>
+<p>Continue to the full
+<a href="../../reference/classes-interfaces-composition/">classes, interfaces, and composition reference</a>
+for constructors, privacy, defaults and conflicts, transitive and generic
+composition, face-valued dispatch, ownership, tooling support, and the
+compatibility implications of changing a face.</p>
 
 
 

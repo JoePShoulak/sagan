@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2229,6 +2267,8 @@
       
         
       
+        
+      
     
     
     
@@ -2303,6 +2343,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2545,6 +2621,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2638,6 +2718,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3230,6 +3382,8 @@
       
         
       
+        
+      
     
     
     
@@ -3376,6 +3530,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3869,6 +4059,7 @@ with <code>g++</code> and runs the resulting native executable.</p>
 <p>The current subset supports typed functions, scalar literals, plain and
 interpolated strings,
 local declarations, immutable local and module-level constants, assignment,
+parallel local declarations and simultaneous reassignment,
 calls, grouping, common unary/binary operators,
 prefix and postfix numeric increment and decrement, checked integer arithmetic,
 dimensioned Cartesian and spherical vector and point values, Cartesian spreads,
@@ -3898,17 +4089,16 @@ Windows, preventing Unicode text from being interpreted through a legacy code
 page; other platforms keep their existing UTF-8 environment. Names are
 deterministically encoded as legal C++ identifiers, so
 Unicode and emoji Sagan names do not depend on a C++ compiler's identifier
-spelling support. <code>main(): Int</code> maps to C++ <code>int main()</code>; <code>main(): Void</code> receives
-an implicit native success return.</p>
+spelling support. The backend synthesizes native C++ <code>int main()</code> for the
+selected root file. Root statements execute in source order; normal completion
+returns success, and Sagan <code>exit(code)</code> supplies an explicit process status.</p>
 <p>Unsupported AST forms produce a source-located backend diagnostic rather than
 silently generating incorrect code. The emitter currently requires explicit
-function signatures. At the program root it emits functions and <code>const</code>
-bindings; ordinary top-level <code>let</code> bindings are not yet emitted. Constants
-become native <code>const</code> values instead of shared mutable scalar boxes. For a
-module-level constant, an <code>extern const</code> declaration lets functions refer to
-it before its source-order definition. Reference-valued constants retain the
-normal pointer representation and enforce the const view in Sagan's type
-checker, without claiming a deep-frozen object graph.</p>
+function signatures. At the program root it emits functions, <code>const</code>
+bindings, mutable <code>let</code> bindings, and executable statements. Root bindings
+have shared storage visible to functions, while their initializers execute in
+source order. The type checker enforces the <code>const</code> view; this is not a
+deep-frozen object graph.</p>
 <p>Homogeneous dictionary literals with backend-supported scalar key and value
 types lower to <code>std::unordered_map</code>. Key lookup is checked and raises the native
 out-of-range exception when a key is absent. Dictionary spreads evaluate each

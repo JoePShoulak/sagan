@@ -1815,6 +1815,8 @@
       
         
       
+        
+      
     
     
     
@@ -2103,6 +2105,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2237,6 +2275,8 @@
       
         
       
+        
+      
     
     
     
@@ -2311,6 +2351,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2543,6 +2619,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2636,6 +2716,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3228,6 +3380,8 @@
       
         
       
+        
+      
     
     
     
@@ -3374,6 +3528,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3860,7 +4050,7 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="editor-support">Editor support</h1>
-<p>The version 0.3.3 VS Code extension in <code>editors/vscode-sagan/</code> associates
+<p>The version 0.3.4 VS Code extension in <code>editors/vscode-sagan/</code> associates
 <code>.sagan</code> files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations (including explicit <code>const</code> and visibly invalid
 <code>let ALL_CAPS</code> names), keywords, types, literals, operators, punctuation,
@@ -3878,6 +4068,12 @@ with VS Code's standard language client. Diagnostics, hover, completion,
 signature help, navigation, symbols, semantic tokens, folding, selection
 ranges, links, inlay hints, safe edits, formatting, and type/call hierarchies
 are enabled according to the server's <code>initialize</code> response.
+The extension also uses compiler-owned cancellable check/build/run operations
+for commands and tasks, and Test Explorer uses stable IDs for explicit
+<code>test "name" { ... }</code> declarations. Project-wide test runs can span modules.
+Full package auto-import and a supported debugger are not advertised yet;
+the extension must leave those features off rather than infer support from
+the presence of experimental compiler code.
 See <a href="../../getting-started/editor-support/">getting-started editor support</a> for
 installation.</p>
 <p>Compiler-owned editor infrastructure is separate from the extension. Source

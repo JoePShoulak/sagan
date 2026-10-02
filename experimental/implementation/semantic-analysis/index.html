@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2229,6 +2267,8 @@
       
         
       
+        
+      
     
     
     
@@ -2303,6 +2343,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2545,6 +2621,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2638,6 +2718,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3230,6 +3382,8 @@
       
         
       
+        
+      
     
     
     
@@ -3376,6 +3530,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3884,9 +4074,12 @@ and borrowing remain future work.</p>
 initializers, assignments, Boolean conditions, conditional branches, core
 operators, calls, overload selection, and returns; and visits every current
 statement family.</p>
-<p><code>Int</code> is the source spelling. Literals and initialized <code>Int</code> variables use the
-smallest fitting signed <code>Int8</code>, <code>Int16</code>, <code>Int32</code>, or <code>Int64</code>; non-inferable
-<code>Int</code> positions default to <code>Int64</code>. Floating literals and non-inferable <code>Float</code>
+<p><code>Int</code> is the source spelling. Literals and initialized <code>Int</code>-annotated variables
+use the smallest fitting signed <code>Int8</code>, <code>Int16</code>, <code>Int32</code>, or <code>Int64</code>.
+Unannotated mutable integer <code>let</code> bindings default to <code>Int64</code>, including each
+name in a parallel <code>let</code> declaration; explicit narrower annotations remain
+available. Non-inferable <code>Int</code> positions also default to <code>Int64</code>. Floating
+literals and non-inferable <code>Float</code>
 positions default to <code>Float64</code>, while <code>Float32</code> may be explicit. Only widening
 that preserves every source value is implicit. A variable with neither an
 annotation nor initializer is rejected; a typed uninitialized variable is
@@ -3938,9 +4131,11 @@ method-specific parameters from their arguments after class substitution.</p>
 Non-<code>Void</code> block-bodied functions must return on every statically guaranteed
 path; <code>if</code> requires both branches and <code>match</code> requires a fallback. Reads before
 definite initialization and statements after a guaranteed return are rejected.</p>
-<p>Executable validation is separate from ordinary module analysis. An executable
-must define exactly one parameterless <code>main</code> returning <code>Int</code> or <code>Void</code>. This
-contract is implemented and feeds the C++ backend.</p>
+<p>The root source file is the executable entry point. Its top-level statements
+run in source order; a declaration-only or empty root completes successfully.
+An ordinary function named <code>main</code> has no special entry-point role. Top-level
+<code>return</code> is invalid, and <code>exit(code)</code> explicitly sets the process status.
+Imported modules cannot contain executable top-level statements.</p>
 
 
 

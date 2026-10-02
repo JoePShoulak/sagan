@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://sagan.shoulak.org/latest/tooling/language-service-roadmap/">
       
       
-        <link rel="prev" href="../language-service-contracts/">
+        <link rel="prev" href="../package-catalog-contract/">
       
       
         <link rel="next" href="../formatting-and-edits/">
@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2227,6 +2265,8 @@
       
         
       
+        
+      
     
     
     
@@ -2301,6 +2341,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2535,6 +2611,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2628,6 +2708,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3385,6 +3537,8 @@
       
         
       
+        
+      
     
     
     
@@ -3531,6 +3685,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -4158,6 +4348,14 @@ structured diagnostic containers, terminal/JSON rendering, strict document
 checking, and capability discovery are implemented. Existing module, project,
 build, entry-point, and runtime paths still need to migrate from textual
 exceptions to distinct structured codes.</p>
+<p><strong>Deferred follow-up: unified Sagan errors.</strong> Do not treat the diagnostic
+foundation as completion of the agreed error experience. Resume with stable
+codes for individual failures across every compiler/runtime phase, multiple
+independent semantic/type diagnostics with cascade suppression, Sagan call-site
+tracebacks and an expanded trace option, accurate captured values, reliable
+fix hints, and honest source mapping for native/toolchain failures. Keep terminal,
+JSON, LSP, and debugger presentations backed by the same structured facts. See
+the <a href="../diagnostics/">diagnostics contract</a> for the agreed tone and format.</p>
 <ul>
 <li>Implement URI/path identity, immutable snapshots, document versions, UTF-8
   byte ranges, UTF-16 positions, and a tested line index.</li>
@@ -4315,19 +4513,27 @@ Run <code>make operations-demo</code> to see Sagan input and both native results
 <li>Add test operations only after an authoritative Sagan test model exists.</li>
 </ul>
 <p><strong>Exit met:</strong> source/error mapping and debugger metadata round-trip in focused
-debug and optimized builds, including an imported overlay. The operations are
-synchronous library calls with cancellation, not asynchronous job handles or
-LSP task requests. There is no test-discovery model, live debugger, DAP server,
-attach contract, or reliable optimized-local evaluation. Breakpoints are
-candidate source locations; native debugger validation remains future work.</p>
+debug and optimized builds, including an imported overlay. A later increment
+added asynchronous check/build/run job handles and cancellable LSP operation
+requests. Explicit <code>test "name" { ... }</code> declarations and versioned
+document/project discovery now exist in both the library and a custom LSP
+request. A later increment added selected document and linked-project test
+execution, including package roots and imported-module overlays. A later
+increment added an experimental framed <code>sagan-dap</code> process backed by GDB's
+native DAP. It has tested launch, Sagan-mapped breakpoint/stack probes, and
+source-level stepping, but reliable Sagan values, exception mapping, complete
+cleanup coverage, and release packaging are still missing. Attach and
+optimized-local evaluation remain unsupported. Debugger capabilities stay
+false until their individual end-to-end gates pass.</p>
 <h2 id="phase-8-language-server-protocol-transport">Phase 8 — Language Server Protocol transport</h2>
 <p><strong>Status: implementation and focused protocol fixtures in place; Phase 9 is
 the workload/release gate.</strong> <code>bin/sagan-lsp</code> speaks JSON-RPC/LSP over stdio,
 uses versioned unsaved overlays and UTF-16 positions, handles workspace
 folders and file notifications, publishes diagnostics, and translates the
 completed compiler queries and safe edit actions. Requests can be cancelled
-with <code>$/cancelRequest</code>; protocol stdout contains frames only. The server does
-not implement build/run task requests or DAP. See the
+with <code>$/cancelRequest</code>; protocol stdout contains frames only. The server now
+provides custom check/build/run operation, test-discovery, and selected
+document/project test execution requests, but not DAP. See the
 <a href="../language-server/">language-server guide</a> for the exact advertised surface
 and limitations. <code>make lsp-demo</code> shows source, hover, navigation, and an edit
 diagnostic.</p>

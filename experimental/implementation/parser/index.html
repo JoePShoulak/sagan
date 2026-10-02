@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2229,6 +2267,8 @@
       
         
       
+        
+      
     
     
     
@@ -2303,6 +2343,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2612,6 +2688,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2705,6 +2785,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3297,6 +3449,8 @@
       
         
       
+        
+      
     
     
     
@@ -3443,6 +3597,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3966,8 +4156,9 @@ trivia and exact source while recovering independent top-level declarations
 after malformed or incomplete input.</p>
 <h2 id="implemented-slices">Implemented slices</h2>
 <ul>
-<li>Programs and newline-separated declarations</li>
-<li><code>let</code> declarations with optional type annotations and initializers</li>
+<li>Programs and newline-separated declarations and executable root statements</li>
+<li>Single-name <code>let</code> declarations with optional type annotations and
+  initializers; parallel <code>let</code> declarations with one initializer per name</li>
 <li><code>const</code> declarations with mandatory initializers and ASCII
   <code>SCREAMING_SNAKE_CASE</code> names</li>
 <li>Identifier, numeric, Boolean, and grouped primary expressions</li>
@@ -3991,7 +4182,7 @@ after malformed or incomplete input.</p>
 <li>Statement blocks, including empty and nested blocks, plus same-line
   single-statement control-flow bodies</li>
 <li>Ordinary and compound (<code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>, <code>%=</code>, <code>^=</code>) assignment
-  statements, plus expression statements inside blocks</li>
+  statements, parallel reassignment, plus expression statements inside blocks</li>
 <li><code>if</code>/<code>else</code> statements and <code>else if</code> chains</li>
 <li><code>for</code>/<code>in</code>, <code>while</code>, and <code>until</code> loops</li>
 <li>Unlabeled <code>break</code> and <code>continue</code>, restricted to loop bodies</li>
@@ -4013,7 +4204,8 @@ after malformed or incomplete input.</p>
 <li>Enum cases with zero or more typed payload declarations</li>
 <li>Declaration-attached <code>///</code> and <code>/** ... */</code> documentation comments with
   retained source spans and focused placement diagnostics</li>
-<li>Declaration-only program roots; executable statements are function-local</li>
+<li>Script-style root statements; imported modules are checked separately to
+  remain declaration-only</li>
 <li>Human-readable AST output and success/error demonstrations</li>
 <li>DOT and standalone SVG AST rendering</li>
 <li>A self-contained HTML view that places source input beside the visual tree</li>

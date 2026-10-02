@@ -16,7 +16,7 @@
         <link rel="prev" href="../editor-support/">
       
       
-        <link rel="next" href="../../design/status/">
+        <link rel="next" href="../testing-sagan-programs/">
       
       
         
@@ -1815,6 +1815,8 @@
       
         
       
+        
+      
     
     
     
@@ -2159,6 +2161,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2293,6 +2331,8 @@
       
         
       
+        
+      
     
     
     
@@ -2367,6 +2407,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2599,6 +2675,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2692,6 +2772,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3284,6 +3436,8 @@
       
         
       
+        
+      
     
     
     
@@ -3430,6 +3584,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3938,8 +4128,8 @@
 <p><code>bin/sagan-lsp</code> is Sagan's editor-facing process. An editor starts it and sends
 Language Server Protocol messages over standard input. Standard output is
 reserved for framed protocol replies; it is not a terminal command for people
-to type source into. The VS Code extension is a separate project and is not
-changed by this server work.</p>
+to type source into. The VS Code extension connects to this server without
+reimplementing Sagan's parser or type checker.</p>
 <p>From the repository, run <code>make lsp-demo</code> to see a small Sagan program, its
 hover/navigation results, and the diagnostic after an unsaved edit. Run
 <code>bash scripts/test.sh</code> for the full compiler and language-server test suite.</p>
@@ -3951,15 +4141,20 @@ and a canonical filesystem path internally. Multiple unsaved modules resolve
 through in-memory overlays before disk files. An edit to one open module
 refreshes diagnostics for all open files, including importers.</p>
 <p>The server accepts the current core syntax in unsaved buffers, including
-<code>a, b = b, a + b</code>, integer <code>.times</code> arrays, exponentiation with a
+<code>let i, a, b = 0, 0, 1</code>, simultaneous <code>a, b = b, a + b</code>, same-line
+<code>while</code> bodies, postfix <code>i++</code>, integer <code>.times</code> arrays, exponentiation with a
 floating-point base and integer exponent (<code>PHI ^ n</code>), and explicit
-<code>Int.round(value)</code> conversion. Diagnostics and inferred
+<code>Int.round(value)</code> conversion. Unannotated mutable integer bindings infer
+<code>Int64</code>, including grouped bindings. Diagnostics and inferred
 types come from the same compiler checks as the CLI. Member completion offers
 <code>times</code> on integer receivers. Hover, semantic classification, the array result
 type, and runtime-error documentation use the compiler's built-in member
 metadata. It is a property, so the insertion is <code>.times</code>, not <code>.times()</code>.
 Completion also offers <code>Int.round(</code> on the built-in <code>Int</code> type, with hover
 and signature documentation for its tie rule and invalid-conversion error.</p>
+<p>The root file can contain executable top-level statements and bindings, with
+<code>exit(code)</code> for an explicit process status. Imported modules remain
+declaration-only; <code>main</code> is an ordinary function name.</p>
 <p>The server currently advertises incremental synchronization, diagnostics,
 hover, definition/type definition, implementations, references and highlights,
 signature help, completion, document/workspace symbols, full semantic tokens,
@@ -3969,13 +4164,51 @@ document/range/on-type formatting. <code>initialize</code> returns the normal LS
 capabilities plus Sagan's versioned compiler capability schema under
 <code>experimental</code>. The transport schema is <code>sagan-lsp/1</code>.</p>
 <p>Limits matter: rename is restricted to proven local bindings. Formatter edits
-require strict source and preserve existing line breaks. Completion is
+may handle locally proven complete lines of recovered source and preserve
+existing line breaks. Completion is
 conservative and has no independent package registry. Module diagnostics may
 have a generic location when an error originates in another file and the
-underlying compiler error lacks source provenance. Test discovery, build/run
-task requests, debugger attach, and Debug Adapter Protocol are not advertised.
-Cancelled requests return LSP <code>RequestCancelled</code>; obsolete diagnostics are
-not published for a newer open-document version.</p>
+underlying compiler error lacks source provenance. Test discovery, debugger
+attach, and Debug Adapter Protocol are not advertised. A custom
+<code>sagan/operation</code> request supports check/build/run with <code>sagan/operationEvent</code>
+progress, cancellation, version checks, and structured results; the extension
+still needs to wire commands and tasks to that contract. Cancelled ordinary
+queries return LSP <code>RequestCancelled</code>; cancelled operations return a structured
+<code>cancelled</code> state. Obsolete diagnostics are
+not published for a newer open-document version. The custom
+<code>sagan/tests/discover</code> request accepts <code>textDocument.uri</code>, optional
+<code>textDocument.version</code>, <code>scope</code> (<code>document</code> or <code>project</code>), and optional
+<code>projectUri</code>. It returns <code>sagan-tests-v1</code>, state, source version, and stable
+test IDs with UTF-16 name ranges and structured discovery diagnostics.
+<code>sagan/tests/run</code> accepts the same document URI and optional version,
+<code>scope</code> (<code>document</code> or <code>project</code>), optional <code>projectUri</code>, and optional
+<code>testIds</code> (empty means all tests in that scope). A project URI may identify
+a package root, manifest, or entry module. It returns <code>sagan-tests-v1</code>,
+stable test IDs, package/module/suite hierarchy, UTF-16 source ranges,
+queued/running/passed/failed/errored/skipped/cancelled case states, per-test
+duration, exit status, captured output, and diagnostics. <code>sagan/testEvent</code>
+notifications precede the response; project events are buffered until the
+project snapshot is verified, so stale runs publish no project events or
+case results. Tests run in resolved-module order, independently, with all
+queued events first and then each case's running/output/final events. Cancel
+using standard <code>$/cancelRequest</code>.</p>
+<p><code>sagan/packages/query</code> reads a compiler-owned local index. An optional
+<code>indexUri</code> points to its file; otherwise the server uses <code>SAGAN_PACKAGE_INDEX</code>.
+An optional <code>prefix</code> filters package names. The response uses
+<code>sagan-package-index-v1</code> with <code>ready</code>, <code>unavailable</code>, or <code>invalid</code> state and
+returns version, compiler requirement, compatibility, installed/available
+state, and manifest URI where installed. This inspection request does not
+itself resolve a project's dependencies, provide export signatures, or enable
+package completion.</p>
+<p>Dependency resolution is a separate compiler-owned operation: manifest aliases,
+the installed local index, and exact <code>sagan.lock</code> pins select the source linked
+into a project. <code>sagan/packages/catalog</code> reports source-derived exports and
+signatures when installed source can be checked. Standard completion already
+suggests unfinished module paths and explicitly exported names in selective
+imports; definition and hover work on those import names and on resolved
+package-owned uses. These are tested subsets, not a claim of full package
+completion, navigation, or safe auto-import. See the
+<a href="../package-catalog-contract/">package catalog contract</a>.</p>
 <h2 id="reliability-gate">Reliability gate</h2>
 <p>Run <code>bash scripts/lsp_reliability_test.sh</code> after building <code>bin/sagan-lsp</code>.
 The full <code>make test</code> target runs it too. The gate uses the real stdio process,

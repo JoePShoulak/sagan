@@ -1947,6 +1947,8 @@
       
         
       
+        
+      
     
     
     
@@ -2225,6 +2227,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2359,6 +2397,8 @@
       
         
       
+        
+      
     
     
     
@@ -2433,6 +2473,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2665,6 +2741,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2758,6 +2838,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3350,6 +3502,8 @@
       
         
       
+        
+      
     
     
     
@@ -3496,6 +3650,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -4105,14 +4295,20 @@ browser.</p>
 <p>Small examples embedded directly in these docs live under
 <code>docs/examples/executable/</code>. The documentation check runs each <code>.sagan</code> file
 and compares its output with the adjacent <code>.stdout</code> file.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>fun main(): Int {
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  print("Hello from Sagan!")
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  return 0
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>}
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>print("Hello from Sagan!")
 </span></code></pre></div>
 <p>Expected output:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Hello from Sagan!
 </span></code></pre></div>
+<p>The compact <a href="executable/fibonacci.sagan">Fibonacci example</a> demonstrates
+parallel <code>let</code>, simultaneous reassignment, postfix increment, and a brace-free
+one-statement loop. Run it with <code>sagan docs/examples/executable/fibonacci.sagan</code>;
+its expected output is <code>144</code>.</p>
+<p>The <a href="executable/composition.sagan">composition example</a> demonstrates a face
+requirement, a face default that calls that requirement through <code>self</code>, explicit
+class conformance, a mutating method, conversion to a face value, and shared
+reference identity. Its adjacent <code>.stdout</code> file is checked with the rest of the
+documentation examples.</p>
 <h2 id="regression-fixtures">Regression fixtures</h2>
 <p><code>tests/fixtures/</code> is grouped by compiler responsibility:</p>
 <ul>

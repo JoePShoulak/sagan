@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2227,6 +2265,8 @@
       
         
       
+        
+      
     
     
     
@@ -2301,6 +2341,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2535,6 +2611,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2628,6 +2708,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3230,6 +3382,8 @@
       
         
       
+        
+      
     
     
     
@@ -3376,6 +3530,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3916,7 +4106,7 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 <tr>
 <td>Completion</td>
 <td>Parser context, semantic scope/type state, module/catalog metadata</td>
-<td><strong>LSP available for compiler-known candidates; no external package catalog</strong></td>
+<td><strong>LSP available for compiler-known candidates; installed imports and unfinished module-path imports work, but full external-package completion/auto-import is blocked</strong></td>
 </tr>
 <tr>
 <td>Semantic highlighting</td>
@@ -3956,7 +4146,7 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 <tr>
 <td>Rename</td>
 <td>Versioned identity-based safe workspace edits</td>
-<td><strong>LSP available for proven local rename; cross-file/public rename unavailable</strong></td>
+<td><strong>LSP available for proven local, private-member, exported-symbol, and imported public-member identities; ambiguous identities are refused</strong></td>
 </tr>
 <tr>
 <td>Quick fixes/code actions</td>
@@ -3966,7 +4156,7 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 <tr>
 <td>Formatting</td>
 <td>Lossless deterministic formatter API</td>
-<td><strong>LSP document/range/on-type available for strict source; incomplete-source formatting unsupported</strong></td>
+<td><strong>LSP document/range/on-type available; recovered source formats only proven complete lines and refuses uncertain edits</strong></td>
 </tr>
 <tr>
 <td>Type hierarchy</td>
@@ -3981,17 +4171,17 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 <tr>
 <td>Check/build/run tasks</td>
 <td>Structured cancellable operations</td>
-<td><strong>Versioned check and native document/project build/run library operations available, with streams, artifacts, cancellation, overlays and stale-result checks; asynchronous orchestration and LSP transport blocked</strong></td>
+<td><strong>Versioned document/project operations and <code>sagan/operation</code> transport are available; the extension provides commands and generated document/project tasks with cancellation and output</strong></td>
 </tr>
 <tr>
-<td>Test explorer</td>
-<td>Authoritative Sagan test discovery model</td>
-<td><strong>Unavailable by design for now</strong></td>
+<td>Test Explorer</td>
+<td>Authoritative Sagan test discovery and execution model</td>
+<td><strong>The extension provides document/project discovery and selected or all execution through granular compiler capabilities; Run results include duration, output, and pass/fail/error/skipped state</strong></td>
 </tr>
 <tr>
 <td>Debugger</td>
 <td>Source maps/runtime metadata, then a separate DAP implementation</td>
-<td><strong>Source maps, candidate breakpoints, scopes, value metadata and launch plan available; live debugger, attach, optimized-local evaluation and DAP blocked</strong></td>
+<td><strong>Experimental <code>sagan-dap</code> launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level step-over/in/out probes including imported modules; reliable values, exceptions, release packaging, and capability advertisement remain blocked</strong></td>
 </tr>
 <tr>
 <td>Lexical TextMate coloring</td>
@@ -4000,6 +4190,34 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 </tr>
 </tbody>
 </table>
+<p>The remaining compiler-side milestones, in dependency order, are:</p>
+<ol>
+<li>Finish operation stress tests and cancellation checkpoints inside strict
+   parsing, type analysis, code generation, and module linking. The current
+   transport can cancel queued/active requests and child processes, but those
+   compiler loops still have some phase-boundary-only checkpoints.</li>
+<li><strong>Project test-runner and VS Code client implemented:</strong> imported tests execute from
+   linked programs, package-root runs retain package identity, and overlays,
+   selection, cancellation, stale runs, and LSP framing have focused tests.
+   The extension consumes stable IDs and project runs through Test Explorer.
+   A public terminal runner and debug-test profile remain unavailable.</li>
+<li>Complete contextual package completion and navigation. Manifest dependency
+   aliases, exact lockfile verification, offline installed-package linking,
+   transitive imports, and navigation/hover for imported package symbols now
+   work. The compiler also supplies module-path candidates and bounded
+   selective-export candidates for incomplete imports, plus definition targets
+   for module paths and definition/hover targets for selective import names.
+   Export/member completion in every context, safe import edits,
+   missing-source documentation targets, and multi-root collision behavior
+   still need implementation and focused tests. No unfinished package
+   capability is advertised.</li>
+<li>Finish the experimental Windows DAP executable using GDB native DAP,
+   source maps, and debug metadata. It already has a live launch/breakpoint/
+   stack and step-over/in/out probes; verify all source contexts, Sagan scopes
+   and values, exceptions,
+   cancellation, shutdown, and runtime packaging before
+   advertising debugger support.</li>
+</ol>
 <p>The extension may begin consuming a feature only when:</p>
 <ol>
 <li>the language-service library test for that feature passes;</li>

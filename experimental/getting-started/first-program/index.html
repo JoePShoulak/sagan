@@ -1881,6 +1881,8 @@
       
         
       
+        
+      
     
     
     
@@ -2159,6 +2161,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2293,6 +2331,8 @@
       
         
       
+        
+      
     
     
     
@@ -2367,6 +2407,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2599,6 +2675,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2692,6 +2772,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3284,6 +3436,8 @@
       
         
       
+        
+      
     
     
     
@@ -3430,6 +3584,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3936,14 +4126,13 @@
 </div>
 <h1 id="write-your-first-program">Write your first program</h1>
 <p>Create a file named <code>hello.sagan</code> with this program:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fun main(): Int {
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  print("Hello from Sagan!")
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  return 0
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>}
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>print("Hello from Sagan!")
 </span></code></pre></div>
-<p>Every executable starts in a function named <code>main</code>. Here, <code>main</code> returns an
-<code>Int</code>: <code>0</code> tells the operating system that the program succeeded. <code>print</code>
-writes one line of text.</p>
+<p>The file you run is the entry point. Sagan executes its top-level statements
+in order, so this one-line program needs no <code>main</code> function or braces. <code>print</code>
+writes one line. If the file finishes normally, its process status is <code>0</code>
+(success). A command-line program can call <code>exit(code)</code> to choose another
+status explicitly.</p>
 <p>Run an installed compiler from Git Bash:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sagan<span class="w"> </span>hello.sagan
 </span></code></pre></div>
@@ -3964,7 +4153,7 @@ archived source and compares its output with the text above.</p>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>bin/sagan<span class="w"> </span>--types<span class="w"> </span>hello.sagan
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>bin/sagan<span class="w"> </span>--emit-cpp<span class="w"> </span>hello.sagan<span class="w"> </span>build/hello.cpp
 </span></code></pre></div>
-<p>Tokens are the smallest pieces of source, such as <code>fun</code>, <code>main</code>, and <code>(</code>. The
+<p>Tokens are the smallest pieces of source, such as <code>print</code>, <code>(</code>, and the string. The
 AST is the <strong>abstract syntax tree</strong>: a structured view of how those pieces form
 declarations and expressions. Symbols show declared names and scopes. Type
 checking confirms that operations use compatible values. <code>--emit-cpp</code> lets you

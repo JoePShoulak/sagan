@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2227,6 +2265,8 @@
       
         
       
+        
+      
     
     
     
@@ -2301,6 +2341,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2533,6 +2609,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2626,6 +2706,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3220,6 +3372,8 @@
       
         
       
+        
+      
     
     
     
@@ -3362,6 +3516,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#branch-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#development-build-versions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3432,6 +3597,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3905,6 +4106,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#branch-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#development-build-versions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3940,7 +4152,8 @@
 <p>Current Windows development uses Git Bash with an MSYS2 UCRT64 toolchain.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>&lt;repository-url&gt;
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>sagan
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bash<span class="w"> </span>scripts/test.sh
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>git<span class="w"> </span>switch<span class="w"> </span>dev
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>bash<span class="w"> </span>scripts/test.sh
 </span></code></pre></div>
 <p>The test script expects <code>make</code>, <code>g++</code>, and <code>cygpath</code>, builds with C++23
 warnings enabled as errors, runs the complete compiler and CLI test suite, and
@@ -3957,6 +4170,14 @@ prints the current version.</p>
 </span></code></pre></div>
 <p>Generated compiler and documentation artifacts live under ignored build/output
 directories and should not be committed.</p>
+<h2 id="branch-workflow">Branch workflow</h2>
+<p>Routine development is committed directly to <code>dev</code>. Sagan does not require a
+new branch for each feature or fix. Keep the shared <code>dev</code> checkout current,
+make focused commits there, and push them to <code>origin/dev</code> after their relevant
+checks pass.</p>
+<p><code>main</code> is the publication branch. Move validated <code>dev</code> history to <code>main</code> only
+as a deliberate release promotion; a push to <code>main</code> starts release-preparation
+automation. Do not use <code>main</code> for ordinary work in progress.</p>
 <h2 id="development-build-versions">Development build versions</h2>
 <p>Sagan uses a commit-derived development version inspired by Schematic. The
 format is <code>MAJOR.MINOR.PATCH+gREVISION</code>, with <code>.dirty</code> appended when tracked or

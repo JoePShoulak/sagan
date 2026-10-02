@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2227,6 +2265,8 @@
       
         
       
+        
+      
     
     
     
@@ -2301,6 +2341,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2535,6 +2611,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2628,6 +2708,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3230,6 +3382,8 @@
       
         
       
+        
+      
     
     
     
@@ -3376,6 +3530,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3884,14 +4074,11 @@ ambiguous input instead of guessing. Wrapping is not rewritten.</p>
 UTF-8/UTF-16 boundaries, and deterministic non-overlapping ranges before
 returning the proposed text. It never writes the editor buffer or disk file.
 When a check fails, it returns <code>stale</code>, <code>invalid</code>, or <code>conflict</code> with a reason.</p>
-<p><code>rename_local</code> is a proof-gated refactoring. VS Code's F2 can rename local
-bindings and non-exported, non-overloaded functions in one document. It uses
-the identity-indexed reference set, validates the new
-identifier and naming convention, refuses existing names, reindexes the
-previewed source, and verifies that every reference still resolves to the one
-renamed declaration. Entry-point <code>main</code>, exported and overloaded functions,
-imported symbols, members, and cross-file rename remain unavailable: the
-compiler refuses these rather than risking a broken project.</p>
+<p>Rename is proof-gated. Local edits cover bindings, private members, and
+non-exported, non-overloaded functions. Workspace edits cover exported identity
+groups and exact imported public-member receivers. Both paths validate naming,
+collisions, snapshot versions, and rebinding before returning an atomic edit;
+ambiguous identities are refused rather than risking a broken project.</p>
 <p><code>organize_imports</code> sorts one uninterrupted top-of-file block of plain imports.
 It preserves each original line and its line endings, then rechecks the result.
 It refuses comments, blank-line import groups, mixed line endings, interleaved
@@ -3905,12 +4092,10 @@ the exact document version. It validates and previews the edits, then rechecks
 strict syntax or full document analysis. The first compiler-issued fix inserts
 a missing final <code>}</code> only when that insertion parses successfully. It is not a
 general automatic repair system.</p>
-<p>The action list explicitly disables workspace/public rename, unused-import
-removal, required-face-member generation, extract-variable, and
-extract-function. Their rebinding, side-effect, conformance, capture, or
-evaluation-order proofs are not available yet. No action is offered by textual
-name matching alone. These are later feature opportunities, not implicit
-promises of Phase 6.</p>
+<p>The action list explicitly disables unused-import removal,
+required-face-member generation, extract-variable, and extract-function. Their
+side-effect, conformance, capture, or evaluation-order proofs are not available
+yet. No action is offered by textual name matching alone.</p>
 <p>To see before/after formatting, rename, and import previews and run the focused
 safety tests:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>formatter-demo

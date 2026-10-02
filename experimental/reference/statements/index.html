@@ -1825,6 +1825,8 @@
       
         
       
+        
+      
     
     
     
@@ -2103,6 +2105,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2237,6 +2275,8 @@
       
         
       
+        
+      
     
     
     
@@ -2311,6 +2351,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2543,6 +2619,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2636,6 +2716,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3228,6 +3380,8 @@
       
         
       
+        
+      
     
     
     
@@ -3374,6 +3528,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3884,17 +4074,27 @@ expression</code> to raise a value. A <code>hope</code> requires at least one ha
 clause. Handlers are tried in source order, unmatched exceptions propagate
 outward, and <code>finally</code> runs during both normal and exceptional exits. See
 <a href="../exceptions/">Exceptions</a>.</p>
-<p>At the program root, the parser accepts declarations only. Executable control
-flow, expression statements, and assignment statements belong inside function
-bodies. An executable program enters through <code>fun main()</code>.</p>
+<p>The selected root file is the executable program. Its declarations and
+executable statements run in source order, so a small program needs no
+<code>main</code> function:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let answer = 42
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>print(answer)
+</span></code></pre></div>
+<p>Root-level mutable bindings are visible to functions in that file. Imported
+modules may contain declarations but not executable top-level statements;
+importing a module never runs an implicit script. Normal completion exits with
+status <code>0</code>. Call <code>exit(code)</code> to end immediately with a status from <code>0</code> to
+<code>255</code>; <code>finally</code> cleanup runs before the process exits. A final expression is
+neither printed nor used as an exit code.
+<code>return</code> remains function-only, and a function named <code>main</code> is ordinary.</p>
 <p>Compound assignment is statement-only, like ordinary <code>=</code> reassignment. Its
 target must be assignable, and the result must convert losslessly back into the
 target's type.</p>
 <p>Parallel reassignment uses one <code>=</code> with comma-separated variable names and
 the same number of values:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let a = 0
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>let b = 1
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>a, b = b, a + b
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let a = 0
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>let b = 1
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>a, b = b, a + b
 </span></code></pre></div>
 <p>Every right-hand expression is evaluated from left to right before any target
 changes. Then the variables are assigned from left to right, so the example
@@ -3902,6 +4102,15 @@ leaves <code>a</code> as <code>1</code> and <code>b</code> as <code>1</code>. Ta
 names; fields, indexes, compound operators, and mismatched list lengths are
 not supported in this form. This is reassignment, not a declaration or tuple
 expression.</p>
+<p>Parallel <code>let</code> declares new mutable names with matching initializers:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let i, a, b = 0, 0, 1
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>while i++ &lt;= n  a, b = b, a + b
+</span></code></pre></div>
+<p>All initializer expressions run before any new name is introduced. A group
+requires exactly one value per name; individual names may carry type
+annotations. Unannotated integer variables default to <code>Int64</code>. The loop shows
+two other independent rules: postfix <code>i++</code> yields the old value, and a
+single-statement <code>while</code> body can omit braces when it stays on the same line.</p>
 <p><code>unless</code> is reserved for exception handling in Sagan; it is not an inverse
 conditional spelling.</p>
 <p><code>yield expression</code> and bare <code>yield</code> are syntactically valid inside function

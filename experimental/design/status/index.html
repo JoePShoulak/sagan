@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://sagan.shoulak.org/latest/design/status/">
       
       
-        <link rel="prev" href="../../tooling/language-server/">
+        <link rel="prev" href="../../tooling/testing-sagan-programs/">
       
       
         <link rel="next" href="../../implementation/">
@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2348,6 +2386,8 @@
       
         
       
+        
+      
     
     
     
@@ -2422,6 +2462,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2654,6 +2730,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2747,6 +2827,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3339,6 +3491,8 @@
       
         
       
+        
+      
     
     
     
@@ -3485,6 +3639,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -4049,6 +4239,10 @@
 today from planned libraries and external release gates. The <code>work-in-progress</code>
 metadata at the top means the prose still awaits the owner's documentation
 audit; it does not mean every listed compiler feature is unfinished.</p>
+<p>Current development commits are preparation for a future 2.0 release. Their
+1.x commit versions are checkpoints, not a declaration that the 2.0 migration
+or release gates are complete. The major-version commit is reserved for the
+coordinated 2.0 publication decision.</p>
 <h2 id="roadmap-snapshot">Roadmap snapshot</h2>
 <table>
 <thead>
@@ -4121,8 +4315,13 @@ audit; it does not mean every listed compiler feature is unfinished.</p>
 </tr>
 <tr>
 <td>Editor tooling</td>
-<td><strong>Usable language server and VS Code client</strong></td>
-<td>reusable compiler library, source identity/UTF-16 positions, recovery, overlays, semantic queries, formatting, safe edits, stdio LSP, and the capability-aware VS Code 0.3.2 extension; debugger and test transport remain later work</td>
+<td><strong>Usable language server and VS Code client; advanced support in progress</strong></td>
+<td>reusable compiler library, source identity/UTF-16 positions, recovery, overlays, semantic queries, recovered-source formatting, safe edits, stdio LSP, cancellable check/build/run operations, document/project test execution, installed package imports, and experimental DAP; full package completion and debugger release support remain gated</td>
+</tr>
+<tr>
+<td>Unified Sagan errors</td>
+<td><strong>Deferred; not complete</strong></td>
+<td>Keep the agreed terminal/editor presentation, stable per-error codes, multi-error recovery, Sagan call-site tracebacks, safe hints, and native-failure mapping on the roadmap; see <a href="../../tooling/diagnostics/">diagnostics</a> and <a href="../../tooling/language-service-roadmap/#phase-1-source-identity-and-structured-diagnostics">language-service Phase 1</a></td>
 </tr>
 </tbody>
 </table>
@@ -4144,8 +4343,9 @@ provide broad successful source files plus focused malformed examples. The
 semantic mode validates names and scopes. Type mode additionally validates the
 implemented type rules. The backend emits C++ for checked programs, and the
 execution demo compiles that output with <code>g++</code> and runs it.
-Entry mode performs the complete implemented checks and requires exactly one
-parameterless <code>main</code> returning <code>Int</code> or <code>Void</code>.</p>
+Entry mode performs the complete implemented checks. The root file can execute
+top-level statements; normal completion exits with status 0, and <code>exit(code)</code>
+sets an explicit status. A function named <code>main</code> is ordinary code.</p>
 <p>The live Codecov report tracks tokenizer lifecycle behavior, Unicode and emoji
 edge cases, string escapes, malformed input, parser and semantic errors, all AST
 renderers, CLI behavior, and defensive invariants.</p>
@@ -4160,8 +4360,8 @@ commas. Text, DOT, SVG, and interactive HTML tree renderers
 cover every implemented AST node. Blocks, same-line single-statement bodies,
 ordinary and compound assignment, expression statements, and
 <code>if</code>/<code>else if</code>/<code>else</code> control flow are also verified. The parser
-enforces declaration-only program roots and provides named, typed, block-bodied
-functions as statement containers. <code>for</code>/<code>in</code>, <code>while</code>, and <code>until</code> loops,
+accepts executable root-file statements while imported modules remain
+declaration-only. <code>for</code>/<code>in</code>, <code>while</code>, and <code>until</code> loops,
 unlabeled <code>break</code> and <code>continue</code>, and bare or value-bearing <code>return</code> statements
 are implemented and rendered in every AST format. Braced or same-line
 single-statement <code>match</code>/<code>case</code>
@@ -4201,8 +4401,10 @@ validates module names and public exports, preserves aliases, and rejects
 cycles. Selective imports and exported namespace members are isolated, linked,
 semantically analyzed, type-checked, and emitted together for native
 cross-module calls. Qualified names map to nested files beneath the manifest
-source root. Mutable module initialization, external dependencies, constraints,
-lockfiles, registries, and distribution remain future work.
+source root. Installed external dependencies now resolve through manifest
+aliases, a local package index, and validated exact <code>sagan.lock</code> pins.
+Resolution is offline; package installation commands, a remote registry,
+mutable module initialization, and distribution remain future work.
 Documentation comments attach to supported declarations with retained text and
 source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
@@ -4217,11 +4419,12 @@ arguments, and top-level generic functions execute with call-site inference.
 Generic classes, generic face defaults, and class-level generic methods execute
 with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
-face conformance with <code>is</code>. Method-specific face generics, external package
-dependencies and distribution, and the concrete math, physics, and rendering APIs
-remain post-1.0 work. Implementation inheritance, parallelism, unsafe escape
-hatches, registries, lockfiles, and remote dependency resolution are also
-explicitly deferred. Math's automatic availability and the explicit-import
+face conformance with <code>is</code>. Method-specific face generics, package installation
+and distribution, and the concrete math, physics, and rendering APIs remain
+post-1.0 work. Implementation inheritance, parallelism, unsafe escape
+hatches, registries, and remote dependency retrieval are also explicitly
+deferred. Exact lockfiles and offline installed-package resolution are now
+implemented. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.</p>
 <h2 id="required-pre-10-design-checkpoints">Required pre-1.0 design checkpoints</h2>
 <p>The geometry checkpoint is complete: locations are named <code>Point</code> and remain
@@ -4277,7 +4480,7 @@ are immutable, and only the latest stable release receives best-effort support.
 The initial 1.0.0 documentation stays experimental; its page-by-page audit is
 the <strong>first post-1.0 task</strong> and will determine whether any language, tooling,
 or documentation changes are needed. Authenticode signing and a clean-machine
-run are subsequent Windows acceptance work. The VS Code 0.3.2 language client
+run are subsequent Windows acceptance work. The VS Code 0.3.4 language client
 is usable today; matching extension tests and compiler capabilities are part
 of every release gate.</p>
 

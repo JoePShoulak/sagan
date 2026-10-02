@@ -1892,6 +1892,8 @@
       
         
       
+        
+      
     
     
     
@@ -2170,6 +2172,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2304,6 +2342,8 @@
       
         
       
+        
+      
     
     
     
@@ -2378,6 +2418,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2610,6 +2686,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2703,6 +2783,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3295,6 +3447,8 @@
       
         
       
+        
+      
     
     
     
@@ -3441,6 +3595,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3975,6 +4165,10 @@ loose entry file; package and imported files require it. It must precede every o
 declaration. Imports and exports are top-level declarations. <code>export local as
 public</code> publishes a top-level variable, function, or type under a public name;
 unexported declarations remain private to the module.</p>
+<p>The loose file named on the command line, or the package's configured <code>entry</code>
+file, is the executable root. Only that file may contain executable top-level
+statements. Imported modules remain declaration-only and do not run code as a
+side effect of import. The entry file no longer needs <code>fun main()</code>.</p>
 <h2 id="packages">Packages</h2>
 <p>A package is a directory containing a strict <code>sagan.toml</code> manifest:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[package]</span>
@@ -4005,13 +4199,36 @@ Imports use the same deterministic mapping and cannot search outside the
 package source root. Unknown manifest sections or keys, duplicate keys,
 malformed values, invalid package names or versions, missing source roots, and
 missing entries are errors.</p>
+<p><code>[dependencies]</code> entries use quoted exact or caret versions. A package name
+that cannot be imported as a Sagan identifier needs an explicit alias:</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[dependencies]</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">physics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"^1.2.3"</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">orbit_tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">package</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"orbit-tools"</span><span class="p">,</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"^0.1.0"</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<p>Set <code>SAGAN_PACKAGE_INDEX</code> to a local package index path. A package with
+dependencies must have <code>sagan.lock</code> beside its manifest, pinning the exact
+versions of direct and transitive dependencies. The compiler validates the
+lock against the index and installed manifests before linking; it does not
+download packages or rewrite the lockfile. A compiler-library index reader validates the
+<code>sagan-package-index-v1</code> schema, local installed manifests, package prefixes,
+and exact/caret compiler compatibility without network access. Its tab-separated
+rows are <code>name</code>, <code>version</code>, <code>compiler requirement</code>, <code>installed|available</code>, and
+manifest path (<code>-</code> when only available). <code>sagan.lock</code> begins with
+<code>sagan-package-lock-v1</code>, then sorted tab-separated <code>name</code> and exact version
+rows. The library selector can produce lockfile text, but installation and
+lockfile-writing commands remain future work. Ordinary packages without
+dependencies need neither index nor lockfile.</p>
+<p><code>import orbit_tools.main</code> uses the dependency alias to select the installed
+package's <code>main</code> module. A plain <code>import orbit_tools</code> prefers a local module
+of that name. Aliases are scoped to the declaring package, so transitive
+dependencies do not leak into the root package's import namespace.</p>
 <p>Loose <code>.sagan</code> files do not require a manifest. They use loose-module resolution
 and the safe <code>console</code> launch default. A manifest is recommended for a named
 application, especially when selecting windowed launch behavior.</p>
 <p>Inspect or compile a package with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bin/sagan<span class="w"> </span>--package<span class="w"> </span>examples/package
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>examples/package<span class="w"> </span>build/package.cpp
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>make<span class="w"> </span>package-demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bin/sagan<span class="w"> </span>--package<span class="w"> </span>examples/package
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>bin/sagan<span class="w"> </span>--emit-cpp-package<span class="w"> </span>examples/package<span class="w"> </span>build/package.cpp
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>make<span class="w"> </span>package-demo
 </span></code></pre></div>
 <p>Both commands accept either the package directory or its <code>sagan.toml</code> path.
 When <code>--modules</code> is given a source file inside a package, Sagan discovers its
@@ -4026,9 +4243,9 @@ consumers. Namespace access exposes only exported members. Missing/private
 exports and dependency cycles are rejected, including a complete cycle path.</p>
 <p>The core math vocabulary is automatically available. Physics and rendering are
 planned first-party libraries that will require explicit imports.</p>
-<p>Mutable module-level initialization, external dependencies, package registries,
-version constraints, lockfiles, distribution, and the final import granularity
-of physics and rendering remain future work.</p>
+<p>Mutable module-level initialization, package installation/distribution,
+complete package-aware editor queries, and the final import granularity of
+physics and rendering remain future work.</p>
 
 
 

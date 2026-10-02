@@ -1827,6 +1827,8 @@
       
         
       
+        
+      
     
     
     
@@ -2105,6 +2107,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2239,6 +2277,8 @@
       
         
       
+        
+      
     
     
     
@@ -2313,6 +2353,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2545,6 +2621,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2638,6 +2718,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3230,6 +3382,8 @@
       
         
       
+        
+      
     
     
     
@@ -3376,6 +3530,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3890,12 +4080,23 @@ and separators between digits:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let entities = 10_000
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>let gravity = 6.674_30e-11
 </span></code></pre></div>
-<p>The checker infers scalar values, enforces compatible
-annotations and assignments, selects the smallest fitting signed integer width,
-defaults floating literals to <code>Float64</code>, and permits only provably lossless
-widening. <code>Int</code> and <code>Float</code> default to 64-bit widths when no initializer supplies
-a narrower inference. A declaration must provide an annotation, initializer, or
-both.</p>
+<p>The checker infers scalar values and enforces compatible annotations and
+assignments. An unannotated mutable integer <code>let</code> binding defaults to <code>Int64</code>;
+use <code>: Int8</code>, <code>: Int16</code>, or <code>: Int32</code> when a narrow variable is intentional.
+Integer literals and constant expressions can still have narrower types before
+they are stored in a variable. Floating literals default to <code>Float64</code>, and
+conversions must be provably lossless. A declaration must provide an annotation,
+initializer, or both.</p>
+<p>Several mutable variables can be declared together when each has an initial
+value:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>let i, a, b = 0, 0, 1
+</span></code></pre></div>
+<p>There must be exactly one initializer per name. All initializers are evaluated
+from left to right before any of the new names becomes visible; then the new
+bindings are created. Each name may have its own annotation, as in
+<code>let low: Int8, high: Int64 = 1, 2</code>. Duplicate names in the same scope are
+rejected. This is a declaration, unlike <code>a, b = b, a + b</code>, which reassigns
+existing variables.</p>
 <p>Arrays infer one homogeneous element type, so one array does not silently mix
 unrelated kinds of values. Dictionaries similarly infer one key type and one
 value type. Cartesian and spherical vectors and points infer a numeric

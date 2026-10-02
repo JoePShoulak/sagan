@@ -1925,6 +1925,8 @@
       
         
       
+        
+      
     
     
     
@@ -2203,6 +2205,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2337,6 +2375,8 @@
       
         
       
+        
+      
     
     
     
@@ -2411,6 +2451,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2643,6 +2719,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2736,6 +2816,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3328,6 +3480,8 @@
       
         
       
+        
+      
     
     
     
@@ -3474,6 +3628,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -4053,7 +4243,7 @@ release asset or build it from source.</p>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>npm<span class="w"> </span>run<span class="w"> </span>package
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>code<span class="w"> </span>--install-extension<span class="w"> </span>sagan-language-*.vsix
 </span></code></pre></div>
-<p>The repository's extension version is currently 0.3.3. Its version is
+<p>The repository's extension version is currently 0.3.4. Its version is
 independent of the compiler version.</p>
 <h2 id="verify-the-installation">Verify the installation</h2>
 <ol>
@@ -4065,10 +4255,15 @@ independent of the compiler version.</p>
    icon may override this contribution.</li>
 <li>Run <strong>Sagan: Show Tooling Status</strong> from the Command Palette.</li>
 <li>Confirm the <strong>Sagan</strong> output channel reports that the language server started.</li>
-<li>Try completion, hover, go to definition, diagnostics, formatting, and rename.</li>
+<li>Try completion, hover, go to definition, diagnostics, formatting, and rename.
+   <strong>Sagan: Check</strong>, <strong>Sagan: Build</strong>, and <strong>Sagan: Run</strong> use compiler-owned
+   operations; Test Explorer discovers explicit <code>test "name" { ... }</code> cases.</li>
 <li>If discovery fails, set <code>sagan.compiler.path</code> and <code>sagan.server.path</code> to the
    matching executables. Relevant setting changes restart the server automatically.</li>
 </ol>
+<p>See <a href="../../tooling/testing-sagan-programs/">Testing Sagan programs</a> for test
+syntax, suites, document versus project runs, selection, output, cancellation,
+and the current absence of a public terminal test command.</p>
 <p>The extension locates the compiler and <a href="../../tooling/language-server/">language server</a>,
 then enables only the capabilities advertised during LSP initialization.
 TextMate coloring remains lexical and is not proof that code parses or
@@ -4076,6 +4271,10 @@ type-checks. The VSIX does not embed the native language-server executable; a
 matching Sagan installation must provide <code>sagan-lsp</code> on <code>PATH</code>, beside the
 configured compiler, in the repository <code>bin</code> directory, or through
 <code>sagan.server.path</code>.</p>
+<p>Package names and imported symbols already have some compiler-backed
+completion and navigation. Full package auto-import is still being built.
+Debugging is not available through the extension yet: the compiler's
+experimental adapter has not passed its release and capability gates.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ul>
 <li>Open <strong>View: Output</strong>, choose <strong>Sagan</strong>, and look for the resolved server path

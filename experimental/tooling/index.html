@@ -1815,6 +1815,8 @@
       
         
       
+        
+      
     
     
     
@@ -2093,6 +2095,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2227,6 +2265,8 @@
       
         
       
+        
+      
     
     
     
@@ -2301,6 +2341,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2533,6 +2609,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2626,6 +2706,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3218,6 +3370,8 @@
       
         
       
+        
+      
     
     
     
@@ -3364,6 +3518,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3860,17 +4050,24 @@
 <li>semantic analysis, type checking, C++ generation, and direct native execution;</li>
 <li>package/module discovery and a self-contained Windows installer;</li>
 <li>a reusable compiler library, recovering document analysis, workspace
-  overlays, and a compiler-owned semantic index for future editor features;</li>
-<li>structured check/build/run library operations, generated-code source maps,
-  and debugger metadata for future integrations;</li>
+  overlays, and a compiler-owned semantic index used by the language server;</li>
+<li>structured, cancellable check/build/run and document/project test operations,
+  generated-code source maps, and debugger metadata;</li>
 <li>a dedicated <a href="language-server/">Sagan language server</a> for editor clients;</li>
-<li>a VS Code extension with tokenizer-aligned highlighting and LSP-backed
-  language features; and</li>
+<li>a VS Code extension with tokenizer-aligned highlighting, LSP-backed
+  language features, tasks, and Test Explorer;</li>
+<li>a compiler-owned <a href="testing-sagan-programs/">Sagan program test model</a> with
+  document/project discovery and selected execution through Test Explorer;</li>
+<li>offline installed-package and lockfile resolution, plus an experimental
+  <a href="debug-adapter-contract/">debug adapter</a>; and</li>
 <li>MkDocs and Mike for experimental and released versioned documentation.</li>
 </ul>
-<p>There is no package registry, formatter for incomplete source, debugger integration,
-or REPL yet. The language server exposes the tested read-only queries and safe
-edit actions, but does not provide a debugger or build/run task protocol. The <a href="language-service-audit/">readiness audit</a>,
+<p>There is no package registry or REPL yet. Recovered-source formatting changes
+only regions the compiler can prove safe; it refuses uncertain edits. The
+debug adapter is a development probe, not a supported extension feature:
+reliable values, exception mapping, and packaged GDB dependencies are still
+missing. Complete package completion and safe auto-import are also gated.
+The <a href="language-service-audit/">historical readiness audit</a>,
 <a href="language-service-contracts/">contracts</a>, <a href="language-service-roadmap/">implementation roadmap</a>,
 <a href="formatting-and-edits/">formatting/edit safety guide</a>, and
 <a href="extension-readiness/">extension readiness checklist</a> track what remains.

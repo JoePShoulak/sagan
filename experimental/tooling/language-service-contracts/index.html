@@ -16,7 +16,7 @@
         <link rel="prev" href="../language-service-audit/">
       
       
-        <link rel="next" href="../language-service-roadmap/">
+        <link rel="next" href="../debug-adapter-contract/">
       
       
         
@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2227,6 +2265,8 @@
       
         
       
+        
+      
     
     
     
@@ -2301,6 +2341,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2520,6 +2596,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -2809,6 +2889,78 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
     </li>
   
 
@@ -3385,6 +3537,8 @@
       
         
       
+        
+      
     
     
     
@@ -3531,6 +3685,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -4316,12 +4506,18 @@ lifecycle tests pass.</p>
 <p>The implementation is in <code>src/language_service/edits.hpp</code>, <code>formatter.hpp</code>,
 and <code>refactor.hpp</code>. <code>preview_edits</code> validates exact document versions,
 identities, UTF boundaries, and non-overlap, then returns proposed text without
-writing. The strict-parse formatter applies token-preserving two-space
-indentation, canonical proven gaps, and safe trailing-whitespace cleanup; it
-preserves existing line breaks and declines ambiguous or incomplete source.
+writing. The <code>sagan-formatting-v1</code> formatter applies token-preserving two-space
+indentation, canonical proven gaps, and safe trailing-whitespace cleanup. On
+recovered source it edits only complete lines with proven token and trivia
+ownership; malformed tokens, unfinished expressions, and diagnostic-bearing
+lines remain untouched. Every preview preserves the token stream,
+strict/recovered state, and diagnostic meaning. If no selected region is
+provably safe, it returns <code>unsupported</code> with a reason. Document, range, and
+on-type formatting retain exact document versions and preserve LF or CRLF.
+A lone CR is invalid Sagan source and is refused without changes.
 <code>rename_local</code> rechecks and rebinds proposed source by symbol identity; it
 supports proven local bindings and one-document, non-exported, non-overloaded
-function names. Exported, entry-point, and workspace-wide rename are refused.
+function names. Exported and workspace-wide rename are refused.
 <code>organize_imports</code> handles only an uninterrupted, comment-free top-level
 import block. <code>add_missing_import</code> uses an exact public workspace symbol ID,
 then validates the new binding. <code>plan_diagnostic_fix</code> accepts only a
@@ -4355,13 +4551,22 @@ cannot be proven.</p>
 summary, detail, parameters, return value, generic parameters, examples,
 deprecation, availability, declaring module, and optional source range. The
 current <code>sagan-documentation-v1</code> schema is discoverable through
-<code>--capabilities-json</code>. Compiler declarations are the sole built-in catalog;
-there is no separately installed standard-library or package catalog yet.
+<code>--capabilities-json</code>. Compiler declarations are the sole built-in catalog.
+An experimental installed-source package catalog separately reports real
+exports and source ranges. <code>query_import_modules</code>, <code>query_import_exports</code>, and
+<code>query_import_module_target</code>, and <code>query_import_export_target</code> provide narrow,
+overlay-aware compiler-owned queries for incomplete module paths, selective
+exported names, and module/export definition and hover targets. The
+selective-export query is bounded to 256 results and
+reports truncation. These tested contexts do not yet constitute complete
+package completion, navigation, or auto-import.
 Editors must not carry a parallel list.</p>
 <h2 id="operations-and-debugger-metadata">Operations and debugger metadata</h2>
-<p><code>operations.hpp</code> exposes synchronous <code>run_check_operation</code>, <code>build_document</code>,
-<code>run_document</code>, <code>build_project</code>, and <code>run_project</code> under
-<code>sagan-operations-v1</code>. Each returns document identity and analyzed version,
+<p><code>operations.hpp</code> exposes synchronous <code>run_check_operation</code>, <code>run_check_project</code>,
+<code>build_document</code>, <code>run_document</code>, <code>build_project</code>, and <code>run_project</code>, plus
+asynchronous <code>start_*</code> handles with cancellation. The schema is
+<code>sagan-operations-v2</code>. Each result has an operation ID and lifecycle state,
+and returns document identity and analyzed version,
 result state, ordered events, diagnostics, and an exit status when applicable.
 The native operations also retain generated C++, the executable path, captured
 stdout/stderr (bounded to 8 MiB per stream), a truncation flag, source maps,
@@ -4371,8 +4576,9 @@ Cancellation stops the compiler or program process and returns no exit status.
 Builds use debug (<code>-O0 -g</code>) or optimized (<code>-O2 -g</code>) profiles. Project operations
 read unsaved overlays through <code>source_provider</code>, snapshot every dependency,
 and reject a result that becomes stale before build completion or execution.
-The caller chooses an artifact root; each build gets a distinct retained
-directory. The library does not delete artifacts on close.</p>
+The caller chooses an artifact root; each build gets a distinct directory.
+Cancellation removes its generated files. Completed artifacts are retained
+until the caller explicitly removes them.</p>
 <p><code>generate_cpp_mapped</code> emits <code>sagan-cpp-source-map-v1</code> generated byte ranges,
 source byte ranges, original module paths, function names, and candidate
 breakpoints. Toolchain diagnostics and known uncaught Sagan runtime failures
@@ -4383,17 +4589,48 @@ local value representations, and conservative pure-identifier expression
 hooks. <code>source_for_stack_frame</code> maps a generated function/line/column back to
 Sagan, and <code>plan_debug_launch</code> supplies executable, working directory, and
 environment for a successful build. Optimized local evaluation and attach are
-explicitly unsupported. These are prerequisites, not a live debugger or a
-Debug Adapter Protocol implementation. Test operations remain unsupported
-until Sagan has an authoritative test model. Asynchronous handles and LSP task
-transport remain future orchestration work.</p>
+explicitly unsupported. An experimental <code>sagan-dap</code> executable now uses GDB's
+native DAP interpreter for debug-build launch, mapped breakpoints, stack
+frames, and source-level <code>next</code>, <code>stepIn</code>, and <code>stepOut</code> probes, including an
+imported module. It is not yet a supported release debugger: reliable Sagan
+values, complete stepping contexts, failure mapping, distributable Linux
+validation, and the GDB runtime package remain incomplete. All live debugger
+flags stay false.
+Explicit <code>test "name" { ... }</code>
+declarations now parse and type-check, and <code>tests.hpp</code> discovers them in a
+document or resolved project with stable ID, URI, UTF-16 name range, and
+package/module identity. Slash-separated names form suite paths; empty path
+components are rejected. <code>assert(condition[, message])</code> is a typed built-in
+that fails a test with a message. The custom <code>sagan/tests/discover</code> LSP request
+exposes document/project metadata with version checks. <code>sagan/tests/run</code>
+executes all or selected document or linked-project tests by stable ID, emits
+<code>sagan/testEvent</code>, and returns pass/fail/error/cancelled states, durations,
+output, source ranges, and diagnostic records. Project execution reads unsaved
+module overlays before disk and rechecks every resolved source snapshot between
+cases. Stale project runs publish no events or case results. The compiler
+advertises <code>testProjectRun</code>; the Test Explorer view remains client-owned. The
+current VS Code extension consumes the granular discovery and run flags to
+provide that UI; the compiler does not implement an editor view.</p>
+<p>The LSP server accepts <code>sagan/operation</code> with <code>kind</code> (<code>check</code>, <code>build</code>, or
+<code>run</code>), <code>scope</code> (<code>document</code> or <code>project</code>), <code>textDocument.uri</code> and optional
+<code>textDocument.version</code>, <code>projectUri</code>, <code>profile</code> (<code>debug</code> or <code>optimized</code>), and
+<code>workDoneToken</code>. It returns the v2 schema, ID, URI/version, lifecycle and
+result states, exit status, structured diagnostics, and (for native operations)
+stdout, stderr, output-truncation flag, and executable path. It emits
+<code>sagan/operationEvent</code> notifications keyed by ID and standard <code>$/progress</code>
+notifications when given a work-done token. <code>$/cancelRequest</code> cancels an active
+compiler or child process. The server does not emit diagnostic events before
+the final version check; a stale or cancelled result has no diagnostics.
+The current LSP worker serializes requests, so this is cancellable operation
+transport, not concurrent operation scheduling.</p>
 <h2 id="protocol-identity-and-discovery">Protocol identity and discovery</h2>
 <p>The service schema is <code>sagan.language-service/1</code> and the transport schema is
 <code>sagan-lsp/1</code>. <code>initialize</code> returns the current build version in <code>serverInfo</code>,
 UTF-16 position encoding, implemented standard LSP capabilities, and the
 compiler's granular versioned capability JSON under <code>experimental.compiler</code>.
-There is no separately installed package or standard-library catalog version
-to report. JSON diagnostic/testing output uses the compiler schema. The LSP
+<code>packageCatalogSchema</code> identifies the installed-source catalog, and
+<code>debugAdapterExecutable</code> gives the sibling debugger filename without implying
+an enabled debugger. JSON diagnostic/testing output uses the compiler schema. The LSP
 server translates these records without embedding language behavior.</p>
 
 

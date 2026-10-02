@@ -1825,6 +1825,8 @@
       
         
       
+        
+      
     
     
     
@@ -2103,6 +2105,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2237,6 +2275,8 @@
       
         
       
+        
+      
     
     
     
@@ -2311,6 +2351,42 @@
     
   
     Architecture
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
   
 
     
@@ -2543,6 +2619,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2636,6 +2716,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3228,6 +3380,8 @@
       
         
       
+        
+      
     
     
     
@@ -3374,6 +3528,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3862,12 +4052,27 @@
 <h1 id="declarations">Declarations</h1>
 <p>Declarations introduce names. <code>let</code> declares mutable variables; <code>const</code>
 declares immutable bindings; <code>fun</code> introduces
-functions; <code>face</code>, <code>class</code>, and <code>enum</code> introduce named types; and
+functions; <code>test</code> introduces an explicitly named test body; <code>face</code>, <code>class</code>,
+and <code>enum</code> introduce named types; and
 <code>dimension</code>, <code>quantity</code>, <code>unit</code>, and <code>affine unit</code> introduce compile-time
 measurement metadata. Measurement declarations are checked for duplicate names,
 inconsistent dimensions, unresolved references, and dependency cycles. See the
 <a href="../../design/units-of-measure/">native units contract</a>.
 <code>module</code>, <code>import</code>, and <code>export</code> participate in modular source.</p>
+<p>An explicit <code>test "name" { ... }</code> declaration is now recognized and
+type-checked. Its quoted name may contain Unicode but cannot be empty,
+interpolated, or duplicated in the same file. Slash-separated names, such as
+<code>"orbits/elliptical"</code>, create suite paths; leading, trailing, or doubled
+slashes are invalid. <code>assert(condition[, message])</code> requires a Bool and an
+optional String. A false assertion fails a test; outside a test it ends the
+program with status 1 and prints the failure message. Test bodies are not run
+by ordinary <code>sagan file.sagan</code> execution. Compiler-owned document and
+resolved-project discovery and selected test execution are available through
+the language-service and LSP APIs. The VS Code extension presents them through
+Test Explorer, including multi-module project selections, captured output,
+structured outcomes, and cancellation. There is not yet a public <code>sagan test</code>
+terminal command or a debug-test profile. See
+<a href="../../tooling/testing-sagan-programs/">Testing Sagan programs</a>.</p>
 <p>The parser accepts a single optional leading <code>module</code>
 declaration, imports with optional <code>from</code> and <code>as</code> clauses, and standalone
 exports with an optional alias. See <a href="../modules/">Modules</a> for the accepted
@@ -3880,6 +4085,16 @@ local variables and individual enum members.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let altitude: Float = 125_000.0
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>const MAX_RETRIES: Int = 5
 </span></code></pre></div>
+<p>To introduce several mutable variables at once, use a parallel <code>let</code> with one
+initializer per name:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let i, a, b = 0, 0, 1
+</span></code></pre></div>
+<p>All right-hand expressions are evaluated from left to right before any of the
+new names enters scope. An unannotated integer <code>let</code> variable uses <code>Int64</code>,
+including each name in this group; annotate a name to request a narrower type.
+Parallel <code>let</code> works at the executable root or inside a function; class fields
+cannot use the grouped form. Reassignment of existing names uses
+<code>a, b = b, a + b</code> instead.</p>
 <p><code>const</code> always requires an initializer and an ASCII <code>SCREAMING_SNAKE_CASE</code>
 name (<code>[A-Z][A-Z0-9_]*</code>). The keyword creates the immutable binding;
 capitalization alone never does. Consequently <code>let MAX_RETRIES = 5</code> is an
@@ -3889,13 +4104,13 @@ compound assignment, indexed or field mutation rooted at the constant, and a
 mutating <code>!</code> method call through it are rejected. A mutable alias to the same
 referenced object can still mutate that object: this is a const view, not a
 transitive deep freeze or general compile-time expression evaluator.
-The compiler exposes the same naming check for future rename tooling; an
-editor must not offer a rename that would give a constant a lowercase name or
-a mutable variable the reserved constant spelling. A full rename operation is
-not implemented yet.</p>
+The compiler exposes the same naming check for rename tooling; a safe local
+rename cannot give a constant a lowercase name or a mutable variable the
+reserved constant spelling. Cross-file and exported-symbol rename remain
+unavailable.</p>
 <p>Top-level declarations may define mutable variables, functions, faces, classes,
 and enums. Functions may use a block body or a short expression body:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>fun double(value: Int): Int =&gt; value * 2
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>fun double(value: Int): Int =&gt; value * 2
 </span></code></pre></div>
 <p>Faces accept required method signatures and methods with default bodies.
 Classes accept fields, constructors, and methods. Enum members may be plain

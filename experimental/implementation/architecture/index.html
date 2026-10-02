@@ -16,7 +16,7 @@
         <link rel="prev" href="../">
       
       
-        <link rel="next" href="../tokenizer/">
+        <link rel="next" href="../technology-stack/">
       
       
         
@@ -1813,6 +1813,8 @@
       
         
       
+        
+      
     
     
     
@@ -2091,6 +2093,42 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/testing-sagan-programs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Sagan programs
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2215,6 +2253,8 @@
       
         
           
+        
+      
         
       
         
@@ -2407,6 +2447,42 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technology-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technology stack and change map
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
     </li>
   
 
@@ -2623,6 +2699,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2716,6 +2796,78 @@
     
   
     Language-service contracts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/debug-adapter-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug adapter contract
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling/package-catalog-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Package catalog contract
   
 
     
@@ -3308,6 +3460,8 @@
       
         
       
+        
+      
     
     
     
@@ -3454,6 +3608,42 @@
     
   
     Windows installer release gate
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/code-signing-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code signing policy
   
 
     
@@ -3981,6 +4171,9 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="architecture">Architecture</h1>
+<p>For the repository-wide inventory of languages, libraries, protocols, build
+tools, hosting, and the checks affected by common changes, see the
+<a href="../technology-stack/">technology stack and change map</a>.</p>
 <h2 id="current-components">Current components</h2>
 <ul>
 <li><code>src/main.cpp</code>: CLI, token printing, self-tests, file loading, and version output.</li>
@@ -4002,6 +4195,8 @@
 <li><code>src/codegen/cpp_generator.*</code>: C++ emission for checked programs, including
   portable identifier encoding, built-in output, and typed
   array/dictionary/index/iteration lowering driven by the checked type model.</li>
+<li><code>src/codegen/source_map.*</code>: generated-to-Sagan source mapping for build errors
+  and experimental debugging.</li>
 <li><code>src/driver/native_runner.*</code>: temporary native builds, compiler invocation,
   executable launch, cleanup, and exit-code propagation.</li>
 <li><code>src/source/*</code>: immutable document identity, version, text, byte ranges, and
@@ -4011,7 +4206,13 @@
 <li><code>src/language_service/*</code>: reusable strict and recovering document analysis
   and versioned capability discovery; workspace state adds document lifecycle,
   cached analysis, dependency invalidation, cancellation, and stale-result
-  rejection.</li>
+  rejection. Queries, formatting, safe edits, documentation, native operations,
+  test discovery/execution, and the installed-package catalog live here.</li>
+<li><code>src/modules/*</code>: package manifests, module resolution, the local package
+  index, and exact lockfile validation for installed dependencies.</li>
+<li><code>src/lsp/*</code>: framed stdio LSP transport over the shared compiler services.</li>
+<li><code>src/dap/*</code>: experimental framed debug adapter using native GDB DAP; it is
+  not yet a supported or packaged editor debugger.</li>
 <li>span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.</li>
 <li><code>src/version.hpp</code> plus generated <code>obj/version.cpp</code>: build identity.</li>
@@ -4026,11 +4227,12 @@ executable entry point and emit the checked program.
 Direct source and package-run modes invoke the native compiler and program.
 Lexical, syntax, and semantic failures are reported with source locations.</p>
 <p>The compiler objects are archived into <code>build/lib/libsagan-compiler.a</code>; the
-batch CLI links that library rather than owning a separate implementation.
-Future semantic-query, formatter, operation, debugger, and LSP layers extend
-the same compiler-owned contracts. The module resolver already consumes the
-shared source-provider interface, so an unsaved imported file takes precedence
-over its disk version without alternate parsing logic.</p>
+batch CLI, language server, and experimental debug adapter link the same
+compiler-owned implementation. The language server does not reparse Sagan in
+JavaScript. The module resolver consumes the shared source-provider interface,
+so an unsaved imported file takes precedence over its disk version without
+alternate parsing logic. Imported installed packages use manifest aliases and
+validated exact <code>sagan.lock</code> pins; index lookup is offline.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>UTF-8 source -&gt; tokenizer -&gt; parser -&gt; AST -&gt; name analysis -&gt; type checking -&gt; C++ emission
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                                  |              |               |              |
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                                  +-&gt; renderers   +-&gt; model       +-&gt; model      +-&gt; native runner
@@ -4039,9 +4241,13 @@ over its disk version without alternate parsing logic.</p>
 lifecycle and malformed-input paths, Unicode and emoji edges, parser and
 semantic errors, renderer output, CLI behavior, and defensive invariants.</p>
 <h2 id="remaining-boundaries">Remaining boundaries</h2>
-<p>Position-based editor queries, formatting and safe source edits, reusable
-build/debug operations, LSP transport, broader platform packaging, and the
-math, physics, and rendering libraries are not complete.</p>
+<p>The current extension consumes the tested position queries, formatting, safe
+edits, LSP transport, and cancellable build/run/test operations. Complete
+package-aware completion and auto-import, reliable debugger values and
+failure mapping, debugger release packaging, broader platform packaging,
+and the math, physics, and rendering libraries remain open work. See the
+<a href="../../tooling/extension-readiness/">extension readiness checklist</a> for the
+capability-by-capability boundary.</p>
 
 
 

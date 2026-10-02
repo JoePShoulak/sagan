@@ -1,0 +1,7 @@
+fun fast_fibonacci(n: Int): Int {
+  let i, a, b = 0, 0, 1
+  while i++ <= n  a, b = b, a + b
+  return b
+}
+
+print(fast_fibonacci(10))
