@@ -299,7 +299,7 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
 
     text_screen(20, 18, "R3 Lagrange stability — six independent massless tracers", 17, 226, 232, 240)
     text_screen(20, 45, "Space pause | Up/Down speed | R reset | Escape close", 12, 148, 163, 184)
-    text_screen(20, 68, "simulation time: ${current.time()}", 12, 148, 210, 189)
+    text_screen(20, 68, "simulation time: ${current.time() / (86400.0 second)} days", 12, 148, 210, 189)
     text_screen(20, 88, "playback: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
     text_screen(20, 122, "L1 error: ${current.tertiary(0).stability_error()}", 11, 244, 114, 182)
     text_screen(20, 142, "L2 error: ${current.tertiary(1).stability_error()}", 11, 251, 146, 60)
