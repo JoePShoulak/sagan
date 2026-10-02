@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 2.4.0](https://img.shields.io/badge/development-2.4.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 2.5.0](https://img.shields.io/badge/development-2.5.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -154,11 +154,14 @@ Sagan's simulation stack has three closely related layers, each still growing:
   vector and scalar operations needed by the first orbital examples.
 - **Physics** is the explicit `sagan-physics` dependency. Version 0.1.0 provides
   a headless two-body solver with unit-checked snapshots.
-- **Rendering** is the explicit `sagan-render` dependency. Version 0.2.0
-  provides a Windows single-window bridge and basic 2D canvas.
+- **Rendering** is the explicit `sagan-render` dependency. Version 0.3.0
+  provides a Windows window, basic 2D canvas, and snapshot-driven animation.
 
 Physics and rendering are independently versioned first-party libraries and
 require explicit imports so lightweight command-line programs stay lightweight.
+Try the included windowed orbit project with `sagan --run-package
+examples/two_body_demo`; its manifest also selects terminal-free Explorer launch
+when you double-click `src/main.sagan` on Windows.
 
 For the honest line between implemented, planned, and deliberately deferred
 work, see [project status](docs/design/status.md). The full documentation is

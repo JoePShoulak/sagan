@@ -91,6 +91,21 @@ make shape-text-demo
 make two-body-demo
 ```
 
+For the animated project, `make two-body-demo` now invokes the normal compiler
+path. You can run that same manifest-backed project directly:
+
+```bash
+sagan --run-package examples/two_body_demo
+```
+
+Its `sagan.toml` declares `[application] mode = "windowed"`. On Windows, with
+Sagan's file association installed, double-click
+`examples/two_body_demo/src/main.sagan` to launch it without a terminal.
+The installed release and portable ZIP also include this example under
+`examples/two_body_demo`; run that copy with `sagan --run-package` or launch its
+entry file from Explorer. An unconfigured or non-rendering Sagan program keeps
+the ordinary console behavior.
+
 The command compiles the Sagan package and its private native bridge, then opens
 a resizable 960 by 540 solid blue-gray window. Close it with the standard
 window close button. `make window-demo-test` uses the private
@@ -116,9 +131,13 @@ and validates the displayed 960 by 540 frame. The deterministic timing controls
 are private test environment settings, not public Sagan APIs.
 
 Version 0.3.0 supports Windows only and links the
-system `user32` and `gdi32` libraries. The demo statically links its GCC/C++
+system `user32` and `gdi32` libraries. The compiler locates the private native
+bridge from the resolved, locked `sagan-render` package; a missing installed
+bridge or package index produces a build error identifying the missing input.
+The demo statically links its GCC/C++
 runtime support, so the resulting executable does not require MSYS2 runtime
 directories on `PATH`. It has no SDL or GPU dependency yet.
+Text uses Windows' Segoe UI system font; no separate font file is bundled.
 The catalog declares compiler compatibility `^2.0.0`. A shallow development
 checkout whose unavailable version baseline makes the compiler identify itself
 as `0.0.0+gunknown` receives a demo-local compatibility index only; released

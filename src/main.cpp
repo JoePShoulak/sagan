@@ -2373,7 +2373,9 @@ auto main(const int argc, char **argv) -> int
       const auto types = semantic::check_types(tree);
       semantic::validate_entry_point(tree);
       const std::string generated = codegen::generate_cpp(tree, types);
-      if (mode == output_mode::run_package) return driver::compile_and_run(generated);
+      if (mode == output_mode::run_package)
+        return driver::compile_and_run(generated,
+            driver::compilation_inputs_for(modules::resolve_package(path)));
       if (output_path.empty()) std::cout << generated;
       else
       {
@@ -2448,11 +2450,13 @@ auto main(const int argc, char **argv) -> int
         });
         if (has_imports || modules::discover_package(path).has_value())
         {
+          const auto graph = modules::resolve(path);
           const auto linked = modules::link(path);
           static_cast<void>(semantic::analyze(linked));
           const auto types = semantic::check_types(linked);
           semantic::validate_entry_point(linked);
-          return driver::compile_and_run(codegen::generate_cpp(linked, types));
+          return driver::compile_and_run(codegen::generate_cpp(linked, types),
+                                         driver::compilation_inputs_for(graph));
         }
         active_phase = sagan::diagnostics::phase::semantic;
         static_cast<void>(semantic::analyze(tree));

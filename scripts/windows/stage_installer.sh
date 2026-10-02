@@ -19,13 +19,18 @@ if [[ ! -x "$toolchain_root/bin/g++.exe" ]]; then
 fi
 
 rm -rf "$stage_dir"
-mkdir -p "$stage_dir/bin" "$stage_dir/toolchain/ucrt64" "$stage_dir/assets" "$stage_dir/licenses"
+mkdir -p "$stage_dir/bin" "$stage_dir/toolchain/ucrt64" "$stage_dir/assets" \
+  "$stage_dir/licenses" "$stage_dir/libraries" "$stage_dir/examples"
 
 make -C "$repo_root" all bin/sagan-lsp windows-launcher OS=Windows_NT SAGAN_VERSION="$version"
 cp "$repo_root/bin/sagan" "$stage_dir/bin/sagan.exe"
 cp "$repo_root/bin/sagan-lsp" "$stage_dir/bin/sagan-lsp.exe"
 cp "$repo_root/bin/sagan-launch.exe" "$stage_dir/bin/sagan-launch.exe"
 cp "$repo_root/packaging/windows/sagan.ico" "$stage_dir/assets/sagan.ico"
+cp "$repo_root/libraries/index.tsv" "$stage_dir/libraries/index.tsv"
+cp -a "$repo_root/libraries/physics" "$stage_dir/libraries/physics"
+cp -a "$repo_root/libraries/render" "$stage_dir/libraries/render"
+cp -a "$repo_root/examples/two_body_demo" "$stage_dir/examples/two_body_demo"
 cp "$repo_root/editors/vscode-sagan/LICENSE.txt" "$stage_dir/licenses/Sagan-GPL-3.0.txt"
 cp "$repo_root/third_party/uni-algo/LICENSE.md" "$stage_dir/licenses/uni-algo-MIT.txt"
 cp "$repo_root/third_party/unicode/LICENSE.txt" "$stage_dir/licenses/Unicode.txt"
@@ -114,7 +119,7 @@ rm -f \
 for runtime_library in \
   crt2.o default-manifest.o libstdc++.a libstdc++.dll.a libmingw32.a \
   libgcc_s.a libmingwex.a libmsvcrt.a libkernel32.a libpthread.a \
-  libadvapi32.a libshell32.a libuser32.a; do
+  libadvapi32.a libshell32.a libuser32.a libgdi32.a; do
   cp -L "$toolchain_root/lib/$runtime_library" "$staged_toolchain/lib/"
 done
 cp -a "$toolchain_root/$compiler_target/." "$staged_toolchain/$compiler_target/"

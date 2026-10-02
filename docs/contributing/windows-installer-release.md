@@ -23,6 +23,10 @@ A candidate is implementation-ready only when all of these checks pass:
 - silent current-user installation succeeds with compiler-runtime directories
   absent from `PATH`;
 - direct CLI compilation, generated-program execution, and windowed launch work;
+- the installer and portable ZIP contain both first-party packages, the native
+  render bridge, and the manifest-backed two-body example;
+- that packaged example runs outside an MSYS2-modified `PATH`, while a headless
+  physics project has no rendering linkage;
 - installing the same or a newer version in place succeeds;
 - installing an older version over a newer version is refused;
 - `.sagan` association, PATH registration, and clean uninstall work; and
@@ -34,6 +38,7 @@ Run the local portions with:
 bash scripts/windows/build_installer.sh
 bash scripts/windows/verify_installer_artifact.sh
 bash scripts/windows/test_installer.sh
+bash scripts/windows/test_portable.sh
 ```
 
 The Windows Installer workflow performs the same package build and smoke test.

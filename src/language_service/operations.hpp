@@ -109,6 +109,7 @@ namespace sagan::language_service
     std::optional<debug_metadata> debug;
     std::optional<std::filesystem::path> generated_source;
     std::optional<std::filesystem::path> executable;
+    std::optional<std::filesystem::path> working_directory;
     std::string standard_output;
     std::string standard_error;
     bool output_truncated{};

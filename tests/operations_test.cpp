@@ -128,9 +128,15 @@ auto main() -> int
               dependency_manifest.dependencies.front().requirement == "^1.2.3",
           "approved dependency manifest syntax was not parsed");
   bool unresolved_dependency_rejected = false;
-  try { static_cast<void>(modules::resolve_package("tests/fixtures/modules/package_dependency")); }
+  try
+  {
+    modules::package_resolution_options missing_index;
+    missing_index.index_path = "tests/fixtures/missing-index.tsv";
+    static_cast<void>(modules::resolve_package("tests/fixtures/modules/package_dependency",
+                                               *project_source, {}, missing_index));
+  }
   catch (const std::runtime_error &error)
-  { unresolved_dependency_rejected = std::string(error.what()).find("require SAGAN_PACKAGE_INDEX") != std::string::npos; }
+  { unresolved_dependency_rejected = std::string(error.what()).find("missing-index.tsv") != std::string::npos; }
   require(unresolved_dependency_rejected,
           "unresolved external dependency was silently ignored");
   const auto package_index = modules::query_package_index(

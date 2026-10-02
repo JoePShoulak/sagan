@@ -196,6 +196,13 @@ context-menu verbs override either choice. Windowed failures retain a local log
 and show a native diagnostic dialog. Published release artifacts use GitHub
 Releases as the canonical source; HP1 provides a verified mirror.
 
+The L1 window-distribution work packages the explicit physics/render libraries,
+render native bridge, and two-body demo with Windows releases. A normal
+`sagan --run-package` call and the GUI launcher use the resolved package rather
+than a demo-specific compiler command. Headless projects still omit the render
+bridge. The [two-body roadmap](../standard-library/two-body-window-roadmap.md)
+records staged-payload verification and remaining manual Explorer validation.
+
 Installer policy is Windows x64 only, a self-contained offline package,
 in-place upgrades, refused downgrades, and SHA-256 sidecars. Initial 1.0.0
 publication explicitly permits an unsigned installer after automated

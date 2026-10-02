@@ -35,6 +35,14 @@ for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-lsp.exe" 
     exit 1
   fi
 done
+for packaged in libraries/index.tsv libraries/render/sagan.toml \
+                libraries/render/src/window.sagan libraries/render/src/canvas.sagan \
+                libraries/render/native/window_bridge.hpp libraries/render/native/window_bridge.cpp \
+                libraries/physics/sagan.toml libraries/physics/src/two_body.sagan \
+                examples/two_body_demo/sagan.toml examples/two_body_demo/sagan.lock \
+                examples/two_body_demo/src/main.sagan; do
+  [[ -f "$install_dir/$packaged" ]] || { echo "Installer omitted $packaged" >&2; exit 1; }
+done
 
 # Run installed executables without any MinGW/MSYS2 compiler-runtime directory.
 # This catches accidental dependencies on libgcc_s_seh-1.dll,
@@ -49,6 +57,7 @@ case "$runtime_isolated_path" in
 esac
 
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
+unset SAGAN_PACKAGE_INDEX
 # This invokes the bundled compiler and then executes the generated program,
 # proving Sagan can add only the child toolchain environment it actually needs.
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" "$repo_root/tests/fixtures/runtime/smoke.sagan"
@@ -77,6 +86,10 @@ mkdir -p "$launcher_data"
 PATH="$runtime_isolated_path" LOCALAPPDATA="$(cygpath -w "$launcher_data")" \
   "$install_dir/bin/sagan-launch.exe" --windowed "$repo_root/tests/fixtures/runtime/smoke.sagan"
 grep -Fq "Direct Sagan execution: 42" "$launcher_data/Sagan/logs/latest-launch.log"
+PATH="$runtime_isolated_path" LOCALAPPDATA="$(cygpath -w "$launcher_data")" \
+  SAGAN_RENDER_FRAME_LIMIT=3 SAGAN_RENDER_TEST_FRAME_MS=5 \
+  "$install_dir/bin/sagan-launch.exe" "$install_dir/examples/two_body_demo/src/main.sagan"
+grep -Fq 'final_time_s ' "$launcher_data/Sagan/logs/latest-launch.log"
 MSYS2_ARG_CONV_EXCL='*' reg.exe query 'HKCU\Software\Classes\.sagan' /ve | grep -Fq 'Sagan.Source'
 MSYS2_ARG_CONV_EXCL='*' reg.exe query 'HKCU\Environment' /v Path | grep -Fq "$(cygpath -w "$install_dir/bin")"
 

@@ -21,6 +21,10 @@
 #include <unordered_set>
 #include <utility>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace modules
 {
   namespace
@@ -40,6 +44,19 @@ namespace modules
       return std::string(full.substr(0, full.find_first_not_of("0123456789.")));
     }
 
+    auto installed_package_index() -> std::filesystem::path
+    {
+#ifdef _WIN32
+      std::vector<wchar_t> buffer(32768);
+      const DWORD size = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+      if (size == 0 || size == buffer.size()) return {};
+      const auto executable = std::filesystem::path(std::wstring(buffer.data(), size));
+      const auto candidate = executable.parent_path().parent_path() / "libraries" / "index.tsv";
+      if (std::filesystem::is_regular_file(candidate)) return candidate;
+#endif
+      return {};
+    }
+
     auto installed_dependencies(const package_manifest &manifest,
                                 const package_resolution_options &options)
       -> std::map<std::string, package_manifest>
@@ -49,14 +66,17 @@ namespace modules
       auto index_path = options.index_path;
       if (index_path.empty())
         if (const auto *configured = std::getenv("SAGAN_PACKAGE_INDEX")) index_path = configured;
+      if (index_path.empty()) index_path = installed_package_index();
       if (index_path.empty())
-        throw std::runtime_error("External package dependencies require SAGAN_PACKAGE_INDEX or an explicit local index");
+        throw std::runtime_error("Package dependencies require an installed libraries/index.tsv, "
+                                 "SAGAN_PACKAGE_INDEX, or an explicit local index");
       const auto version = options.compiler_version.empty() ? compiler_numeric_version() : options.compiler_version;
       const auto lock = options.lock_path.empty() ? manifest.package_root / "sagan.lock" : options.lock_path;
       const auto selected = resolve_indexed_dependencies(
           manifest.manifest_path, index_path, version, lock);
       if (selected.state != dependency_state::ready)
-        throw std::runtime_error("Could not resolve package dependencies: " + selected.message);
+        throw std::runtime_error("Could not resolve package dependencies using '" +
+                                 index_path.string() + "': " + selected.message);
       for (const auto &item : selected.packages)
         installed.emplace(item.name, load_package(item.manifest_path));
       return installed;

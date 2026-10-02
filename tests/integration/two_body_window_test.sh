@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
 
-capture="build/two-body-demo/two-body-window.bmp"
+capture="$repo_root/build/two-body-demo/two-body-window.bmp"
 rm -f "$capture"
 
 fast_output="$(
@@ -14,14 +14,10 @@ fast_output="$(
   SAGAN_RENDER_CAPTURE_BMP="$capture" \
   bash scripts/two_body_demo.sh
 )"
-native_output="build/two-body-demo/two-body-demo"
-if [[ "${OS:-}" == "Windows_NT" ]]; then
-  native_output="build/two-body-demo/two-body-demo.exe"
-fi
 slow_output="$(
   SAGAN_RENDER_TEST_FRAME_MS=100 \
   SAGAN_RENDER_FRAME_LIMIT=20 \
-  "$native_output"
+  bash scripts/two_body_demo.sh
 )"
 
 fast_final="$(printf '%s\n' "$fast_output" | grep '^final_')"

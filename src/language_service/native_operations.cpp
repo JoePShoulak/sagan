@@ -278,7 +278,8 @@ namespace sagan::language_service
                            const native_build_profile profile,
                            const diagnostics::cancellation_token cancellation,
                            const operation_observer &observer,
-                           const source::source_provider *provider = nullptr) -> void
+                           const source::source_provider *provider = nullptr,
+                           const driver::native_compilation_inputs &inputs = {}) -> void
     {
       const auto directory = unique_artifact_directory(artifact_root, document);
       result.generated_source = directory / "program.cpp";
@@ -301,9 +302,13 @@ namespace sagan::language_service
       arguments.push_back("-static-libgcc");
       arguments.push_back("-static-libstdc++");
 #endif
+      if (inputs.header)
+      { arguments.push_back("-include"); arguments.push_back(path_utf8(*inputs.header)); }
       arguments.push_back(path_utf8(*result.generated_source));
+      if (inputs.source) arguments.push_back(path_utf8(*inputs.source));
       arguments.push_back("-o");
       arguments.push_back(path_utf8(*result.executable));
+      arguments.insert(arguments.end(), inputs.libraries.begin(), inputs.libraries.end());
       auto environment = configuration.environment;
       for (const auto *variable : {"TMPDIR", "TMP", "TEMP"})
         environment.emplace_back(variable, path_utf8(directory));
@@ -343,7 +348,8 @@ namespace sagan::language_service
     {
       emit(result, observer, operation_event_kind::progress, 0, "Running native program");
       const auto configuration = driver::configured_compiler();
-      const auto process = driver::run_process(*result.executable, {}, result.executable->parent_path(),
+      const auto process = driver::run_process(*result.executable, {},
+                                               result.working_directory.value_or(result.executable->parent_path()),
                                                configuration.environment, cancellation,
                                                [&](const bool error, const std::string_view text)
       {
@@ -379,7 +385,8 @@ namespace sagan::language_service
   {
     if (build.state != diagnostics::result_state::complete || !build.executable ||
         !build.debug || !std::filesystem::is_regular_file(*build.executable)) return {};
-    return debug_launch_plan{*build.executable, build.executable->parent_path(),
+    return debug_launch_plan{*build.executable,
+                             build.working_directory.value_or(build.executable->parent_path()),
                              driver::configured_compiler().environment, build.profile};
   }
 
@@ -550,7 +557,9 @@ namespace sagan::language_service
       result.debug = derive_debug_metadata(*entry, model, types, *result.generated, &source);
       if (cancellation.is_cancelled()) { cancelled(result, observer); return result; }
       if (!dependencies_current(result, source)) { stale(result, observer); return result; }
-      compile_generated(result, *entry, artifact_root, profile, cancellation, observer, &source);
+      const auto inputs = driver::compilation_inputs_for(graph);
+      result.working_directory = inputs.working_directory;
+      compile_generated(result, *entry, artifact_root, profile, cancellation, observer, &source, inputs);
       if (result.state == diagnostics::result_state::complete &&
           !dependencies_current(result, source)) stale(result, observer);
     }

@@ -34,6 +34,7 @@ After installation, open a new terminal and run:
 ```bash
 sagan --version
 sagan path/to/program.sagan
+sagan --run-package path/to/project
 ```
 
 Double-clicking a loose `.sagan` file opens a terminal by default. A package may
@@ -48,6 +49,13 @@ Use `mode = "console"` to select a terminal explicitly. Explorer's **Run in
 Terminal** and **Run Without Terminal** actions override the configured choice
 for one launch. Windowed failures are recorded at
 `%LOCALAPPDATA%\Sagan\logs\latest-launch.log` and reported with a native dialog.
+
+The Windows installer and portable ZIP include the manifest-backed two-body
+example and its explicit `sagan-render` and `sagan-physics` libraries. From Git
+Bash, run `sagan --run-package /path/to/sagan/examples/two_body_demo`, or
+double-click its `src/main.sagan` when file association is enabled. Rendering
+uses the Windows Segoe UI system font; no separate font download is needed.
+Ordinary command-line programs do not load the render bridge.
 
 Windows installer artifacts are built and smoke-tested by the Windows Installer
 workflow. macOS and Linux installers remain planned targets; their future

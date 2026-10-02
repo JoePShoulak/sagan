@@ -193,6 +193,18 @@ unwanted console. Test missing-library/resource errors and release contents.
 The broader, deferred unified-error redesign is not a prerequisite for this
 slice, but new failures must still produce honest, actionable diagnostics.
 
+**L1 automated Windows verification (2026-10-01):** The orbit project's manifest now
+selects windowed launch. Normal `sagan --run-package` and source-file execution
+link the native bridge from the resolved `sagan-render` package; the Explorer
+launcher uses the same path without a console. Windows staging includes both
+first-party packages, native bridge source/header, and the orbit demo, while
+non-rendering programs compile without the bridge. The two frame-rate runs
+produce the same fixed-step snapshot. The staged launcher and portable ZIP
+ran the orbit demo with MSYS2 removed from `PATH`; the ZIP checksum, bundled
+toolchain, and package files were checked. The actual installer was built, but
+a manual Explorer double-click and installation on a clean Windows machine
+remain unverified.
+
 ## Cross-chat integration order and acceptance
 
 | Step | Depends on | Observable handoff |

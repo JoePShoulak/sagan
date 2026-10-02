@@ -7,7 +7,7 @@ cd "$repo_root"
 
 output="$(bin/sagan tests/fixtures/runtime/constants.sagan)"
 output="${output//$'\r'/}"
-[[ "$output" == $'Retries: 5\nSpeed: 5\nRadius: 3\nStandard gravity: 9.80665\n(1, 2, 3)\nAlias value: 7\nGeneric retries: 5' ]]
+[[ "$output" == $'Retries: 5\nSpeed: 5 meter / second\nRadius: 3\nStandard gravity: 9.80665 meter / second^2\n(1, 2, 3)\nAlias value: 7\nGeneric retries: 5' ]]
 
 imported="$(bin/sagan tests/fixtures/modules/constants/main.sagan)"
 imported="${imported//$'\r'/}"

@@ -1,9 +1,13 @@
 #include "native_runner.hpp"
+#include "process.hpp"
+#include "../modules/resolver.hpp"
 
 #include <chrono>
+#include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -20,6 +24,29 @@ namespace driver
 {
   namespace
   {
+    auto flag_words(const std::string &flags) -> std::vector<std::string>
+    {
+      std::vector<std::string> result;
+      std::string word;
+      char quote = '\0';
+      bool started = false;
+      for (const char character : flags)
+      {
+        if ((character == '\'' || character == '"') && (quote == '\0' || quote == character))
+        { quote = quote == '\0' ? character : '\0'; started = true; continue; }
+        if (quote == '\0' && std::isspace(static_cast<unsigned char>(character)))
+        {
+          if (started) { result.push_back(std::move(word)); word.clear(); started = false; }
+          continue;
+        }
+        word += character;
+        started = true;
+      }
+      if (quote != '\0') throw std::runtime_error("Unclosed quote in SAGAN_CXXFLAGS");
+      if (started) result.push_back(std::move(word));
+      return result;
+    }
+
     auto shell_quote(const std::string &value) -> std::string
     {
 #ifdef _WIN32
@@ -149,6 +176,30 @@ namespace driver
 #endif
   }
 
+  auto compilation_inputs_for(const modules::module_graph &graph) -> native_compilation_inputs
+  {
+    native_compilation_inputs result;
+    for (const auto &module : graph.modules)
+    {
+      const auto root = module.path.parent_path().parent_path();
+      if (!std::filesystem::is_regular_file(root / "sagan.toml")) continue;
+      const auto manifest = modules::load_package(root);
+      if (manifest.name != "sagan-render") continue;
+      result.header = root / "native" / "window_bridge.hpp";
+      result.source = root / "native" / "window_bridge.cpp";
+      if (graph.package) result.working_directory = graph.package->package_root;
+      if (!std::filesystem::is_regular_file(*result.header) ||
+          !std::filesystem::is_regular_file(*result.source))
+        throw std::runtime_error("Installed sagan-render package is missing native/window_bridge.hpp or "
+                                 "native/window_bridge.cpp under '" + root.string() + "'");
+#ifdef _WIN32
+      result.libraries = {"-lgdi32", "-luser32"};
+#endif
+      break;
+    }
+    return result;
+  }
+
   auto configured_compiler() -> native_compiler_configuration
   {
     native_compiler_configuration result;
@@ -172,7 +223,7 @@ namespace driver
     return result;
   }
 
-  auto compile_and_run(const std::string &generated_cpp) -> int
+  auto compile_and_run(const std::string &generated_cpp, const native_compilation_inputs &inputs) -> int
   {
     temporary_directory build;
     const auto source = build.path() / "program.cpp";
@@ -199,6 +250,24 @@ namespace driver
       bundled_path.emplace(configuration.environment.front().first,
                            configuration.environment.front().second);
     const std::string &flags = configuration.flags;
+    if (inputs.source)
+    {
+      auto arguments = flag_words(flags);
+#ifdef _WIN32
+      arguments.insert(arguments.end(), {"-static-libgcc", "-static-libstdc++"});
+#endif
+      arguments.insert(arguments.end(), {"-include", inputs.header->string(), source.string(),
+                                          inputs.source->string(), "-o", executable.string()});
+      arguments.insert(arguments.end(), inputs.libraries.begin(), inputs.libraries.end());
+      const auto report = [](const bool error, const std::string_view output)
+      { (error ? std::cerr : std::cout) << output; };
+      const auto compiled = run_process(compiler, arguments, build.path(), configuration.environment, {}, report);
+      if (compiled.exit_status != 0)
+        throw std::runtime_error("Native rendering build failed (exit " +
+                                 std::to_string(compiled.exit_status) + ")");
+      return run_process(executable, {}, inputs.working_directory.value_or(std::filesystem::current_path()),
+                         {}, {}, report).exit_status;
+    }
     const bool quote_compiler = compiler.find_first_of(" \\/") != std::string::npos;
     std::string compile_command = (quote_compiler ? shell_quote(compiler) : compiler) + " " + flags + " " +
                                   shell_quote(source.string()) + " -o " + shell_quote(executable.string());
