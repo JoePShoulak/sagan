@@ -27,6 +27,7 @@ namespace driver
   };
 
   auto configured_compiler() -> native_compiler_configuration;
+  auto native_icon_resource() -> std::optional<std::filesystem::path>;
   auto compile_and_run(const std::string &generated_cpp,
                        const native_compilation_inputs &inputs = {}) -> int;
 }

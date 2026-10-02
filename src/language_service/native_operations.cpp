@@ -365,6 +365,11 @@ namespace sagan::language_service
       { arguments.push_back("-include"); arguments.push_back(path_utf8(*inputs.header)); }
       arguments.push_back(path_utf8(*result.generated_source));
       if (inputs.source) arguments.push_back(path_utf8(*inputs.source));
+#ifdef _WIN32
+      const auto icon = driver::native_icon_resource();
+      if (!icon) throw std::runtime_error("Sagan icon resource is missing; reinstall or rebuild Sagan");
+      arguments.push_back(path_utf8(*icon));
+#endif
       arguments.push_back("-o");
       arguments.push_back(path_utf8(*result.executable));
       arguments.insert(arguments.end(), inputs.libraries.begin(), inputs.libraries.end());

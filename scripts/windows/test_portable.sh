@@ -28,6 +28,7 @@ fi
 [[ -x "$install_dir/bin/sagan.exe" ]]
 [[ -x "$install_dir/bin/sagan-lsp.exe" ]]
 [[ -x "$install_dir/toolchain/ucrt64/bin/g++.exe" ]]
+[[ -f "$install_dir/assets/sagan-resource.o" ]]
 [[ -f "$install_dir/libraries/index.tsv" ]]
 [[ -f "$install_dir/libraries/render/native/window_bridge.cpp" ]]
 [[ -f "$install_dir/libraries/render/native/window_bridge.hpp" ]]

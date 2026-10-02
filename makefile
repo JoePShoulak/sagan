@@ -92,9 +92,11 @@ WINDOWS_HOST := $(if $(filter Windows_NT,$(OS)),1,$(if $(findstring MINGW,$(HOST
 ifneq ($(WINDOWS_HOST),)
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
 WINDOWS_RUNTIME_LDFLAGS := -static -static-libgcc -static-libstdc++
+WINDOWS_ICON_RESOURCE := $(WINDOWS_LAUNCHER_RESOURCE)
 else
 BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 WINDOWS_RUNTIME_LDFLAGS :=
+WINDOWS_ICON_RESOURCE :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
@@ -102,13 +104,13 @@ TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD
 
 all: $(TARGET)
 
-$(LANGUAGE_SERVER): src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY)
+$(LANGUAGE_SERVER): src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
-$(DEBUG_ADAPTER): src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY)
+$(DEBUG_ADAPTER): src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 libraries: $(COMPILER_LIBRARY)
 
@@ -132,9 +134,9 @@ $(COMPILER_LIBRARY): $(LIBRARY_OBJECTS)
 	@mkdir -p $(dir $@)
 	ar rcs $@ $(LIBRARY_OBJECTS)
 
-$(TARGET): $(CLI_OBJECTS) $(COMPILER_LIBRARY)
+$(TARGET): $(CLI_OBJECTS) $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CLI_OBJECTS) $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CLI_OBJECTS) $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(SOURCE_DIAGNOSTICS_TEST): tests/source_diagnostics_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)

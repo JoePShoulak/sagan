@@ -223,6 +223,20 @@ namespace driver
     return result;
   }
 
+  auto native_icon_resource() -> std::optional<std::filesystem::path>
+  {
+#ifdef _WIN32
+    std::vector<wchar_t> buffer(32768);
+    const DWORD length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+    if (length == 0 || length == buffer.size()) return {};
+    const auto root = std::filesystem::path(std::wstring(buffer.data(), length)).parent_path().parent_path();
+    for (const auto &candidate : {root / "assets" / "sagan-resource.o",
+                                  root / "obj" / "launcher" / "sagan-resource.o"})
+      if (std::filesystem::is_regular_file(candidate)) return candidate;
+#endif
+    return {};
+  }
+
   auto compile_and_run(const std::string &generated_cpp, const native_compilation_inputs &inputs) -> int
   {
     temporary_directory build;
@@ -250,6 +264,10 @@ namespace driver
       bundled_path.emplace(configuration.environment.front().first,
                            configuration.environment.front().second);
     const std::string &flags = configuration.flags;
+#ifdef _WIN32
+    const auto icon = native_icon_resource();
+    if (!icon) throw std::runtime_error("Sagan icon resource is missing; reinstall or rebuild Sagan");
+#endif
     if (inputs.source)
     {
       auto arguments = flag_words(flags);
@@ -257,7 +275,11 @@ namespace driver
       arguments.insert(arguments.end(), {"-static-libgcc", "-static-libstdc++"});
 #endif
       arguments.insert(arguments.end(), {"-include", inputs.header->string(), source.string(),
-                                          inputs.source->string(), "-o", executable.string()});
+                                          inputs.source->string()});
+#ifdef _WIN32
+      arguments.push_back(icon->string());
+#endif
+      arguments.insert(arguments.end(), {"-o", executable.string()});
       arguments.insert(arguments.end(), inputs.libraries.begin(), inputs.libraries.end());
       const auto report = [](const bool error, const std::string_view output)
       { (error ? std::cerr : std::cout) << output; };
@@ -270,7 +292,11 @@ namespace driver
     }
     const bool quote_compiler = compiler.find_first_of(" \\/") != std::string::npos;
     std::string compile_command = (quote_compiler ? shell_quote(compiler) : compiler) + " " + flags + " " +
-                                  shell_quote(source.string()) + " -o " + shell_quote(executable.string());
+                                  shell_quote(source.string());
+#ifdef _WIN32
+    compile_command += " " + shell_quote(icon->string());
+#endif
+    compile_command += " -o " + shell_quote(executable.string());
 #ifdef _WIN32
     if (quote_compiler) compile_command = '"' + compile_command + '"';
 #endif

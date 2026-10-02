@@ -35,7 +35,7 @@ for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-lsp.exe" 
     exit 1
   fi
 done
-for packaged in libraries/index.tsv libraries/render/sagan.toml \
+for packaged in assets/sagan-resource.o libraries/index.tsv libraries/render/sagan.toml \
                 libraries/render/src/window.sagan libraries/render/src/canvas.sagan \
                 libraries/render/native/window_bridge.hpp libraries/render/native/window_bridge.cpp \
                 libraries/physics/sagan.toml libraries/physics/src/two_body.sagan \

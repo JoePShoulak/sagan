@@ -56,6 +56,9 @@ Bash, run `sagan --run-package /path/to/sagan/examples/two_body_demo`, or
 double-click its `src/main.sagan` when file association is enabled. Rendering
 uses the Windows Segoe UI system font; no separate font download is needed.
 Ordinary command-line programs do not load the render bridge.
+Windows executables built by Sagan embed the Sagan logo. Rendered windows use
+that embedded icon for their title bar and taskbar entry; a console program
+may instead be grouped under its terminal application's taskbar icon.
 
 Windows installer artifacts are built and smoke-tested by the Windows Installer
 workflow. macOS and Linux installers remain planned targets; their future

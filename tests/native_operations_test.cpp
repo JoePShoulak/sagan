@@ -8,6 +8,10 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace
 {
   auto require(const bool condition, const char *message) -> void
@@ -160,6 +164,13 @@ auto main() -> int
               result.standard_output.find("Phase 7 says hello") != std::string::npos &&
               streamed >= result.standard_output.size() && !result.output_truncated,
           "native operation did not build, run, capture output, and return artifacts");
+#ifdef _WIN32
+  const HMODULE image = LoadLibraryExW(result.executable->c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
+  require(image != nullptr, "could not inspect the generated Windows executable");
+  const bool has_icon = FindResourceW(image, MAKEINTRESOURCEW(1), MAKEINTRESOURCEW(14)) != nullptr;
+  FreeLibrary(image);
+  require(has_icon, "generated Windows executable is missing the Sagan icon");
+#endif
   auto asynchronous = language_service::start_run_document(valid, "build/operations-test");
   const auto asynchronous_result = asynchronous.future.get();
   require(asynchronous_result.operation_id == asynchronous.id &&

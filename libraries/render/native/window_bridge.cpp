@@ -362,6 +362,14 @@ auto sagan_5f5f72656e6465725f77696e646f775f6f70656e(
   descriptor.lpfnWndProc = window_procedure;
   descriptor.lpszClassName = window_class_name;
   descriptor.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(32512));
+  descriptor.hIcon = static_cast<HICON>(LoadImageW(window.instance, MAKEINTRESOURCEW(1), IMAGE_ICON,
+                                                  GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON),
+                                                  LR_SHARED));
+  descriptor.hIconSm = static_cast<HICON>(LoadImageW(window.instance, MAKEINTRESOURCEW(1), IMAGE_ICON,
+                                                    GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                                                    LR_SHARED));
+  if (!descriptor.hIcon || !descriptor.hIconSm)
+    throw std::runtime_error("Sagan window icon resource is missing from the executable");
   if (!RegisterClassExW(&descriptor))
     throw std::runtime_error("Could not register the native window class");
   window.class_registered = true;
