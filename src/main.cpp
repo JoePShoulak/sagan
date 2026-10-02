@@ -2,6 +2,7 @@
 #include "diagnostics/diagnostic.hpp"
 #include "driver/native_runner.hpp"
 #include "language_service/language_service.hpp"
+#include "language_service/operations.hpp"
 #include "parser/lex.hpp"
 #include "parser/ast_render.hpp"
 #include "parser/parse_error.hpp"
@@ -14,9 +15,12 @@
 #include "semantic/semantic_error.hpp"
 #include "semantic/type_checker.hpp"
 #include "source/source.hpp"
+#include "source/provider.hpp"
+#include "syntax/syntax.hpp"
 #include "version.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 #include <filesystem>
 #include <iomanip>
@@ -2175,6 +2179,64 @@ namespace
         sagan::source::source_range{document.identity().id, sagan::source::byte_range{begin, end}}, message,
         {}, {}, {}};
   }
+
+  auto run_with_diagnostics(const std::string &path,
+                            const sagan::source::document_snapshot &document,
+                            const bool project) -> int
+  {
+    const auto artifact_root = std::filesystem::current_path() / "build" / "cli-runs";
+    sagan::source::disk_source_provider provider;
+    const auto result = project
+        ? sagan::language_service::run_project(path, provider, artifact_root)
+        : sagan::language_service::run_document(document, artifact_root);
+    std::cout << result.standard_output;
+    if (result.diagnostics.empty() && !result.standard_error.empty())
+      std::cerr << result.standard_error;
+    for (const auto &issue : result.diagnostics)
+    {
+      const sagan::source::document_snapshot *owning = &document;
+      std::optional<sagan::source::document_snapshot> imported;
+      for (const auto &dependency : result.dependencies)
+      {
+        if (issue.primary.document != dependency.document.id) continue;
+        imported.emplace(dependency.document, dependency.version, dependency.text);
+        owning = &*imported;
+        break;
+      }
+      sagan::diagnostics::render_terminal(std::cerr, *owning, issue);
+    }
+    if (result.generated_source && result.executable)
+    {
+      const auto directory = result.generated_source->parent_path();
+      if (directory == result.executable->parent_path() && directory.parent_path() == artifact_root)
+      {
+        std::error_code ignored;
+        std::filesystem::remove_all(directory, ignored);
+      }
+    }
+    return result.exit_status.value_or(1);
+  }
+
+  auto render_cli_diagnostics(const sagan::source::document_snapshot &document,
+                              const std::vector<sagan::diagnostics::diagnostic> &issues) -> void
+  {
+    std::size_t limit = 50;
+    if (const char *setting = std::getenv("SAGAN_MAX_ERRORS"))
+    {
+      char *end = nullptr;
+      const auto requested = std::strtol(setting, &end, 10);
+      if (end != setting && *end == '\0' && requested > 0 && requested <= 1000)
+        limit = static_cast<std::size_t>(requested);
+    }
+    for (std::size_t index = 0; index < std::min(limit, issues.size()); ++index)
+    {
+      if (index != 0) std::cerr << '\n';
+      sagan::diagnostics::render_terminal(std::cerr, document, issues[index]);
+    }
+    if (issues.size() > limit)
+      std::cerr << "... " << issues.size() - limit
+                << " more errors omitted; raise SAGAN_MAX_ERRORS to show more\n";
+  }
 }
 
 auto main(const int argc, char **argv) -> int
@@ -2368,14 +2430,19 @@ auto main(const int argc, char **argv) -> int
     if (mode == output_mode::emit_cpp_modules || mode == output_mode::emit_cpp_package ||
         mode == output_mode::run_package)
     {
+      if (mode == output_mode::run_package)
+      {
+        sagan::source::disk_source_provider provider;
+        const auto package = modules::resolve_package(path, provider);
+        const auto loaded = provider.read_path(package.entry_path);
+        if (!loaded) throw std::runtime_error(loaded.error->message);
+        return run_with_diagnostics(path, *loaded.value, true);
+      }
       const auto tree = mode == output_mode::emit_cpp_modules ? modules::link(path) : modules::link_package(path);
       static_cast<void>(semantic::analyze(tree));
       const auto types = semantic::check_types(tree);
       semantic::validate_entry_point(tree);
       const std::string generated = codegen::generate_cpp(tree, types);
-      if (mode == output_mode::run_package)
-        return driver::compile_and_run(generated,
-            driver::compilation_inputs_for(modules::resolve_package(path)));
       if (output_path.empty()) std::cout << generated;
       else
       {
@@ -2386,6 +2453,15 @@ auto main(const int argc, char **argv) -> int
     }
     const std::string source = read_file(path);
     document.emplace(sagan::source::identity_from_path(sagan::source::document_id{1}, path), 0, source);
+    if (mode == output_mode::run)
+    {
+      const auto analyzed = sagan::syntax::analyze(*document, {.recover = true, .maximum_diagnostics = 64});
+      if (!analyzed.diagnostics.empty())
+      {
+        render_cli_diagnostics(*document, analyzed.diagnostics);
+        return 1;
+      }
+    }
     if (mode == output_mode::diagnostics_json)
     {
       const auto checked = sagan::language_service::analyze_document(*document);
@@ -2449,22 +2525,8 @@ auto main(const int argc, char **argv) -> int
           return dynamic_cast<const parser::import_declaration *>(entry.get()) != nullptr;
         });
         if (has_imports || modules::discover_package(path).has_value())
-        {
-          const auto graph = modules::resolve(path);
-          const auto linked = modules::link(path);
-          static_cast<void>(semantic::analyze(linked));
-          const auto types = semantic::check_types(linked);
-          semantic::validate_entry_point(linked);
-          return driver::compile_and_run(codegen::generate_cpp(linked, types),
-                                         driver::compilation_inputs_for(graph));
-        }
-        active_phase = sagan::diagnostics::phase::semantic;
-        static_cast<void>(semantic::analyze(tree));
-        active_phase = sagan::diagnostics::phase::type;
-        const auto types = semantic::check_types(tree);
-        active_phase = sagan::diagnostics::phase::entry_point;
-        semantic::validate_entry_point(tree);
-        return driver::compile_and_run(codegen::generate_cpp(tree, types));
+          return run_with_diagnostics(path, *document, true);
+        return run_with_diagnostics(path, *document, false);
       }
       else if (mode == output_mode::ast_text)
       {
@@ -2544,7 +2606,8 @@ auto main(const int argc, char **argv) -> int
   }
   catch (const std::exception &error)
   {
-    std::cerr << "error: " << error.what() << '\n';
+    std::cerr << "error[" << sagan::diagnostics::default_code(active_phase) << "]: "
+              << error.what() << '\n';
     return 1;
   }
 

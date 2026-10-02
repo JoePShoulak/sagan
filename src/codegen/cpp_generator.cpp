@@ -580,9 +580,9 @@ namespace codegen
           if (op == "-")
           {
             if (const auto *literal = dynamic_cast<const parser::literal_expression *>(unary->operand.get()))
-              return "static_cast<" + type_name(expression_type(value), value.range) + ">(-" +
+              return "static_cast<" + type_name(expression_type(*unary->operand), unary->operand->range) + ">(-" +
                      expression(*literal) + ")";
-            return "sagan_negate<" + type_name(expression_type(value), value.range) + ">(" +
+            return "sagan_negate<" + type_name(expression_type(*unary->operand), unary->operand->range) + ">(" +
                    expression(*unary->operand) + ")";
           }
           if (op == "+" && std::string_view{expression_type(value)}.starts_with("Vector"))
@@ -615,8 +615,14 @@ namespace codegen
             return "sagan_multiply<" + checked_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
           if (binary->operator_text == "/")
-            return "sagan_divide<" + checked_type + ">(" + expression(*binary->left) + ", " +
+          {
+            const std::string left_type = expression_type(*binary->left);
+            const std::string division_type = std::string_view{left_type}.starts_with("Vector")
+                                                  ? type_name(left_type, binary->left->range)
+                                                  : checked_type;
+            return "sagan_divide<" + division_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
+          }
           if (binary->operator_text == "%")
             return "sagan_modulo<" + checked_type + ">(" + expression(*binary->left) + ", " +
                    expression(*binary->right) + ")";
@@ -1300,6 +1306,10 @@ namespace codegen
         }
         output << ") {\n";
         ++depth;
+        if (map_enabled)
+          output << indentation() << "sagan_call_scope sagan_call_" << temporary_index++
+                 << '(' << escaped_string(value.name) << ", " << escaped_string(active_source_utf8())
+                 << ", " << value.range.begin << ", " << value.range.end << ");\n";
         open_boxed_scope();
         for (const auto &parameter : value.parameters)
         {
@@ -1381,6 +1391,11 @@ namespace codegen
         active_return_types.push_back(value.return_type.value_or("Void"));
         output << "{\n";
         ++depth;
+        if (map_enabled)
+          output << indentation() << "sagan_call_scope sagan_call_" << temporary_index++
+                 << '(' << escaped_string(std::string(class_name) + "::" + value.name)
+                 << ", " << escaped_string(active_source_utf8())
+                 << ", " << value.range.begin << ", " << value.range.end << ");\n";
         open_boxed_scope();
         for (const auto &parameter : value.parameters)
         {
@@ -1759,22 +1774,58 @@ namespace codegen
                     "  sagan_source_scope(const char *path, int begin, int end)\n"
                     "      : previous(sagan_active_site) { sagan_active_site = {path, begin, end}; }\n"
                     "  ~sagan_source_scope() { sagan_active_site = previous; }\n"
+                    "};\n\n"
+                    "struct sagan_call_frame { const char *name; const char *path; int begin; int end; };\n"
+                    "thread_local std::vector<sagan_call_frame> sagan_call_stack;\n"
+                    "struct sagan_call_scope\n"
+                    "{\n"
+                    "  sagan_call_scope(const char *name, const char *path, int begin, int end)\n"
+                    "  { sagan_call_stack.push_back({name, path, begin, end}); }\n"
+                    "  ~sagan_call_scope() { sagan_call_stack.pop_back(); }\n"
                     "};\n\n";
         output << "struct sagan_exception final : std::exception\n"
                   "{\n"
                   "  std::any value;\n"
                   "  std::type_index type;\n"
                   "  std::string message;\n";
-        if (map_enabled) output << "  sagan_source_site site;\n";
+        if (map_enabled) output << "  sagan_source_site site;\n  std::vector<sagan_call_frame> calls;\n";
         output << "  sagan_exception(std::any thrown, const std::type_index thrown_type, std::string text)\n"
                   "      : value(std::move(thrown)), type(thrown_type), message(std::move(text))";
-        if (map_enabled) output << ", site(sagan_active_site)";
+        if (map_enabled) output << ", site(sagan_active_site), calls(sagan_call_stack)";
         output << " {}\n"
                   "  const char *what() const noexcept override { return message.c_str(); }\n"
                   "};\n\n"
+                  "const char *sagan_exception_code(const sagan_exception &error)\n"
+                  "{\n"
+                  "  if (error.type != std::type_index(typeid(sagan_runtime_error))) return \"SAG-RUN-0100\";\n"
+                  "  switch (std::any_cast<sagan_runtime_error>(error.value))\n"
+                  "  {\n"
+                  "  case sagan_runtime_error::integer_overflow: return \"SAG-RUN-0101\";\n"
+                  "  case sagan_runtime_error::division_by_zero: return \"SAG-RUN-0102\";\n"
+                  "  case sagan_runtime_error::modulo_by_zero: return \"SAG-RUN-0103\";\n"
+                  "  case sagan_runtime_error::undefined_exponentiation: return \"SAG-RUN-0104\";\n"
+                  "  case sagan_runtime_error::negative_integer_exponent: return \"SAG-RUN-0105\";\n"
+                  "  case sagan_runtime_error::index_out_of_bounds: return \"SAG-RUN-0106\";\n"
+                  "  case sagan_runtime_error::invalid_range: return \"SAG-RUN-0107\";\n"
+                  "  case sagan_runtime_error::invalid_conversion: return \"SAG-RUN-0108\";\n"
+                  "  case sagan_runtime_error::missing_key: return \"SAG-RUN-0109\";\n"
+                  "  case sagan_runtime_error::uninitialized_binding: return \"SAG-RUN-0110\";\n"
+                  "  case sagan_runtime_error::math_domain: return \"SAG-RUN-0111\";\n"
+                  "  case sagan_runtime_error::non_finite: return \"SAG-RUN-0112\";\n"
+                  "  case sagan_runtime_error::zero_length: return \"SAG-RUN-0113\";\n"
+                  "  }\n"
+                  "  return \"SAG-RUN-0001\";\n"
+                  "}\n\n"
                   "template <typename T>\n"
                   "[[noreturn]] void sagan_scream(T value)\n"
-                  "{ throw sagan_exception{std::move(value), std::type_index(typeid(T)), \"Uncaught Sagan exception\"}; }\n\n"
+                  "{\n"
+                  "  const std::string message = [&]() -> std::string\n"
+                  "  {\n"
+                  "    if constexpr (std::is_same_v<T, std::string>) return value;\n"
+                  "    return \"Uncaught Sagan exception\";\n"
+                  "  }();\n"
+                  "  throw sagan_exception{std::move(value), std::type_index(typeid(T)), message};\n"
+                  "}\n\n"
                   "[[noreturn]] void sagan_runtime_failure(const sagan_runtime_error error, std::string message)\n"
                   "{ throw sagan_exception{error, std::type_index(typeid(sagan_runtime_error)), std::move(message)}; }\n\n"
                   "template <typename T>\n"
@@ -2061,8 +2112,11 @@ namespace codegen
                   "}\n\n"
                   "struct sagan_assertion_failure final : std::exception\n"
                   "{\n"
-                  "  std::string message;\n"
-                  "  explicit sagan_assertion_failure(std::string text) : message(std::move(text)) {}\n"
+                  "  std::string message;\n";
+        if (map_enabled) output << "  sagan_source_site site;\n  std::vector<sagan_call_frame> calls;\n";
+        output << "  explicit sagan_assertion_failure(std::string text) : message(std::move(text))";
+        if (map_enabled) output << ", site(sagan_active_site), calls(sagan_call_stack)";
+        output << " {}\n"
                   "  const char *what() const noexcept override { return message.c_str(); }\n"
                   "};\n\n"
                   "void sagan_assert(const bool condition, const std::string &message = \"Assertion failed\")\n"
@@ -2117,7 +2171,7 @@ namespace codegen
                   "    constexpr Result minimum = std::numeric_limits<Result>::min();\n"
                   "    constexpr Result maximum = std::numeric_limits<Result>::max();\n"
                   "    if ((right > 0 && left > maximum - right) || (right < 0 && left < minimum - right))\n"
-                  "      sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer addition overflow\");\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::integer_overflow, \"Sagan integer addition overflow (\" + sagan_stringify(left) + \" + \" + sagan_stringify(right) + \" cannot fit)\");\n"
                   "  }\n"
                   "  return static_cast<Result>(left + right);\n"
                   "  }\n"
@@ -2455,17 +2509,51 @@ namespace codegen
         --depth;
         output << indentation() << "} catch (const sagan_exit_signal &requested) {\n"
                << indentation() << "  return requested.code;\n" << indentation() << "}\n";
-        output << indentation() << "catch (const sagan_assertion_failure &error) {\n"
-               << indentation() << "  std::cerr << \"SAGAN_ASSERTION_FAILURE\\t\" << error.what() << '\\n';\n"
-               << indentation() << "  return 1;\n" << indentation() << "}\n";
+        output << indentation() << "catch (const sagan_assertion_failure &error) {\n";
+        if (map_enabled)
+        {
+          output << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t\""
+                 << " << error.site.begin << '\\t' << error.site.end"
+                 << " << '\\t' << error.site.path";
+          output << " << \"\\tSAG-RUN-0200\\t\" << error.what() << '\\n';\n";
+        }
+        else
+          output << indentation() << "  std::cerr << \"error[SAG-RUN-0200]: \""
+                 << " << error.what() << '\\n';\n";
+        if (map_enabled)
+          output << indentation() << "  for (auto frame = error.calls.rbegin(); frame != error.calls.rend(); ++frame)\n"
+                 << indentation() << "    std::cerr << \"SAGAN_RUNTIME_FRAME\\t\" << frame->path << '\\t'"
+                 << " << frame->begin << '\\t' << frame->end << '\\t' << frame->name << '\\n';\n";
+        output << indentation() << "  return 1;\n" << indentation() << "}\n";
         if (map_enabled)
         {
           output << indentation() << "catch (const sagan_exception &error) {\n"
                  << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t\" << error.site.begin"
                  << " << '\\t' << error.site.end << '\\t' << error.site.path"
-                 << " << '\\t' << error.what() << '\\n';\n"
+                 << " << '\\t' << sagan_exception_code(error) << '\\t' << error.what() << '\\n';\n"
+                 << indentation() << "  for (auto frame = error.calls.rbegin(); frame != error.calls.rend(); ++frame)\n"
+                 << indentation() << "    std::cerr << \"SAGAN_RUNTIME_FRAME\\t\" << frame->path << '\\t'"
+                 << " << frame->begin << '\\t' << frame->end << '\\t' << frame->name << '\\n';\n"
                  << indentation() << "  return 1;\n" << indentation() << "}\n";
         }
+        else
+          output << indentation() << "catch (const sagan_exception &error) {\n"
+                 << indentation() << "  std::cerr << \"error[\" << sagan_exception_code(error)"
+                 << " << \"]: \" << error.what() << '\\n';\n"
+                 << indentation() << "  return 1;\n" << indentation() << "}\n";
+        output << indentation() << "catch (const std::exception &error) {\n";
+        if (map_enabled)
+          output << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t0\\t0\\t\\tSAG-RUN-0999\\tNative runtime failure: \"";
+        else
+          output << indentation() << "  std::cerr << \"error[SAG-RUN-0999]: Native runtime failure: \"";
+        output << " << error.what() << '\\n';\n"
+               << indentation() << "  return 1;\n" << indentation() << "}\n"
+               << indentation() << "catch (...) {\n";
+        if (map_enabled)
+          output << indentation() << "  std::cerr << \"SAGAN_RUNTIME_ERROR\\t0\\t0\\t\\tSAG-RUN-0998\\tUnknown native runtime failure\\n\";\n";
+        else
+          output << indentation() << "  std::cerr << \"error[SAG-RUN-0998]: Unknown native runtime failure\\n\";\n";
+        output << indentation() << "  return 1;\n" << indentation() << "}\n";
         --depth;
         output << "}\n";
         close_boxed_scope();

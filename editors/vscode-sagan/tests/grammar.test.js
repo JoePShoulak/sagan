@@ -145,6 +145,9 @@ async function main() {
   assertScoped(measurements, "unit", "keyword.declaration.measurement.unit.sagan");
   assertScoped(measurements, "meter", "entity.name.type.unit.sagan");
   assertScoped(measurements, "Celsius", "entity.name.type.unit.sagan");
+  assertScoped(measurements, "^", "keyword.operator.arithmetic.sagan");
+  assert(measurements.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
+    "Powered leading unit annotation contains invalid scopes");
 
   const strings = tokenize(grammar, readFixture("strings.sagan"));
   assertScoped(strings, "\\u{1F680}", "constant.character.escape.sagan");

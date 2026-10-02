@@ -263,13 +263,12 @@ namespace sagan::language_service
       { test.state = test_case_state::cancelled; result.state = diagnostics::result_state::cancelled; }
       else if (native.exit_status == 0 && native.state == diagnostics::result_state::complete)
         test.state = test_case_state::passed;
-      else if (const auto marker = test.standard_error.find("SAGAN_ASSERTION_FAILURE\t");
-               marker != std::string::npos)
+      else if (const auto failure = std::find_if(native.diagnostics.begin(), native.diagnostics.end(),
+                   [](const auto &issue) { return issue.code == "SAG-RUN-0200"; });
+               failure != native.diagnostics.end())
       {
         test.state = test_case_state::failed;
-        test.message = test.standard_error.substr(marker + 24);
-        while (!test.message.empty() && (test.message.back() == '\n' || test.message.back() == '\r'))
-          test.message.pop_back();
+        test.message = failure->message;
         result.state = diagnostics::result_state::incomplete;
       }
       else
@@ -395,13 +394,12 @@ namespace sagan::language_service
       { test.state = test_case_state::skipped; result.state = diagnostics::result_state::stale; }
       else if (native.exit_status == 0 && native.state == diagnostics::result_state::complete)
         test.state = test_case_state::passed;
-      else if (const auto marker = test.standard_error.find("SAGAN_ASSERTION_FAILURE\t");
-               marker != std::string::npos)
+      else if (const auto failure = std::find_if(native.diagnostics.begin(), native.diagnostics.end(),
+                   [](const auto &issue) { return issue.code == "SAG-RUN-0200"; });
+               failure != native.diagnostics.end())
       {
         test.state = test_case_state::failed;
-        test.message = test.standard_error.substr(marker + 24);
-        while (!test.message.empty() && (test.message.back() == '\n' || test.message.back() == '\r'))
-          test.message.pop_back();
+        test.message = failure->message;
         result.state = diagnostics::result_state::incomplete;
       }
       else

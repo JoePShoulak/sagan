@@ -5,23 +5,10 @@ on:
     branches:
       - dev
       - main
-    paths:
-      - "docs/**"
-      - "mkdocs.yml"
-      - "requirements-docs.txt"
-      - "scripts/docs.sh"
-      - "scripts/docs_examples_test.sh"
-      - "scripts/docs_status.py"
-      - "scripts/docs_release_check.py"
-      - "scripts/docs_versions.sh"
-      - "scripts/docs_versions_test.sh"
-      - "deploy/docs/**"
-      - "deploy/hp1/**"
-      - "deploy/hosting/update.sh"
-      - "src/**"
-      - "makefile"
-      - ".github/workflows/documentation.yml"
   pull_request:
+    branches:
+      - dev
+      - main
     paths:
       - "docs/**"
       - "mkdocs.yml"
@@ -67,7 +54,7 @@ jobs:
 
   publish-version:
     name: Publish documentation version
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/dev'
     needs: validate
     runs-on: ubuntu-latest
     permissions:
@@ -91,10 +78,10 @@ jobs:
         run: |
           if [[ -n "$RELEASE_VERSION" ]]; then
             bash scripts/docs_versions.sh deploy-release "$RELEASE_VERSION"
-          elif [[ "$WORKFLOW_REF" == "refs/heads/main" ]]; then
+          elif [[ "$WORKFLOW_REF" == "refs/heads/dev" ]]; then
             bash scripts/docs_versions.sh deploy-experimental
           else
-            echo "Experimental documentation can only be published from main." >&2
+            echo "Experimental documentation can only be published from dev." >&2
             exit 1
           fi
 

@@ -9,7 +9,7 @@ verified_by: null
 
 # VS Code extension roadmap
 
-Version 0.3.4 is a usable language client for the capabilities currently
+Version 0.3.5 is a usable language client for the capabilities currently
 advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.

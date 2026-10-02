@@ -10,7 +10,7 @@ set +e
 output=$(bin/sagan tests/fixtures/runtime/assert_fail.sagan 2>&1)
 status=$?
 set -e
-[[ $status -eq 1 && "$output" == *"SAGAN_ASSERTION_FAILURE"* &&
+[[ $status -eq 1 && "$output" == *"error[SAG-RUN-0200]"* &&
    "$output" == *"orbit escaped"* ]]
 
 set +e
@@ -19,4 +19,4 @@ status=$?
 set -e
 [[ $status -ne 0 && "$output" == *"assert condition requires Bool"* ]]
 
-echo 'Assertion tests passed: success, structured failure marker, and type rejection.'
+echo 'Assertion tests passed: success, structured Sagan diagnostic, and type rejection.'

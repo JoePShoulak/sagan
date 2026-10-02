@@ -5,8 +5,8 @@ source = "src"
 entry = "main"
 
 [dependencies]
-physics = { package = "sagan-physics", version = "^0.1.0" }
-render = { package = "sagan-render", version = "^0.3.0" }
+physics = { package = "sagan-physics", version = "^0.3.0" }
+render = { package = "sagan-render", version = "^0.5.0" }
 
 [application]
 mode = "windowed"

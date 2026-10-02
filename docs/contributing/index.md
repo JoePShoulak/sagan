@@ -17,6 +17,8 @@ Before changing code or documentation:
   to identify every affected compiler, tooling, test, documentation, and
   release surface;
 - read the [development setup](development-setup.md);
+- follow the [change and publication lifecycle](change-lifecycle.md) for
+  branches, pull requests, integration, promotion, and publication;
 - run the [tests](testing.md);
 - follow the [documentation workflow](documentation.md);
 - use the [post-1.0 documentation audit](documentation-roadmaps.md) as the

@@ -642,7 +642,10 @@ auto main() -> int
               enum_case_preview.state == language_service::edit_state::ready &&
               std::any_of(enum_case_preview.documents.begin(), enum_case_preview.documents.end(),
                           [](const auto &entry)
-              { return entry.text.find("\n  active\n") != std::string::npos; }) &&
+              {
+                return entry.text.find("\n  active\n") != std::string::npos ||
+                       entry.text.find("\n  active\r\n") != std::string::npos;
+              }) &&
               std::any_of(enum_case_preview.documents.begin(), enum_case_preview.documents.end(),
                           [](const auto &entry)
               { return entry.text.find("flight_data.Signal.active") != std::string::npos; }),

@@ -221,6 +221,6 @@ are immutable, and only the latest stable release receives best-effort support.
 The initial 1.0.0 documentation stays experimental; its page-by-page audit is
 the **first post-1.0 task** and will determine whether any language, tooling,
 or documentation changes are needed. Authenticode signing and a clean-machine
-run are subsequent Windows acceptance work. The VS Code 0.3.4 language client
+run are subsequent Windows acceptance work. The VS Code 0.3.5 language client
 is usable today; matching extension tests and compiler capabilities are part
 of every release gate.

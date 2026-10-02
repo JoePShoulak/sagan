@@ -48,7 +48,7 @@ npm run package
 code --install-extension sagan-language-*.vsix
 ```
 
-The repository's extension version is currently 0.3.4. Its version is
+The repository's extension version is currently 0.3.5. Its version is
 independent of the compiler version.
 
 ## Verify the installation

@@ -72,8 +72,19 @@ auto main() -> int
                   "structured diagnostic JSON");
   std::ostringstream terminal;
   diagnostics::render_terminal(terminal, document, value);
-  passed &= check(terminal.str().contains("syntax error at 1:5 [SAG-SYN-0001]"),
+  passed &= check(terminal.str().contains("error[SAG-SYN-0001]: example \"message\"") &&
+                      terminal.str().contains("--> file:///demo.sagan:1:5") &&
+                      terminal.str().contains("related declaration") &&
+                      terminal.str().contains("note: example note") &&
+                      terminal.str().contains("help: replace example"),
                   "terminal diagnostic presentation");
+  std::ostringstream build_terminal;
+  diagnostics::render_terminal(build_terminal, document,
+      {"SAG-BLD-0001", diagnostics::severity::error, diagnostics::phase::build,
+       {document.identity().id, {}}, "Native compiler unavailable", {}, {}, {}});
+  passed &= check(build_terminal.str().contains("error[SAG-BLD-0001]: Native compiler unavailable") &&
+                      !build_terminal.str().contains(" --> "),
+                  "unmapped build failure does not invent a source location");
 
   source::document_snapshot valid_document(
       source::document_identity{source::document_id{8}, source::document_uri{"file:///valid.sagan"}, {}},

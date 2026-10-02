@@ -10,9 +10,11 @@ verified_by: null
 # Physics library
 
 !!! info "Initial implementation"
-    `sagan-physics` 0.1.0 implements the narrow P0 headless two-body surface
-    documented below. Broader astrodynamics, N-body propagation, collisions,
-    rigid bodies, atmospheres, and trajectory planning remain future work.
+    `sagan-physics` 0.3.0 implements the narrow P0 two-body, P1 circular
+    restricted-three-body, and solar-perturbed Lagrange experiment documented
+    below. Broader astrodynamics,
+    general N-body propagation, collisions, rigid bodies, atmospheres, and
+    trajectory planning remain future work.
 
 Physics is intended to be a first-party Sagan core library built around the
 same mathematical and simulation vocabulary as the language. Unlike math, it
@@ -23,13 +25,13 @@ Native units are already a language feature; they do not require importing the
 physics library. The library will use those checked units rather than inventing
 a second unit system.
 
-The physics package is first-party but independently versioned. Its `0.1.0`
+The physics package is first-party but independently versioned. Its `0.3.0`
 version does not change Sagan's compiler version. A package imports it through
 an explicit dependency and an exact lockfile selection:
 
 ```toml
 [dependencies]
-physics = { package = "sagan-physics", version = "^0.1.0" }
+physics = { package = "sagan-physics", version = "^0.3.0" }
 ```
 
 ## Implemented P0 surface
@@ -77,6 +79,87 @@ energy and angular-momentum drift against relative tolerances of `1e-8` and
 `1e-12`, respectively. It also requires the barycenter to remain within
 `1e-6 m` of its initial origin. These are fixture tolerances, not a general
 accuracy guarantee for every orbit or timestep.
+
+## Implemented P1 surface
+
+The `physics.restricted_three_body` module adds:
+
+| Symbol | Implemented contract |
+| --- | --- |
+| `LagrangeBodySeed` | Identity, inertial position/velocity, and a dimensionless rotating-frame reference coordinate for one massless tracer. |
+| `LagrangeBodySnapshot` | The P0 identity/position/velocity shape plus rotating reference, stability error in metres, and latched `escaped()` state. |
+| `RestrictedThreeBodySnapshot` | The massive P0 pair and exactly six read-only tertiary snapshots. |
+| `RestrictedThreeBodySolver` | Advances the P0 pair and six independent massless tracers using the same fixed timestep and velocity-Verlet scheme. |
+
+This is the circular restricted three-body problem, not a general eight-body
+gravity solver. Tertiaries feel the gravity of both primaries but exert no
+force themselves. They therefore do not perturb either primary and do not
+interact with one another. This intentional restriction allows several
+alternative trajectories to be compared in one deterministic run.
+
+The checked fixture uses an Earth-Moon-like mass ratio of approximately
+`0.01214`, below the triangular-point stability limit. It places tracers at
+L1, L2, L3, L4, and L5 plus an off-point control, then advances 60 days with a
+300-second step. L4 and L5 are the stable equilibrium points. L1 through L3
+are unstable equilibrium points; starting there does not make them stable.
+
+At every snapshot, the solver reconstructs each tracer's reference position
+from the current primary-secondary axis and barycenter. `stability_error()` is
+the tracer's distance from that rotating reference, making the six results
+directly comparable without introducing rendering concerns into physics.
+
+`escaped()` becomes true when a tertiary has moved beyond twice the current
+primary-secondary separation, is moving outward from the barycenter, and has
+positive instantaneous specific orbital energy relative to both primaries.
+The result is latched once detected. This is a practical boundary for the
+isolated restricted-three-body demo, not a claim about escape from an external
+body's Hill sphere. Presentations should display `escaped` instead of the
+stability-error number after the flag becomes true; the numeric error remains
+available for diagnostics.
+
+Run the checked fixture with:
+
+```bash
+make lagrange-numeric-demo
+```
+
+The fixture verifies that the massive pair is identical to a standalone P0
+run, checks its existing energy and angular-momentum tolerances, and requires
+both L4 and L5 to remain closer to their references than the off-point control.
+The demonstrated stability is specific to the stated mass ratio, starting
+conditions, duration, and timestep.
+
+## Solar-perturbed Lagrange experiment
+
+The `physics.solar_lagrange` module adds a deliberately narrow planar
+restricted-four-body experiment:
+
+| Symbol | Implemented contract |
+| --- | --- |
+| `SolarLagrangeSeed` | One massless tracer's inertial state and Earth-Moon rotating-frame reference. |
+| `SolarTertiarySnapshot` | Read-only tracer state, rotating-frame error, and Earth-Moon escape flag. |
+| `SolarLagrangeSnapshot` | Sun, Earth, Moon, and exactly six massless tracer snapshots. |
+| `SolarLagrangeSolver` | Mutually advances the three massive bodies and independently advances all six tracers under their combined gravity. |
+
+The checked setup starts a circular Earth-Moon approximation with its
+barycenter on a circular solar approximation at one astronomical unit. It is
+two-dimensional and omits orbital inclination, eccentricity, nonspherical
+gravity, radiation pressure, other planets, and ephemeris-fitted initial
+conditions. It exists to isolate the qualitative effect of solar gravity; it
+is not a real Earth-Moon ephemeris model.
+
+Run the numerical comparison or windowed visualization with:
+
+```bash
+make solar-lagrange-numeric-demo
+make solar-lagrange-demo
+```
+
+The window keeps an Earth-Moon-centered Lagrange view with colored trails and
+adds a heliocentric inset plus a Sun-direction indicator. In the checked
+60-day, 300-second-step fixture, the L4 and L5 rotating-frame errors grow to
+approximately 39,844 km and 48,369 km, respectively. Those values demonstrate
+the model difference; they are not an accuracy claim about the real system.
 
 ## Intended role beyond P0
 

@@ -12,9 +12,9 @@ verified_by: null
 | --- | --- | --- |
 | Built-in math availability | Decided | M0 operations implemented automatically |
 | Math types and operations | Direction settled; wider APIs open | Minimal orbital M0 implemented |
-| Physics as explicit first-party core library | Decided | P0 two-body solver implemented as `sagan-physics` 0.1.0 |
-| Rendering as explicit first-party core library | Decided | R0–R2 Windows window, canvas, and snapshot animation implemented as `sagan-render` 0.3.0 |
-| Module and package names | Implemented for first slices | `render.window`, `render.canvas`, and `physics.two_body` |
+| Physics as explicit first-party core library | Decided | P0/P1 plus solar Lagrange experiment implemented as `sagan-physics` 0.3.0 |
+| Rendering as explicit first-party core library | Decided | R0-R3 implemented as `sagan-render` 0.5.1 |
+| Module and package names | Implemented for first slices | `render.window`, `render.canvas`, `physics.two_body`, and current Lagrange modules |
 | General standard-library boundary | Open | Not implemented |
 | Basic output intrinsic | Provisional | `print(value)` implemented for the native subset |
 
@@ -26,18 +26,19 @@ deferred. The physics library builds on the native unit model rather than
 maintaining a parallel runtime wrapper.
 
 The high-level core-library structure is decided. Math has its first narrow
-implementation slice, physics has its independently versioned P0 slice, and
-rendering has its independently versioned R0–R2 slices. Wider APIs remain staged.
+implementation slice, physics has independently versioned P0/P1 and solar
+experiment slices, and rendering has its first Windows 2D implementation;
+wider math, physics, and rendering work remains staged.
 
 | Core library | Coupling | Inclusion | Status |
 | --- | --- | --- | --- |
 | [Math](math.md) | Built into Sagan's language foundation | Automatic | M0 implemented |
-| [Physics](physics.md) | First-party and tightly coupled to math; independently versioned | Explicit import | P0 implemented in 0.1.0 |
-| [Rendering](rendering.md) | First-party and tightly coupled to math and simulation types | Explicit import | R0–R2 implemented in 0.3.0; L1 Windows distribution in progress |
+| [Physics](physics.md) | First-party and tightly coupled to math; independently versioned | Explicit import | P0/P1 plus solar experiment implemented in 0.3.0 |
+| [Rendering](rendering.md) | First-party and tightly coupled to math and simulation types | Explicit import | Windows R0-R3 implemented in 0.5.1; L1 packaged windowed demo verified on Windows |
 
-Open design work includes concrete APIs, module and package names, dependency
-boundaries, initialization behavior, linking strategy, and whether physics and
-rendering have smaller independently importable components.
+Open design work includes wider APIs, dependency boundaries, initialization
+behavior, and whether physics and rendering need smaller independently
+importable components.
 
 The [two-body window roadmap](two-body-window-roadmap.md) is the first
 cross-library implementation plan. Only milestones carrying an implementation

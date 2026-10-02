@@ -2615,6 +2615,7 @@ namespace semantic
         add_binding("__render_window_close", binding{"Function", callable_signature{{}, "Void", {}, {}}});
         add_binding("__render_elapsed_seconds", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
         add_binding("__render_key_pressed", binding{"Function", callable_signature{{"String"}, "Bool", {}, {}}});
+        add_binding("__render_scroll_y", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
         add_binding("__render_set_view",
                     binding{"Function", callable_signature{{"Float64", "Float64", "Float64"}, "Void", {}, {}}});
         add_binding("__render_present", binding{"Function", callable_signature{{}, "Void", {}, {}}});

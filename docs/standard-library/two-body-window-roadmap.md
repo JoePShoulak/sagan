@@ -106,10 +106,30 @@ test frame limit. Its deterministic test proves that 100 20-millisecond frames
 and 20 100-millisecond frames reach the identical 172800-second snapshot. The
 recorded 960 by 540 frame comes from the exact checked-in demo source.
 
-**R3 — Optional three-body display.** Reuse R2; add a third body, label, and
-trail without creating a second renderer. **Demo:** proposed
-`make three-body-demo` shows the three-body state from Physics P1. Stop after
-R2 if time or usage is tight.
+**R3 — Lagrange stability display.** Reuse R2 to show eight bodies: the two
+massive circular-orbit primaries plus six massless tertiary tracers from P1.
+Place one tracer at each of L1 through L5 and one off-point control. Give every
+body a distinct color and a trail in the same color. Show each tertiary's
+rotating-frame stability error numerically until its snapshot reports escape,
+then show `escaped` in place of the number. Use the trails to make the
+stable L4/L5 behavior visibly comparable with unstable collinear points and
+the off-point control. Do not create a second renderer or allow render timing
+to alter physics. **Demo:** proposed `make lagrange-demo` consumes P1's
+immutable snapshots and records a representative long-duration frame or
+capture. The scene contains eight bodies total, despite the six tertiaries
+remaining gravitationally independent of one another.
+
+**Status: implemented at `7603ecc`, corrected at `2e767ff`, and verified on
+2026-10-01.** `make lagrange-demo`
+reuses `sagan-render` 0.5.1 and `sagan-physics` 0.3.0 without adding another
+renderer. It draws all eight bodies with distinct matching-color eight-sample
+trails sampled every six simulation hours, plus all six rotating-frame errors.
+It begins at five simulated days per real second.
+Space, Up/Down, and Escape retain R2 behavior; R resets physics and trails while
+preserving the selected, displayed playback rate. The deterministic test
+compares two display schedules at the same 60-day physics time, requires
+identical final errors, and verifies reset-rate independence; its checked 1180
+by 720 capture comes from the exact demo source.
 
 ## Physics chat
 
@@ -136,14 +156,40 @@ no collision, softening, or cross-toolchain bit-equality promise. Compiler
 commit `d97f499` preserves grouping when composite units appear as divisors,
 which is required for the solver's inverse-square force calculation.
 
-**P1 — Optional simplified three-body solver.** Generalize only as far as
-three point masses with direct pairwise gravity and the same fixed-step
-integrator. Check pairwise force symmetry, finite states, barycenter behavior,
-and bounded numerical drift on a stated fixture. Avoid singular initial
-conditions; do not promise long-term orbital stability. Publish the same
-snapshot shape used by R2 so rendering changes are minimal. **Demo:** a
-headless three-body trace first, then R3's window. This starts only after the
-two-body window passes its acceptance tests.
+**P1 — Circular restricted three-body solver.** Keep the P0 massive pair in a
+near-circular orbit and advance six independent massless tertiary tracers with
+the same fixed-step velocity-Verlet method. Each tracer feels both primaries;
+none affects the primaries or another tracer. Place one tracer at each of L1
+through L5 and an off-point control. Publish immutable snapshots with the same
+identity/position/velocity shape as P0 plus each tracer's distance from its
+rotating-frame reference. Verify that the primary pair is bit-identical to a
+two-body reference run, remains within P0's conservation tolerances, and that
+L4/L5 remain closer to their references than the off-point control over a
+documented run. L1, L2, and L3 are equilibrium locations but are not stable;
+do not describe all five points as stable. **Demo:** proposed
+`make lagrange-numeric-demo` prints a time series comparing all six errors,
+then hands the same snapshot contract to R3.
+
+**Status: implemented at `abbc147` and locally verified on 2026-10-01.**
+`sagan-physics` 0.3.0 provides `physics.restricted_three_body`, retaining P0's
+massive pair while advancing six independent massless tracers. The checked
+60-day fixture uses a 300-second step and an Earth-Moon-like circular pair;
+the primary snapshots remain bit-identical to a separate P0 reference run.
+At day 60, the L4 and L5 rotating-frame errors are approximately 13 micrometres
+and 71 micrometres, versus 962 million metres for the off-point control. The
+collinear-point traces remain available for comparison without claiming that
+L1, L2, or L3 are stable. R3 can consume these immutable snapshots without
+adding physics to the renderer.
+
+**P2 — Solar-perturbed Lagrange experiment.** Preserve P1 as the ideal
+reference and add a separate planar model in which the Sun, Earth, and Moon
+mutually gravitate while the same six massless tracers feel all three massive
+bodies. Center the main presentation on the Earth-Moon barycenter and include
+a heliocentric inset so both scales remain legible. This is a controlled model
+comparison, not an ephemeris claim. **Status: implemented at `1111d4a` and
+locally verified on 2026-10-02.** `sagan-physics` 0.3.0 provides checked
+numeric and windowed 60-day fixtures; the latter also records a representative
+1180 by 720 frame.
 
 ## Math chat
 

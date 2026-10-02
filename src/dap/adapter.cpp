@@ -349,8 +349,9 @@ namespace sagan::dap
             throw std::runtime_error("Debug build cancelled");
           if (!plan || !result->generated_source)
           {
-            const auto message = result->standard_error.empty()
-                ? "Sagan debug build failed" : result->standard_error;
+            const auto message = !result->diagnostics.empty()
+                ? result->diagnostics.front().message
+                : result->standard_error.empty() ? "Sagan debug build failed" : result->standard_error;
             throw std::runtime_error(message);
           }
           {

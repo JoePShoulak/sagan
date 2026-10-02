@@ -56,10 +56,20 @@ suite. When `lcov` is available it writes `build/coverage.info`. Instrumented
 objects are removed even after failure so later ordinary builds do not inherit
 coverage linkage.
 
-`.github/workflows/coverage.yml` repeats this on Ubuntu for pushes and pull
-requests, uploads the report to Codecov through GitHub OIDC, and enforces the
-repository's line-coverage floor. Coverage shows which implementation paths ran;
-it does not prove that every language rule is correct.
+`.github/workflows/coverage.yml` repeats this on Ubuntu for pull requests that
+affect the implementation and for every integrated push to `dev` or `main`. It
+uploads the report to Codecov through GitHub OIDC and enforces the repository's
+line-coverage floor. Coverage shows which implementation paths ran; it does not
+prove that every language rule is correct.
+
+## Branch and integration scope
+
+On a focused change branch, run the smallest set of tests that fully exercises
+the changed surfaces. After the branch merges into `dev`, CI reruns the complete
+compiler, coverage, documentation, extension, and installer gates against the
+combined repository state. Promotion to `main` then starts the stable-release
+pipeline. See [Change and publication lifecycle](change-lifecycle.md) for the
+required sequence.
 
 ## Documentation
 

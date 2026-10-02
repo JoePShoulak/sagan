@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 2.5.0](https://img.shields.io/badge/development-2.5.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 2.10.0](https://img.shields.io/badge/development-2.10.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -152,16 +152,30 @@ Sagan's simulation stack has three closely related layers, each still growing:
 
 - **Math** is automatically available. Its implemented M0 surface includes the
   vector and scalar operations needed by the first orbital examples.
-- **Physics** is the explicit `sagan-physics` dependency. Version 0.1.0 provides
-  a headless two-body solver with unit-checked snapshots.
-- **Rendering** is the explicit `sagan-render` dependency. Version 0.3.0
-  provides a Windows window, basic 2D canvas, and snapshot-driven animation.
+- **Physics** is the explicit `sagan-physics` dependency. Version 0.3.0 provides
+  unit-checked two-body, restricted-three-body, and planar solar-perturbed
+  Lagrange experiments.
+- **Rendering** is the explicit `sagan-render` dependency. Version 0.5.1
+  provides a Windows single-window bridge, basic 2D canvas, text, trails,
+  deterministic frame tests, and wheel-controlled zoom.
 
 Physics and rendering are independently versioned first-party libraries and
 require explicit imports so lightweight command-line programs stay lightweight.
 Try the included windowed orbit project with `sagan --run-package
 examples/two_body_demo`; its manifest also selects terminal-free Explorer launch
 when you double-click `src/main.sagan` on Windows.
+
+Run the ideal Earth-Moon Lagrange comparison or the corresponding experiment
+with solar gravity using Bash:
+
+```bash
+make lagrange-demo
+make solar-lagrange-demo
+```
+
+Checked headless versions are available as `make lagrange-numeric-demo` and
+`make solar-lagrange-numeric-demo`. The solar experiment is a planar model
+comparison, not an ephemeris-accuracy claim.
 
 For the honest line between implemented, planned, and deliberately deferred
 work, see [project status](docs/design/status.md). The full documentation is
