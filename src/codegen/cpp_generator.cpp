@@ -265,6 +265,14 @@ namespace codegen
         return {};
       }
 
+      auto dimensioned_component_type(const std::string &value, const parser::span range) const -> std::string
+      {
+        const auto open = value.find('<');
+        if (open == std::string::npos || !value.ends_with('>'))
+          fail("expected a dimensioned value type", range);
+        return value.substr(open + 1, value.size() - open - 2);
+      }
+
       auto ratio(const semantic::units::rational value) const -> std::string
       {
         std::string result = "(" + std::to_string(value.numerator) + ".0 / " +
@@ -609,6 +617,28 @@ namespace codegen
         if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
         {
           const auto *called_name = dynamic_cast<const parser::identifier_expression *>(call->callee.get());
+          if (called_name && called_name->name == "sqrt")
+            return "sagan_math_sqrt(" + expression(*call->arguments.front()) + ")";
+          if (called_name && called_name->name == "squared_length")
+            return "sagan_math_squared_length<" + type_name(expression_type(value), value.range) + ">(" +
+                   expression(*call->arguments.front()) + ")";
+          if (called_name && called_name->name == "length")
+            return "sagan_math_length<" + type_name(expression_type(value), value.range) + ">(" +
+                   expression(*call->arguments.front()) + ")";
+          if (called_name && called_name->name == "dot")
+            return "sagan_math_dot<" + type_name(expression_type(value), value.range) + ">(" +
+                   expression(*call->arguments[0]) + ", " +
+                   converted_expression(*call->arguments[1], expression_type(*call->arguments[0])) + ")";
+          if (called_name && called_name->name == "normalized")
+            return "sagan_math_normalized<" + type_name(expression_type(value), value.range) + ">(" +
+                   expression(*call->arguments.front()) + ")";
+          if (called_name && called_name->name == "display_coordinates")
+            return "sagan_math_display_coordinates<" + type_name(expression_type(value), value.range) + ">(" +
+                   expression(*call->arguments[0]) + ", " +
+                   converted_expression(*call->arguments[1], expression_type(*call->arguments[0])) + ", " +
+                   converted_expression(*call->arguments[2],
+                                        dimensioned_component_type(expression_type(*call->arguments[0]), value.range)) +
+                   ")";
           if (called_name && called_name->name == "Some")
             return "std::optional<" + type_name(expression_type(*call->arguments.front()), value.range) + ">{" +
                    expression(*call->arguments.front()) + "}";
@@ -1692,7 +1722,10 @@ namespace codegen
                   "  invalid_range,\n"
                   "  invalid_conversion,\n"
                   "  missing_key,\n"
-                  "  uninitialized_binding\n"
+                  "  uninitialized_binding,\n"
+                  "  math_domain,\n"
+                  "  non_finite,\n"
+                  "  zero_length\n"
                   "};\n\n";
         if (map_enabled)
           output << "struct sagan_source_site { const char *path; int begin; int end; };\n"
@@ -1797,6 +1830,83 @@ namespace codegen
                   "  constexpr std::size_t size() const { return Size; }\n"
                   "  bool operator==(const sagan_point &) const = default;\n"
                   "};\n\n"
+                  "template <typename Float>\n"
+                  "Float sagan_math_sqrt(const Float value)\n"
+                  "{\n"
+                  "  if (!std::isfinite(value))\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::non_finite, \"sqrt requires a finite value\");\n"
+                  "  if (value < Float{0})\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::math_domain, \"sqrt requires a non-negative value\");\n"
+                  "  return std::sqrt(value);\n"
+                  "}\n\n"
+                  "template <typename Result, typename Vector>\n"
+                  "Result sagan_math_squared_length(const Vector &value)\n"
+                  "{\n"
+                  "  Result result{};\n"
+                  "  for (const auto component : value.components)\n"
+                  "  {\n"
+                  "    if (!std::isfinite(component))\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::non_finite, \"squared_length requires finite components\");\n"
+                  "    result += static_cast<Result>(component) * static_cast<Result>(component);\n"
+                  "    if (!std::isfinite(result))\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::non_finite, \"squared_length produced a non-finite result\");\n"
+                  "  }\n"
+                  "  return result;\n"
+                  "}\n\n"
+                  "template <typename Result, typename Left, typename Right>\n"
+                  "Result sagan_math_dot(const Left &left, const Right &right)\n"
+                  "{\n"
+                  "  Result result{};\n"
+                  "  for (std::size_t index = 0; index < left.size(); ++index)\n"
+                  "  {\n"
+                  "    if (!std::isfinite(left.components[index]) || !std::isfinite(right.components[index]))\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::non_finite, \"dot requires finite components\");\n"
+                  "    result += static_cast<Result>(left.components[index]) * static_cast<Result>(right.components[index]);\n"
+                  "    if (!std::isfinite(result))\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::non_finite, \"dot produced a non-finite result\");\n"
+                  "  }\n"
+                  "  return result;\n"
+                  "}\n\n"
+                  "template <typename Result, typename Vector>\n"
+                  "Result sagan_math_length(const Vector &value)\n"
+                  "{\n"
+                  "  return sagan_math_sqrt(static_cast<Result>(sagan_math_squared_length<Result>(value)));\n"
+                  "}\n\n"
+                  "template <typename Result, typename Vector>\n"
+                  "Result sagan_math_normalized(const Vector &value)\n"
+                  "{\n"
+                  "  Result result{};\n"
+                  "  using Float = typename decltype(result.components)::value_type;\n"
+                  "  const Float magnitude = sagan_math_length<Float>(value);\n"
+                  "  if (magnitude == Float{0})\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::zero_length, \"normalized cannot normalize a zero-length Vector\");\n"
+                  "  for (std::size_t index = 0; index < result.size(); ++index)\n"
+                  "  {\n"
+                  "    result.components[index] = static_cast<Float>(value.components[index]) / magnitude;\n"
+                  "    if (!std::isfinite(result.components[index]))\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::non_finite, \"normalized produced a non-finite component\");\n"
+                  "  }\n"
+                  "  return result;\n"
+                  "}\n\n"
+                  "template <typename Result, typename Point, typename Scale>\n"
+                  "Result sagan_math_display_coordinates(const Point &point, const Point &origin, const Scale scale)\n"
+                  "{\n"
+                  "  if (!std::isfinite(scale))\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::non_finite, \"display_coordinates requires a finite scale\");\n"
+                  "  if (scale == Scale{0})\n"
+                  "    sagan_runtime_failure(sagan_runtime_error::division_by_zero, \"display_coordinates scale cannot be zero\");\n"
+                  "  Result result{};\n"
+                  "  for (std::size_t index = 0; index < result.size(); ++index)\n"
+                  "  {\n"
+                  "    if (!std::isfinite(point.components[index]) || !std::isfinite(origin.components[index]))\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::non_finite, \"display_coordinates requires finite Points\");\n"
+                  "    result.components[index] = static_cast<typename decltype(result.components)::value_type>(\n"
+                  "        (point.components[index] - origin.components[index]) / scale);\n"
+                  "    if (!std::isfinite(result.components[index]))\n"
+                  "      sagan_runtime_failure(sagan_runtime_error::non_finite, \"display_coordinates produced a non-finite component\");\n"
+                  "  }\n"
+                  "  return result;\n"
+                  "}\n\n"
                   "template <typename T, std::size_t Size>\n"
                   "struct sagan_spherical_vector\n"
                   "{\n"

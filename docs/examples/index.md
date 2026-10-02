@@ -44,6 +44,16 @@ unit-constrained callables, custom units, SI prefixes, and angular units.
 make units-demo
 ```
 
+## Minimal orbital math
+
+`examples/orbit_math.sagan` demonstrates M0's automatically available square
+root, vector length, squared length, dot product, normalization, and explicit
+physical-to-display coordinate conversion while preserving native units.
+
+```bash
+make orbit-math-demo
+```
+
 ## Modules and packages
 
 `examples/package/` is a complete manifest-backed project. It uses qualified

@@ -1418,6 +1418,12 @@ namespace semantic
                       "dot requires two Vectors", value.range);
               require(left->dimensions == right->dimensions,
                       "dot requires Vectors of equal dimension", value.range);
+              const auto left_measured = units::parse_measured_type(left->component, unit_registry, value.range);
+              const auto right_measured = units::parse_measured_type(right->component, unit_registry, value.range);
+              const std::string left_numeric = left_measured ? left_measured->numeric : left->component;
+              const std::string right_numeric = right_measured ? right_measured->numeric : right->component;
+              require(float_width(left_numeric) > 0 && float_width(right_numeric) > 0,
+                      "dot requires Float32 or Float64 vector components", value.range);
               static_cast<void>(common_type(left->component, right->component, value.range,
                                             "dot components"));
               const std::string result = arithmetic_type("*", left->component, right->component, value.range);

@@ -38,6 +38,7 @@ assertions. The curated visual and executable demonstrations are:
 make run-demo
 make geometry-demo
 make units-demo
+make orbit-math-demo
 make package-demo
 bash scripts/ast_demo.sh --no-open
 ```
