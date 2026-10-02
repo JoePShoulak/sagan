@@ -14,11 +14,10 @@ fast_output="$(
   bash scripts/lagrange_demo.sh
 )"
 
-native_output="build/lagrange-demo/lagrange-demo-r4.exe"
 slow_output="$(
   SAGAN_RENDER_TEST_FRAME_MS=100 \
   SAGAN_RENDER_FRAME_LIMIT=120 \
-  "$native_output"
+  bash scripts/lagrange_demo.sh
 )"
 
 reset_output="$(
@@ -26,7 +25,7 @@ reset_output="$(
   SAGAN_RENDER_FRAME_LIMIT=600 \
   SAGAN_RENDER_TEST_UP_FRAME=100 \
   SAGAN_RENDER_TEST_RESET_FRAME=300 \
-  "$native_output"
+  bash scripts/lagrange_demo.sh
 )"
 
 fast_final="$(printf '%s\n' "$fast_output" | grep '^final_')"

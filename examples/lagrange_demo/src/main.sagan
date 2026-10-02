@@ -2,6 +2,7 @@ module main
 
 import TwoBodySolver from physics.two_body
 import LagrangeBodySeed from physics.restricted_three_body
+import RestrictedThreeBodySnapshot from physics.restricted_three_body
 import RestrictedThreeBodySolver from physics.restricted_three_body
 import open from render.window
 import poll from render.window
@@ -100,6 +101,18 @@ fun create_solver(): RestrictedThreeBodySolver {
     lagrange_seed("Control", 0.25, 0.25))
 }
 
+fun lagrange_target(snapshot: RestrictedThreeBodySnapshot,
+                    index: Int64): Point2<Float64, meter> {
+  let separation_vector = snapshot.secondary().position() - snapshot.primary().position()
+  let separation = length(separation_vector)
+  let axis = normalized(separation_vector)
+  let perpendicular = <-axis.y, axis.x>
+  let body = snapshot.tertiary(index)
+  return snapshot.primary_system().barycenter() +
+    axis * (body.reference_x() * separation) +
+    perpendicular * (body.reference_y() * separation)
+}
+
 let solver = create_solver()
 let current = solver.snapshot()
 
@@ -169,6 +182,11 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     let fourth = display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer)
     let fifth = display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer)
     let control = display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer)
+    let first_target = display_coordinates(lagrange_target(current, 0), origin, 1000 kilometer)
+    let second_target = display_coordinates(lagrange_target(current, 1), origin, 1000 kilometer)
+    let third_target = display_coordinates(lagrange_target(current, 2), origin, 1000 kilometer)
+    let fourth_target = display_coordinates(lagrange_target(current, 3), origin, 1000 kilometer)
+    let fifth_target = display_coordinates(lagrange_target(current, 4), origin, 1000 kilometer)
     if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
       primary_trail.record!(primary)
       secondary_trail.record!(secondary)
@@ -184,6 +202,20 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     clear(7, 13, 25)
     line(-700.0, 0.0, 700.0, 0.0, 1.0, 37, 52, 71)
     line(0.0, -500.0, 0.0, 500.0, 1.0, 37, 52, 71)
+
+    // The reference geometry rotates with the primary-secondary axis. The
+    // colored tertiary bodies begin on these vertices, then visibly depart.
+    line(third_target.x, third_target.y, second_target.x, second_target.y, 1.0, 70, 105, 105)
+    line(primary.x, primary.y, fourth_target.x, fourth_target.y, 1.0, 70, 105, 105)
+    line(fourth_target.x, fourth_target.y, secondary.x, secondary.y, 1.0, 70, 105, 105)
+    line(primary.x, primary.y, fifth_target.x, fifth_target.y, 1.0, 70, 105, 105)
+    line(fifth_target.x, fifth_target.y, secondary.x, secondary.y, 1.0, 70, 105, 105)
+    circle(first_target.x, first_target.y, 2.0, 112, 160, 160)
+    circle(second_target.x, second_target.y, 2.0, 112, 160, 160)
+    circle(third_target.x, third_target.y, 2.0, 112, 160, 160)
+    circle(fourth_target.x, fourth_target.y, 2.0, 112, 160, 160)
+    circle(fifth_target.x, fifth_target.y, 2.0, 112, 160, 160)
+
     line(primary_trail.point_one().x, primary_trail.point_one().y, primary_trail.point_two().x, primary_trail.point_two().y, 2.0, 250, 204, 21)
     line(primary_trail.point_two().x, primary_trail.point_two().y, primary_trail.point_three().x, primary_trail.point_three().y, 2.0, 250, 204, 21)
     line(primary_trail.point_three().x, primary_trail.point_three().y, primary_trail.point_four().x, primary_trail.point_four().y, 2.0, 250, 204, 21)
