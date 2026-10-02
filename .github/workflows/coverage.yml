@@ -38,6 +38,14 @@ jobs:
       - name: Build and collect coverage
         run: bash scripts/coverage.sh --require-lcov
 
+      - name: Preserve coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc-coverage-info
+          path: build/coverage.info
+          if-no-files-found: ignore
+
       - name: Enforce release coverage floor
         run: bash scripts/coverage_threshold.sh
 

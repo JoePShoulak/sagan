@@ -48,7 +48,11 @@ def response(process, received, identifier, method, params):
 
 def check_reliability(logging=False):
     process, received, logs, log_reader = start_server(logging)
-    workspace = tempfile.TemporaryDirectory(prefix="sagan-lsp-workspace-")
+    temporary_root = ROOT / "build" / "tmp"
+    temporary_root.mkdir(parents=True, exist_ok=True)
+    workspace = tempfile.TemporaryDirectory(
+        prefix="sagan-lsp-workspace-", dir=temporary_root
+    )
     try:
         package = server_file_uri(ROOT / "examples" / "package")
         second_root = Path(workspace.name)
@@ -68,7 +72,9 @@ def check_reliability(logging=False):
         })
         assert result["capabilities"]["positionEncoding"] == "utf-16"
         symbols, graph_seconds = response(process, received, 2, "workspace/symbol", {"query": "second_workspace"})
-        assert any(item["name"] == "second_workspace" for item in symbols), symbols
+        assert any(item["name"] == "second_workspace" for item in symbols), (
+            f"workspace/symbol returned {symbols} for {module}"
+        )
         showcase = ROOT / "examples" / "showcase.sagan"
         showcase_uri = server_file_uri(showcase)
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
