@@ -16,7 +16,7 @@
         <link rel="prev" href="../physics/">
       
       
-        <link rel="next" href="../status/">
+        <link rel="next" href="../two-body-window-roadmap/">
       
       
         
@@ -1574,6 +1574,8 @@
       
         
       
+        
+      
     
     
     
@@ -1799,6 +1801,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#window-and-frame-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Window and frame lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-2d-canvas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic 2D canvas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demos-and-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demos and verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#relationship-to-math-and-physics" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1824,6 +1859,42 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
     </li>
   
 
@@ -4128,6 +4199,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#window-and-frame-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Window and frame lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-2d-canvas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic 2D canvas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demos-and-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demos and verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#relationship-to-math-and-physics" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4172,10 +4276,10 @@
 </div>
 <h1 id="rendering-library">Rendering library</h1>
 <div class="admonition warning">
-<p class="admonition-title">Planned library</p>
-<p>The rendering library is not implemented. No backend, windowing system,
-scene model, module name, import statement, or public API is established by
-this page.</p>
+<p class="admonition-title">Work-in-progress library</p>
+<p>Version 0.3.0 implements the R0 single-window bridge, R1 basic 2D canvas,
+and R2 snapshot animation support on Windows. It is not a general scene or
+UI system, and its public API may change before 1.0.</p>
 </div>
 <p>Rendering is intended to be a first-party Sagan core library integrated with
 the language's mathematical and simulation vocabulary. It will require an
@@ -4189,6 +4293,83 @@ features, or any particular graphics ecosystem.</p>
 <p>The compiler's existing DOT, SVG, and interactive HTML AST renderers are
 developer tools. They are not implementations or previews of the future Sagan
 rendering library.</p>
+<h2 id="window-and-frame-lifecycle">Window and frame lifecycle</h2>
+<p>The independently versioned <code>sagan-render</code> package exports <code>open</code>, <code>poll</code>,
+<code>clear</code>, <code>close</code>, <code>elapsed_seconds</code>, and <code>key_pressed</code> from <code>render.window</code>. It
+owns one resizable native window per process. Native handles remain private.
+The current private backend uses the Windows API; this is not part of the
+Sagan-facing contract and may be replaced by SDL3 without changing callers.</p>
+<p><code>open</code> validates positive dimensions and reports native setup failures through
+the existing runtime-failure path. <code>poll</code> processes pending window events and
+becomes false after a close request. <code>close</code> releases the window, back buffer,
+and registration resources and is safe to call after the user closes the
+window.</p>
+<p><code>elapsed_seconds()</code> reports monotonic wall time since <code>open</code>. <code>key_pressed</code>
+consumes one press of <code>space</code>, <code>up</code>, or <code>down</code>; Escape requests a clean close
+directly. These small primitives let an application schedule fixed simulation
+steps independently of display frames. They do not make the renderer the owner
+of simulation time or mutable physics state.</p>
+<p><code>clear</code> starts a frame by filling a resize-aware private back buffer. Drawing
+operations modify that frame, and <code>present</code> copies it to the window. Callers
+redraw every display frame; the renderer preserves the most recently presented
+frame for native paint events.</p>
+<h2 id="basic-2d-canvas">Basic 2D canvas</h2>
+<p>The <code>render.canvas</code> module exports:</p>
+<ul>
+<li><code>set_view(center_x, center_y, pixels_per_unit)</code> for a centered orthographic
+  world-to-screen transform;</li>
+<li><code>circle(x, y, radius, red, green, blue)</code> for filled world-space circles;</li>
+<li><code>line(start_x, start_y, end_x, end_y, width, red, green, blue)</code> for
+  world-space line segments;</li>
+<li><code>text(x, y, value, point_size, red, green, blue)</code> for world-positioned text;</li>
+<li><code>text_screen(x, y, value, point_size, red, green, blue)</code> for fixed overlays;
+  and</li>
+<li><code>present()</code> to display the completed frame.</li>
+</ul>
+<p>World coordinates use +X right and +Y up. The view center maps to the current
+client-area center, so resizing keeps the world origin centered. Circle radii
+scale with <code>pixels_per_unit</code>; line widths and screen text positions are physical
+pixels. Colors are integer RGB channels from 0 through 255. Coordinates, scale,
+radii, widths, point sizes, and colors are checked before drawing. Version 0.3
+does not yet expose alpha, clipping, rotation, font selection, paths as one
+object, or retained drawables.</p>
+<p>Text uses the Windows system <code>Segoe UI</code> font with ClearType quality. Point sizes
+use the drawing device's current DPI. No font file is distributed at R1; a
+portable backend must establish an equivalent font-loading contract.</p>
+<h2 id="demos-and-verification">Demos and verification</h2>
+<p>From a source checkout with the documented MSYS2 UCRT64 toolchain, run:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>window-demo
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>make<span class="w"> </span>shape-text-demo
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>make<span class="w"> </span>two-body-demo
+</span></code></pre></div>
+<p>The command compiles the Sagan package and its private native bridge, then opens
+a resizable 960 by 540 solid blue-gray window. Close it with the standard
+window close button. <code>make window-demo-test</code> uses the private
+<code>SAGAN_RENDER_AUTOCLOSE_MS</code> smoke-test setting to exercise the same lifecycle
+without waiting for input. <code>make shape-text-demo</code> opens the R1 static
+presentation with two bodies, axes, line segments, world labels, and a screen
+legend. <code>make shape-text-demo-test</code> captures and validates the same frame as a
+960 by 540 top-down BMP. <code>make two-body-demo</code> consumes immutable snapshots from
+<code>sagan-physics</code> 0.1.0 and animates the real two-body solution. Space pauses,
+Up/Down change playback speed, and Escape or the close button exits cleanly.
+The demo caps a single real-time frame contribution at 0.25 seconds to avoid a
+large simulation catch-up after a debugger stop or window stall.</p>
+<p><img alt="R1 shapes and text demo" src="../../assets/images/render-r1-shape-text.bmp" /></p>
+<p><img alt="R2 physics-driven two-body frame" src="../../assets/images/render-r2-two-body.bmp" /></p>
+<p><code>make two-body-demo-test</code> runs the same executable under two deterministic
+display schedules: 100 frames at 20 milliseconds and 20 frames at 100
+milliseconds. Both represent two real seconds and must produce the identical
+fixed-step snapshot at simulation time 172800 seconds. The test also captures
+and validates the displayed 960 by 540 frame. The deterministic timing controls
+are private test environment settings, not public Sagan APIs.</p>
+<p>Version 0.3.0 supports Windows only and links the
+system <code>user32</code> and <code>gdi32</code> libraries. The demo statically links its GCC/C++
+runtime support, so the resulting executable does not require MSYS2 runtime
+directories on <code>PATH</code>. It has no SDL or GPU dependency yet.
+The catalog declares compiler compatibility <code>^2.0.0</code>. A shallow development
+checkout whose unavailable version baseline makes the compiler identify itself
+as <code>0.0.0+gunknown</code> receives a demo-local compatibility index only; released
+package metadata retains the declared 2.x range.</p>
 <h2 id="relationship-to-math-and-physics">Relationship to math and physics</h2>
 <p>Rendering will use the automatically available math foundation. It should be
 able to visualize data produced by physics, but physics remains a separate,

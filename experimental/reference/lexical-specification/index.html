@@ -1715,6 +1715,8 @@
       
         
       
+        
+      
     
     
     
@@ -1861,6 +1863,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4287,13 +4325,13 @@ byte range so diagnostics can point back to the source.</p>
 <p>Textual identifiers follow Unicode 17 <code>XID_Start</code> and <code>XID_Continue</code>, with <code>_</code>
 also accepted in either position. Emoji sequences may begin or continue an
 identifier. This permits names such as:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let Δx = 1.0
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>let 変数 = Δx
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>let 🌌distance = 42
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span>Δ<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">let</span><span class="w"> </span>変数<span class="w"> </span><span class="o">=</span><span class="w"> </span>Δ<span class="n">x</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">let</span><span class="w"> </span>🌌<span class="n">distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>fun 👩🏽‍🚀(destination) {
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  // ...
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>}
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kd">fun</span><span class="w"> </span>👩🏽‍🚀<span class="p">(</span><span class="n">destination</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="c1">// ...</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Identifier spellings are normalized to Unicode NFC before keyword lookup and
 later compiler processing. In plain language, canonically equivalent Unicode
@@ -4312,8 +4350,8 @@ this reserved form is rejected rather than silently becoming a constant.</p>
 <h2 id="numbers">Numbers</h2>
 <p>Sagan supports decimal integers, decimal floating-point values, scientific
 notation, and <code>_</code> separators placed strictly between digits.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let count = 10_000
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>let gravity = 6.674_30e-11
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10_000</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">let</span><span class="w"> </span><span class="n">gravity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.674_30e-11</span>
 </span></code></pre></div>
 <p>A decimal point requires a digit on both sides. Consequently <code>.5</code>, <code>5.</code>,
 <code>.5e2</code>, and <code>5.e2</code> are lexical errors. Binary, octal, and hexadecimal numeric

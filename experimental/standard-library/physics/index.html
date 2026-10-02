@@ -1574,6 +1574,8 @@
       
         
       
+        
+      
     
     
     
@@ -1752,10 +1754,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#intended-role" class="md-nav__link">
+  <a href="#implemented-p0-surface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Intended role
+        Implemented P0 surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#intended-role-beyond-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intended role beyond P0
       
     </span>
   </a>
@@ -1774,10 +1787,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-required-before-release" class="md-nav__link">
+  <a href="#documentation-required-before-a-stable-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation required before release
+        Documentation required before a stable release
       
     </span>
   </a>
@@ -1808,6 +1821,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4117,10 +4166,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#intended-role" class="md-nav__link">
+  <a href="#implemented-p0-surface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Intended role
+        Implemented P0 surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#intended-role-beyond-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intended role beyond P0
       
     </span>
   </a>
@@ -4139,10 +4199,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-required-before-release" class="md-nav__link">
+  <a href="#documentation-required-before-a-stable-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation required before release
+        Documentation required before a stable release
       
     </span>
   </a>
@@ -4171,10 +4231,11 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="physics-library">Physics library</h1>
-<div class="admonition warning">
-<p class="admonition-title">Planned library</p>
-<p>The physics library is not implemented. No module name, import statement,
-public type, solver, or runtime behavior is established by this page.</p>
+<div class="admonition info">
+<p class="admonition-title">Initial implementation</p>
+<p><code>sagan-physics</code> 0.1.0 implements the narrow P0 headless two-body surface
+documented below. Broader astrodynamics, N-body propagation, collisions,
+rigid bodies, atmospheres, and trajectory planning remain future work.</p>
 </div>
 <p>Physics is intended to be a first-party Sagan core library built around the
 same mathematical and simulation vocabulary as the language. Unlike math, it
@@ -4183,7 +4244,68 @@ incur its dependencies or runtime costs.</p>
 <p>Native units are already a language feature; they do not require importing the
 physics library. The library will use those checked units rather than inventing
 a second unit system.</p>
-<h2 id="intended-role">Intended role</h2>
+<p>The physics package is first-party but independently versioned. Its <code>0.1.0</code>
+version does not change Sagan's compiler version. A package imports it through
+an explicit dependency and an exact lockfile selection:</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[dependencies]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">physics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">package</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"sagan-physics"</span><span class="p">,</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"^0.1.0"</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="implemented-p0-surface">Implemented P0 surface</h2>
+<p>The <code>physics.two_body</code> module exports:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Implemented contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GRAVITATIONAL_CONSTANT</code></td>
+<td>The fixed Newtonian value <code>6.67430e-11 m^3 kg^-1 s^-2</code>.</td>
+</tr>
+<tr>
+<td><code>BodySnapshot</code></td>
+<td>Read-only identity, mass, 2D SI position, and 2D SI velocity.</td>
+</tr>
+<tr>
+<td><code>TwoBodySnapshot</code></td>
+<td>Read-only time, both body snapshots, total mechanical energy, scalar 2D angular momentum, and barycenter.</td>
+</tr>
+<tr>
+<td><code>TwoBodySolver</code></td>
+<td>Exactly two mutually gravitating Newtonian point masses advanced by one explicit fixed step at a time.</td>
+</tr>
+</tbody>
+</table>
+<p><code>TwoBodySolver.step!()</code> uses velocity Verlet. It calculates the force on the
+first body and applies its equal-and-opposite value to the second body, so both
+bodies move about their common barycenter. Authoritative positions and
+velocities use <code>Float64</code> and SI units in one caller-defined 2D Cartesian frame.
+Coordinate-frame identity is not yet represented by the type system.</p>
+<p>Snapshots detach their position and velocity values from the solver's next
+step. Their fields are private and their public API contains no mutating
+method, so rendering can consume them without changing authoritative physics.
+The solver has no rendering dependency.</p>
+<p>Construction rejects non-finite or non-positive mass and timestep values,
+non-finite position or velocity components, and overlapping initial positions.
+Every force evaluation rejects zero separation. P0 deliberately provides no
+collision response or force softening.</p>
+<p>Public force and energy values use the named <code>newton</code> and <code>joule</code> units so
+callers do not need to mentally reduce composite dimensions. The implementation
+performs explicit checked conversions after calculating their dimensions.
+Angular momentum remains <code>kilogram * meter^2 / second</code> because SI defines no
+special named unit for it.</p>
+<p>Run the checked numerical example with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>orbit-numeric-demo
+</span></code></pre></div>
+<p>The example advances an Earth-Moon-scale circular reference for 28,800 seconds
+using a 300-second fixed step. It prints five samples and checks absolute
+energy and angular-momentum drift against relative tolerances of <code>1e-8</code> and
+<code>1e-12</code>, respectively. It also requires the barycenter to remain within
+<code>1e-6 m</code> of its initial origin. These are fixture tolerances, not a general
+accuracy guarantee for every orbit or timestep.</p>
+<h2 id="intended-role-beyond-p0">Intended role beyond P0</h2>
 <p>The library will eventually provide the supported physical-modeling facilities
 for Sagan simulations. Its exact scope and subdivision must be decided from
 concrete use cases and implementation evidence. Possible APIs must not be
@@ -4198,7 +4320,7 @@ relationship.</p>
 determinism guarantees, and extension points remain design questions. Each
 needs a recorded decision before its behavior can be presented as part of
 Sagan's contract.</p>
-<h2 id="documentation-required-before-release">Documentation required before release</h2>
+<h2 id="documentation-required-before-a-stable-release">Documentation required before a stable release</h2>
 <p>The completed section must define installation or distribution behavior,
 imports, package organization, public APIs, units and conventions, numerical
 methods, lifecycle and ownership, determinism limits, diagnostics, examples,

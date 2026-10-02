@@ -1671,6 +1671,8 @@
       
         
       
+        
+      
     
     
     
@@ -1817,6 +1819,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4221,10 +4259,10 @@ from zero (<code>Int.round(2.5)</code> is <code>3</code>; <code>Int.round(-2.5)<
 <code>Float32</code> or <code>Float64</code> and returns <code>Int64</code>. NaN, infinity, and values whose
 rounded result is outside <code>Int64</code> raise <code>RuntimeError.invalid_conversion</code>.</p>
 <p>For example, Binet's Fibonacci formula can keep its integer return type:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fun fibonacci_binet(n: Int): Int {
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  const PHI = (1 + 5 ^ 0.5) / 2
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  return Int.round((PHI ^ n - (-PHI) ^ (-n)) / 5 ^ 0.5)
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>}
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">fibonacci_binet</span><span class="p">(</span><span class="n">n</span><span class="p">:</span><span class="w"> </span><span class="n">Int</span><span class="p">):</span><span class="w"> </span><span class="n">Int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="n">PHI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Int</span><span class="p">.</span><span class="n">round</span><span class="p">((</span><span class="n">PHI</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="n">PHI</span><span class="p">)</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">))</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Floating-point rounding can lose exactness for sufficiently large Fibonacci
 indices; use an integer algorithm when exact results matter.</p>
@@ -4265,22 +4303,22 @@ expected optional type supplies <code>T</code>. The right-associative <code>??</
 its left operand when present and otherwise evaluates its right operand lazily:</p>
 <p><code>None</code> is Sagan's sole absence value. There is no general <code>null</code> value: ordinary
 types remain guaranteed-present, and absence must be expressed as <code>Optional&lt;T&gt;</code>.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let configured: Optional&lt;Int&gt; = None
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>let result = configured ?? 42
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>let chained = configured ?? cached ?? calculate_default()
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">configured</span><span class="p">:</span><span class="w"> </span><span class="n">Optional</span><span class="o">&lt;</span><span class="n">Int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">None</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">let</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">configured</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="mi">42</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">let</span><span class="w"> </span><span class="n">chained</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">configured</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="n">cached</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="n">calculate_default</span><span class="p">()</span>
 </span></code></pre></div>
 <p><code>Optional&lt;T&gt; ?? T</code> produces <code>T</code>; <code>Optional&lt;T&gt; ?? Optional&lt;T&gt;</code> produces
 <code>Optional&lt;T&gt;</code>. Safe access propagates absence through fields and method calls,
 and may be chained before a fallback:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let controller_name = possible_ship?.controller?.name ?? "No controller"
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>let result = possible_probe?.calculate() ?? 0
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">controller_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">possible_ship</span><span class="o">?.</span><span class="n">controller</span><span class="o">?.</span><span class="n">name</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s2">"No controller"</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">let</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">possible_probe</span><span class="o">?.</span><span class="n">calculate</span><span class="p">()</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="mi">0</span>
 </span></code></pre></div>
 <p><code>match</code> can distinguish absence and bind a present payload. The binding exists
 only inside its case:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>match possible_result {
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  case Some(result) print(result)
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  case None print("No result")
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>}
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">match</span><span class="w"> </span><span class="n">possible_result</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">Some</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="w"> </span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">None</span><span class="w"> </span><span class="nb">print</span><span class="p">(</span><span class="s2">"No result"</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Payload-bearing enums use the same construction and binding shape:
 <code>Success(42)</code> constructs a case and <code>case Success(value)</code> binds its typed
@@ -4294,8 +4332,8 @@ once.</p>
 <p>Ordinary single- and double-quoted strings, raw strings, and triple-double-quoted
 multiline strings are parsed as expressions. An interpolated string retains an
 ordered sequence of decoded text and embedded expression nodes:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>let status = "mission ${mission.name}: altitude ${ship.position.altitude}"
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>let path = r"C:\simulation\${literal_text}"
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mission </span><span class="si">${</span><span class="n">mission</span><span class="p">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: altitude </span><span class="si">${</span><span class="n">ship</span><span class="p">.</span><span class="n">position</span><span class="p">.</span><span class="n">altitude</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sa">r"</span><span class="s2">C:\simulation\${literal_text}"</span>
 </span></code></pre></div>
 <p>Interpolation accepts a complete Sagan expression and therefore follows the
 same precedence rules as an expression outside a string. <code>${}</code> is a syntax
@@ -4303,12 +4341,12 @@ error because every interpolation requires an expression. Raw strings never
 interpolate; <code>${literal_text}</code> in the raw example is ordinary text.</p>
 <h2 id="collection-expressions">Collection expressions</h2>
 <p>The parser implements four collection forms:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>let values = [1, 2, ...additional_values,]
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>let metadata = {"name": "Voyager", active_key: true, ...defaults,}
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>let direction = &lt;1.0, 0.0, 0.0,&gt;
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>let position = (100.0, 200.0, 300.0,)
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>let radial_direction = s&lt;2.0, 0.5, 1.0&gt;
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>let radial_position = s(100.0, 0.5, 1.0)
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="o">...</span><span class="n">additional_values</span><span class="p">,]</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">let</span><span class="w"> </span><span class="n">metadata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Voyager"</span><span class="p">,</span><span class="w"> </span><span class="n">active_key</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="o">...</span><span class="n">defaults</span><span class="p">,}</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kd">let</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="o">&gt;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kd">let</span><span class="w"> </span><span class="n">position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">300.0</span><span class="p">,)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="kd">let</span><span class="w"> </span><span class="n">radial_direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="o">&lt;</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="o">&gt;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="kd">let</span><span class="w"> </span><span class="n">radial_position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Arrays and dictionaries may be empty. Dictionary keys accept any expression;
 semantic analysis will determine whether a key's type is hashable.

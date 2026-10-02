@@ -1582,6 +1582,8 @@
       
         
       
+        
+      
     
     
     
@@ -1728,6 +1730,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4082,12 +4120,12 @@ immediately follows them. The AST preserves each comment separately with its
 source span and text. Supported targets are modules, imports, exports, <code>let</code>, <code>const</code>,
 <code>fun</code>, <code>face</code>, <code>class</code>, and <code>enum</code> declarations, including fields, methods, and
 local variables and individual enum members.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let altitude: Float = 125_000.0
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>const MAX_RETRIES: Int = 5
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">altitude</span><span class="p">:</span><span class="w"> </span><span class="n">Float</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">125_000.0</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">const</span><span class="w"> </span><span class="n">MAX_RETRIES</span><span class="p">:</span><span class="w"> </span><span class="n">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
 </span></code></pre></div>
 <p>To introduce several mutable variables at once, use a parallel <code>let</code> with one
 initializer per name:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let i, a, b = 0, 0, 1
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span>
 </span></code></pre></div>
 <p>All right-hand expressions are evaluated from left to right before any of the
 new names enters scope. An unannotated integer <code>let</code> variable uses <code>Int64</code>,
@@ -4110,7 +4148,7 @@ reserved constant spelling. Cross-file and exported-symbol rename remain
 unavailable.</p>
 <p>Top-level declarations may define mutable variables, functions, faces, classes,
 and enums. Functions may use a block body or a short expression body:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>fun double(value: Int): Int =&gt; value * 2
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">double</span><span class="p">(</span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="n">Int</span><span class="p">):</span><span class="w"> </span><span class="n">Int</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span>
 </span></code></pre></div>
 <p>Faces accept required method signatures and methods with default bodies.
 Classes accept fields, constructors, and methods. Enum members may be plain

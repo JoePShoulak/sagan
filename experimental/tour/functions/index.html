@@ -1584,6 +1584,8 @@
       
         
       
+        
+      
     
     
     
@@ -1730,6 +1732,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4056,20 +4094,20 @@
 the annotation after <code>:</code> says what the function returns. More than one function
 may share a name when their parameter types distinguish them; this is called
 <strong>overloading</strong>.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fun distance(a: Vector, b: Vector): Float {
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  return (a - b).magnitude()
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>}
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">distance</span><span class="p">(</span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="n">Vector</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="n">Vector</span><span class="p">):</span><span class="w"> </span><span class="n">Float</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">b</span><span class="p">).</span><span class="n">magnitude</span><span class="p">()</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Expression bodies and lambdas use <code>=&gt;</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>let greater = fun(a: Float, b: Float) =&gt; a &gt; b
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">greater</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">fun</span><span class="p">(</span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="n">Float</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="n">Float</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>let predicate: (Float, Float) =&gt; Bool = greater
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">let</span><span class="w"> </span><span class="n">predicate</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">Float</span><span class="p">,</span><span class="w"> </span><span class="n">Float</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Bool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">greater</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>fun square(value: Float): Float =&gt; value * value
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">square</span><span class="p">(</span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="n">Float</span><span class="p">):</span><span class="w"> </span><span class="n">Float</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">value</span>
 </span></code></pre></div>
 <p>A mutating counterpart may conventionally end in <code>!</code>, and the tokenizer emits
 a distinct method-identifier token:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>vector.normalize!()
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">vector</span><span class="p">.</span><span class="n">normalize!</span><span class="p">()</span>
 </span></code></pre></div>
 <p>Named functions, face defaults, and class methods may use either a block or
 <code>=&gt; expression</code>. Anonymous functions are called <strong>lambdas</strong>. A typed lambda can

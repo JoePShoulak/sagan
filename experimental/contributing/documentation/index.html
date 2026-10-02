@@ -1570,6 +1570,8 @@
       
         
       
+        
+      
     
     
     
@@ -1716,6 +1718,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -3765,6 +3803,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sagan-syntax-highlighting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sagan syntax highlighting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documentation-version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4172,6 +4221,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sagan-syntax-highlighting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sagan syntax highlighting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documentation-version" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4275,6 +4335,24 @@ archived source directly.</p>
 <p>Then run:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
 </span></code></pre></div>
+<h2 id="sagan-syntax-highlighting">Sagan syntax highlighting</h2>
+<p>Use <code>sagan</code> on fenced Sagan source examples. The documentation build registers
+the repository-owned lexer in <code>scripts/docs_sagan_lexer.py</code>, so these blocks are
+highlighted with the same theme-aware token colors and copy controls as other
+source code:</p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="sb">```sagan</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nb">print</span><span class="p">(</span><span class="s2">"Hello from Sagan!"</span><span class="p">)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="sb">```</span>
+</span></code></pre></div>
+<p><code>bash scripts/docs.sh check</code> verifies both the lexer token categories and the
+rendered HTML. When Sagan's lexical vocabulary changes, update the compiler,
+the VS Code grammar, and this documentation lexer together.</p>
+<p>GitHub README rendering is different: GitHub controls its own language list and
+does not load repository CSS, JavaScript, or local Pygments lexers. Keep README
+examples labeled <code>sagan</code> so their language is explicit and so they can gain
+native highlighting if Sagan is added to GitHub Linguist later.</p>
 <p>The unreleased documentation channel is named <strong>experimental</strong>. It is useful to
 project contributors and to anyone building from a clone of the live repository.
 The initial 1.0.0 release does not promote unaudited pages into a numbered
@@ -4299,19 +4377,19 @@ version selector. The <code>latest</code> alias and the site root point to the n
 released documentation. Before the first release exists, the site root may
 temporarily point to <code>experimental</code>.</p>
 <p>Every page starts with this metadata:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">work-in-progress</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">work-in-progress</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 </span></code></pre></div>
 <p>After the primary audit confirms a page as complete, change all five fields
 together:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">complete</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RELEASE_VERSION</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">YYYY-MM-DD</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reviewer name</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">complete</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">publication_ready</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nt">verified_in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RELEASE_VERSION</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nt">verified_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">YYYY-MM-DD</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nt">verified_by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Reviewer name</span>
 </span></code></pre></div>
 <p><code>bash scripts/docs.sh check</code> rejects missing, incomplete, contradictory, or stale
 completion metadata. In <code>experimental</code>, a complete page may be verified for an

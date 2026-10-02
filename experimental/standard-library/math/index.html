@@ -1574,6 +1574,8 @@
       
         
       
+        
+      
     
     
     
@@ -1716,6 +1718,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#implemented-m0-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented M0 surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#intended-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1808,6 +1821,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4117,6 +4166,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#implemented-m0-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented M0 surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#intended-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4171,11 +4231,11 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="math-library">Math library</h1>
-<div class="admonition warning">
-<p class="admonition-title">Planned library</p>
-<p>The math library is not implemented. This page records the intended
-boundary without promising types, functions, module names, or behavior
-that the repository does not yet provide.</p>
+<div class="admonition info">
+<p class="admonition-title">Initial implementation</p>
+<p>M0 implements the narrow orbital-math surface documented below. The wider
+scalar, geometry, matrix, quaternion, and numerical library remains future
+work and must not be inferred from the intended scope.</p>
 </div>
 <p>Math is the automatically available foundation of Sagan's core-library
 ecosystem. Programs will not need an import to use its eventual public surface.
@@ -4183,8 +4243,63 @@ Physics and rendering will share this mathematical vocabulary rather than
 defining incompatible alternatives.</p>
 <p>This does not mean Sagan currently has no mathematical behavior. Checked
 numeric operations, Cartesian vectors and points, spherical forms, and native
-units are language features today. This page covers the larger automatic math
-library that will be designed after the 1.0 language release.</p>
+units are language features today. M0 adds automatically available operations
+needed by the first two-body solver. Math is part of Sagan's main version and
+does not carry an independent package version.</p>
+<h2 id="implemented-m0-surface">Implemented M0 surface</h2>
+<p>The following names are automatically available without an import:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Implemented contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sqrt(value)</code></td>
+<td>Returns the square root of a finite, non-negative <code>Float32</code> or <code>Float64</code>.</td>
+</tr>
+<tr>
+<td><code>squared_length(vector)</code></td>
+<td>Returns the sum of squared components and preserves squared physical units.</td>
+</tr>
+<tr>
+<td><code>length(vector)</code></td>
+<td>Returns the Euclidean length of a finite floating-point vector in the component unit.</td>
+</tr>
+<tr>
+<td><code>dot(left, right)</code></td>
+<td>Returns the dot product of equal-dimension, unit-compatible floating-point vectors.</td>
+</tr>
+<tr>
+<td><code>normalized(vector)</code></td>
+<td>Returns a dimensionless unit vector; zero-length input is rejected.</td>
+</tr>
+<tr>
+<td><code>display_coordinates(point, origin, scale)</code></td>
+<td>Returns dimensionless coordinates <code>(point - origin) / scale</code> after checking compatible physical units.</td>
+</tr>
+</tbody>
+</table>
+<p>M0 accepts fixed-size Cartesian <code>Vector</code> and <code>Point</code> values whose components
+are <code>Float32</code> or <code>Float64</code>; measured components retain their native unit
+metadata. <code>display_coordinates</code> requires measured points and an explicit
+compatible world-units-per-display-unit scale. It returns a vector rather than
+a point because the result is an offset from the supplied display origin.</p>
+<p>All M0 inputs must be finite, and intermediate squared sums and dot products
+must remain finite. <code>sqrt</code> rejects negative input with
+<code>RuntimeError.math_domain</code>; non-finite input or output uses
+<code>RuntimeError.non_finite</code>; <code>normalized</code> rejects a zero vector with
+<code>RuntimeError.zero_length</code>; and a zero display scale uses the existing
+<code>RuntimeError.division_by_zero</code>. Floating results retain ordinary IEEE-754
+rounding and are not promised to be exact or bit-identical across toolchains.</p>
+<p>Run the checked example with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>orbit-math-demo
+</span></code></pre></div>
+<p><code>examples/orbit_math.sagan</code> demonstrates a measured 3-4-5 displacement, dot
+product, normalization, square root, and conversion from metres to
+dimensionless display coordinates at an explicit kilometre scale.</p>
 <h2 id="intended-scope">Intended scope</h2>
 <p>The design direction includes the mathematical facilities needed by geometry,
 astrodynamics, numerics, and simulation. Candidate subject areas include:</p>
@@ -4194,8 +4309,9 @@ astrodynamics, numerics, and simulation. Candidate subject areas include:</p>
 <li>points, coordinates, and transformations; and</li>
 <li>numerical algorithms and utilities needed across the core libraries.</li>
 </ul>
-<p>This list describes the intended domain, not an approved API. Exact types,
-operations, precision behavior, naming, and organization remain open.</p>
+<p>Outside the M0 surface above, this list describes intended domain rather than
+an approved API. Exact additional types, operations, precision behavior,
+naming, and organization remain open.</p>
 <h2 id="language-boundary">Language boundary</h2>
 <p>Automatic availability is a settled design choice, but it does not make every
 mathematical facility a language keyword or primitive. The boundary between

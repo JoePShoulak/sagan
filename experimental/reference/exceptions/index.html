@@ -1582,6 +1582,8 @@
       
         
       
+        
+      
     
     
     
@@ -1728,6 +1730,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4086,8 +4124,8 @@ Sagan exception values. Its current cases are <code>integer_overflow</code>,
 <code>division_by_zero</code>, <code>modulo_by_zero</code>, <code>undefined_exponentiation</code>,
 <code>negative_integer_exponent</code>, <code>index_out_of_bounds</code>, <code>invalid_range</code>,
 <code>invalid_conversion</code>, and <code>missing_key</code>.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hope print(values[values_count])
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>unless RuntimeError.index_out_of_bounds print("No such value")
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">hope</span><span class="w"> </span><span class="nb">print</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">values_count</span><span class="p">])</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">unless</span><span class="w"> </span><span class="n">RuntimeError</span><span class="p">.</span><span class="n">index_out_of_bounds</span><span class="w"> </span><span class="nb">print</span><span class="p">(</span><span class="s2">"No such value"</span><span class="p">)</span>
 </span></code></pre></div>
 <p><em>Nominal</em> means that <code>RuntimeError</code> is its own named type rather than merely a
 collection of numbers. The same exact type-and-value matching rules apply, so native failures propagate

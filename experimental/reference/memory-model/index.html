@@ -1582,6 +1582,8 @@
       
         
       
+        
+      
     
     
     
@@ -1728,6 +1730,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4065,15 +4103,15 @@ not expose borrowing or explicit lifetime operations.</p>
 and lazy <code>??</code> fallback. A weak field begins empty, accepts a strong class or
 face value on assignment, and returns <code>Optional&lt;T&gt;</code> when read. A live target is
 <code>Some(target)</code>; an expired target is <code>None</code>, so no dangling value is exposed.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>class Observer {
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  weak let target: Probe
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">class</span><span class="w"> </span><span class="nc">Observer</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="kd">weak</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="n">target</span><span class="p">:</span><span class="w"> </span><span class="n">Probe</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  fun watch!(value: Probe): Void {
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    self.target = value
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  }
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>}
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="kd">fun</span><span class="w"> </span><span class="nf">watch!</span><span class="p">(</span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="n">Probe</span><span class="p">):</span><span class="w"> </span><span class="n">Void</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="bp">self</span><span class="p">.</span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>let answer = observer.target?.answer() ?? 0
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kd">let</span><span class="w"> </span><span class="n">answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">observer</span><span class="p">.</span><span class="n">target</span><span class="o">?.</span><span class="n">answer</span><span class="p">()</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="mi">0</span>
 </span></code></pre></div>
 <p>Sagan does not have a general <code>null</code> value. A plain class or face value is
 always present; <code>None</code> is valid only where an <code>Optional&lt;T&gt;</code> supplies the absent

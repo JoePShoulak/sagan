@@ -1584,6 +1584,8 @@
       
         
       
+        
+      
     
     
     
@@ -1730,6 +1732,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4055,15 +4093,15 @@
 <p><code>let</code> gives a value a name. Variables are mutable by default, which means the
 program may assign them a new value later. <code>=</code> supplies the first value or
 replaces the current one.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>let altitude: Float = 125_000.0
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>altitude = altitude + 500.0
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>altitude += 500.0
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">altitude</span><span class="p">:</span><span class="w"> </span><span class="n">Float</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">125_000.0</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">altitude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">altitude</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">500.0</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">altitude</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">500.0</span>
 </span></code></pre></div>
 <p>Use <code>const</code> when the name should never be assigned again:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>const DISTANCE = 100 meter
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>const TIME = 20 second
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>const SPEED = DISTANCE / TIME
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>print(SPEED)
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="n">DISTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="n">meter</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="n">TIME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="n">second</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="n">SPEED</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DISTANCE</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">TIME</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">SPEED</span><span class="p">)</span>
 </span></code></pre></div>
 <p>The name must use ASCII <code>SCREAMING_SNAKE_CASE</code>. <code>const</code> is the rule that makes
 it immutable; uppercase letters alone do not. Sagan rejects <code>let SPEED = 5</code>
@@ -4077,8 +4115,8 @@ statements inside function bodies. <code>^=</code> uses Sagan's exponentiation o
 there are no initial bitwise operators.</p>
 <p>Numbers may use decimal integers, decimal floating point, scientific notation,
 and separators between digits:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>let entities = 10_000
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>let gravity = 6.674_30e-11
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10_000</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">let</span><span class="w"> </span><span class="n">gravity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6.674_30e-11</span>
 </span></code></pre></div>
 <p>The checker infers scalar values and enforces compatible annotations and
 assignments. An unannotated mutable integer <code>let</code> binding defaults to <code>Int64</code>;
@@ -4089,7 +4127,7 @@ conversions must be provably lossless. A declaration must provide an annotation,
 initializer, or both.</p>
 <p>Several mutable variables can be declared together when each has an initial
 value:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>let i, a, b = 0, 0, 1
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">let</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span>
 </span></code></pre></div>
 <p>There must be exactly one initializer per name. All initializers are evaluated
 from left to right before any of the new names becomes visible; then the new

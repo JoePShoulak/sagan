@@ -1570,6 +1570,8 @@
       
         
       
+        
+      
     
     
     
@@ -1716,6 +1718,42 @@
     
   
     Rendering
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard-library/two-body-window-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two-body window roadmap
   
 
     
@@ -4194,11 +4232,11 @@
 <p>Sagan has a compiler-owned test model and a VS Code Test Explorer client.
 Tests are explicit named declarations, not functions discovered by naming
 convention:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>test "guidance/holds commanded heading" {
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  let commanded = 42
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  let measured = 42
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  assert(commanded == measured, "guidance departed from the commanded heading")
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>}
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">test</span><span class="w"> </span><span class="s2">"guidance/holds commanded heading"</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="n">commanded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="n">measured</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nb">assert</span><span class="p">(</span><span class="n">commanded</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">measured</span><span class="p">,</span><span class="w"> </span><span class="s2">"guidance departed from the commanded heading"</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>The compiler parses and type-checks test bodies with the same language rules as
 ordinary code. A test passes when its body completes. A false
