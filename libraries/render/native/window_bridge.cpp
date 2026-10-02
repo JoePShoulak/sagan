@@ -39,6 +39,7 @@ namespace
     bool up_pressed{};
     bool down_pressed{};
     bool reset_pressed{};
+    double scroll_y{};
     std::int64_t poll_count{};
     std::int64_t present_count{};
     std::int64_t frame_limit{};
@@ -46,6 +47,8 @@ namespace
     std::int64_t capture_frame{1};
     std::int64_t test_reset_frame{};
     std::int64_t test_up_frame{};
+    std::int64_t test_space_frame{};
+    std::int64_t test_scroll_frame{};
     std::chrono::steady_clock::time_point opened_at{};
     std::chrono::milliseconds auto_close_after{};
   };
@@ -262,6 +265,10 @@ namespace
         DestroyWindow(handle);
       }
       return 0;
+    case WM_MOUSEWHEEL:
+      state().scroll_y += static_cast<double>(GET_WHEEL_DELTA_WPARAM(word)) /
+                          static_cast<double>(WHEEL_DELTA);
+      return 0;
     case WM_ERASEBKGND:
       return 1;
     case WM_PAINT:
@@ -331,6 +338,8 @@ auto sagan_5f5f72656e6465725f77696e646f775f6f70656e(
   window.capture_frame = configured_integer("SAGAN_RENDER_CAPTURE_FRAME", 1000000, 1);
   window.test_reset_frame = configured_integer("SAGAN_RENDER_TEST_RESET_FRAME", 1000000, 0);
   window.test_up_frame = configured_integer("SAGAN_RENDER_TEST_UP_FRAME", 1000000, 0);
+  window.test_space_frame = configured_integer("SAGAN_RENDER_TEST_SPACE_FRAME", 1000000, 0);
+  window.test_scroll_frame = configured_integer("SAGAN_RENDER_TEST_SCROLL_FRAME", 1000000, 0);
 
   WNDCLASSEXW descriptor{};
   descriptor.cbSize = sizeof(descriptor);
@@ -386,6 +395,10 @@ auto sagan_5f5f72656e6465725f77696e646f775f706f6c6c() -> bool
     window.reset_pressed = true;
   if (window.test_up_frame > 0 && window.poll_count == window.test_up_frame)
     window.up_pressed = true;
+  if (window.test_space_frame > 0 && window.poll_count == window.test_space_frame)
+    window.space_pressed = true;
+  if (window.test_scroll_frame > 0 && window.poll_count == window.test_scroll_frame)
+    window.scroll_y += 1.0;
   if (window.auto_close_after.count() > 0 &&
       std::chrono::steady_clock::now() - window.opened_at >= window.auto_close_after)
     release_window();
@@ -435,6 +448,14 @@ auto sagan_5f5f72656e6465725f6b65795f70726573736564(const std::string &key) -> b
   else throw std::runtime_error("Supported render keys are space, up, down, and r");
   const bool result = *pressed;
   *pressed = false;
+  return result;
+}
+
+auto sagan_5f5f72656e6465725f7363726f6c6c5f79() -> double
+{
+  auto &window = state();
+  const double result = window.scroll_y;
+  window.scroll_y = 0.0;
   return result;
 }
 
@@ -544,7 +565,7 @@ namespace
 {
   [[noreturn]] auto unsupported() -> void
   {
-    throw std::runtime_error("sagan-render 0.4.0 currently supports Windows only");
+    throw std::runtime_error("sagan-render 0.5.0 currently supports Windows only");
   }
 }
 
@@ -556,6 +577,7 @@ auto sagan_5f5f72656e6465725f77696e646f775f636c656172(
 auto sagan_5f5f72656e6465725f77696e646f775f636c6f7365() -> void { unsupported(); }
 auto sagan_5f5f72656e6465725f656c61707365645f7365636f6e6473() -> double { unsupported(); }
 auto sagan_5f5f72656e6465725f6b65795f70726573736564(const std::string &) -> bool { unsupported(); }
+auto sagan_5f5f72656e6465725f7363726f6c6c5f79() -> double { unsupported(); }
 auto sagan_5f5f72656e6465725f7365745f76696577(double, double, double) -> void { unsupported(); }
 auto sagan_5f5f72656e6465725f70726573656e74() -> void { unsupported(); }
 auto sagan_5f5f72656e6465725f636972636c65(

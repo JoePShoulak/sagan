@@ -8,6 +8,7 @@ capture="build/lagrange-demo/lagrange-window.bmp"
 rm -f "$capture"
 fast_output="$(
   SAGAN_RENDER_TEST_FRAME_MS=20 \
+  SAGAN_RENDER_TEST_SPACE_FRAME=1 \
   SAGAN_RENDER_FRAME_LIMIT=600 \
   SAGAN_RENDER_CAPTURE_FRAME=600 \
   SAGAN_RENDER_CAPTURE_BMP="$capture" \
@@ -16,15 +17,24 @@ fast_output="$(
 
 slow_output="$(
   SAGAN_RENDER_TEST_FRAME_MS=100 \
+  SAGAN_RENDER_TEST_SPACE_FRAME=1 \
   SAGAN_RENDER_FRAME_LIMIT=120 \
   bash scripts/lagrange_demo.sh
 )"
 
 reset_output="$(
   SAGAN_RENDER_TEST_FRAME_MS=20 \
+  SAGAN_RENDER_TEST_SPACE_FRAME=1 \
   SAGAN_RENDER_FRAME_LIMIT=600 \
   SAGAN_RENDER_TEST_UP_FRAME=100 \
   SAGAN_RENDER_TEST_RESET_FRAME=300 \
+  bash scripts/lagrange_demo.sh
+)"
+
+zoom_output="$(
+  SAGAN_RENDER_TEST_FRAME_MS=20 \
+  SAGAN_RENDER_FRAME_LIMIT=1 \
+  SAGAN_RENDER_TEST_SCROLL_FRAME=1 \
   bash scripts/lagrange_demo.sh
 )"
 
@@ -38,6 +48,17 @@ fi
 if [[ "$reset_output" != *"final_playback_rate 864000"* ]]; then
   printf 'Expected reset to preserve the selected doubled playback rate, got:\n%s\n' \
     "$reset_output" >&2
+  exit 1
+fi
+if [[ "$reset_output" != *"final_time_s 0"* ]]; then
+  printf 'Expected reset to restore a paused initial state, got:\n%s\n' \
+    "$reset_output" >&2
+  exit 1
+fi
+if [[ "$zoom_output" != *"final_kilometers_per_pixel 2000"* ||
+      "$zoom_output" != *"final_time_s 0"* ]]; then
+  printf 'Expected one upward wheel step to zoom from 2500 to 2000 km/pixel while paused, got:\n%s\n' \
+    "$zoom_output" >&2
   exit 1
 fi
 if [[ "$fast_final" != *"final_time_s 5.184e+06"* &&
@@ -54,4 +75,4 @@ if [[ "$dimensions" != "1180 -720" ]]; then
 fi
 
 printf '%s\n' "$fast_final"
-echo "Lagrange window test passed: two display schedules matched at day 60 and reset restarted the simulation and trails."
+echo "Lagrange window test passed: schedules matched at day 60, reset paused at the initial state, and wheel zoom changed the scale."

@@ -20,9 +20,14 @@ fun elapsed_seconds(): Float64 => __render_elapsed_seconds()
 /// Consume one press of space, up, down, or r. Escape always requests a clean close.
 fun key_pressed(key: String): Bool => __render_key_pressed(key)
 
+/// Consume accumulated vertical mouse-wheel movement since the previous call.
+/// Positive values scroll up and negative values scroll down.
+fun scroll_y(): Float64 => __render_scroll_y()
+
 export open
 export poll
 export clear
 export close
 export elapsed_seconds
 export key_pressed
+export scroll_y

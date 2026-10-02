@@ -701,6 +701,7 @@ namespace semantic
         for (const std::string_view bridge : {"__render_window_open", "__render_window_poll",
                                               "__render_window_clear", "__render_window_close",
                                               "__render_elapsed_seconds", "__render_key_pressed",
+                                              "__render_scroll_y",
                                               "__render_set_view", "__render_present",
                                               "__render_circle", "__render_line", "__render_text",
                                               "__render_text_screen"})

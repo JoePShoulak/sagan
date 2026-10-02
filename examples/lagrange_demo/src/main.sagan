@@ -10,6 +10,7 @@ import clear from render.window
 import close from render.window
 import elapsed_seconds from render.window
 import key_pressed from render.window
+import scroll_y from render.window
 import set_view from render.canvas
 import present from render.canvas
 import circle from render.canvas
@@ -27,6 +28,7 @@ const SECONDARY_SPEED: Float64<meter / second> = 1012.1038864231901 (meter / sec
 const ROTATING_SPEED_SCALE: Float64<meter / second> =
   1024.5463142288881 (meter / second)
 const INITIAL_PLAYBACK_RATE: Float64 = 432000.0
+const MAX_PLAYBACK_RATE: Float64 = 3456000.0
 const TRAIL_SAMPLE_INTERVAL: Float64<second> = 21600.0 second
 
 class Trail8 {
@@ -126,11 +128,12 @@ let fifth_trail = Trail8(display_coordinates(current.tertiary(4).position(), ori
 let control_trail = Trail8(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
 
 if open("Sagan R3: Lagrange Stability", 1180, 720) {
-  set_view(-70.0, 0.0, 0.4)
+  let kilometers_per_pixel = 2500.0
+  set_view(-70.0, 0.0, 1000.0 / kilometers_per_pixel)
   let previous_frame_time = elapsed_seconds()
   let accumulated_simulation_seconds = 0.0
   let simulation_seconds_per_real_second = INITIAL_PLAYBACK_RATE
-  let paused = false
+  let paused = true
   let last_trail_sample = 0.0 second
 
   while poll() {
@@ -145,6 +148,9 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     }
     if key_pressed("up") {
       simulation_seconds_per_real_second = simulation_seconds_per_real_second * 2.0
+      if simulation_seconds_per_real_second > MAX_PLAYBACK_RATE {
+        simulation_seconds_per_real_second = MAX_PLAYBACK_RATE
+      }
     }
     if key_pressed("down") {
       simulation_seconds_per_real_second = simulation_seconds_per_real_second * 0.5
@@ -154,7 +160,7 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
       current = solver.snapshot()
       accumulated_simulation_seconds = 0.0
       last_trail_sample = 0.0 second
-      paused = false
+      paused = true
       primary_trail = Trail8(display_coordinates(current.primary().position(), origin, 1000 kilometer))
       secondary_trail = Trail8(display_coordinates(current.secondary().position(), origin, 1000 kilometer))
       first_trail = Trail8(display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer))
@@ -164,6 +170,20 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
       fifth_trail = Trail8(display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer))
       control_trail = Trail8(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
     }
+    let scroll = scroll_y()
+    if scroll > 0.0 {
+      kilometers_per_pixel = kilometers_per_pixel * 0.8
+    }
+    if scroll < 0.0 {
+      kilometers_per_pixel = kilometers_per_pixel * 1.25
+    }
+    if kilometers_per_pixel < 250.0 {
+      kilometers_per_pixel = 250.0
+    }
+    if kilometers_per_pixel > 20000.0 {
+      kilometers_per_pixel = 20000.0
+    }
+    set_view(-70.0, 0.0, 1000.0 / kilometers_per_pixel)
 
     if paused == false {
       accumulated_simulation_seconds = accumulated_simulation_seconds +
@@ -298,9 +318,10 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     text(control.x + 8.0, control.y - 14.0, "Control", 11, 248, 113, 113)
 
     text_screen(20, 18, "R3 Lagrange stability — six independent massless tracers", 17, 226, 232, 240)
-    text_screen(20, 45, "Space pause | Up/Down speed | R reset | Escape close", 12, 148, 163, 184)
+    text_screen(20, 45, "Space play/pause | Wheel zoom | Up/Down speed (max 40 days/s) | R reset | Escape close", 12, 148, 163, 184)
     text_screen(20, 68, "simulation time: ${current.time() / (86400.0 second)} days", 12, 148, 210, 189)
     text_screen(20, 88, "playback: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
+    text_screen(20, 108, "zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
     text_screen(20, 122, "L1 error: ${current.tertiary(0).stability_error()}", 11, 244, 114, 182)
     text_screen(20, 142, "L2 error: ${current.tertiary(1).stability_error()}", 11, 251, 146, 60)
     text_screen(20, 162, "L3 error: ${current.tertiary(2).stability_error()}", 11, 167, 139, 250)
@@ -310,6 +331,7 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     present()
   }
   print("final_playback_rate ${simulation_seconds_per_real_second}")
+  print("final_kilometers_per_pixel ${kilometers_per_pixel}")
   close()
 }
 

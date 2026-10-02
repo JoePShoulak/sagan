@@ -559,9 +559,9 @@ namespace codegen
           if (op == "-")
           {
             if (const auto *literal = dynamic_cast<const parser::literal_expression *>(unary->operand.get()))
-              return "static_cast<" + type_name(expression_type(value), value.range) + ">(-" +
+              return "static_cast<" + type_name(expression_type(*unary->operand), unary->operand->range) + ">(-" +
                      expression(*literal) + ")";
-            return "sagan_negate<" + type_name(expression_type(value), value.range) + ">(" +
+            return "sagan_negate<" + type_name(expression_type(*unary->operand), unary->operand->range) + ">(" +
                    expression(*unary->operand) + ")";
           }
           if (op == "+" && std::string_view{expression_type(value)}.starts_with("Vector"))
