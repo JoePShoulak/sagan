@@ -94,6 +94,11 @@ fun stability_result(body: LagrangeBodySnapshot): String {
   return "${body.stability_error()}"
 }
 
+fun stability_display(body: LagrangeBodySnapshot): String {
+  if body.escaped() { return "escaped" }
+  return "${body.stability_error() / (1.0 kilometer)} km"
+}
+
 fun create_solver(): RestrictedThreeBodySolver {
   let primaries = TwoBodySolver(
     "Primary", PRIMARY_MASS, primary_position, primary_velocity,
@@ -328,12 +333,12 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     text_screen(20, 68, "simulation time: ${current.time() / (86400.0 second)} days", 12, 148, 210, 189)
     text_screen(20, 88, "playback: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
     text_screen(20, 108, "zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
-    text_screen(20, 122, "L1 error: ${stability_result(current.tertiary(0))}", 11, 244, 114, 182)
-    text_screen(20, 142, "L2 error: ${stability_result(current.tertiary(1))}", 11, 251, 146, 60)
-    text_screen(20, 162, "L3 error: ${stability_result(current.tertiary(2))}", 11, 167, 139, 250)
-    text_screen(20, 182, "L4 error: ${stability_result(current.tertiary(3))}", 11, 74, 222, 128)
-    text_screen(20, 202, "L5 error: ${stability_result(current.tertiary(4))}", 11, 34, 211, 238)
-    text_screen(20, 222, "Control error: ${stability_result(current.tertiary(5))}", 11, 248, 113, 113)
+    text_screen(20, 122, "L1 error: ${stability_display(current.tertiary(0))}", 11, 244, 114, 182)
+    text_screen(20, 142, "L2 error: ${stability_display(current.tertiary(1))}", 11, 251, 146, 60)
+    text_screen(20, 162, "L3 error: ${stability_display(current.tertiary(2))}", 11, 167, 139, 250)
+    text_screen(20, 182, "L4 error: ${stability_display(current.tertiary(3))}", 11, 74, 222, 128)
+    text_screen(20, 202, "L5 error: ${stability_display(current.tertiary(4))}", 11, 34, 211, 238)
+    text_screen(20, 222, "Control error: ${stability_display(current.tertiary(5))}", 11, 248, 113, 113)
     present()
   }
   print("final_playback_rate ${simulation_seconds_per_real_second}")
