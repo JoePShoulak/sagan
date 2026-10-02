@@ -1,0 +1,6 @@
+[package]
+name = "sagan-physics"
+version = "0.1.0"
+source = "src"
+entry = "two_body"
+

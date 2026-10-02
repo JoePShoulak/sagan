@@ -97,7 +97,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test run-demo geometry-demo units-demo orbit-math-demo editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -283,6 +283,12 @@ units-demo: $(TARGET)
 
 orbit-math-demo: $(TARGET)
 	bash scripts/orbit_math_demo.sh
+
+orbit-numeric-demo: $(TARGET)
+	bash scripts/orbit_numeric_demo.sh
+
+orbit-numeric-demo-test: $(TARGET)
+	bash tests/integration/orbit_numeric_test.sh
 
 editor-tooling-demo: $(TARGET)
 	bash scripts/editor_tooling_demo.sh

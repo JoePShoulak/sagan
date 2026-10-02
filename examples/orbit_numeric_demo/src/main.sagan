@@ -1,0 +1,64 @@
+module main
+
+import TwoBodySolver from physics.two_body
+
+const PRIMARY_MASS: Float64<kilogram> = 5.9722e24 kilogram
+const SECONDARY_MASS: Float64<kilogram> = 7.342e22 kilogram
+const SEPARATION: Float64<meter> = 384400 kilometer
+const STEP: Float64<second> = 300.0 second
+const PRIMARY_SPEED: Float64<meter / second> = 12.44242780569817 (meter / second)
+const SECONDARY_SPEED: Float64<meter / second> = 1012.1038864231901 (meter / second)
+
+let total_mass = PRIMARY_MASS + SECONDARY_MASS
+let primary_radius = (SEPARATION * SECONDARY_MASS / total_mass) as meter
+let secondary_radius = (SEPARATION * PRIMARY_MASS / total_mass) as meter
+let origin = (0.0, 0.0) meter
+let primary_position = origin + <-1.0, 0.0> * primary_radius
+let secondary_position = origin + <1.0, 0.0> * secondary_radius
+let primary_velocity = <0.0, -1.0> * PRIMARY_SPEED
+let secondary_velocity = <0.0, 1.0> * SECONDARY_SPEED
+let solver = TwoBodySolver(
+  "primary", PRIMARY_MASS, primary_position, primary_velocity,
+  "secondary", SECONDARY_MASS, secondary_position, secondary_velocity,
+  STEP)
+
+let initial = solver.snapshot()
+let initial_energy = initial.energy()
+let initial_angular_momentum = initial.angular_momentum()
+
+print("time_s primary_x_m primary_y_m secondary_x_m secondary_y_m energy_J angular_momentum")
+print("${initial.time()} ${initial.first().position().x} ${initial.first().position().y} ${initial.second().position().x} ${initial.second().position().y} ${initial.energy()} ${initial.angular_momentum()}")
+
+let current = initial
+let step_index = 0
+while step_index < 96 {
+  current = solver.step!()
+  step_index++
+  if step_index % 24 == 0 {
+    print("${current.time()} ${current.first().position().x} ${current.first().position().y} ${current.second().position().x} ${current.second().position().y} ${current.energy()} ${current.angular_momentum()}")
+  }
+}
+
+let energy_drift = current.energy() - initial_energy
+let energy_tolerance =
+  (0.0 joule - initial_energy) * 1.0e-8
+let angular_momentum_drift = current.angular_momentum() - initial_angular_momentum
+let angular_momentum_tolerance = initial_angular_momentum * 1.0e-12
+let barycenter_distance = length(current.barycenter() - (0.0, 0.0) meter)
+
+print("energy_absolute_drift ${energy_drift}")
+print("energy_absolute_tolerance ${energy_tolerance}")
+print("angular_momentum_absolute_drift ${angular_momentum_drift}")
+print("angular_momentum_absolute_tolerance ${angular_momentum_tolerance}")
+print("barycenter_distance_m ${barycenter_distance}")
+
+assert(energy_drift < energy_tolerance and
+       energy_drift > 0.0 joule - energy_tolerance,
+       "energy drift exceeded the P0 circular-orbit tolerance")
+assert(angular_momentum_drift < angular_momentum_tolerance and
+       angular_momentum_drift >
+         0.0 (kilogram * meter * meter / second) - angular_momentum_tolerance,
+       "angular momentum drift exceeded the P0 circular-orbit tolerance")
+assert(barycenter_distance < 1.0e-6 meter,
+       "barycenter drift exceeded the P0 circular-orbit tolerance")
+
