@@ -90,19 +90,23 @@ jobs:
       - name: Build compiler and language server
         shell: msys2 {0}
         run: make all bin/sagan-lsp
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Install extension dependencies
-        shell: msys2 {0}
+        shell: bash
         working-directory: editors/vscode-sagan
         run: npm ci
       - name: Run extension unit tests
-        shell: msys2 {0}
+        shell: bash
         working-directory: editors/vscode-sagan
         run: npm test
       - name: Verify extension bundle
-        shell: msys2 {0}
+        shell: bash
         working-directory: editors/vscode-sagan
         run: npm run test:bundle
       - name: Run Extension Development Host integration
-        shell: msys2 {0}
+        shell: bash
         working-directory: editors/vscode-sagan
         run: npm run test:integration

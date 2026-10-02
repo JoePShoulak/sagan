@@ -331,18 +331,18 @@ namespace sagan::dap
       if (!string_field(arguments, "cwd").empty() &&
           !std::filesystem::is_directory(path_from_utf8(string_field(arguments, "cwd"))))
       { response(seq, "launch", false, {}, "Debug working directory does not exist"); return; }
-      const auto profile = language_service::native_build_profile::debug;
       {
         std::scoped_lock lock(state_mutex_);
         launch_pending_ = true;
         launch_seq_ = seq;
       }
-      build_thread_ = std::thread([this, path, profile, arguments, seq]
+      build_thread_ = std::thread([this, path, arguments, seq]
       {
         try
         {
           auto result = std::make_shared<language_service::native_operation_result>(
-              language_service::build_project(path, source_, artifact_root_, profile,
+              language_service::build_project(path, source_, artifact_root_,
+                                              language_service::native_build_profile::debug,
                                               build_cancel_.token()));
           const auto plan = language_service::plan_debug_launch(*result);
           if (build_cancel_.token().is_cancelled())

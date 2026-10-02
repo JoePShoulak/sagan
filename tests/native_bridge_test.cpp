@@ -4,12 +4,22 @@
 #include "../src/source/provider.hpp"
 
 #include <filesystem>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
 int main()
 {
+  const auto index = std::filesystem::absolute("libraries/index.tsv");
+  if (!std::filesystem::is_regular_file(index))
+    throw std::runtime_error("Native bridge test package index is missing");
+#ifdef _WIN32
+  if (_putenv_s("SAGAN_PACKAGE_INDEX", index.string().c_str()) != 0)
+#else
+  if (setenv("SAGAN_PACKAGE_INDEX", index.string().c_str(), 1) != 0)
+#endif
+    throw std::runtime_error("Could not configure native bridge test package index");
   const auto orbit_graph = modules::resolve_package("examples/two_body_demo");
   const auto render = driver::compilation_inputs_for(orbit_graph);
   if (!render.header || !render.source || !render.working_directory ||
