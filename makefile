@@ -97,7 +97,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo run-demo geometry-demo units-demo editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test run-demo geometry-demo units-demo editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -259,6 +259,12 @@ tokenizer-inspect: $(TARGET)
 
 package-demo: $(TARGET)
 	bash scripts/package_demo.sh
+
+window-demo: $(TARGET)
+	bash scripts/window_demo.sh
+
+window-demo-test: $(TARGET)
+	bash tests/integration/window_bridge_test.sh
 
 run-demo: $(TARGET)
 	bash scripts/run_demo.sh

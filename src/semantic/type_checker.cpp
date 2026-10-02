@@ -2514,6 +2514,14 @@ namespace semantic
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}, {}}});
         add_binding("assert", binding{"Function", callable_signature{{"Bool"}, "Void", {}, {}}});
         add_binding("exit", binding{"Function", callable_signature{{"Int64"}, "Void", {}, {}}});
+        // Private native-package bridge used by sagan-render. These names are not
+        // a public language API; the versioned package supplies the public facade.
+        add_binding("__render_window_open",
+                    binding{"Function", callable_signature{{"String", "Int64", "Int64"}, "Bool", {}, {}}});
+        add_binding("__render_window_poll", binding{"Function", callable_signature{{}, "Bool", {}, {}}});
+        add_binding("__render_window_clear",
+                    binding{"Function", callable_signature{{"Int64", "Int64", "Int64"}, "Void", {}, {}}});
+        add_binding("__render_window_close", binding{"Function", callable_signature{{}, "Void", {}, {}}});
         add_binding("None", binding{"None", {}});
         add_binding("RuntimeError", binding{"Type", {}});
         enums["RuntimeError"] = {"integer_overflow", "division_by_zero", "modulo_by_zero",

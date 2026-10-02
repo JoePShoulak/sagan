@@ -684,6 +684,11 @@ namespace semantic
         declare("exit", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Ends the program with an explicit process status.",
                                          "@param code An integer exit status from 0 through 255.", "@return Void"});
+        for (const std::string_view bridge : {"__render_window_open", "__render_window_poll",
+                                              "__render_window_clear", "__render_window_close"})
+          declare(std::string(bridge), symbol_kind::function, parser::span{0, 0},
+                  symbol_visibility::private_access, symbol_origin::builtin,
+                  {"Private sagan-render native bridge."});
         declare("Some", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Wraps a present value in an Optional.",
                                          "@param value The present value."});

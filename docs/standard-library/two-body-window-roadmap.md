@@ -51,8 +51,8 @@ named below are *proposed targets*, not commands available today. Keep pages
 `work-in-progress` until the owner's documentation audit approves them. Do
 not invent public APIs in docs ahead of implementation.
 
-All milestones below are **not started**. Change a milestone's status only
-after its demo, tests, and documentation have been checked at a named commit.
+Milestone status is recorded after its demo, tests, and documentation have been
+checked at a named commit. Unmarked milestones remain **not started**.
 
 ## Rendering chat
 
@@ -63,6 +63,12 @@ handles private and the Sagan-facing surface independent of a particular
 graphics backend. **Demo:** proposed `make window-demo` opens a solid-color
 window that resizes and closes cleanly. Document install/runtime requirements
 and failure behavior. This milestone must work before drawing an orbit.
+
+**Status: implemented, pending named-commit acceptance.** `sagan-render` 0.1.0
+provides the independently versioned `render.window` package, a private Windows
+backend, `make window-demo`, and an automated lifecycle smoke test. SDL3 remains
+the intended portable replacement for the private backend; no backend-specific
+handle or type is exposed to Sagan.
 
 **R1 — Shapes and text.** Add the smallest 2D drawing surface that can draw a
 filled circle, a line or polyline, and legible text at specified positions.

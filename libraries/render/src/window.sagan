@@ -1,0 +1,20 @@
+module window
+
+/// Open the process's single rendering window.
+fun open(title: String, width: Int64, height: Int64): Bool =>
+  __render_window_open(title, width, height)
+
+/// Process pending input and window events. Returns false after close is requested.
+fun poll(): Bool => __render_window_poll()
+
+/// Clear the window to an RGB color whose channels are in the range 0 through 255.
+fun clear(red: Int64, green: Int64, blue: Int64): Void =>
+  __render_window_clear(red, green, blue)
+
+/// Close the window and release its native resources. Safe to call more than once.
+fun close(): Void => __render_window_close()
+
+export open
+export poll
+export clear
+export close

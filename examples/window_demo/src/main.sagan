@@ -1,0 +1,13 @@
+module main
+
+import open from render.window
+import poll from render.window
+import clear from render.window
+import close from render.window
+
+if open("Sagan Render R0", 960, 540) {
+  while poll() {
+    clear(22, 30, 46)
+  }
+  close()
+}
