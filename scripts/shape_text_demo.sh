@@ -37,6 +37,7 @@ TMPDIR="$native_tmp" TMP="$native_tmp" TEMP="$native_tmp" \
   g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror \
   -include "$repo_root/libraries/render/native/window_bridge.hpp" \
   build/shape-text-demo/program.cpp libraries/render/native/window_bridge.cpp \
+  "$repo_root/obj/launcher/sagan-resource.o" \
   -o "$native_output" -static -static-libgcc -static-libstdc++ -lgdi32 -luser32
 
 "$native_output"
