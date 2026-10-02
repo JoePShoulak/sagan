@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Sagan Manifest",
+  "scopeName": "source.sagan-manifest",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#package-section" },
+    { "include": "#application-section" },
+    { "include": "#dependencies-section" },
+    { "include": "#unknown-section" }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.number-sign.sagan-manifest",
+      "begin": "#",
+      "beginCaptures": { "0": { "name": "punctuation.definition.comment.sagan-manifest" } },
+      "end": "$"
+    },
+    "double-string": {
+      "name": "string.quoted.double.sagan-manifest",
+      "begin": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan-manifest" } },
+      "end": "\"|$",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan-manifest" } },
+      "patterns": [
+        { "name": "constant.character.escape.sagan-manifest", "match": "\\\\(?:[btnfr\"\\\\]|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})" },
+        { "name": "invalid.illegal.escape.sagan-manifest", "match": "\\\\." }
+      ]
+    },
+    "single-string": {
+      "name": "string.quoted.single.sagan-manifest",
+      "begin": "'",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sagan-manifest" } },
+      "end": "'|$",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.sagan-manifest" } }
+    },
+    "assignment": {
+      "patterns": [
+        { "name": "keyword.operator.assignment.sagan-manifest", "match": "=" },
+        { "include": "#double-string" },
+        { "include": "#single-string" },
+        { "name": "punctuation.separator.comma.sagan-manifest", "match": "," },
+        { "name": "punctuation.section.inline-table.sagan-manifest", "match": "[{}]" },
+        { "include": "#comments" }
+      ]
+    },
+    "package-section": {
+      "name": "meta.section.package.sagan-manifest",
+      "begin": "^\\s*(\\[)(package)(\\])\\s*(?=#|$)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.section.begin.sagan-manifest" },
+        "2": { "name": "entity.name.section.package.sagan-manifest" },
+        "3": { "name": "punctuation.definition.section.end.sagan-manifest" }
+      },
+      "end": "(?=^\\s*\\[)|\\z",
+      "patterns": [
+        { "include": "#comments" },
+        {
+          "match": "^\\s*(name|version|source|entry)(\\s*)(=)",
+          "captures": {
+            "1": { "name": "support.type.property-name.package.sagan-manifest" },
+            "3": { "name": "keyword.operator.assignment.sagan-manifest" }
+          }
+        },
+        { "include": "#assignment" },
+        { "name": "invalid.illegal.unknown-key.sagan-manifest", "match": "^\\s*([A-Za-z_][A-Za-z0-9_-]*)(?=\\s*=)" }
+      ]
+    },
+    "application-section": {
+      "name": "meta.section.application.sagan-manifest",
+      "begin": "^\\s*(\\[)(application)(\\])\\s*(?=#|$)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.section.begin.sagan-manifest" },
+        "2": { "name": "entity.name.section.application.sagan-manifest" },
+        "3": { "name": "punctuation.definition.section.end.sagan-manifest" }
+      },
+      "end": "(?=^\\s*\\[)|\\z",
+      "patterns": [
+        { "include": "#comments" },
+        {
+          "match": "^\\s*(mode)(\\s*)(=)",
+          "captures": {
+            "1": { "name": "support.type.property-name.application.sagan-manifest" },
+            "3": { "name": "keyword.operator.assignment.sagan-manifest" }
+          }
+        },
+        { "name": "constant.language.application-mode.sagan-manifest", "match": "(?<=\\=\\s{0,32})\"(?:console|windowed)\"" },
+        { "include": "#assignment" },
+        { "name": "invalid.illegal.unknown-key.sagan-manifest", "match": "^\\s*([A-Za-z_][A-Za-z0-9_-]*)(?=\\s*=)" }
+      ]
+    },
+    "dependencies-section": {
+      "name": "meta.section.dependencies.sagan-manifest",
+      "begin": "^\\s*(\\[)(dependencies)(\\])\\s*(?=#|$)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.section.begin.sagan-manifest" },
+        "2": { "name": "entity.name.section.dependencies.sagan-manifest" },
+        "3": { "name": "punctuation.definition.section.end.sagan-manifest" }
+      },
+      "end": "(?=^\\s*\\[)|\\z",
+      "patterns": [
+        { "include": "#comments" },
+        { "name": "entity.name.namespace.dependency.sagan-manifest", "match": "^\\s*[A-Za-z_][A-Za-z0-9_]*(?=\\s*=)" },
+        { "name": "support.type.property-name.dependency.sagan-manifest", "match": "\\b(?:package|version)(?=\\s*=)" },
+        { "include": "#assignment" },
+        { "name": "invalid.illegal.dependency-alias.sagan-manifest", "match": "^\\s*[^#\\s][^=]*(?=\\s*=)" }
+      ]
+    },
+    "unknown-section": {
+      "name": "invalid.illegal.unknown-section.sagan-manifest",
+      "match": "^\\s*\\[[^]\\r\\n]+\\]"
+    }
+  }
+}

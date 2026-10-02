@@ -10,6 +10,13 @@ The extension associates `.sagan` files with Sagan and provides TextMate highlig
 
 The Sagan galaxy-pie logo is registered as the default `.sagan` language icon. VS Code uses it when the active file-icon theme permits language-provided icons and does not define its own `.sagan` icon.
 
+The extension also recognizes `sagan.toml` as a **Sagan Manifest** and provides
+schema-aware highlighting for the compiler's current `[package]`,
+`[application]`, and `[dependencies]` sections. Manifest diagnostics,
+completion, hover, navigation, and quick fixes remain compiler/LSP-owned and
+will be enabled only after the running server advertises a manifest-document
+contract; the extension does not duplicate manifest validation in TypeScript.
+
 The extension provides TextMate highlighting plus live diagnostics, hover,
 navigation, references, completion, signature help, symbols, semantic tokens,
 folding, selection ranges, import links, inlay hints, safe rename and quick

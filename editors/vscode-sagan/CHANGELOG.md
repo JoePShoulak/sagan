@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Recognize `sagan.toml` as a first-class Sagan Manifest with a file icon,
+  comment/bracket configuration, and schema-aware highlighting for package,
+  application, and dependency declarations.
 - Make the esbuild entry and output paths portable across Windows, Linux, and
   macOS by resolving them from the declared extension working directory.
 - Refresh extension guidance for the post-1.0 compiler: script entry points,
