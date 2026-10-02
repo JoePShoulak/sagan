@@ -182,11 +182,13 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
       control_trail = Trail8(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
     }
     let scroll = scroll_y()
-    if scroll > 0.0 {
+    while scroll >= 1.0 {
       kilometers_per_pixel = kilometers_per_pixel * 0.8
+      scroll = scroll - 1.0
     }
-    if scroll < 0.0 {
+    while scroll <= -1.0 {
       kilometers_per_pixel = kilometers_per_pixel * 1.25
+      scroll = scroll + 1.0
     }
     if kilometers_per_pixel < 250.0 {
       kilometers_per_pixel = 250.0

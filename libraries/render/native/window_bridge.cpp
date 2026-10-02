@@ -49,6 +49,7 @@ namespace
     std::int64_t test_up_frame{};
     std::int64_t test_space_frame{};
     std::int64_t test_scroll_frame{};
+    double test_scroll_delta{1.0};
     std::chrono::steady_clock::time_point opened_at{};
     std::chrono::milliseconds auto_close_after{};
   };
@@ -303,6 +304,19 @@ namespace
     return static_cast<std::int64_t>(value);
   }
 
+  auto configured_scroll_delta() -> double
+  {
+    const char *raw = std::getenv("SAGAN_RENDER_TEST_SCROLL_DELTA");
+    if (!raw || *raw == '\0') return 1.0;
+    char *end{};
+    const double value = std::strtod(raw, &end);
+    if (*end != '\0' || !std::isfinite(value) || value == 0.0 ||
+        value < -100.0 || value > 100.0)
+      throw std::runtime_error(
+        "SAGAN_RENDER_TEST_SCROLL_DELTA must be between -100 and 100 and not zero");
+    return value;
+  }
+
   auto release_window() -> void
   {
     auto &window = state();
@@ -340,6 +354,7 @@ auto sagan_5f5f72656e6465725f77696e646f775f6f70656e(
   window.test_up_frame = configured_integer("SAGAN_RENDER_TEST_UP_FRAME", 1000000, 0);
   window.test_space_frame = configured_integer("SAGAN_RENDER_TEST_SPACE_FRAME", 1000000, 0);
   window.test_scroll_frame = configured_integer("SAGAN_RENDER_TEST_SCROLL_FRAME", 1000000, 0);
+  window.test_scroll_delta = configured_scroll_delta();
 
   WNDCLASSEXW descriptor{};
   descriptor.cbSize = sizeof(descriptor);
@@ -398,7 +413,7 @@ auto sagan_5f5f72656e6465725f77696e646f775f706f6c6c() -> bool
   if (window.test_space_frame > 0 && window.poll_count == window.test_space_frame)
     window.space_pressed = true;
   if (window.test_scroll_frame > 0 && window.poll_count == window.test_scroll_frame)
-    window.scroll_y += 1.0;
+    window.scroll_y += window.test_scroll_delta;
   if (window.auto_close_after.count() > 0 &&
       std::chrono::steady_clock::now() - window.opened_at >= window.auto_close_after)
     release_window();
@@ -495,8 +510,8 @@ auto sagan_5f5f72656e6465725f636972636c65(
   auto &window = state();
   ensure_surface();
   const auto center = world_to_screen(x, y);
-  const int screen_radius = checked_int(radius * window.pixels_per_unit, "Circle radius");
-  if (screen_radius < 1) throw std::runtime_error("Circle radius is smaller than one screen pixel");
+  const int screen_radius = std::max(1, checked_int(radius * window.pixels_per_unit,
+                                                    "Circle radius"));
   HBRUSH brush = CreateSolidBrush(color(red, green, blue));
   HPEN pen = CreatePen(PS_SOLID, 1, color(red, green, blue));
   if (!brush || !pen)
@@ -565,7 +580,7 @@ namespace
 {
   [[noreturn]] auto unsupported() -> void
   {
-    throw std::runtime_error("sagan-render 0.5.0 currently supports Windows only");
+    throw std::runtime_error("sagan-render 0.5.1 currently supports Windows only");
   }
 }
 

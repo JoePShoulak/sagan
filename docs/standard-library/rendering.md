@@ -10,7 +10,7 @@ verified_by: null
 # Rendering library
 
 !!! warning "Work-in-progress library"
-    Version 0.5.0 implements the R0 single-window bridge, R1 basic 2D canvas,
+    Version 0.5.1 implements the R0 single-window bridge, R1 basic 2D canvas,
     R2 snapshot animation support, and the keyboard and wheel input used by R3
     on Windows.
     It is not a general scene or UI system, and its public API may change
@@ -144,7 +144,7 @@ It also verifies that reset preserves a doubled playback rate and validates the
 captured 1180 by 720 frame. Trail sampling is a presentation concern and does
 not feed state back into the physics solver.
 
-Version 0.5.0 supports Windows only and links the
+Version 0.5.1 supports Windows only and links the
 system `user32` and `gdi32` libraries. The demo statically links its GCC/C++
 runtime support, so the resulting executable does not require MSYS2 runtime
 directories on `PATH`. It has no SDL or GPU dependency yet.

@@ -40,6 +40,14 @@ zoom_output="$(
   bash scripts/lagrange_demo.sh
 )"
 
+zoom_out_output="$(
+  SAGAN_RENDER_TEST_FRAME_MS=20 \
+  SAGAN_RENDER_FRAME_LIMIT=1 \
+  SAGAN_RENDER_TEST_SCROLL_FRAME=1 \
+  SAGAN_RENDER_TEST_SCROLL_DELTA=-20 \
+  bash scripts/lagrange_demo.sh
+)"
+
 fast_final="$(printf '%s\n' "$fast_output" | grep '^final_')"
 slow_final="$(printf '%s\n' "$slow_output" | grep '^final_')"
 if [[ "$fast_final" != "$slow_final" ]]; then
@@ -61,6 +69,11 @@ if [[ "$zoom_output" != *"final_kilometers_per_pixel 2000"* ||
       "$zoom_output" != *"final_time_s 0"* ]]; then
   printf 'Expected one upward wheel step to zoom from 2500 to 2000 km/pixel while paused, got:\n%s\n' \
     "$zoom_output" >&2
+  exit 1
+fi
+if [[ "$zoom_out_output" != *"final_kilometers_per_pixel 20000"* ]]; then
+  printf 'Expected downward wheel input to stop at 20000 km/pixel without a subpixel-circle failure, got:\n%s\n' \
+    "$zoom_out_output" >&2
   exit 1
 fi
 if [[ "$fast_final" != *"final_time_s 5.184e+06"* &&
