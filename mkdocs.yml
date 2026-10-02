@@ -43,6 +43,7 @@ plugins:
 
 hooks:
   - scripts/docs_status.py
+  - scripts/docs_sagan_lexer.py
 
 markdown_extensions:
   - admonition

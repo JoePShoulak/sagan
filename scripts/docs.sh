@@ -52,6 +52,7 @@ case "${1:-}" in
     }
     bash scripts/docs_examples_test.sh
     "$venv_python" -m mkdocs build --strict --clean
+    "$venv_python" scripts/docs_syntax_test.py build/docs-site
     ;;
   release-check)
     test -x "$venv_python" || {
