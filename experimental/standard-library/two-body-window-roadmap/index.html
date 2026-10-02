@@ -3533,6 +3533,8 @@
       
         
       
+        
+      
     
     
     
@@ -3607,6 +3609,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4360,10 +4398,29 @@ playback-speed controls, and closes through Escape, the window button, or the
 test frame limit. Its deterministic test proves that 100 20-millisecond frames
 and 20 100-millisecond frames reach the identical 172800-second snapshot. The
 recorded 960 by 540 frame comes from the exact checked-in demo source.</p>
-<p><strong>R3 — Optional three-body display.</strong> Reuse R2; add a third body, label, and
-trail without creating a second renderer. <strong>Demo:</strong> proposed
-<code>make three-body-demo</code> shows the three-body state from Physics P1. Stop after
-R2 if time or usage is tight.</p>
+<p><strong>R3 — Lagrange stability display.</strong> Reuse R2 to show eight bodies: the two
+massive circular-orbit primaries plus six massless tertiary tracers from P1.
+Place one tracer at each of L1 through L5 and one off-point control. Give every
+body a distinct color and a trail in the same color. Show each tertiary's
+rotating-frame stability error numerically until its snapshot reports escape,
+then show <code>escaped</code> in place of the number. Use the trails to make the
+stable L4/L5 behavior visibly comparable with unstable collinear points and
+the off-point control. Do not create a second renderer or allow render timing
+to alter physics. <strong>Demo:</strong> proposed <code>make lagrange-demo</code> consumes P1's
+immutable snapshots and records a representative long-duration frame or
+capture. The scene contains eight bodies total, despite the six tertiaries
+remaining gravitationally independent of one another.</p>
+<p><strong>Status: implemented at <code>7603ecc</code>, corrected at <code>2e767ff</code>, and verified on
+2026-10-01.</strong> <code>make lagrange-demo</code>
+reuses <code>sagan-render</code> 0.5.1 and <code>sagan-physics</code> 0.3.0 without adding another
+renderer. It draws all eight bodies with distinct matching-color eight-sample
+trails sampled every six simulation hours, plus all six rotating-frame errors.
+It begins at five simulated days per real second.
+Space, Up/Down, and Escape retain R2 behavior; R resets physics and trails while
+preserving the selected, displayed playback rate. The deterministic test
+compares two display schedules at the same 60-day physics time, requires
+identical final errors, and verifies reset-rate independence; its checked 1180
+by 720 capture comes from the exact demo source.</p>
 <h2 id="physics-chat">Physics chat</h2>
 <p><strong>P0 — Headless two-body solver.</strong> Define two masses, positions, velocities,
 and an explicit time step using native unit-checked values and shared math
@@ -4386,14 +4443,38 @@ mass/timestep/overlap tests. The run uses one caller-defined 2D frame and makes
 no collision, softening, or cross-toolchain bit-equality promise. Compiler
 commit <code>d97f499</code> preserves grouping when composite units appear as divisors,
 which is required for the solver's inverse-square force calculation.</p>
-<p><strong>P1 — Optional simplified three-body solver.</strong> Generalize only as far as
-three point masses with direct pairwise gravity and the same fixed-step
-integrator. Check pairwise force symmetry, finite states, barycenter behavior,
-and bounded numerical drift on a stated fixture. Avoid singular initial
-conditions; do not promise long-term orbital stability. Publish the same
-snapshot shape used by R2 so rendering changes are minimal. <strong>Demo:</strong> a
-headless three-body trace first, then R3's window. This starts only after the
-two-body window passes its acceptance tests.</p>
+<p><strong>P1 — Circular restricted three-body solver.</strong> Keep the P0 massive pair in a
+near-circular orbit and advance six independent massless tertiary tracers with
+the same fixed-step velocity-Verlet method. Each tracer feels both primaries;
+none affects the primaries or another tracer. Place one tracer at each of L1
+through L5 and an off-point control. Publish immutable snapshots with the same
+identity/position/velocity shape as P0 plus each tracer's distance from its
+rotating-frame reference. Verify that the primary pair is bit-identical to a
+two-body reference run, remains within P0's conservation tolerances, and that
+L4/L5 remain closer to their references than the off-point control over a
+documented run. L1, L2, and L3 are equilibrium locations but are not stable;
+do not describe all five points as stable. <strong>Demo:</strong> proposed
+<code>make lagrange-numeric-demo</code> prints a time series comparing all six errors,
+then hands the same snapshot contract to R3.</p>
+<p><strong>Status: implemented at <code>abbc147</code> and locally verified on 2026-10-01.</strong>
+<code>sagan-physics</code> 0.3.0 provides <code>physics.restricted_three_body</code>, retaining P0's
+massive pair while advancing six independent massless tracers. The checked
+60-day fixture uses a 300-second step and an Earth-Moon-like circular pair;
+the primary snapshots remain bit-identical to a separate P0 reference run.
+At day 60, the L4 and L5 rotating-frame errors are approximately 13 micrometres
+and 71 micrometres, versus 962 million metres for the off-point control. The
+collinear-point traces remain available for comparison without claiming that
+L1, L2, or L3 are stable. R3 can consume these immutable snapshots without
+adding physics to the renderer.</p>
+<p><strong>P2 — Solar-perturbed Lagrange experiment.</strong> Preserve P1 as the ideal
+reference and add a separate planar model in which the Sun, Earth, and Moon
+mutually gravitate while the same six massless tracers feel all three massive
+bodies. Center the main presentation on the Earth-Moon barycenter and include
+a heliocentric inset so both scales remain legible. This is a controlled model
+comparison, not an ephemeris claim. <strong>Status: implemented at <code>1111d4a</code> and
+locally verified on 2026-10-02.</strong> <code>sagan-physics</code> 0.3.0 provides checked
+numeric and windowed 60-day fixtures; the latter also records a representative
+1180 by 720 frame.</p>
 <h2 id="math-chat">Math chat</h2>
 <p><strong>M0 — Minimal orbital math.</strong> Audit the existing <code>Float64</code>, <code>Point2</code>,
 <code>Vector2</code>, and native unit behavior before adding anything. Supply only the
@@ -4435,6 +4516,17 @@ double-clicking its configured Windows entry opens the window without an
 unwanted console. Test missing-library/resource errors and release contents.
 The broader, deferred unified-error redesign is not a prerequisite for this
 slice, but new failures must still produce honest, actionable diagnostics.</p>
+<p><strong>L1 automated Windows verification (2026-10-01):</strong> The orbit project's manifest now
+selects windowed launch. Normal <code>sagan --run-package</code> and source-file execution
+link the native bridge from the resolved <code>sagan-render</code> package; the Explorer
+launcher uses the same path without a console. Windows staging includes both
+first-party packages, native bridge source/header, and the orbit demo, while
+non-rendering programs compile without the bridge. The two frame-rate runs
+produce the same fixed-step snapshot. The staged launcher and portable ZIP
+ran the orbit demo with MSYS2 removed from <code>PATH</code>; the ZIP checksum, bundled
+toolchain, and package files were checked. The actual installer was built, but
+a manual Explorer double-click and installation on a clean Windows machine
+remain unverified.</p>
 <h2 id="cross-chat-integration-order-and-acceptance">Cross-chat integration order and acceptance</h2>
 <table>
 <thead>

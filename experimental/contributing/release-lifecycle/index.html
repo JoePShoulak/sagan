@@ -3412,6 +3412,8 @@
       
         
       
+        
+      
     
     
     
@@ -3486,6 +3488,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4275,9 +4313,12 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="release-lifecycle">Release lifecycle</h1>
-<p>Development is integrated directly on <code>dev</code>. The project owner promotes a
-validated <code>dev</code> commit to <code>main</code> only when intentionally preparing a release;
-ordinary feature and fix work does not land directly on <code>main</code>.</p>
+<p>Development occurs on focused branches created from <code>dev</code>. Changes merge into
+<code>dev</code> through pull requests, where the combined state receives the full
+integration suite. The project owner promotes validated <code>dev</code> history to <code>main</code>
+only when intentionally preparing a release; ordinary feature and fix work does
+not land directly on either protected branch. See the
+<a href="../change-lifecycle/">change and publication lifecycle</a> for the complete path.</p>
 <p>Every push to <code>main</code> runs release-preparation CI. A new history-derived 0.x
 version gets a signed <code>-rc.1</code> preview tag; a new 1.x version gets a signed
 stable tag. A docs, test, or maintenance commit with no version change does

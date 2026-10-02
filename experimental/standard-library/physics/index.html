@@ -1765,6 +1765,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#implemented-p1-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented P1 surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solar-perturbed-lagrange-experiment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solar-perturbed Lagrange experiment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#intended-role-beyond-p0" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3511,6 +3533,8 @@
       
         
       
+        
+      
     
     
     
@@ -3585,6 +3609,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4177,6 +4237,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#implemented-p1-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented P1 surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solar-perturbed-lagrange-experiment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solar-perturbed Lagrange experiment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#intended-role-beyond-p0" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4233,9 +4315,11 @@
 <h1 id="physics-library">Physics library</h1>
 <div class="admonition info">
 <p class="admonition-title">Initial implementation</p>
-<p><code>sagan-physics</code> 0.1.0 implements the narrow P0 headless two-body surface
-documented below. Broader astrodynamics, N-body propagation, collisions,
-rigid bodies, atmospheres, and trajectory planning remain future work.</p>
+<p><code>sagan-physics</code> 0.3.0 implements the narrow P0 two-body, P1 circular
+restricted-three-body, and solar-perturbed Lagrange experiment documented
+below. Broader astrodynamics,
+general N-body propagation, collisions, rigid bodies, atmospheres, and
+trajectory planning remain future work.</p>
 </div>
 <p>Physics is intended to be a first-party Sagan core library built around the
 same mathematical and simulation vocabulary as the language. Unlike math, it
@@ -4244,11 +4328,11 @@ incur its dependencies or runtime costs.</p>
 <p>Native units are already a language feature; they do not require importing the
 physics library. The library will use those checked units rather than inventing
 a second unit system.</p>
-<p>The physics package is first-party but independently versioned. Its <code>0.1.0</code>
+<p>The physics package is first-party but independently versioned. Its <code>0.3.0</code>
 version does not change Sagan's compiler version. A package imports it through
 an explicit dependency and an exact lockfile selection:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[dependencies]</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">physics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">package</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"sagan-physics"</span><span class="p">,</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"^0.1.0"</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">physics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">package</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"sagan-physics"</span><span class="p">,</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"^0.3.0"</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
 <h2 id="implemented-p0-surface">Implemented P0 surface</h2>
 <p>The <code>physics.two_body</code> module exports:</p>
@@ -4305,6 +4389,108 @@ energy and angular-momentum drift against relative tolerances of <code>1e-8</cod
 <code>1e-12</code>, respectively. It also requires the barycenter to remain within
 <code>1e-6 m</code> of its initial origin. These are fixture tolerances, not a general
 accuracy guarantee for every orbit or timestep.</p>
+<h2 id="implemented-p1-surface">Implemented P1 surface</h2>
+<p>The <code>physics.restricted_three_body</code> module adds:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Implemented contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LagrangeBodySeed</code></td>
+<td>Identity, inertial position/velocity, and a dimensionless rotating-frame reference coordinate for one massless tracer.</td>
+</tr>
+<tr>
+<td><code>LagrangeBodySnapshot</code></td>
+<td>The P0 identity/position/velocity shape plus rotating reference, stability error in metres, and latched <code>escaped()</code> state.</td>
+</tr>
+<tr>
+<td><code>RestrictedThreeBodySnapshot</code></td>
+<td>The massive P0 pair and exactly six read-only tertiary snapshots.</td>
+</tr>
+<tr>
+<td><code>RestrictedThreeBodySolver</code></td>
+<td>Advances the P0 pair and six independent massless tracers using the same fixed timestep and velocity-Verlet scheme.</td>
+</tr>
+</tbody>
+</table>
+<p>This is the circular restricted three-body problem, not a general eight-body
+gravity solver. Tertiaries feel the gravity of both primaries but exert no
+force themselves. They therefore do not perturb either primary and do not
+interact with one another. This intentional restriction allows several
+alternative trajectories to be compared in one deterministic run.</p>
+<p>The checked fixture uses an Earth-Moon-like mass ratio of approximately
+<code>0.01214</code>, below the triangular-point stability limit. It places tracers at
+L1, L2, L3, L4, and L5 plus an off-point control, then advances 60 days with a
+300-second step. L4 and L5 are the stable equilibrium points. L1 through L3
+are unstable equilibrium points; starting there does not make them stable.</p>
+<p>At every snapshot, the solver reconstructs each tracer's reference position
+from the current primary-secondary axis and barycenter. <code>stability_error()</code> is
+the tracer's distance from that rotating reference, making the six results
+directly comparable without introducing rendering concerns into physics.</p>
+<p><code>escaped()</code> becomes true when a tertiary has moved beyond twice the current
+primary-secondary separation, is moving outward from the barycenter, and has
+positive instantaneous specific orbital energy relative to both primaries.
+The result is latched once detected. This is a practical boundary for the
+isolated restricted-three-body demo, not a claim about escape from an external
+body's Hill sphere. Presentations should display <code>escaped</code> instead of the
+stability-error number after the flag becomes true; the numeric error remains
+available for diagnostics.</p>
+<p>Run the checked fixture with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>lagrange-numeric-demo
+</span></code></pre></div>
+<p>The fixture verifies that the massive pair is identical to a standalone P0
+run, checks its existing energy and angular-momentum tolerances, and requires
+both L4 and L5 to remain closer to their references than the off-point control.
+The demonstrated stability is specific to the stated mass ratio, starting
+conditions, duration, and timestep.</p>
+<h2 id="solar-perturbed-lagrange-experiment">Solar-perturbed Lagrange experiment</h2>
+<p>The <code>physics.solar_lagrange</code> module adds a deliberately narrow planar
+restricted-four-body experiment:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Implemented contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SolarLagrangeSeed</code></td>
+<td>One massless tracer's inertial state and Earth-Moon rotating-frame reference.</td>
+</tr>
+<tr>
+<td><code>SolarTertiarySnapshot</code></td>
+<td>Read-only tracer state, rotating-frame error, and Earth-Moon escape flag.</td>
+</tr>
+<tr>
+<td><code>SolarLagrangeSnapshot</code></td>
+<td>Sun, Earth, Moon, and exactly six massless tracer snapshots.</td>
+</tr>
+<tr>
+<td><code>SolarLagrangeSolver</code></td>
+<td>Mutually advances the three massive bodies and independently advances all six tracers under their combined gravity.</td>
+</tr>
+</tbody>
+</table>
+<p>The checked setup starts a circular Earth-Moon approximation with its
+barycenter on a circular solar approximation at one astronomical unit. It is
+two-dimensional and omits orbital inclination, eccentricity, nonspherical
+gravity, radiation pressure, other planets, and ephemeris-fitted initial
+conditions. It exists to isolate the qualitative effect of solar gravity; it
+is not a real Earth-Moon ephemeris model.</p>
+<p>Run the numerical comparison or windowed visualization with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>solar-lagrange-numeric-demo
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>make<span class="w"> </span>solar-lagrange-demo
+</span></code></pre></div>
+<p>The window keeps an Earth-Moon-centered Lagrange view with colored trails and
+adds a heliocentric inset plus a Sun-direction indicator. In the checked
+60-day, 300-second-step fixture, the L4 and L5 rotating-frame errors grow to
+approximately 39,844 km and 48,369 km, respectively. Those values demonstrate
+the model difference; they are not an accuracy claim about the real system.</p>
 <h2 id="intended-role-beyond-p0">Intended role beyond P0</h2>
 <p>The library will eventually provide the supported physical-modeling facilities
 for Sagan simulations. Its exact scope and subdivision must be decided from

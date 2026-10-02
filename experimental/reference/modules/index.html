@@ -3487,6 +3487,8 @@
       
         
       
+        
+      
     
     
     
@@ -3561,6 +3563,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4243,7 +4281,10 @@ that cannot be imported as a Sagan identifier needs an explicit alias:</p>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">physics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"^1.2.3"</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">orbit_tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">package</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"orbit-tools"</span><span class="p">,</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"^0.1.0"</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
-<p>Set <code>SAGAN_PACKAGE_INDEX</code> to a local package index path. A package with
+<p>Installed Windows Sagan first looks for <code>libraries/index.tsv</code> beside its
+<code>bin</code> directory. An explicit <code>SAGAN_PACKAGE_INDEX</code> overrides that bundled
+index, and tooling may supply an index path directly. A source checkout finds
+its adjacent <code>libraries/index.tsv</code> in the same way. A package with
 dependencies must have <code>sagan.lock</code> beside its manifest, pinning the exact
 versions of direct and transitive dependencies. The compiler validates the
 lock against the index and installed manifests before linking; it does not

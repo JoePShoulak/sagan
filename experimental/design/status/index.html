@@ -3531,6 +3531,8 @@
       
         
       
+        
+      
     
     
     
@@ -3605,6 +3607,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4281,6 +4319,10 @@ audit; it does not mean every listed compiler feature is unfinished.</p>
 1.x commit versions are checkpoints, not a declaration that the 2.0 migration
 or release gates are complete. The major-version commit is reserved for the
 coordinated 2.0 publication decision.</p>
+<p>The current units work also preserves compound-denominator grouping and shows
+the selected unit in native <code>print</code> output and string interpolation. Named
+derived units such as <code>newton</code> and <code>watt</code> retain their catalog dimensions; the
+<a href="../../reference/units/">units reference</a> includes executable examples.</p>
 <h2 id="roadmap-snapshot">Roadmap snapshot</h2>
 <table>
 <thead>
@@ -4501,6 +4543,12 @@ program, and Explorer launcher. An optional <code>[application] mode</code> sele
 context-menu verbs override either choice. Windowed failures retain a local log
 and show a native diagnostic dialog. Published release artifacts use GitHub
 Releases as the canonical source; HP1 provides a verified mirror.</p>
+<p>The L1 window-distribution work packages the explicit physics/render libraries,
+render native bridge, and two-body demo with Windows releases. A normal
+<code>sagan --run-package</code> call and the GUI launcher use the resolved package rather
+than a demo-specific compiler command. Headless projects still omit the render
+bridge. The <a href="../../standard-library/two-body-window-roadmap/">two-body roadmap</a>
+records staged-payload verification and remaining manual Explorer validation.</p>
 <p>Installer policy is Windows x64 only, a self-contained offline package,
 in-place upgrades, refused downgrades, and SHA-256 sidecars. Initial 1.0.0
 publication explicitly permits an unsigned installer after automated
@@ -4518,7 +4566,7 @@ are immutable, and only the latest stable release receives best-effort support.
 The initial 1.0.0 documentation stays experimental; its page-by-page audit is
 the <strong>first post-1.0 task</strong> and will determine whether any language, tooling,
 or documentation changes are needed. Authenticode signing and a clean-machine
-run are subsequent Windows acceptance work. The VS Code 0.3.4 language client
+run are subsequent Windows acceptance work. The VS Code 0.3.5 language client
 is usable today; matching extension tests and compiler capabilities are part
 of every release gate.</p>
 

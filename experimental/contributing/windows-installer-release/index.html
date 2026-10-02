@@ -3412,6 +3412,8 @@
       
         
       
+        
+      
     
     
     
@@ -3486,6 +3488,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4221,6 +4259,10 @@ distribution remain future work.</p>
 <li>silent current-user installation succeeds with compiler-runtime directories
   absent from <code>PATH</code>;</li>
 <li>direct CLI compilation, generated-program execution, and windowed launch work;</li>
+<li>the installer and portable ZIP contain both first-party packages, the native
+  render bridge, and the manifest-backed two-body example;</li>
+<li>that packaged example runs outside an MSYS2-modified <code>PATH</code>, while a headless
+  physics project has no rendering linkage;</li>
 <li>installing the same or a newer version in place succeeds;</li>
 <li>installing an older version over a newer version is refused;</li>
 <li><code>.sagan</code> association, PATH registration, and clean uninstall work; and</li>
@@ -4230,6 +4272,7 @@ distribution remain future work.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bash<span class="w"> </span>scripts/windows/build_installer.sh
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bash<span class="w"> </span>scripts/windows/verify_installer_artifact.sh
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bash<span class="w"> </span>scripts/windows/test_installer.sh
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>bash<span class="w"> </span>scripts/windows/test_portable.sh
 </span></code></pre></div>
 <p>The Windows Installer workflow performs the same package build and smoke test.
 An unsigned artifact is normally a development artifact. The experimental

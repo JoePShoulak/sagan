@@ -3412,6 +3412,8 @@
       
         
       
+        
+      
     
     
     
@@ -3486,6 +3488,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -3889,6 +3927,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#branch-and-integration-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch and integration scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4166,6 +4215,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#branch-and-integration-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch and integration scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4241,10 +4301,18 @@ assertions. The curated visual and executable demonstrations are:</p>
 suite. When <code>lcov</code> is available it writes <code>build/coverage.info</code>. Instrumented
 objects are removed even after failure so later ordinary builds do not inherit
 coverage linkage.</p>
-<p><code>.github/workflows/coverage.yml</code> repeats this on Ubuntu for pushes and pull
-requests, uploads the report to Codecov through GitHub OIDC, and enforces the
-repository's line-coverage floor. Coverage shows which implementation paths ran;
-it does not prove that every language rule is correct.</p>
+<p><code>.github/workflows/coverage.yml</code> repeats this on Ubuntu for pull requests that
+affect the implementation and for every integrated push to <code>dev</code> or <code>main</code>. It
+uploads the report to Codecov through GitHub OIDC and enforces the repository's
+line-coverage floor. Coverage shows which implementation paths ran; it does not
+prove that every language rule is correct.</p>
+<h2 id="branch-and-integration-scope">Branch and integration scope</h2>
+<p>On a focused change branch, run the smallest set of tests that fully exercises
+the changed surfaces. After the branch merges into <code>dev</code>, CI reruns the complete
+compiler, coverage, documentation, extension, and installer gates against the
+combined repository state. Promotion to <code>main</code> then starts the stable-release
+pipeline. See <a href="../change-lifecycle/">Change and publication lifecycle</a> for the
+required sequence.</p>
 <h2 id="documentation">Documentation</h2>
 <p>Validate documentation metadata, links, navigation, Markdown, executable
 examples, and rendering with:</p>

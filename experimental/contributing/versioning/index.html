@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://sagan.shoulak.org/latest/contributing/versioning/">
       
       
-        <link rel="prev" href="../development-setup/">
+        <link rel="prev" href="../change-lifecycle/">
       
       
         <link rel="next" href="../windows-installer-release/">
@@ -3412,6 +3412,8 @@
       
         
       
+        
+      
     
     
     
@@ -3486,6 +3488,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4264,10 +4302,12 @@ version. Prepare it before committing:</p>
 <p>The helper changes only the README badge. It does not stage files, create a
 commit, or push. Documentation-only and maintenance commits have no version
 impact and do not require a badge update.</p>
-<p>Routine commits and pushes go directly to <code>dev</code>; the project does not require
-per-feature branches. When the integrated <code>dev</code> history is ready for a release,
-promote it deliberately to <code>main</code> without adding unrelated publication-only
-changes.</p>
+<p>Create each change on a short-lived branch from <code>dev</code>, validate its affected
+surfaces, and merge it into <code>dev</code> through a pull request. The merged <code>dev</code> state
+then receives the complete integration suite. When that integrated history is
+ready for a release, promote <code>dev</code> deliberately to <code>main</code> without unrelated
+publication-only changes. The canonical branch, CI, and publication sequence is
+documented in the <a href="../change-lifecycle/">change and publication lifecycle</a>.</p>
 <p>Every push to <code>main</code> runs the release-preparation workflow. It checks the
 history-derived version and README badge. For a new 0.x version, CI signs an
 <code>-rc.1</code> preview tag; for a new stable version from 1.0 onward, CI signs the

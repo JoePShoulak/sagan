@@ -3422,6 +3422,8 @@
       
         
       
+        
+      
     
     
     
@@ -3496,6 +3498,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4112,17 +4150,17 @@
 <tr>
 <td>Physics as explicit first-party core library</td>
 <td>Decided</td>
-<td>P0 two-body solver implemented as <code>sagan-physics</code> 0.1.0</td>
+<td>P0/P1 plus solar Lagrange experiment implemented as <code>sagan-physics</code> 0.3.0</td>
 </tr>
 <tr>
 <td>Rendering as explicit first-party core library</td>
 <td>Decided</td>
-<td>Not implemented</td>
+<td>R0-R3 implemented as <code>sagan-render</code> 0.5.1</td>
 </tr>
 <tr>
 <td>Module and package names</td>
-<td>Open</td>
-<td>Not implemented</td>
+<td>Implemented for first slices</td>
+<td><code>render.window</code>, <code>render.canvas</code>, <code>physics.two_body</code>, and current Lagrange modules</td>
 </tr>
 <tr>
 <td>General standard-library boundary</td>
@@ -4143,8 +4181,9 @@ and available without importing physics; coordinate-frame identity remains
 deferred. The physics library builds on the native unit model rather than
 maintaining a parallel runtime wrapper.</p>
 <p>The high-level core-library structure is decided. Math has its first narrow
-implementation slice, and physics has its first independently versioned P0
-slice; wider math, physics, and rendering work remains staged.</p>
+implementation slice, physics has independently versioned P0/P1 and solar
+experiment slices, and rendering has its first Windows 2D implementation;
+wider math, physics, and rendering work remains staged.</p>
 <table>
 <thead>
 <tr>
@@ -4165,19 +4204,19 @@ slice; wider math, physics, and rendering work remains staged.</p>
 <td><a href="../physics/">Physics</a></td>
 <td>First-party and tightly coupled to math; independently versioned</td>
 <td>Explicit import</td>
-<td>P0 implemented in 0.1.0</td>
+<td>P0/P1 plus solar experiment implemented in 0.3.0</td>
 </tr>
 <tr>
 <td><a href="../rendering/">Rendering</a></td>
 <td>First-party and tightly coupled to math and simulation types</td>
 <td>Explicit import</td>
-<td>Planned</td>
+<td>Windows R0-R3 implemented in 0.5.1; L1 packaged windowed demo verified on Windows</td>
 </tr>
 </tbody>
 </table>
-<p>Open design work includes concrete APIs, module and package names, dependency
-boundaries, initialization behavior, linking strategy, and whether physics and
-rendering have smaller independently importable components.</p>
+<p>Open design work includes wider APIs, dependency boundaries, initialization
+behavior, and whether physics and rendering need smaller independently
+importable components.</p>
 <p>The <a href="../two-body-window-roadmap/">two-body window roadmap</a> is the first
 cross-library implementation plan. Only milestones carrying an implementation
 status and checked commit are completed features.</p>

@@ -3487,6 +3487,8 @@
       
         
       
+        
+      
     
     
     
@@ -3561,6 +3563,42 @@
     
   
     Development setup
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/change-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change and publication lifecycle
   
 
     
@@ -4206,6 +4244,7 @@ necessary. Windows ARM64, Linux, and macOS are not supported by Sagan 1.0.</p>
 <p>After installation, open a new terminal and run:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sagan<span class="w"> </span>--version
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sagan<span class="w"> </span>path/to/program.sagan
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sagan<span class="w"> </span>--run-package<span class="w"> </span>path/to/project
 </span></code></pre></div>
 <p>Double-clicking a loose <code>.sagan</code> file opens a terminal by default. A package may
 select terminal-free launch behavior in <code>sagan.toml</code>:</p>
@@ -4216,6 +4255,12 @@ select terminal-free launch behavior in <code>sagan.toml</code>:</p>
 Terminal</strong> and <strong>Run Without Terminal</strong> actions override the configured choice
 for one launch. Windowed failures are recorded at
 <code>%LOCALAPPDATA%\Sagan\logs\latest-launch.log</code> and reported with a native dialog.</p>
+<p>The Windows installer and portable ZIP include the manifest-backed two-body
+example and its explicit <code>sagan-render</code> and <code>sagan-physics</code> libraries. From Git
+Bash, run <code>sagan --run-package /path/to/sagan/examples/two_body_demo</code>, or
+double-click its <code>src/main.sagan</code> when file association is enabled. Rendering
+uses the Windows Segoe UI system font; no separate font download is needed.
+Ordinary command-line programs do not load the render bridge.</p>
 <p>Windows installer artifacts are built and smoke-tested by the Windows Installer
 workflow. macOS and Linux installers remain planned targets; their future
 support must preserve this manifest contract without pretending they are
