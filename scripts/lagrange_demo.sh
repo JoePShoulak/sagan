@@ -26,7 +26,11 @@ export SAGAN_PACKAGE_INDEX="$package_index"
 
 bin/sagan --emit-cpp-package examples/lagrange_demo build/lagrange-demo/program.cpp
 
-native_output="build/lagrange-demo/lagrange-demo-r4.exe"
+native_output="build/lagrange-demo/lagrange-demo-${BASHPID:-$$}.exe"
+cleanup_native_output() {
+  rm -f "$native_output"
+}
+trap cleanup_native_output EXIT
 native_tmp="$repo_root/build/tmp"
 if command -v cygpath >/dev/null 2>&1; then
   native_tmp="$(cygpath -w "$native_tmp")"
