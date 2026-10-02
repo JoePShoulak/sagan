@@ -88,8 +88,19 @@ using standard `$/cancelRequest`.
 An optional `prefix` filters package names. The response uses
 `sagan-package-index-v1` with `ready`, `unavailable`, or `invalid` state and
 returns version, compiler requirement, compatibility, installed/available
-state, and manifest URI where installed. It does not yet resolve dependencies,
-provide export signatures, or enable package completion.
+state, and manifest URI where installed. This inspection request does not
+itself resolve a project's dependencies, provide export signatures, or enable
+package completion.
+
+Dependency resolution is a separate compiler-owned operation: manifest aliases,
+the installed local index, and exact `sagan.lock` pins select the source linked
+into a project. `sagan/packages/catalog` reports source-derived exports and
+signatures when installed source can be checked. Standard completion already
+suggests unfinished module paths and explicitly exported names in selective
+imports; definition and hover work on those import names and on resolved
+package-owned uses. These are tested subsets, not a claim of full package
+completion, navigation, or safe auto-import. See the
+[package catalog contract](package-catalog-contract.md).
 
 ## Reliability gate
 

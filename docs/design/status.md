@@ -120,8 +120,10 @@ validates module names and public exports, preserves aliases, and rejects
 cycles. Selective imports and exported namespace members are isolated, linked,
 semantically analyzed, type-checked, and emitted together for native
 cross-module calls. Qualified names map to nested files beneath the manifest
-source root. Mutable module initialization, external dependencies, constraints,
-lockfiles, registries, and distribution remain future work.
+source root. Installed external dependencies now resolve through manifest
+aliases, a local package index, and validated exact `sagan.lock` pins.
+Resolution is offline; package installation commands, a remote registry,
+mutable module initialization, and distribution remain future work.
 Documentation comments attach to supported declarations with retained text and
 source spans and appear in every AST renderer. Focused errors cover orphaned,
 same-line, executable-statement, and enum-member placements.
@@ -138,11 +140,12 @@ arguments, and top-level generic functions execute with call-site inference.
 Generic classes, generic face defaults, and class-level generic methods execute
 with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
-face conformance with `is`. Method-specific face generics, external package
-dependencies and distribution, and the concrete math, physics, and rendering APIs
-remain post-1.0 work. Implementation inheritance, parallelism, unsafe escape
-hatches, registries, lockfiles, and remote dependency resolution are also
-explicitly deferred. Math's automatic availability and the explicit-import
+face conformance with `is`. Method-specific face generics, package installation
+and distribution, and the concrete math, physics, and rendering APIs remain
+post-1.0 work. Implementation inheritance, parallelism, unsafe escape
+hatches, registries, and remote dependency retrieval are also explicitly
+deferred. Exact lockfiles and offline installed-package resolution are now
+implemented. Math's automatic availability and the explicit-import
 status of the first-party physics and rendering libraries are settled.
 
 ## Required pre-1.0 design checkpoints
@@ -205,6 +208,6 @@ are immutable, and only the latest stable release receives best-effort support.
 The initial 1.0.0 documentation stays experimental; its page-by-page audit is
 the **first post-1.0 task** and will determine whether any language, tooling,
 or documentation changes are needed. Authenticode signing and a clean-machine
-run are subsequent Windows acceptance work. The VS Code 0.3.2 language client
+run are subsequent Windows acceptance work. The VS Code 0.3.4 language client
 is usable today; matching extension tests and compiler capabilities are part
 of every release gate.

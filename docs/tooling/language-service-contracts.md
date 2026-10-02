@@ -315,9 +315,11 @@ Sagan, and `plan_debug_launch` supplies executable, working directory, and
 environment for a successful build. Optimized local evaluation and attach are
 explicitly unsupported. An experimental `sagan-dap` executable now uses GDB's
 native DAP interpreter for debug-build launch, mapped breakpoints, stack
-frames, and source-level `next`. It is not yet a supported release debugger:
-Sagan values, full stepping, failure mapping, Linux validation, and the GDB
-runtime package remain incomplete. All live debugger flags stay false.
+frames, and source-level `next`, `stepIn`, and `stepOut` probes, including an
+imported module. It is not yet a supported release debugger: reliable Sagan
+values, complete stepping contexts, failure mapping, distributable Linux
+validation, and the GDB runtime package remain incomplete. All live debugger
+flags stay false.
 Explicit `test "name" { ... }`
 declarations now parse and type-check, and `tests.hpp` discovers them in a
 document or resolved project with stable ID, URI, UTF-16 name range, and

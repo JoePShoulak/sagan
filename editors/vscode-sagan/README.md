@@ -26,6 +26,18 @@ Project test discovery is supported. When the server advertises project-wide
 execution, a selection spanning several modules runs as one cancellable project
 operation; older compatible servers retain document-grouped execution.
 
+Tests are explicit Sagan declarations, for example:
+
+```sagan
+test "the answer" {
+  assert(6 * 7 == 42)
+}
+```
+
+The compiler, not the extension, decides which files belong to a package and
+which test IDs are valid. Check/build/run and test requests use the current
+document's unsaved text where the server supports an overlay.
+
 The [demo](examples/demo.sagan) includes grouped `let` bindings, simultaneous
 Fibonacci reassignment, postfix increment, a brace-free loop, `5.times`,
 `PHI ^ n`, and `Int.round(...)`. The compiler and language server determine
@@ -37,6 +49,14 @@ longer requires a `main` function.
 Run **Sagan: Show Tooling Status** from the Command Palette to inspect the compiler found for the current workspace. If discovery does not find it, set `sagan.compiler.path` to the compiler executable.
 
 The extension locates `sagan-lsp` beside the configured compiler, in the workspace `bin` directory, or on `PATH`. Set `sagan.server.path` to override discovery. Changes to server, compiler, or trace settings restart the client automatically; **Sagan: Restart Language Server** remains available for manual recovery. Optional sanitized protocol-method tracing is controlled by `sagan.server.trace`.
+
+Installed packages and locked dependencies already have compiler-backed import
+suggestions and some navigation and hover support. Complete package completion
+and automatic import edits are still in development. The compiler also has an
+experimental debug adapter, but it is not packaged or advertised as a
+supported debugger; this extension does not offer a Sagan debug configuration
+yet. The [extension roadmap](../../docs/tooling/vscode-extension-roadmap.md)
+tracks those gates.
 
 ## Local development
 

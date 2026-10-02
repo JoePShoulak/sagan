@@ -29,6 +29,8 @@ verified_by: null
 - `src/codegen/cpp_generator.*`: C++ emission for checked programs, including
   portable identifier encoding, built-in output, and typed
   array/dictionary/index/iteration lowering driven by the checked type model.
+- `src/codegen/source_map.*`: generated-to-Sagan source mapping for build errors
+  and experimental debugging.
 - `src/driver/native_runner.*`: temporary native builds, compiler invocation,
   executable launch, cleanup, and exit-code propagation.
 - `src/source/*`: immutable document identity, version, text, byte ranges, and
@@ -38,7 +40,13 @@ verified_by: null
 - `src/language_service/*`: reusable strict and recovering document analysis
   and versioned capability discovery; workspace state adds document lifecycle,
   cached analysis, dependency invalidation, cancellation, and stale-result
-  rejection.
+  rejection. Queries, formatting, safe edits, documentation, native operations,
+  test discovery/execution, and the installed-package catalog live here.
+- `src/modules/*`: package manifests, module resolution, the local package
+  index, and exact lockfile validation for installed dependencies.
+- `src/lsp/*`: framed stdio LSP transport over the shared compiler services.
+- `src/dap/*`: experimental framed debug adapter using native GDB DAP; it is
+  not yet a supported or packaged editor debugger.
 - span, diagnostic, generator, and parse-error support retained or adapted
   from Schematic.
 - `src/version.hpp` plus generated `obj/version.cpp`: build identity.
@@ -55,11 +63,12 @@ Direct source and package-run modes invoke the native compiler and program.
 Lexical, syntax, and semantic failures are reported with source locations.
 
 The compiler objects are archived into `build/lib/libsagan-compiler.a`; the
-batch CLI links that library rather than owning a separate implementation.
-Future semantic-query, formatter, operation, debugger, and LSP layers extend
-the same compiler-owned contracts. The module resolver already consumes the
-shared source-provider interface, so an unsaved imported file takes precedence
-over its disk version without alternate parsing logic.
+batch CLI, language server, and experimental debug adapter link the same
+compiler-owned implementation. The language server does not reparse Sagan in
+JavaScript. The module resolver consumes the shared source-provider interface,
+so an unsaved imported file takes precedence over its disk version without
+alternate parsing logic. Imported installed packages use manifest aliases and
+validated exact `sagan.lock` pins; index lookup is offline.
 
 ```text
 UTF-8 source -> tokenizer -> parser -> AST -> name analysis -> type checking -> C++ emission
@@ -73,6 +82,10 @@ semantic errors, renderer output, CLI behavior, and defensive invariants.
 
 ## Remaining boundaries
 
-Position-based editor queries, formatting and safe source edits, reusable
-build/debug operations, LSP transport, broader platform packaging, and the
-math, physics, and rendering libraries are not complete.
+The current extension consumes the tested position queries, formatting, safe
+edits, LSP transport, and cancellable build/run/test operations. Complete
+package-aware completion and auto-import, reliable debugger values and
+failure mapping, debugger release packaging, broader platform packaging,
+and the math, physics, and rendering libraries remain open work. See the
+[extension readiness checklist](../tooling/extension-readiness.md) for the
+capability-by-capability boundary.

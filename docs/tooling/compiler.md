@@ -14,10 +14,11 @@ smallest pieces recognized from the text, while the AST flags show the parsed
 structure as text, DOT, SVG, or interactive HTML. AST means *abstract syntax
 tree*: a tree-shaped representation of the program's grammar.
 It can also analyze lexical scopes and print symbols and resolved references.
-The `--types` mode prints the implemented scalar/function type model.
+The `--types` mode prints inferred and declared types, including collections,
+geometry, units, and callable types.
 The `--entry` mode checks the selected root file as an executable program;
 no specially named function is required.
-The `--emit-cpp` mode emits C++ for the executable subset, and `--run-package`
+The `--emit-cpp` mode emits checked C++, and `--run-package`
 runs the entry selected by a package manifest.
 
 ```bash

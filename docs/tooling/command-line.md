@@ -72,8 +72,8 @@ lexical and syntax analysis followed, for complete syntax, by strict semantic
 and type checking through the reusable language-service API. It prints one
 machine-readable JSON document, including `recovered` state and multiple
 diagnostics where applicable. It exits successfully only for a complete check;
-this is an automation/testing interface, not the future
-stdio Language Server Protocol transport.
+this is an automation/testing interface. Editors should use the existing
+`sagan-lsp` stdio server instead of parsing this CLI output.
 `--emit-cpp` performs the same front-end checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
@@ -111,8 +111,8 @@ bin/sagan --run-package examples/package
 
 Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
-Type output confirms the documented scalar/function, generic-function and
-generic-sum, collection, class, member, constructor, and face-dispatch subset.
+Type output confirms the documented scalar, callable, generic, collection,
+geometry, unit, class, member, constructor, and face-dispatch rules.
 Generated C++ supports the language surface documented under
 [code generation](../implementation/code-generation.md), with explicit
 limitations listed there.

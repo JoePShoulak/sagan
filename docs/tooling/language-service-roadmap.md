@@ -212,10 +212,13 @@ added asynchronous check/build/run job handles and cancellable LSP operation
 requests. Explicit `test "name" { ... }` declarations and versioned
 document/project discovery now exist in both the library and a custom LSP
 request. A later increment added selected document and linked-project test
-execution, including package roots and imported-module overlays. There is
-still no live debugger, DAP server, attach
-contract, or reliable optimized-local evaluation. Breakpoints are
-candidate source locations; native debugger validation remains future work.
+execution, including package roots and imported-module overlays. A later
+increment added an experimental framed `sagan-dap` process backed by GDB's
+native DAP. It has tested launch, Sagan-mapped breakpoint/stack probes, and
+source-level stepping, but reliable Sagan values, exception mapping, complete
+cleanup coverage, and release packaging are still missing. Attach and
+optimized-local evaluation remain unsupported. Debugger capabilities stay
+false until their individual end-to-end gates pass.
 
 ## Phase 8 — Language Server Protocol transport
 

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refresh extension guidance for the post-1.0 compiler: script entry points,
+  explicit tests, offline locked packages, and the still-disabled package
+  auto-import and debugger capabilities.
 - Add capability-gated, cancellable check/build/run commands and Sagan tasks.
 - Add Test Explorer discovery and selected document test execution using the
   compiler-owned `sagan-tests-v1` contract.

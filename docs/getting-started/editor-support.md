@@ -48,7 +48,7 @@ npm run package
 code --install-extension sagan-language-*.vsix
 ```
 
-The repository's extension version is currently 0.3.3. Its version is
+The repository's extension version is currently 0.3.4. Its version is
 independent of the compiler version.
 
 ## Verify the installation
@@ -62,6 +62,8 @@ independent of the compiler version.
 4. Run **Sagan: Show Tooling Status** from the Command Palette.
 5. Confirm the **Sagan** output channel reports that the language server started.
 6. Try completion, hover, go to definition, diagnostics, formatting, and rename.
+   **Sagan: Check**, **Sagan: Build**, and **Sagan: Run** use compiler-owned
+   operations; Test Explorer discovers explicit `test "name" { ... }` cases.
 7. If discovery fails, set `sagan.compiler.path` and `sagan.server.path` to the
    matching executables. Relevant setting changes restart the server automatically.
 
@@ -72,6 +74,11 @@ type-checks. The VSIX does not embed the native language-server executable; a
 matching Sagan installation must provide `sagan-lsp` on `PATH`, beside the
 configured compiler, in the repository `bin` directory, or through
 `sagan.server.path`.
+
+Package names and imported symbols already have some compiler-backed
+completion and navigation. Full package auto-import is still being built.
+Debugging is not available through the extension yet: the compiler's
+experimental adapter has not passed its release and capability gates.
 
 ## Troubleshooting
 

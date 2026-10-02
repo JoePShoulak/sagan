@@ -15,9 +15,11 @@ Create a file named `hello.sagan` with this program:
 --8<-- "docs/examples/executable/hello.sagan"
 ```
 
-Every executable starts in a function named `main`. Here, `main` returns an
-`Int`: `0` tells the operating system that the program succeeded. `print`
-writes one line of text.
+The file you run is the entry point. Sagan executes its top-level statements
+in order, so this one-line program needs no `main` function or braces. `print`
+writes one line. If the file finishes normally, its process status is `0`
+(success). A command-line program can call `exit(code)` to choose another
+status explicitly.
 
 Run an installed compiler from Git Bash:
 
@@ -53,7 +55,7 @@ bin/sagan --types hello.sagan
 bin/sagan --emit-cpp hello.sagan build/hello.cpp
 ```
 
-Tokens are the smallest pieces of source, such as `fun`, `main`, and `(`. The
+Tokens are the smallest pieces of source, such as `print`, `(`, and the string. The
 AST is the **abstract syntax tree**: a structured view of how those pieces form
 declarations and expressions. Symbols show declared names and scopes. Type
 checking confirms that operations use compatible values. `--emit-cpp` lets you
