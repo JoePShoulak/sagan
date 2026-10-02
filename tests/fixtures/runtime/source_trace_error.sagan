@@ -1,0 +1,4 @@
+fun overflowing(value: Int8): Int8 => value + 1
+fun caller(): Int8 => overflowing(127)
+
+print(caller())

@@ -1037,16 +1037,19 @@ namespace parser
       expect(tokens::RANGLE, "'>' after type arguments");
       result += '>';
     }
+    const auto parse_unit_exponent = [&]()
+    {
+      if (!match(tokens::CARET)) return;
+      const bool negative = match(tokens::MINUS);
+      result += '^' + std::string(negative ? "-" : "") +
+                expect(tokens::INTEGER, "an integer unit exponent").text;
+    };
+    parse_unit_exponent();
     while (match(tokens::STAR) || match(tokens::SLASH))
     {
       const std::string operation = previous().text;
       result += ' ' + operation + ' ' + expect(tokens::IDENTIFIER, "a unit name").text;
-      if (match(tokens::CARET))
-      {
-        const bool negative = match(tokens::MINUS);
-        result += '^' + std::string(negative ? "-" : "") +
-                  expect(tokens::INTEGER, "an integer unit exponent").text;
-      }
+      parse_unit_exponent();
     }
     return result;
   }

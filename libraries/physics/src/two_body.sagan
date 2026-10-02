@@ -1,15 +1,15 @@
 module two_body
 
 /// Newtonian gravitational constant used by the P0 two-body solver.
-const GRAVITATIONAL_CONSTANT: Float64<meter * meter * meter / kilogram / second^2> =
-  6.67430e-11 (meter^3 / kilogram / second^2)
+const GRAVITATIONAL_CONSTANT: Float64<meter^3 / kilogram / second^2> =
+6.67430e-11 (meter ^ 3 / kilogram / second ^ 2)
 
 /// Read-only state for one body at a snapshot time.
 class BodySnapshot {
-  let .identity_value: String
-  let .mass_value: Float64<kilogram>
-  let .position_value: Point2<Float64, meter>
-  let .velocity_value: Vector2<Float64, meter / second>
+  let.identity_value: String
+  let.mass_value: Float64<kilogram>
+  let.position_value: Point2<Float64, meter>
+  let.velocity_value: Vector2<Float64, meter / second>
 
   new(identity: String, mass: Float64<kilogram>, position: Point2<Float64, meter>,
       velocity: Vector2<Float64, meter / second>) {
@@ -27,12 +27,12 @@ class BodySnapshot {
 
 /// Immutable presentation and diagnostic state produced after a fixed step.
 class TwoBodySnapshot {
-  let .time_value: Float64<second>
-  let .first_value: BodySnapshot
-  let .second_value: BodySnapshot
-  let .energy_value: Float64<joule>
-  let .angular_momentum_value: Float64<kilogram * meter * meter / second>
-  let .barycenter_value: Point2<Float64, meter>
+  let.time_value: Float64<second>
+  let.first_value: BodySnapshot
+  let.second_value: BodySnapshot
+  let.energy_value: Float64<joule>
+  let.angular_momentum_value: Float64<kilogram * meter * meter / second>
+  let.barycenter_value: Point2<Float64, meter>
 
   new(time: Float64<second>, first: BodySnapshot, second: BodySnapshot,
       energy: Float64<joule>,
@@ -51,22 +51,22 @@ class TwoBodySnapshot {
   fun second(): BodySnapshot => self.second_value
   fun energy(): Float64<joule> => self.energy_value
   fun angular_momentum(): Float64<kilogram * meter * meter / second> =>
-    self.angular_momentum_value
+  self.angular_momentum_value
   fun barycenter(): Point2<Float64, meter> => self.barycenter_value
 }
 
 /// Fixed-step Newtonian point-mass solver for exactly two bodies in one 2D frame.
 class TwoBodySolver {
-  let .first_identity: String
-  let .second_identity: String
-  let .first_mass: Float64<kilogram>
-  let .second_mass: Float64<kilogram>
-  let .first_position: Point2<Float64, meter>
-  let .second_position: Point2<Float64, meter>
-  let .first_velocity: Vector2<Float64, meter / second>
-  let .second_velocity: Vector2<Float64, meter / second>
-  let .step_duration: Float64<second>
-  let .elapsed: Float64<second> = 0.0 second
+  let.first_identity: String
+  let.second_identity: String
+  let.first_mass: Float64<kilogram>
+  let.second_mass: Float64<kilogram>
+  let.first_position: Point2<Float64, meter>
+  let.second_position: Point2<Float64, meter>
+  let.first_velocity: Vector2<Float64, meter / second>
+  let.second_velocity: Vector2<Float64, meter / second>
+  let.step_duration: Float64<second>
+  let.elapsed: Float64<second> = 0.0 second
 
   new(first_identity: String, first_mass: Float64<kilogram>,
       first_position: Point2<Float64, meter>,
@@ -100,10 +100,10 @@ class TwoBodySolver {
 
   fun .force(first_position: Point2<Float64, meter>,
              second_position: Point2<Float64, meter>):
-      Vector2<Float64, newton> {
+  Vector2<Float64, newton> {
     let displacement = second_position - first_position
     let distance_squared = squared_length(displacement)
-    assert(distance_squared > 0.0 meter^2, "two-body positions must not overlap")
+    assert(distance_squared > 0.0 meter ^ 2, "two-body positions must not overlap")
     let direction = normalized(displacement)
     let magnitude = (6.67430e-11 (meter^3 / kilogram / second^2) *
       self.first_mass * self.second_mass /
@@ -115,11 +115,11 @@ class TwoBodySolver {
                  first_velocity: Vector2<Float64, meter / second>,
                  second_position: Point2<Float64, meter>,
                  second_velocity: Vector2<Float64, meter / second>):
-      Float64<joule> {
+  Float64<joule> {
     let first_kinetic = 0.5 * self.first_mass * squared_length(first_velocity)
     let second_kinetic = 0.5 * self.second_mass * squared_length(second_velocity)
     let potential = -1.0 * GRAVITATIONAL_CONSTANT * self.first_mass * self.second_mass /
-      length(second_position - first_position)
+    length(second_position - first_position)
     return (first_kinetic + second_kinetic + potential) as joule
   }
 
@@ -127,11 +127,11 @@ class TwoBodySolver {
                            first_velocity: Vector2<Float64, meter / second>,
                            second_position: Point2<Float64, meter>,
                            second_velocity: Vector2<Float64, meter / second>):
-      Float64<kilogram * meter * meter / second> {
+  Float64<kilogram * meter * meter / second> {
     let first = self.first_mass *
-      (first_position.x * first_velocity.y - first_position.y * first_velocity.x)
+    (first_position.x * first_velocity.y - first_position.y * first_velocity.x)
     let second = self.second_mass *
-      (second_position.x * second_velocity.y - second_position.y * second_velocity.x)
+    (second_position.x * second_velocity.y - second_position.y * second_velocity.x)
     return first + second
   }
 
@@ -166,17 +166,17 @@ class TwoBodySolver {
     let half_step_squared = 0.5 * self.step_duration * self.step_duration
 
     let first_velocity_displacement =
-      (self.first_velocity * self.step_duration) as meter
+    (self.first_velocity * self.step_duration) as meter
     let second_velocity_displacement =
-      (self.second_velocity * self.step_duration) as meter
+    (self.second_velocity * self.step_duration) as meter
     let first_acceleration_displacement =
-      (first_acceleration * half_step_squared) as meter
+    (first_acceleration * half_step_squared) as meter
     let second_acceleration_displacement =
-      (second_acceleration * half_step_squared) as meter
+    (second_acceleration * half_step_squared) as meter
     let next_first_position = self.first_position + first_velocity_displacement +
-      first_acceleration_displacement
+    first_acceleration_displacement
     let next_second_position = self.second_position + second_velocity_displacement +
-      second_acceleration_displacement
+    second_acceleration_displacement
 
     let new_force = self.force(next_first_position, next_second_position)
     let next_first_acceleration = new_force / self.first_mass
@@ -184,9 +184,9 @@ class TwoBodySolver {
     let half_step = 0.5 * self.step_duration
 
     let first_velocity_change =
-      ((first_acceleration + next_first_acceleration) * half_step) as (meter / second)
+    ((first_acceleration + next_first_acceleration) * half_step) as (meter / second)
     let second_velocity_change =
-      ((second_acceleration + next_second_acceleration) * half_step) as (meter / second)
+    ((second_acceleration + next_second_acceleration) * half_step) as (meter / second)
     self.first_velocity = self.first_velocity + first_velocity_change
     self.second_velocity = self.second_velocity + second_velocity_change
     self.first_position = next_first_position

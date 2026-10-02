@@ -14,5 +14,7 @@ affine unit Celsius: Temperature {
 }
 
 let distance: Float64<meter> = 10 kilometer
+const GRAVITATIONAL_CONSTANT: Float64<meter^3 / kilogram / second^2> =
+  6.67430e-11 (meter^3 / kilogram / second^2)
 let velocity = <10, 2, 0> (meter / second)
 let temperature = 20 Celsius

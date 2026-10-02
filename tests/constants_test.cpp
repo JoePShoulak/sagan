@@ -36,6 +36,8 @@ auto main() -> int
   using namespace sagan;
   const std::string valid =
       "const SPEED_OF_LIGHT = 299_792_458\n"
+      "const GRAVITATIONAL_CONSTANT: Float64<meter^3 / kilogram / second^2> =\n"
+      "  6.67430e-11 (meter^3 / kilogram / second^2)\n"
       "fun main(): Int {\n"
       "  const DISTANCE = 100 meter\n"
       "  const TIME = 20 second\n"

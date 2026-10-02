@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.3.5
+
+- Validate powered leading units in measured type annotations such as
+  `Float64<meter^3 / kilogram / second^2>` against the corrected language server.
 - Recognize `sagan.toml` as a first-class Sagan Manifest with a file icon,
   comment/bracket configuration, and schema-aware highlighting for package,
   application, and dependency declarations.

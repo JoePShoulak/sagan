@@ -14,6 +14,7 @@
     { "include": "#method-identifiers" },
     { "include": "#type-annotations" },
     { "include": "#function-calls" },
+    { "include": "#powered-identifiers" },
     { "include": "#operators" },
     { "include": "#punctuation" },
     { "include": "#identifiers" }
@@ -405,6 +406,17 @@
         {
           "name": "entity.name.function.call.sagan",
           "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*(?=\\s*\\()"
+        }
+      ]
+    },
+    "powered-identifiers": {
+      "patterns": [
+        {
+          "match": "((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:(?!\\^)(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}]))*)(\\^)",
+          "captures": {
+            "1": { "name": "variable.other.sagan" },
+            "2": { "name": "keyword.operator.arithmetic.sagan" }
+          }
         }
       ]
     },

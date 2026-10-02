@@ -194,11 +194,13 @@ namespace sagan::language_service
       const auto begin = stderr_text.find(marker);
       if (begin == std::string::npos) return {};
       const auto line_end = stderr_text.find('\n', begin);
-      const std::string_view line(stderr_text.data() + begin,
-                                  (line_end == std::string::npos ? stderr_text.size() : line_end) - begin);
+      std::string_view line(stderr_text.data() + begin,
+                            (line_end == std::string::npos ? stderr_text.size() : line_end) - begin);
+      if (line.ends_with('\r')) line.remove_suffix(1);
       const auto first = line.find('\t', marker.size());
       const auto second = first == std::string_view::npos ? first : line.find('\t', first + 1);
       const auto third = second == std::string_view::npos ? second : line.find('\t', second + 1);
+      const auto fourth = third == std::string_view::npos ? third : line.find('\t', third + 1);
       if (first == std::string_view::npos || second == std::string_view::npos ||
           third == std::string_view::npos) return {};
       source::byte_range range{};
@@ -223,11 +225,68 @@ namespace sagan::language_service
         if (range.begin > range.end || range.end > source_size) range = {};
       }
       catch (const std::exception &) { range = {}; }
+      const auto encoded_code = fourth == std::string_view::npos ? std::string_view{} :
+                                line.substr(third + 1, fourth - third - 1);
+      const auto code = encoded_code.starts_with("SAG-RUN-") && encoded_code.size() == 12
+                            ? std::string(encoded_code)
+                            : std::string(diagnostics::default_code(diagnostics::phase::runtime));
       diagnostics::diagnostic issue{
-          std::string(diagnostics::default_code(diagnostics::phase::runtime)),
+          code,
           diagnostics::severity::error, diagnostics::phase::runtime,
-          {source_id, range}, std::string(line.substr(third + 1)), {}, {}, {}};
-      if (!path.empty()) issue.notes.push_back("Sagan source: " + std::string(path));
+          {source_id, range}, std::string(line.substr(fourth == std::string_view::npos ? third + 1 : fourth + 1)),
+          {}, {}, {}};
+      if (!path.empty() && source_id == document.identity().id &&
+          document.identity().canonical_path &&
+          document.identity().canonical_path->lexically_normal() !=
+              std::filesystem::path(std::string(path)).lexically_normal())
+        issue.notes.push_back("Sagan source: " + std::string(path));
+      constexpr std::string_view frame_marker = "SAGAN_RUNTIME_FRAME\t";
+      std::size_t cursor = line_end == std::string::npos ? stderr_text.size() : line_end + 1;
+      for (std::size_t count = 0; count < 64 && cursor < stderr_text.size(); ++count)
+      {
+        const auto frame_end = stderr_text.find('\n', cursor);
+        std::string_view frame(stderr_text.data() + cursor,
+            (frame_end == std::string::npos ? stderr_text.size() : frame_end) - cursor);
+        if (frame.ends_with('\r')) frame.remove_suffix(1);
+        if (!frame.starts_with(frame_marker)) break;
+        const auto a = frame.find('\t', frame_marker.size());
+        const auto b = a == std::string_view::npos ? a : frame.find('\t', a + 1);
+        const auto c = b == std::string_view::npos ? b : frame.find('\t', b + 1);
+        if (a == std::string_view::npos || b == std::string_view::npos || c == std::string_view::npos) break;
+        const std::string frame_path(frame.substr(frame_marker.size(), a - frame_marker.size()));
+        const std::string name(frame.substr(c + 1));
+        std::string location = frame_path;
+        if (!frame_path.empty())
+        {
+          std::optional<source::document_snapshot> frame_document;
+          if (provider)
+          {
+            const auto loaded = provider->read_path(frame_path);
+            if (loaded) frame_document = std::move(*loaded.value);
+          }
+          else if (document.identity().canonical_path &&
+                   document.identity().canonical_path->lexically_normal() ==
+                       std::filesystem::path(frame_path).lexically_normal())
+            frame_document = document;
+          if (frame_document)
+            try
+            {
+              const auto byte = static_cast<source::byte_offset>(std::stoul(std::string(frame.substr(a + 1, b - a - 1))));
+              const auto position = frame_document->to_utf16(byte);
+              if (position) location += ':' + std::to_string(position->line + 1);
+            }
+            catch (const std::exception &) {}
+        }
+        std::error_code path_error;
+        const auto relative = std::filesystem::relative(frame_path, std::filesystem::current_path(), path_error);
+        if (!path_error && !relative.empty() && *relative.begin() != "..")
+        {
+          const auto suffix = location.substr(frame_path.size());
+          location = relative.generic_string() + suffix;
+        }
+        issue.notes.push_back("in " + name + " at " + location);
+        cursor = frame_end == std::string::npos ? stderr_text.size() : frame_end + 1;
+      }
       return issue;
     }
 
