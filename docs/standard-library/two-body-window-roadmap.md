@@ -64,11 +64,14 @@ graphics backend. **Demo:** proposed `make window-demo` opens a solid-color
 window that resizes and closes cleanly. Document install/runtime requirements
 and failure behavior. This milestone must work before drawing an orbit.
 
-**Status: implemented, pending named-commit acceptance.** `sagan-render` 0.1.0
-provides the independently versioned `render.window` package, a private Windows
-backend, `make window-demo`, and an automated lifecycle smoke test. SDL3 remains
-the intended portable replacement for the private backend; no backend-specific
-handle or type is exposed to Sagan.
+**Status: implemented at `d727bd1` and lifecycle-verified on 2026-10-01.**
+`sagan-render` 0.1.0 provides the independently versioned `render.window`
+package, a private Windows backend, `make window-demo`, and an automated
+lifecycle smoke test. SDL3 remains the intended portable replacement for the
+private backend; no backend-specific handle or type is exposed to Sagan. The
+standalone window remained responsive until the verification process stopped
+it, but the unavailable Windows UI capture service prevented screenshot-based
+pixel and manual-resize evidence in this run.
 
 **R1 — Shapes and text.** Add the smallest 2D drawing surface that can draw a
 filled circle, a line or polyline, and legible text at specified positions.
