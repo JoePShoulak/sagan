@@ -57,7 +57,8 @@ namespace sagan::lsp
           {"documentHighlightProvider", true}, {"documentSymbolProvider", true},
           {"workspaceSymbolProvider", true}, {"foldingRangeProvider", true},
           {"selectionRangeProvider", true}, {"documentLinkProvider", true},
-          {"inlayHintProvider", true}, {"renameProvider", true},
+          {"inlayHintProvider", true},
+          {"renameProvider", J::object{{"prepareProvider", true}}},
           {"documentFormattingProvider", true}, {"documentRangeFormattingProvider", true},
           {"documentOnTypeFormattingProvider", J::object{{"firstTriggerCharacter", "}"},
                                                          {"moreTriggerCharacter", J::array{"\n"}}}},
@@ -104,6 +105,14 @@ namespace sagan::lsp
   {
     std::scoped_lock lock(cancellation_mutex_);
     return active_cancellation_ ? active_cancellation_->token() : diagnostics::cancellation_token{};
+  }
+  auto server::set_notification_sink(std::function<void(const json::value &)> sink) -> void
+  {
+    notification_sink_ = std::move(sink);
+  }
+  auto server::notify(const json::value &message) const -> void
+  {
+    if (notification_sink_) notification_sink_(message);
   }
 
   auto server::handle(const json::value &message) -> std::vector<json::value>
@@ -167,11 +176,14 @@ namespace sagan::lsp
       if (method.starts_with("textDocument/did")) return synchronize(method, params);
       if (!id) return {};
       auto answer = query(method, params, active_token());
-      if (active_token().is_cancelled()) throw request_cancelled{};
+      if (active_token().is_cancelled() && method != "sagan/operation" &&
+          method != "sagan/tests/run") throw request_cancelled{};
       return {response(*id, std::move(answer))};
     }
     catch (const request_cancelled &failure)
     { return id ? std::vector<J>{error(*id, -32800, failure.what())} : std::vector<J>{}; }
+    catch (const request_failed &failure)
+    { return id ? std::vector<J>{error(*id, -32803, failure.what())} : std::vector<J>{}; }
     catch (const std::invalid_argument &failure)
     { return id ? std::vector<J>{error(*id, -32602, failure.what())} : std::vector<J>{}; }
     catch (const std::out_of_range &failure)
@@ -216,6 +228,7 @@ namespace sagan::lsp
       output << "Content-Length: " << encoded.size() << "\r\n\r\n" << encoded;
       output.flush();
     };
+    service.set_notification_sink(send);
     std::jthread worker([&]
     {
       for (;;)
@@ -295,6 +308,7 @@ namespace sagan::lsp
     }
     ready.notify_one();
     worker.join();
+    service.set_notification_sink({});
     return read_status;
   }
 }

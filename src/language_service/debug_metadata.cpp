@@ -75,6 +75,9 @@ namespace sagan::language_service
       }
     }
     std::vector<std::optional<std::filesystem::path>> scope_paths(model.scopes.size());
+    // Linked modules may supply their own provenance below, but the entry
+    // document's top-level bindings still belong to the entry source file.
+    if (!scope_paths.empty()) scope_paths.front() = document.identity().canonical_path;
     for (const auto &scope : model.scopes)
       for (const auto &symbol : scope.symbols)
         if (symbol.kind == semantic::symbol_kind::function ||

@@ -14,13 +14,15 @@ if [[ "${SAGAN_STAGE_READY:-false}" != true ]]; then
   bash "$repo_root/scripts/windows/stage_installer.sh"
 fi
 
-if [[ ! -x "$windows_stage/bin/sagan.exe" || ! -d "$windows_stage/toolchain" ]]; then
+if [[ ! -x "$windows_stage/bin/sagan.exe" || ! -x "$windows_stage/bin/sagan-lsp.exe" ||
+      ! -d "$windows_stage/toolchain" ]]; then
   echo "The canonical Windows stage is incomplete." >&2
   exit 1
 fi
 rm -rf "$portable_stage"
 mkdir -p "$portable_stage/bin" "$output_dir"
 cp "$windows_stage/bin/sagan.exe" "$portable_stage/bin/sagan.exe"
+cp "$windows_stage/bin/sagan-lsp.exe" "$portable_stage/bin/sagan-lsp.exe"
 cp -a "$windows_stage/toolchain" "$portable_stage/toolchain"
 cp -a "$windows_stage/licenses" "$portable_stage/licenses"
 cp "$windows_stage/VERSION" "$portable_stage/VERSION"

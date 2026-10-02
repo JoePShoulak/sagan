@@ -44,8 +44,8 @@ symbols, folding, selection ranges, import links, inlay hints, rename, type and
 call hierarchies, code actions, formatting, and required file notifications.
 
 Individual refactorings are offered only when their safety proof is
-implemented. Test discovery is advertised only after Sagan defines a language
-or project test model. Debug Adapter Protocol support is separate; the language
+implemented. Document and project test discovery and execution use the
+explicit Sagan test model. Debug Adapter Protocol support is separate; the language
 server may expose debug metadata discovery but does not claim to be a debugger.
 
 ## Capability discovery
@@ -67,10 +67,28 @@ The compiler discovery JSON includes
 `source_edit_capabilities()` action list reports which formatting and
 proof-gated edit actions are available and why others are disabled. This is
 embedded in LSP `initialize` under `experimental.compiler`.
-The same JSON reports `sagan-operations-v1`, `sagan-cpp-source-map-v1`, and
-`sagan-debug-metadata-v1`. Native check/build/run, source maps, debug metadata,
-and launch plans are true; test discovery, attach, and optimized-local
-evaluation are false.
+The same JSON reports `sagan-operations-v2`, `sagan-cpp-source-map-v1`, and
+`sagan-debug-metadata-v1`. The additive `debugAdapterExecutable` discovery
+field names `sagan-dap.exe` on Windows or `sagan-dap` elsewhere, located beside
+`sagan` and `sagan-lsp`; its presence does not override a false `debugAdapter`
+capability. Native check/build/run and cancellable LSP operation
+transport, source maps, debug metadata, and launch plans are true. Granular
+test-document discovery/run and project discovery/run are true. The VS Code
+extension uses those granular flags to provide Test Explorer. The aggregate
+compiler field `testExplorer` remains false because the compiler does not own
+or advertise a particular editor UI; it does not negate the four test
+transport capabilities. Debug attach and optimized-local evaluation remain false.
+The local package index reader, `sagan/packages/query`, and the
+installed-source `sagan/packages/catalog` query are true. The catalog provides
+real exported symbols and source navigation metadata where installed source
+resolves; manifest aliases and exact lockfiles resolve installed external
+dependencies into builds. Standard LSP now also serves incomplete module and
+selective-export imports plus go-to-definition on module paths. Export names
+inside selective imports also have source definition and hover targets,
+including incomplete importer documents and installed-source overlays.
+Package completion, package navigation, and package auto-import remain false. The
+breakpoint mapping library is available, but every live DAP/debugger capability
+remains false until the adapter and release payload pass end-to-end tests.
 
 Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.
@@ -84,6 +102,9 @@ edit bursts, stale versions, malformed input, repeated queries, overlay
 cleanup, bounded frame size, and stderr-only optional logging. The
 [reliability guide](language-server.md#reliability-gate) records repeatable
 commands and performance limits. These tests establish the extension-facing
-server contract; they do not make test discovery, build/run LSP requests,
-cross-file rename, or DAP available.
+server contract; custom test discovery and selected document/project execution
+are available, but DAP is not. Check,
+build, and run LSP requests use the separate versioned `sagan/operation`
+contract. Cross-file rename is available only for compiler-proven identity
+groups; ambiguous identities are deliberately refused.
 

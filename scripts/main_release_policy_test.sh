@@ -4,6 +4,9 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 main_workflow="$repo_root/.github/workflows/release-on-main.yml"
 release_workflow="$repo_root/.github/workflows/release.yml"
+documentation_workflow="$repo_root/.github/workflows/documentation.yml"
+windows_workflow="$repo_root/.github/workflows/windows-installer.yml"
+development_setup="$repo_root/docs/contributing/development-setup.md"
 
 grep -Fq '      - main' "$main_workflow"
 grep -Fq 'bash scripts/version.sh check-badge' "$main_workflow"
@@ -17,5 +20,9 @@ grep -Fq 'git push origin "refs/tags/$RELEASE_TAG"' "$main_workflow"
 grep -Fq 'gh workflow run release.yml --ref "$RELEASE_TAG"' "$main_workflow"
 grep -Fq '  workflow_dispatch:' "$release_workflow"
 grep -Fq 'environment: stable-release' "$release_workflow"
+grep -Fq 'Routine development is committed directly to `dev`.' "$development_setup"
+grep -Fq '      - dev' "$documentation_workflow"
+grep -Fq "github.ref == 'refs/heads/main'" "$documentation_workflow"
+grep -Fq 'branches: [dev, main]' "$windows_workflow"
 
 echo 'Main-driven release policy tests passed.'

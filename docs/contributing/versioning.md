@@ -45,6 +45,11 @@ The helper changes only the README badge. It does not stage files, create a
 commit, or push. Documentation-only and maintenance commits have no version
 impact and do not require a badge update.
 
+Routine commits and pushes go directly to `dev`; the project does not require
+per-feature branches. When the integrated `dev` history is ready for a release,
+promote it deliberately to `main` without adding unrelated publication-only
+changes.
+
 Every push to `main` runs the release-preparation workflow. It checks the
 history-derived version and README badge. For a new 0.x version, CI signs an
 `-rc.1` preview tag; for a new stable version from 1.0 onward, CI signs the

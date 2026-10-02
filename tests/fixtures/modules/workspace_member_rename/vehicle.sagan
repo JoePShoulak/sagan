@@ -1,0 +1,9 @@
+module vehicle
+
+class Probe {
+  let reading: Int = 1
+
+  fun sample(): Int => self.reading
+}
+
+export Probe

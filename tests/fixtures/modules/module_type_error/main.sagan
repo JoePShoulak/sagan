@@ -3,3 +3,5 @@ module main
 import course from guidance
 
 fun main(): Int => course("forty")
+
+exit(main())

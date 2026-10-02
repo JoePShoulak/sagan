@@ -1,0 +1,7 @@
+module guidance
+
+fun calculate(value: Int): Int => value * 2
+fun trajectory(value: Int): Int => value + 1
+
+export calculate as course
+export trajectory

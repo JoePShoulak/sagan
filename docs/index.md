@@ -42,12 +42,17 @@ and closures, collections, classes and faces, reference-counted objects,
 optionals, enums and payload enums, generics, exceptions and catchable runtime
 errors, geometry values, and native units of measure.
 
-The math library beyond the built-in language foundation, rendering, physics,
-the full language server, and non-Windows installers are later work. Pages say
-clearly when they describe those planned areas.
+The language server already powers a usable VS Code extension, including
+diagnostics, navigation, formatting, safe rename, build/run commands, and Test
+Explorer. Complete external-package completion and a supported debugger are
+still in development. The math library beyond the built-in language
+foundation, rendering, physics, and non-Windows installers are later work.
+Pages say clearly when they describe planned areas.
 
 ## Documentation status
 
 This is the **experimental** documentation from the current repository. Every
 page remains work in progress until the project owner audits it. A page may be
 accurate and tested without yet being approved for the frozen 1.0 archive.
+The current development branch also contains changes made after the published
+1.0 release; use the matching compiler and extension when following its examples.

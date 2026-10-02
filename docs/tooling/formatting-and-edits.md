@@ -35,14 +35,11 @@ UTF-8/UTF-16 boundaries, and deterministic non-overlapping ranges before
 returning the proposed text. It never writes the editor buffer or disk file.
 When a check fails, it returns `stale`, `invalid`, or `conflict` with a reason.
 
-`rename_local` is a proof-gated refactoring. VS Code's F2 can rename local
-bindings and non-exported, non-overloaded functions in one document. It uses
-the identity-indexed reference set, validates the new
-identifier and naming convention, refuses existing names, reindexes the
-previewed source, and verifies that every reference still resolves to the one
-renamed declaration. Entry-point `main`, exported and overloaded functions,
-imported symbols, members, and cross-file rename remain unavailable: the
-compiler refuses these rather than risking a broken project.
+Rename is proof-gated. Local edits cover bindings, private members, and
+non-exported, non-overloaded functions. Workspace edits cover exported identity
+groups and exact imported public-member receivers. Both paths validate naming,
+collisions, snapshot versions, and rebinding before returning an atomic edit;
+ambiguous identities are refused rather than risking a broken project.
 
 `organize_imports` sorts one uninterrupted top-of-file block of plain imports.
 It preserves each original line and its line endings, then rechecks the result.
@@ -59,12 +56,10 @@ strict syntax or full document analysis. The first compiler-issued fix inserts
 a missing final `}` only when that insertion parses successfully. It is not a
 general automatic repair system.
 
-The action list explicitly disables workspace/public rename, unused-import
-removal, required-face-member generation, extract-variable, and
-extract-function. Their rebinding, side-effect, conformance, capture, or
-evaluation-order proofs are not available yet. No action is offered by textual
-name matching alone. These are later feature opportunities, not implicit
-promises of Phase 6.
+The action list explicitly disables unused-import removal,
+required-face-member generation, extract-variable, and extract-function. Their
+side-effect, conformance, capture, or evaluation-order proofs are not available
+yet. No action is offered by textual name matching alone.
 
 To see before/after formatting, rename, and import previews and run the focused
 safety tests:

@@ -94,7 +94,7 @@ expect_failure "structured type diagnostic" 1 '"code":"SAG-TYP-0001"' \
   "$binary" --diagnostics-json tests/fixtures/semantic/type_error.sagan
 expect_output "weak ownership cycle type model" "TypeModel" \
   "$binary" --types tests/fixtures/semantic/type_weak_ownership_cycle.sagan
-expect_output "entry-point validation" "executable entry point is valid" \
+expect_output "root-file validation" "executable root is valid" \
   "$binary" --entry tests/fixtures/semantic/entry.sagan
 expect_output "module graph resolution" "Import(course from guidance as calculate_course)" \
   "$binary" --modules tests/fixtures/modules/module_demo/main.sagan
@@ -128,7 +128,7 @@ expect_output "Cartesian and spherical geometry execution" "Spherical vector: s<
   "$binary" examples/geometry.sagan
 expect_output "package entry execution with import linking" "Package answer: 42" \
   "$binary" examples/package/src/main.sagan
-printf '%s\n' 'fun main(): Int {' '  print("exit seven")' '  return 7' '}' > "$work_dir/exit-seven.sagan"
+printf '%s\n' 'print("exit seven")' 'exit(7)' > "$work_dir/exit-seven.sagan"
 expect_failure "native exit-code propagation" 7 "exit seven" \
   "$binary" "$work_dir/exit-seven.sagan"
 expect_failure "native compiler failure" 1 "Native C++ compilation failed with exit code 1" \
@@ -170,23 +170,23 @@ grep -Fq "for (auto" "$work_dir/generated.cpp"
 grep -Fq ".at(2)" "$work_dir/generated.cpp"
 grep -Fq "sagan_stringify" "$work_dir/generated.cpp"
 grep -Fq "while (" "$work_dir/generated.cpp"
-grep -Fq "sagan_subtract_assign<std::int8_t>" "$work_dir/generated.cpp"
+grep -Fq "sagan_subtract_assign<std::int64_t>" "$work_dir/generated.cpp"
 grep -Fq "std::unordered_map<std::string, std::int8_t>" "$work_dir/generated.cpp"
 grep -Fq "sagan_array_0.push_back" "$work_dir/generated.cpp"
 grep -Fq "sagan_spread_0_0" "$work_dir/generated.cpp"
 grep -Fq "sagan_spread_0_2" "$work_dir/generated.cpp"
 grep -Fq "sagan_dictionary_1.insert_or_assign" "$work_dir/generated.cpp"
 grep -Fq "sagan_dictionary_spread_1_0" "$work_dir/generated.cpp"
-grep -Fq "sagan_increment<std::int8_t>((*sagan_6c61756e63685f6e756d626572), true)" "$work_dir/generated.cpp"
-grep -Fq "sagan_increment<std::int8_t>((*sagan_6c61756e63685f6e756d626572), false)" "$work_dir/generated.cpp"
+grep -Fq "sagan_increment<std::int64_t>(sagan_box_value(sagan_6c61756e63685f6e756d626572), true)" "$work_dir/generated.cpp"
+grep -Fq "sagan_increment<std::int64_t>(sagan_box_value(sagan_6c61756e63685f6e756d626572), false)" "$work_dir/generated.cpp"
 grep -Fq "sagan_power<std::int8_t>(3, 2)" "$work_dir/generated.cpp"
 grep -Fq "sagan_power<double>(2.0, static_cast<std::int8_t>(-1))" "$work_dir/generated.cpp"
-grep -Fq "sagan_power_assign<std::int8_t>" "$work_dir/generated.cpp"
-grep -Fq "sagan_add_assign<std::int8_t>" "$work_dir/generated.cpp"
-grep -Fq "sagan_multiply_assign<std::int8_t>" "$work_dir/generated.cpp"
-grep -Fq "sagan_divide_assign<std::int8_t>" "$work_dir/generated.cpp"
-grep -Fq "sagan_modulo_assign<std::int8_t>" "$work_dir/generated.cpp"
-grep -Fq "sagan_subtract_assign<std::int8_t>" "$work_dir/generated.cpp"
+grep -Fq "sagan_power_assign<std::int64_t>" "$work_dir/generated.cpp"
+grep -Fq "sagan_add_assign<std::int64_t>" "$work_dir/generated.cpp"
+grep -Fq "sagan_multiply_assign<std::int64_t>" "$work_dir/generated.cpp"
+grep -Fq "sagan_divide_assign<std::int64_t>" "$work_dir/generated.cpp"
+grep -Fq "sagan_modulo_assign<std::int64_t>" "$work_dir/generated.cpp"
+grep -Fq "sagan_subtract_assign<std::int64_t>" "$work_dir/generated.cpp"
 grep -Fq "sagan_multiply<std::int8_t>(6, 7)" "$work_dir/generated.cpp"
 grep -Fq "sagan_modulo<double>(5.5, 2.0)" "$work_dir/generated.cpp"
 grep -Fq "sagan_vector<double, 3>" "$work_dir/generated.cpp"
@@ -196,7 +196,7 @@ grep -Fq "sagan_add<sagan_vector<double, 3>>" "$work_dir/generated.cpp"
 grep -Fq "sagan_multiply<sagan_vector<double, 3>>(2.0" "$work_dir/generated.cpp"
 grep -Fq "sagan_negate<sagan_vector<double, 3>>" "$work_dir/generated.cpp"
 grep -Fq "[=](std::int64_t" "$work_dir/generated.cpp"
-grep -Fq "(*sagan_6c61756e63685f7472616e73666f726d)(40)" "$work_dir/generated.cpp"
+grep -Fq "sagan_box_value(sagan_6c61756e63685f7472616e73666f726d)(40)" "$work_dir/generated.cpp"
 grep -Fq "struct sagan_4c61756e6368436f756e746572" "$work_dir/generated.cpp"
 grep -Fq "(*this).sagan_76616c7565" "$work_dir/generated.cpp"
 grep -Fq "sagan_696e6372656d656e7421()" "$work_dir/generated.cpp"
@@ -243,7 +243,7 @@ expect_failure "annotation type diagnostic" 1 "does not name a type" \
   "$binary" --types tests/fixtures/semantic/type_annotation_error.sagan
 expect_failure "definite return diagnostic" 1 "may reach the end without returning Int64" \
   "$binary" --types tests/fixtures/semantic/type_return_error.sagan
-expect_failure "missing entry-point diagnostic" 1 "requires a 'main' entry point" \
+expect_output "declaration-only root is executable" "executable root is valid" \
   "$binary" --entry tests/fixtures/semantic/entry_missing_error.sagan
 expect_failure "uninitialized variable diagnostic" 1 "is used before initialization" \
   "$binary" --types tests/fixtures/semantic/type_uninitialized_error.sagan

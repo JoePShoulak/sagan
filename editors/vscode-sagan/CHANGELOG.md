@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased
+
+- Make the esbuild entry and output paths portable across Windows, Linux, and
+  macOS by resolving them from the declared extension working directory.
+- Refresh extension guidance for the post-1.0 compiler: script entry points,
+  explicit tests, offline locked packages, and the still-disabled package
+  auto-import and debugger capabilities.
+- Add capability-gated, cancellable check/build/run commands and Sagan tasks.
+- Add Test Explorer discovery and selected document test execution using the
+  compiler-owned `sagan-tests-v1` contract.
+- Use authoritative project-wide test execution when `testProjectRun` is
+  advertised, including selections spanning multiple documents.
+- Consume recovered-source formatting through the existing LSP providers.
+- Use the compiler's root-file script entry model in the bundled executable
+  demo; `main` is now an ordinary function name.
+- Highlight every binding in a parallel `let` declaration while preserving
+  individual type annotations.
+- Refresh the compiler-valid demo and grammar fixture for compact Fibonacci,
+  integer `.times`, floating-point exponentiation, and `Int.round`.
+- Recognize `test` declarations and executable root statements in the base
+  grammar used before semantic tokens arrive.
+
+## 0.3.4
+
+- Replace the parser-only demonstration with a compiler-valid, diagnostic-free Sagan program.
+- Validate the packaged demonstration with the matching compiler during integration tests.
+- Add a repeatable Linux build, integration, and packaging acceptance script.
+- Record the clean Pop!_OS acceptance results and clarify that `sagan-lsp` is a separate build target.
+- Expand real VS Code integration coverage for references, highlights, workspace symbols, folding, selection ranges, semantic tokens, local-variable rename, and safe entry-point rename refusal.
+
 ## 0.3.3
 
 - Register the Sagan galaxy-pie logo as the default light and dark `.sagan` file icon.

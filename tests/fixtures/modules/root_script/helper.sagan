@@ -1,0 +1,4 @@
+module helper
+
+fun answer(value: Int): Int => value + 2
+export answer

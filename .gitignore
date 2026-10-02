@@ -68,6 +68,7 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+.vscode-test/
 
 # Python and documentation environments
 __pycache__/

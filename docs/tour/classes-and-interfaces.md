@@ -13,6 +13,13 @@ interface describes behavior without choosing how it is stored. Sagan calls an
 interface a `face`; `class` introduces stored objects. `is` and `has` are
 interchangeable words for declaring that a class or face provides other faces.
 
+The important idea is dependency direction: code asks for the smallest face it
+needs, while a class can assemble several faces into one concrete object. This
+makes behavior reusable without forcing unrelated objects into one family tree.
+It also makes dependencies and test substitutes easier to see: a function that
+accepts `Renderable` does not need to know whether the value is a spacecraft,
+plot, or future simulation view.
+
 ```sagan
 face Renderable {
   fun render()
@@ -83,3 +90,9 @@ expired targets read as `None`.
 All-strong reference cycles are not collected automatically; use `weak let` for
 the back edge of an ownership relationship. Borrowing and implementation
 inheritance are outside the 1.0 language.
+
+Continue to the full
+[classes, interfaces, and composition reference](../reference/classes-interfaces-composition.md)
+for constructors, privacy, defaults and conflicts, transitive and generic
+composition, face-valued dispatch, ownership, tooling support, and the
+compatibility implications of changing a face.

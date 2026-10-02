@@ -241,6 +241,19 @@ namespace parser
         }
         return node;
       }
+      if (const auto *declaration = dynamic_cast<const parallel_let_declaration *>(&value))
+      {
+        auto node = std::make_unique<visual_node>(visual_node{"Parallel let", "declaration"});
+        for (const auto &binding : declaration->bindings)
+        {
+          std::string label = "Let\n" + binding.name;
+          if (binding.type_name) label += ": " + *binding.type_name;
+          auto child = std::make_unique<visual_node>(visual_node{std::move(label), "declaration"});
+          child->children.push_back(make_expression_node(*binding.initializer));
+          node->children.push_back(std::move(child));
+        }
+        return node;
+      }
       if (const auto *expression = dynamic_cast<const expression_statement *>(&value))
       {
         auto node = std::make_unique<visual_node>(visual_node{"Expression statement", "statement"});
@@ -384,7 +397,8 @@ namespace parser
       }
       if (const auto *function = dynamic_cast<const function_declaration *>(&value))
       {
-        std::string label = std::string(function->constructor_member ? "Constructor\n" : "Function\n") +
+        std::string label = function->test_name ? "Test\n" + *function->test_name :
+                            std::string(function->constructor_member ? "Constructor\n" : "Function\n") +
                             std::string(function->private_member ? "." : "") + function->name;
         if (!function->type_parameters.empty())
         {
@@ -396,7 +410,7 @@ namespace parser
           }
           label += '>';
         }
-        if (function->return_type)
+        if (function->return_type && !function->test_name)
         {
           label += ": " + *function->return_type;
         }

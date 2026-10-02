@@ -3,3 +3,5 @@ module main
 import missing from support
 
 fun main(): Int => 0
+
+exit(main())

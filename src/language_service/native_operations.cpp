@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <fstream>
 #include <regex>
 #include <sstream>
@@ -25,7 +26,21 @@ namespace sagan::language_service
               const operation_event_kind kind, const int percent, std::string text,
               std::optional<diagnostics::diagnostic> issue = {}) -> void
     {
-      result.events.push_back({kind, result.events.size(), percent, std::move(text), std::move(issue)});
+      if (kind == operation_event_kind::started || kind == operation_event_kind::progress)
+        result.lifecycle = operation_state::running;
+      else if (kind == operation_event_kind::finished)
+      {
+        switch (result.state)
+        {
+          case diagnostics::result_state::complete: result.lifecycle = operation_state::completed; break;
+          case diagnostics::result_state::cancelled: result.lifecycle = operation_state::cancelled; break;
+          case diagnostics::result_state::stale: result.lifecycle = operation_state::stale; break;
+          case diagnostics::result_state::incomplete:
+          case diagnostics::result_state::recovered: result.lifecycle = operation_state::failed; break;
+        }
+      }
+      result.events.push_back({kind, result.events.size(), percent, std::move(text), std::move(issue),
+                               result.operation_id, result.lifecycle});
       if (observer) observer(result.events.back());
     }
 
@@ -72,11 +87,14 @@ namespace sagan::language_service
     {
       if (root.empty()) throw std::runtime_error("Artifact root must be specified");
       std::filesystem::create_directories(root);
+      // Editor runs can build the same document/version many times across
+      // server restarts. A run-specific suffix avoids exhausting 0..99.
+      const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
       for (int attempt = 0; attempt < 100; ++attempt)
       {
         const auto candidate = root / ("sagan-" + std::to_string(document.identity().id.value) +
                                        "-" + std::to_string(document.version()) +
-                                       "-" + std::to_string(attempt));
+                                       "-" + std::to_string(nonce) + "-" + std::to_string(attempt));
         std::error_code error;
         if (std::filesystem::create_directory(candidate, error))
           return std::filesystem::absolute(candidate);
@@ -217,6 +235,19 @@ namespace sagan::language_service
     {
       result.state = diagnostics::result_state::cancelled;
       result.exit_status.reset();
+      if (result.generated_source && result.generated_source->filename() == "program.cpp")
+      {
+        const auto directory = result.generated_source->parent_path();
+        if (directory.filename().string().starts_with("sagan-") && result.executable &&
+            result.executable->parent_path() == directory &&
+            (result.executable->filename() == "program.exe" ||
+             result.executable->filename() == "program"))
+        {
+          std::error_code ignored;
+          std::filesystem::remove_all(directory, ignored);
+          if (!ignored) { result.generated_source.reset(); result.executable.reset(); }
+        }
+      }
       emit(result, observer, operation_event_kind::finished, 100, "Operation cancelled");
     }
 
@@ -356,9 +387,13 @@ namespace sagan::language_service
                       const std::filesystem::path &artifact_root,
                       const native_build_profile profile,
                       const diagnostics::cancellation_token cancellation,
-                      const operation_observer &observer) -> native_operation_result
+                      const operation_observer &observer,
+                      std::string operation_id,
+                      std::optional<std::string> selected_test) -> native_operation_result
   {
     native_operation_result result;
+    result.operation_id = operation_id.empty() ? next_operation_id() : std::move(operation_id);
+    result.lifecycle = operation_state::running;
     result.profile = profile;
     result.document = document.identity();
     result.analyzed_version = document.version();
@@ -390,8 +425,11 @@ namespace sagan::language_service
         throw std::runtime_error("Strict syntax tree was unavailable after a successful check");
       const auto model = semantic::analyze(*parsed.value->strict_ast);
       const auto types = semantic::check_types(*parsed.value->strict_ast);
-      result.generated = codegen::generate_cpp_mapped(
-          *parsed.value->strict_ast, types, document.identity().canonical_path);
+      result.generated = selected_test
+          ? codegen::generate_cpp_mapped_test(*parsed.value->strict_ast, types, *selected_test,
+                                              document.identity().canonical_path)
+          : codegen::generate_cpp_mapped(*parsed.value->strict_ast, types,
+                                         document.identity().canonical_path);
       result.debug = derive_debug_metadata(document, model, types, *result.generated);
       if (cancellation.is_cancelled()) { cancelled(result, observer); return result; }
       compile_generated(result, document, artifact_root, profile, cancellation, observer);
@@ -423,9 +461,12 @@ namespace sagan::language_service
                     const std::filesystem::path &artifact_root,
                     const native_build_profile profile,
                     const diagnostics::cancellation_token cancellation,
-                    const operation_observer &observer) -> native_operation_result
+                    const operation_observer &observer,
+                    std::string operation_id,
+                    std::optional<std::string> selected_test) -> native_operation_result
   {
-    auto result = build_document(document, artifact_root, profile, cancellation, observer);
+    auto result = build_document(document, artifact_root, profile, cancellation, observer,
+                                 std::move(operation_id), std::move(selected_test));
     if (result.state != diagnostics::result_state::complete || !result.executable) return result;
     try
     {
@@ -449,9 +490,13 @@ namespace sagan::language_service
                      const std::filesystem::path &artifact_root,
                      const native_build_profile profile,
                      const diagnostics::cancellation_token cancellation,
-                     const operation_observer &observer) -> native_operation_result
+                     const operation_observer &observer,
+                     std::string operation_id,
+                     std::optional<project_test_selection> selected_test) -> native_operation_result
   {
     native_operation_result result;
+    result.operation_id = operation_id.empty() ? next_operation_id() : std::move(operation_id);
+    result.lifecycle = operation_state::running;
     result.profile = profile;
     result.document = source::identity_from_path(source::document_id{}, entry_or_package);
     emit(result, observer, operation_event_kind::started, 0, "Building Sagan project");
@@ -462,8 +507,8 @@ namespace sagan::language_service
       const bool package_path = std::filesystem::is_directory(entry_or_package) ||
                                 entry_or_package.filename() == "sagan.toml";
       emit(result, observer, operation_event_kind::progress, 10, "Resolving modules and overlays");
-      const auto graph = package_path ? modules::resolve_package(entry_or_package, source)
-                                      : modules::resolve(entry_or_package, source);
+      const auto graph = package_path ? modules::resolve_package(entry_or_package, source, cancellation)
+                                      : modules::resolve(entry_or_package, source, cancellation);
       auto loaded = source.read_path(graph.entry_path);
       if (!loaded) throw std::runtime_error(loaded.error->message);
       entry = std::move(*loaded.value);
@@ -479,13 +524,29 @@ namespace sagan::language_service
                                        std::string(loaded_module.value->text())});
       }
       if (cancellation.is_cancelled()) { cancelled(result, observer); return result; }
-      const auto tree = package_path ? modules::link_package(entry_or_package, source)
-                                     : modules::link(entry_or_package, source);
+      const auto tree = package_path ? modules::link_package(entry_or_package, source, cancellation)
+                                     : modules::link(entry_or_package, source, cancellation);
       const auto model = semantic::analyze(tree);
       const auto types = semantic::check_types(tree);
       semantic::validate_entry_point(tree);
       emit(result, observer, operation_event_kind::progress, 30, "Generating linked C++ and source map");
-      result.generated = codegen::generate_cpp_mapped(tree, types, entry->identity().canonical_path);
+      if (selected_test)
+      {
+        std::optional<std::string> linked_name;
+        const auto selected_path = std::filesystem::absolute(selected_test->source_path).lexically_normal();
+        for (const auto &statement : tree.statements)
+        {
+          const auto *function = dynamic_cast<const parser::function_declaration *>(statement.get());
+          if (!function || !function->test_name || *function->test_name != selected_test->name ||
+              !statement->origin_path) continue;
+          if (std::filesystem::absolute(*statement->origin_path).lexically_normal() == selected_path)
+          { linked_name = function->name; break; }
+        }
+        if (!linked_name) throw std::runtime_error("Selected test is not present in the linked project");
+        result.generated = codegen::generate_cpp_mapped_test(tree, types, *linked_name,
+                                                              entry->identity().canonical_path);
+      }
+      else result.generated = codegen::generate_cpp_mapped(tree, types, entry->identity().canonical_path);
       result.debug = derive_debug_metadata(*entry, model, types, *result.generated, &source);
       if (cancellation.is_cancelled()) { cancelled(result, observer); return result; }
       if (!dependencies_current(result, source)) { stale(result, observer); return result; }
@@ -533,9 +594,12 @@ namespace sagan::language_service
                    const std::filesystem::path &artifact_root,
                    const native_build_profile profile,
                    const diagnostics::cancellation_token cancellation,
-                   const operation_observer &observer) -> native_operation_result
+                   const operation_observer &observer,
+                   std::string operation_id,
+                   std::optional<project_test_selection> selected_test) -> native_operation_result
   {
-    auto result = build_project(entry_or_package, source, artifact_root, profile, cancellation, observer);
+    auto result = build_project(entry_or_package, source, artifact_root, profile, cancellation, observer,
+                                std::move(operation_id), std::move(selected_test));
     if (result.state != diagnostics::result_state::complete || !result.executable) return result;
     const auto loaded = source.read_path(result.document.canonical_path.value_or(entry_or_package));
     if (!loaded)

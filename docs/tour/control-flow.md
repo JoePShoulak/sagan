@@ -44,6 +44,19 @@ else return fallback
 Moving the body to a later line requires braces; indentation alone never
 creates a block.
 
+Here is a compact, executable Fibonacci function using several independent
+rules together:
+
+```sagan
+--8<-- "docs/examples/executable/fibonacci.sagan"
+```
+
+`let i, a, b = 0, 0, 1` creates three `Int64` variables. The postfix `i++`
+uses the old counter value for the comparison and then increments it. On each
+loop iteration, both right-hand values in `a, b = b, a + b` are calculated
+before either variable changes. `fast_fibonacci(10)` prints `144` with this
+loop condition; change `<=` to `<` if you want one fewer iteration.
+
 `break` and `continue` are unlabeled and valid only inside a loop. A `return`
 may carry an expression or stand alone to return without a value.
 

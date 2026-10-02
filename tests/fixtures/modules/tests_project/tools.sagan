@@ -1,0 +1,5 @@
+module tools
+
+test "math/add" {
+  print(2)
+}

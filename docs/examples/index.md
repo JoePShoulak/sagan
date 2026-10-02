@@ -82,6 +82,17 @@ Expected output:
 --8<-- "docs/examples/executable/hello.stdout"
 ```
 
+The compact [Fibonacci example](executable/fibonacci.sagan) demonstrates
+parallel `let`, simultaneous reassignment, postfix increment, and a brace-free
+one-statement loop. Run it with `sagan docs/examples/executable/fibonacci.sagan`;
+its expected output is `144`.
+
+The [composition example](executable/composition.sagan) demonstrates a face
+requirement, a face default that calls that requirement through `self`, explicit
+class conformance, a mutating method, conversion to a face value, and shared
+reference identity. Its adjacent `.stdout` file is checked with the rest of the
+documentation examples.
+
 ## Regression fixtures
 
 `tests/fixtures/` is grouped by compiler responsibility:

@@ -1,0 +1,2 @@
+module main
+export fun orbit_answer(): Int => 42

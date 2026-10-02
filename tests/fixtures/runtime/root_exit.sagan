@@ -1,0 +1,3 @@
+let expected = 7
+hope exit(expected)
+finally print("cleanup before exit")

@@ -2,3 +2,5 @@ fun main(): Int {
   let value: Int8 = 64
   return value * 2
 }
+
+exit(main())

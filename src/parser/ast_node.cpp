@@ -370,6 +370,27 @@ namespace parser
     if (initializer) initializer->print(stream, indent + 2);
   }
 
+  parallel_let_declaration::parallel_let_declaration(const span source_range,
+                                                     std::vector<parallel_let_binding> entries)
+      : statement(source_range), bindings(std::move(entries))
+  {
+  }
+
+  auto parallel_let_declaration::print(std::ostream &stream, const int indent) const -> void
+  {
+    write_indent(stream, indent);
+    stream << "ParallelLet\n";
+    print_documentation(stream, indent + 2);
+    for (const auto &binding : bindings)
+    {
+      write_indent(stream, indent + 2);
+      stream << "Let(" << binding.name;
+      if (binding.type_name) stream << ": " << *binding.type_name;
+      stream << ")\n";
+      binding.initializer->print(stream, indent + 4);
+    }
+  }
+
   expression_statement::expression_statement(const span source_range, expression_ref statement_value)
       : statement(source_range), value(std::move(statement_value))
   {
@@ -634,6 +655,12 @@ namespace parser
   auto function_declaration::print(std::ostream &stream, const int indent) const -> void
   {
     write_indent(stream, indent);
+    if (test_name)
+    {
+      stream << "Test(\"" << escaped_string_text(*test_name) << "\")\n";
+      if (body) body->print(stream, indent + 2);
+      return;
+    }
     stream << (constructor_member ? "Constructor(" : "Function(")
            << (private_member ? "." : "") << name;
     if (!type_parameters.empty())

@@ -6,6 +6,7 @@
     { "include": "#comments" },
     { "include": "#strings" },
     { "include": "#enum-declaration" },
+    { "include": "#parallel-let-declaration" },
     { "include": "#declarations" },
     { "include": "#numbers" },
     { "include": "#constants" },
@@ -154,8 +155,29 @@
         { "include": "$self" }
       ]
     },
+    "parallel-let-declaration": {
+      "name": "meta.declaration.variable.parallel.sagan",
+      "begin": "\\b(let)(?=\\s+[^=\\n,]+,)",
+      "beginCaptures": {
+        "1": { "name": "keyword.declaration.variable.sagan" }
+      },
+      "end": "(?==|$)",
+      "patterns": [
+        { "name": "invalid.illegal.constant-name.sagan", "match": "\\b[A-Z][A-Z0-9_]*\\b(?=\\s*(?:[:,]|=))" },
+        { "name": "variable.other.definition.sagan", "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*(?=\\s*:)" },
+        { "include": "#type-annotations" },
+        { "name": "variable.other.definition.sagan", "match": "(?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*(?=\\s*(?:,|=))" },
+        { "name": "punctuation.separator.comma.sagan", "match": "," }
+      ]
+    },
     "declarations": {
       "patterns": [
+        {
+          "match": "\\b(test)(?=\\s+[\"'])",
+          "captures": {
+            "1": { "name": "keyword.declaration.function.test.sagan" }
+          }
+        },
         {
           "match": "\\b(new)(?=\\s*\\()",
           "captures": {
@@ -327,7 +349,7 @@
         { "name": "keyword.operator.logical.sagan", "match": "\\b(?:and|or|not)\\b" },
         { "name": "keyword.operator.type.sagan", "match": "\\b(?:is|has)\\b" },
         { "name": "variable.language.self.sagan", "match": "\\bself\\b" },
-        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|new|class|face|enum|dimension|quantity|unit|affine|module)\\b" }
+        { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|test|new|class|face|enum|dimension|quantity|unit|affine|module)\\b" }
       ]
     },
     "method-identifiers": {

@@ -64,6 +64,7 @@ namespace tokens
     KWD_CONST,
     KWD_WEAK,
     KWD_FUN,
+    KWD_TEST,
     KWD_NEW,
     KWD_CLASS,
     KWD_FACE,

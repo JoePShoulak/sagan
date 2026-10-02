@@ -26,3 +26,5 @@ fun main(): Int {
       radial_position.radius == 10.0 and radial_direction.magnitude == 2.0 return 0
   else return 1
 }
+
+exit(main())

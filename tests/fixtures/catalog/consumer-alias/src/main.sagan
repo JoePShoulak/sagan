@@ -1,0 +1,7 @@
+module main
+import orbit_tools as local_tools
+import orbit_answer from orbit_tools.main
+import orbit_tools.main as package_tools
+print(orbit_answer())
+print(local_tools.local_answer())
+print(package_tools.orbit_answer())

@@ -117,6 +117,11 @@ namespace sagan::language_service
       if (const auto *symbol = index_.find(reference.target))
         if (const auto selection = name_range(document_, tokens_, reference.location, symbol->name, true))
           accept(*symbol, *selection);
+    for (const auto &member : index_.member_resolutions())
+      if (member.candidates.size() == 1)
+        if (const auto *symbol = index_.find(member.candidates.front()))
+          if (const auto selection = name_range(document_, tokens_, member.use, symbol->name, true))
+            accept(*symbol, *selection);
     if (workspace_)
       for (const auto &reference : workspace_->external_references())
         if (reference.location.document == document_.identity().id)

@@ -3,3 +3,5 @@ fun main(): Int {
   print(value)
   return 0
 }
+
+exit(main())

@@ -804,6 +804,11 @@ namespace semantic
                       binding{declared, function_signature_type(fixed_annotation(declaration->type_name)), false,
                               dynamic_cast<const parser::const_declaration *>(declaration) != nullptr});
         }
+        else if (const auto *declaration = dynamic_cast<const parser::parallel_let_declaration *>(&value))
+        {
+          for (const auto &entry : declaration->bindings)
+            add_binding(entry.name, binding{annotation(entry.type_name), {}, false, false});
+        }
         else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&value))
         {
           const auto declared_signature = signature(*function);
@@ -1367,6 +1372,20 @@ namespace semantic
           }
           if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
           {
+            if (identifier->name == "assert")
+            {
+              require(arguments.size() == 1 || arguments.size() == 2,
+                      "assert expects a Bool and an optional String message", value.range);
+              require_compatible("Bool", arguments.front(), call->arguments.front()->range,
+                                 "assert condition");
+              if (arguments.size() == 2)
+                require_compatible("String", arguments.back(), call->arguments.back()->range,
+                                   "assert message");
+              static_cast<void>(record(*call->callee, "Function"));
+              model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                  arguments, "Void"});
+              return record(value, "Void");
+            }
             if (identifier->name == "Some")
             {
               require(arguments.size() == 1, "Some expects exactly one value", value.range);
@@ -1938,8 +1957,6 @@ namespace semantic
 
       auto function(const parser::function_declaration &value) -> void
       {
-        require(value.name != "main" || value.type_parameters.empty(),
-                "Entry function 'main' cannot be generic", value.range);
         open_scope();
         for (const auto &parameter : value.parameters)
         {
@@ -2162,7 +2179,7 @@ namespace semantic
                                    : (declared == "Int" && integer_width(inferred) > 0) ||
                                            (declared == "Float" && float_width(inferred) > 0)
                                        ? inferred
-                                   : is_unknown(declared) ? inferred
+                                   : is_unknown(declared) ? (!constant && integer_width(inferred) > 0 ? "Int64" : inferred)
                                                           : declared;
           std::optional<callable_signature> callable;
           if (const auto declared_callable = function_signature_type(type)) callable = declared_callable;
@@ -2187,6 +2204,53 @@ namespace semantic
                   "Variable '" + declaration->name + "' requires a type annotation or initializer",
                   declaration->range);
           model.declarations.push_back(typed_declaration{declaration->range, declaration->name, type});
+        }
+        else if (const auto *declaration = dynamic_cast<const parser::parallel_let_declaration *>(&value))
+        {
+          struct checked_binding
+          {
+            std::string type;
+            std::optional<callable_signature> callable;
+          };
+          std::vector<checked_binding> checked;
+          checked.reserve(declaration->bindings.size());
+          for (const auto &entry : declaration->bindings)
+          {
+            const std::string declared = annotation(entry.type_name);
+            const auto previous_expected = expected_expression;
+            if (!is_unknown(declared)) expected_expression = fixed_annotation(entry.type_name);
+            std::string inferred = expression(*entry.initializer);
+            expected_expression = previous_expected;
+            if (declared == "Float32")
+              if (const auto *literal = dynamic_cast<const parser::literal_expression *>(entry.initializer.get());
+                  literal && literal->literal_kind == parser::literal_expression::kind::floating_point)
+                inferred = "Float32";
+            if (!is_unknown(declared))
+              require_compatible(declared, inferred, entry.initializer->range, "Variable initializer");
+            const std::string type = (declared == "Int" && integer_width(inferred) > 0) ||
+                                             (declared == "Float" && float_width(inferred) > 0)
+                                         ? inferred
+                                     : is_unknown(declared) ? (integer_width(inferred) > 0 ? "Int64" : inferred)
+                                                            : declared;
+            require(!is_unknown(type), "Variable '" + entry.name + "' requires a known type", entry.name_range);
+            std::optional<callable_signature> callable = function_signature_type(type);
+            if (const auto found = callables.find(entry.initializer.get()); found != callables.end())
+              callable = found->second;
+            checked.push_back(checked_binding{type, std::move(callable)});
+          }
+          for (std::size_t index = 0; index < declaration->bindings.size(); ++index)
+          {
+            const auto &entry = declaration->bindings[index];
+            auto &result = checked[index];
+            if (predeclared)
+            {
+              scopes.back()[entry.name].front().type = result.type;
+              scopes.back()[entry.name].front().callable = std::move(result.callable);
+              scopes.back()[entry.name].front().initialized = true;
+            }
+            else add_binding(entry.name, binding{result.type, std::move(result.callable), true, false});
+            model.declarations.push_back(typed_declaration{entry.name_range, entry.name, result.type});
+          }
         }
         else if (const auto *expression_statement = dynamic_cast<const parser::expression_statement *>(&value))
         {
@@ -2259,6 +2323,7 @@ namespace semantic
         }
         else if (const auto *returned = dynamic_cast<const parser::return_statement *>(&value))
         {
+          require(!return_types.empty(), "'return' is only valid inside a function", returned->range);
           const auto previous_expected = expected_expression;
           if (!return_types.empty()) expected_expression = return_types.back();
           const std::string actual = returned->value ? expression(*returned->value) : std::string(void_type);
@@ -2447,11 +2512,14 @@ namespace semantic
       {
         unit_registry.add_program(tree);
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}, {}}});
+        add_binding("assert", binding{"Function", callable_signature{{"Bool"}, "Void", {}, {}}});
+        add_binding("exit", binding{"Function", callable_signature{{"Int64"}, "Void", {}, {}}});
         add_binding("None", binding{"None", {}});
         add_binding("RuntimeError", binding{"Type", {}});
         enums["RuntimeError"] = {"integer_overflow", "division_by_zero", "modulo_by_zero",
                                   "undefined_exponentiation", "negative_integer_exponent",
-                                  "index_out_of_bounds", "invalid_range", "invalid_conversion", "missing_key"};
+                                  "index_out_of_bounds", "invalid_range", "invalid_conversion", "missing_key",
+                                  "uninitialized_binding"};
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);
@@ -2490,7 +2558,13 @@ namespace semantic
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
               type && type->type_kind == parser::type_declaration::kind::class_type)
             validate_composition(type->name, objects.at(type->name), type->range);
-        for (const auto &entry : tree.statements) statement(*entry, true);
+        // Root bindings are initialized by the script before a later call can
+        // enter a function body. Check those bindings first so functions may
+        // refer to them regardless of where the function is declared.
+        for (const auto &entry : tree.statements)
+          if (!dynamic_cast<const parser::function_declaration *>(entry.get())) statement(*entry, true);
+        for (const auto &entry : tree.statements)
+          if (dynamic_cast<const parser::function_declaration *>(entry.get())) statement(*entry, true);
         return std::move(model);
       }
     };
@@ -2518,22 +2592,8 @@ namespace semantic
 
   auto validate_entry_point(const parser::program &tree) -> void
   {
-    const parser::function_declaration *entry = nullptr;
-    for (const auto &statement : tree.statements)
-    {
-      const auto *function = dynamic_cast<const parser::function_declaration *>(statement.get());
-      if (!function || function->name != "main") continue;
-      if (entry) throw semantic_error("Program defines more than one 'main' entry point", function->range);
-      entry = function;
-    }
-    if (!entry) throw semantic_error("Executable program requires a 'main' entry point", tree.range);
-    if (!entry->parameters.empty())
-    {
-      throw semantic_error("Entry point 'main' cannot declare parameters", entry->range);
-    }
-    if (!entry->return_type || (*entry->return_type != "Int" && *entry->return_type != "Void"))
-    {
-      throw semantic_error("Entry point 'main' must return Int or Void", entry->range);
-    }
+    // The selected root document is the executable entry point. Type checking
+    // validates its statements; it need not contain a specially named function.
+    static_cast<void>(tree);
   }
 }

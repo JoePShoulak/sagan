@@ -511,35 +511,6 @@ namespace
     return true;
   }
 
-  auto expect_entry_error(const std::string &name, const std::string &source,
-                          const std::string &expected) -> bool
-  {
-    try
-    {
-      parser::syntax_parser syntax(tokenize(source));
-      const auto tree = syntax.parse();
-      static_cast<void>(semantic::analyze(tree));
-      static_cast<void>(semantic::check_types(tree));
-      semantic::validate_entry_point(tree);
-    }
-    catch (const semantic::semantic_error &error)
-    {
-      if (std::string(error.what()).contains(expected))
-      {
-        std::cout << "[PASS] " << name << '\n';
-        return true;
-      }
-      // LCOV_EXCL_START
-      std::cerr << "[FAIL] " << name << ": unexpected entry-point error '" << error.what() << "'\n";
-      return false;
-      // LCOV_EXCL_STOP
-    }
-    // LCOV_EXCL_START
-    std::cerr << "[FAIL] " << name << ": expected an entry-point error\n";
-    return false;
-    // LCOV_EXCL_STOP
-  }
-
   auto run_self_tests() -> int
   {
     bool passed = true;
@@ -576,9 +547,9 @@ namespace
 
     passed &= expect_ids(
         "complete keyword vocabulary",
-        "let weak fun new class face enum dimension quantity unit affine if else match case for in while until break continue return yield "
+        "let weak fun test new class face enum dimension quantity unit affine if else match case for in while until break continue return yield "
         "import from as module export hope unless finally scream and or not self is has true false inf nan\n",
-        {tokens::KWD_LET, tokens::KWD_WEAK, tokens::KWD_FUN, tokens::KWD_NEW, tokens::KWD_CLASS, tokens::KWD_FACE, tokens::KWD_ENUM,
+        {tokens::KWD_LET, tokens::KWD_WEAK, tokens::KWD_FUN, tokens::KWD_TEST, tokens::KWD_NEW, tokens::KWD_CLASS, tokens::KWD_FACE, tokens::KWD_ENUM,
          tokens::KWD_DIMENSION, tokens::KWD_QUANTITY, tokens::KWD_UNIT, tokens::KWD_AFFINE,
          tokens::KWD_IF, tokens::KWD_ELSE, tokens::KWD_MATCH, tokens::KWD_CASE, tokens::KWD_FOR,
          tokens::KWD_IN, tokens::KWD_WHILE, tokens::KWD_UNTIL, tokens::KWD_BREAK, tokens::KWD_CONTINUE,
@@ -1002,8 +973,8 @@ namespace
     passed &= expect_syntax_error_contains("chained compound assignment",
                                            "fun invalid() {\n  first += second += third\n}\n",
                                            "Assignment statements cannot be chained");
-    passed &= expect_syntax_error("top-level expression statement", "launch()\n");
-    passed &= expect_syntax_error("top-level control flow", "if ready {\n}\n");
+    passed &= expect_entry_point("top-level expression statement", "print(42)\n");
+    passed &= expect_entry_point("top-level control flow", "if true {\n  print(42)\n}\n");
     passed &= expect_syntax_error_contains("standalone else", "fun invalid() {\n  else {\n  }\n}\n",
                                            "'else' is only valid after an if statement");
     passed &= expect_ast(
@@ -1635,16 +1606,17 @@ namespace
         "let text = identity(\"Sagan\")\n",
         {"number: Int64", "text: String"});
     passed &= expect_type_model(
-        "smallest fitting integer widths",
+        "smallest fitting literals and Int64 mutable defaults",
         "let tiny = 127\nlet small = 128\nlet medium = 32768\n"
         "let large = 2147483648\nlet negative = -128\nlet wider_negative = -129\n"
         "let widened = tiny + small\n",
-        {"tiny: Int8", "small: Int16", "medium: Int32", "large: Int64",
-         "negative: Int8", "wider_negative: Int16", "widened: Int16"});
+        {"tiny: Int64", "small: Int64", "medium: Int64", "large: Int64",
+         "negative: Int64", "wider_negative: Int64", "widened: Int64",
+         "Int8 @", "Int16 @", "Int32 @", "Int64 @"});
     passed &= expect_type_model(
         "prefix and postfix increment types",
         "let value = 1\nlet old = value++\nlet current = ++value\nlet prior = value--\nlet final = --value\n",
-        {"value: Int8", "old: Int8", "current: Int8", "prior: Int8", "final: Int8"});
+        {"value: Int64", "old: Int64", "current: Int64", "prior: Int64", "final: Int64"});
     passed &= expect_type_model(
         "floating widths",
         "let default_value = 1.0\nlet precise: Float64 = 2.0\nlet compact: Float32 = 3.0\n",
@@ -1702,13 +1674,13 @@ namespace
         "let small = [1, 2]\nlet mixed_width = [1, 200]\n"
         "let combined = [...small, 3]\nlet selected = mixed_width[0]\n",
         {"small: Array<Int8>", "mixed_width: Array<Int16>", "combined: Array<Int8>",
-         "selected: Int16", "value: Unknown"});
+         "selected: Int64", "value: Unknown"});
     passed &= expect_type_model(
         "homogeneous dictionary inference indexing and spreads",
         "let counts = {\"one\": 1, \"two\": 200}\n"
         "let more = {...counts, \"three\": 3}\n"
         "let selected = more[\"two\"]\n",
-        {"counts: Dictionary<String, Int16>", "more: Dictionary<String, Int16>", "selected: Int16"});
+        {"counts: Dictionary<String, Int16>", "more: Dictionary<String, Int16>", "selected: Int64"});
     passed &= expect_type_model(
         "dimensioned vector point and spherical inference",
         "let direction = <1.0, 0.0, 0.0>\n"
@@ -1742,7 +1714,7 @@ namespace
         "  let radial = s(10.0, 0.5, 1.0)\n  let orbit = s<2.0, 0.25, 0.75>\n"
         "  let radius = radial.radius\n  let magnitude = orbit.magnitude\n  let azimuth = radial.azimuth\n"
         "  direction.y = 8.0\n  direction.z += 1.0\n}\n",
-        {"horizontal: Float64", "altitude: Int8", "frame: Int8", "radius: Float64",
+        {"horizontal: Float64", "altitude: Int64", "frame: Int64", "radius: Float64",
          "magnitude: Float64", "azimuth: Float64"});
     passed &= expect_type_model(
         "lambda callability captures and immediate calls",
@@ -2131,17 +2103,11 @@ namespace
         "cyclic face composition",
         "face Left is Right {\n}\nface Right is Left {\n}\n",
         "Cyclic face composition involving");
-    passed &= expect_entry_point("Int entry point", "fun main(): Int => 0\n");
-    passed &= expect_entry_point("Void entry point", "fun main(): Void {\n  return\n}\n");
-    passed &= expect_entry_error("missing entry point", "let library_value = 1\n",
-                                 "requires a 'main' entry point");
-    passed &= expect_entry_error("entry point parameters", "fun main(value: Int): Int => value\n",
-                                 "cannot declare parameters");
-    passed &= expect_entry_error("entry point result", "fun main(): String => \"invalid\"\n",
-                                 "must return Int or Void");
-    passed &= expect_entry_error("duplicate entry point",
-                                 "fun main(): Int => 0\nfun main(): Int => 1\n",
-                                 "more than one 'main' entry point");
+    passed &= expect_entry_point("empty root program", "\n");
+    passed &= expect_entry_point("root binding and function", "let offset = 2\nfun answer(): Int => offset + 40\nprint(answer())\n");
+    passed &= expect_entry_point("main is an ordinary function", "fun main(value: Int): String => \"ok\"\n");
+    passed &= expect_type_error("root return is invalid", "return 1\n", "only valid inside a function");
+    passed &= expect_type_error("exit requires an integer status", "exit(1.5)\n", "No matching overload");
 
     std::cout << (passed ? "All front-end tests passed.\n" : "Front-end tests failed.\n");
     return passed ? 0 : 1;
@@ -2456,7 +2422,7 @@ auto main(const int argc, char **argv) -> int
         static_cast<void>(semantic::check_types(tree));
         active_phase = sagan::diagnostics::phase::entry_point;
         semantic::validate_entry_point(tree);
-        std::cout << "Sagan " << SAGAN_VERSION << " executable entry point is valid: " << path << '\n';
+        std::cout << "Sagan " << SAGAN_VERSION << " executable root is valid: " << path << '\n';
       }
       else if (mode == output_mode::emit_cpp)
       {

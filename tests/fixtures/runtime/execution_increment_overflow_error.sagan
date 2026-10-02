@@ -2,3 +2,5 @@ fun main(): Int {
   let value: Int8 = 127
   return ++value
 }
+
+exit(main())

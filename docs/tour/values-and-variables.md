@@ -47,12 +47,27 @@ let entities = 10_000
 let gravity = 6.674_30e-11
 ```
 
-The checker infers scalar values, enforces compatible
-annotations and assignments, selects the smallest fitting signed integer width,
-defaults floating literals to `Float64`, and permits only provably lossless
-widening. `Int` and `Float` default to 64-bit widths when no initializer supplies
-a narrower inference. A declaration must provide an annotation, initializer, or
-both.
+The checker infers scalar values and enforces compatible annotations and
+assignments. An unannotated mutable integer `let` binding defaults to `Int64`;
+use `: Int8`, `: Int16`, or `: Int32` when a narrow variable is intentional.
+Integer literals and constant expressions can still have narrower types before
+they are stored in a variable. Floating literals default to `Float64`, and
+conversions must be provably lossless. A declaration must provide an annotation,
+initializer, or both.
+
+Several mutable variables can be declared together when each has an initial
+value:
+
+```sagan
+let i, a, b = 0, 0, 1
+```
+
+There must be exactly one initializer per name. All initializers are evaluated
+from left to right before any of the new names becomes visible; then the new
+bindings are created. Each name may have its own annotation, as in
+`let low: Int8, high: Int64 = 1, 2`. Duplicate names in the same scope are
+rejected. This is a declaration, unlike `a, b = b, a + b`, which reassigns
+existing variables.
 
 Arrays infer one homogeneous element type, so one array does not silently mix
 unrelated kinds of values. Dictionaries similarly infer one key type and one

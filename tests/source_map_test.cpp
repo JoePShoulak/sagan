@@ -21,7 +21,7 @@ namespace
 
 auto main() -> int
 {
-  const std::string text = "fun main(): Int {\n  return 42\n}\n";
+  const std::string text = "let answer = 42\nprint(answer)\n";
   const sagan::source::document_snapshot document(
       {{sagan::source::document_id{1}, sagan::source::document_uri{"untitled:source-map"}, {}},
        1, text});
@@ -36,15 +36,15 @@ auto main() -> int
               !generated.mappings.empty() &&
               codegen::source_map_schema_version == std::string_view{"sagan-cpp-source-map-v1"},
           "mapped generation changed the generated C++ or lost its schema");
-  const auto position = generated.text.rfind("return 42;");
-  require(position != std::string::npos, "generated return was not found");
+  const auto position = generated.text.rfind("sagan_print(");
+  require(position != std::string::npos, "generated root statement was not found");
   const auto *mapped = codegen::source_for_generated_offset(generated, position);
   const auto metadata = sagan::language_service::derive_debug_metadata(document, model, types, generated);
   require(mapped && mapped->breakpoint && mapped->generated_function == "main" &&
               mapped->source_path && mapped->source_path->filename() == "demo.sagan" &&
-              mapped->source.begin <= static_cast<int>(text.find("return 42")) &&
-              static_cast<int>(text.find("return 42")) < mapped->source.end,
-          "return statement did not round-trip to the Sagan source range");
+              mapped->source.begin <= static_cast<int>(text.find("print(answer)")) &&
+              static_cast<int>(text.find("print(answer)")) < mapped->source.end,
+          "root statement did not round-trip to the Sagan source range");
   const auto line = 1 + std::count(generated.text.begin(),
                                    generated.text.begin() + static_cast<std::ptrdiff_t>(position), '\n');
   const auto line_begin = generated.text.rfind('\n', position);
@@ -57,7 +57,7 @@ auto main() -> int
   const auto frame = sagan::language_service::source_for_stack_frame(
       metadata, generated, "main", static_cast<std::size_t>(line), column);
   require(frame && frame->document == document.identity().id &&
-              frame->bytes.begin == text.find("return 42") &&
+              frame->bytes.begin == text.find("print(answer)") &&
               !sagan::language_service::source_for_stack_frame(metadata, generated, "missing",
                                                                  static_cast<std::size_t>(line), column),
           "generated stack-frame location did not map to a Sagan breakpoint");
@@ -66,7 +66,7 @@ auto main() -> int
                            std::to_string(column) + ": error: synthetic compiler failure\n");
   require(toolchain.size() == 1 && toolchain.front().owner == sagan::diagnostics::phase::build &&
               toolchain.front().primary.document == document.identity().id &&
-              toolchain.front().primary.bytes.begin == text.find("return 42") &&
+              toolchain.front().primary.bytes.begin == text.find("print(answer)") &&
               toolchain.front().message == "synthetic compiler failure" &&
               !toolchain.front().notes.empty(),
           "native toolchain error did not map to the Sagan source range");
@@ -100,6 +100,25 @@ auto main() -> int
   const auto linked_column = linked_position -
       (linked_line_begin == std::string::npos ? 0 : linked_line_begin + 1) + 1;
   const sagan::source::disk_source_provider disk;
+  const auto root_document = disk.read_path("tests/fixtures/runtime/root_script.sagan");
+  require(static_cast<bool>(root_document), "root script fixture was unavailable");
+  const auto root_syntax = sagan::syntax::analyze(*root_document.value, {.recover = false});
+  require(root_syntax.value && root_syntax.value->strict_ast,
+          "root script fixture did not parse");
+  const auto &root_tree = *root_syntax.value->strict_ast;
+  const auto root_model = semantic::analyze(root_tree);
+  const auto root_types = semantic::check_types(root_tree);
+  const auto root_generated = codegen::generate_cpp_mapped(
+      root_tree, root_types, root_document.value->identity().canonical_path);
+  const auto root_metadata = sagan::language_service::derive_debug_metadata(
+      *root_document.value, root_model, root_types, root_generated, &disk);
+  require(std::any_of(root_metadata.variables.begin(), root_metadata.variables.end(),
+                      [&](const auto &variable)
+                      {
+                        return variable.name == "offset" && variable.source_path &&
+                               *variable.source_path == *root_document.value->identity().canonical_path;
+                      }),
+          "root-level Sagan bindings were omitted from debugger metadata");
   const auto main_document = disk.read_path("tests/fixtures/modules/module_demo/main.sagan");
   const auto guidance_document = disk.read_path("tests/fixtures/modules/module_demo/guidance.sagan");
   require(main_document && guidance_document, "linked source documents were unavailable");

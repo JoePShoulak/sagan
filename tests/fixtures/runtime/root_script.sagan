@@ -1,0 +1,4 @@
+fun answer(value: Int): Int => value + offset
+
+let offset = 2
+print(answer(40))

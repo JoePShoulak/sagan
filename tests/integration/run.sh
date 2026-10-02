@@ -12,6 +12,7 @@ tests=(
   type_test.sh
   entry_test.sh
   module_test.sh
+  package_dependency_test.sh
   codegen_test.sh
   runtime_test.sh
   optional_test.sh
@@ -21,7 +22,10 @@ tests=(
   closure_test.sh
   constants_test.sh
   array_times_parallel_test.sh
+  parallel_let_fibonacci_test.sh
   mixed_exponent_test.sh
+  root_script_test.sh
+  assert_test.sh
 )
 
 for test_script in "${tests[@]}"; do

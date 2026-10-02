@@ -35,3 +35,5 @@ fun main(): Int {
   if SPEED_OF_LIGHT > 0 and mutable == 1 return 0
   else return 1
 }
+
+exit(main())

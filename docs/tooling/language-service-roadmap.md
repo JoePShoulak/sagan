@@ -37,6 +37,15 @@ checking, and capability discovery are implemented. Existing module, project,
 build, entry-point, and runtime paths still need to migrate from textual
 exceptions to distinct structured codes.
 
+**Deferred follow-up: unified Sagan errors.** Do not treat the diagnostic
+foundation as completion of the agreed error experience. Resume with stable
+codes for individual failures across every compiler/runtime phase, multiple
+independent semantic/type diagnostics with cascade suppression, Sagan call-site
+tracebacks and an expanded trace option, accurate captured values, reliable
+fix hints, and honest source mapping for native/toolchain failures. Keep terminal,
+JSON, LSP, and debugger presentations backed by the same structured facts. See
+the [diagnostics contract](diagnostics.md) for the agreed tone and format.
+
 - Implement URI/path identity, immutable snapshots, document versions, UTF-8
   byte ranges, UTF-16 positions, and a tested line index.
 - Add structured result states, cancellation tokens, diagnostics, related
@@ -207,11 +216,18 @@ Run `make operations-demo` to see Sagan input and both native results.
 - Add test operations only after an authoritative Sagan test model exists.
 
 **Exit met:** source/error mapping and debugger metadata round-trip in focused
-debug and optimized builds, including an imported overlay. The operations are
-synchronous library calls with cancellation, not asynchronous job handles or
-LSP task requests. There is no test-discovery model, live debugger, DAP server,
-attach contract, or reliable optimized-local evaluation. Breakpoints are
-candidate source locations; native debugger validation remains future work.
+debug and optimized builds, including an imported overlay. A later increment
+added asynchronous check/build/run job handles and cancellable LSP operation
+requests. Explicit `test "name" { ... }` declarations and versioned
+document/project discovery now exist in both the library and a custom LSP
+request. A later increment added selected document and linked-project test
+execution, including package roots and imported-module overlays. A later
+increment added an experimental framed `sagan-dap` process backed by GDB's
+native DAP. It has tested launch, Sagan-mapped breakpoint/stack probes, and
+source-level stepping, but reliable Sagan values, exception mapping, complete
+cleanup coverage, and release packaging are still missing. Attach and
+optimized-local evaluation remain unsupported. Debugger capabilities stay
+false until their individual end-to-end gates pass.
 
 ## Phase 8 — Language Server Protocol transport
 
@@ -220,8 +236,9 @@ the workload/release gate.** `bin/sagan-lsp` speaks JSON-RPC/LSP over stdio,
 uses versioned unsaved overlays and UTF-16 positions, handles workspace
 folders and file notifications, publishes diagnostics, and translates the
 completed compiler queries and safe edit actions. Requests can be cancelled
-with `$/cancelRequest`; protocol stdout contains frames only. The server does
-not implement build/run task requests or DAP. See the
+with `$/cancelRequest`; protocol stdout contains frames only. The server now
+provides custom check/build/run operation, test-discovery, and selected
+document/project test execution requests, but not DAP. See the
 [language-server guide](language-server.md) for the exact advertised surface
 and limitations. `make lsp-demo` shows source, hover, navigation, and an edit
 diagnostic.

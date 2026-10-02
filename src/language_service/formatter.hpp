@@ -1,9 +1,12 @@
 #pragma once
 
 #include "edits.hpp"
+#include <string_view>
 
 namespace sagan::language_service
 {
+  inline constexpr std::string_view formatting_schema_version = "sagan-formatting-v1";
+
   struct format_result
   {
     edit_state state{edit_state::unsupported};
@@ -11,9 +14,9 @@ namespace sagan::language_service
     workspace_edit edits;
   };
 
-  // Phase 6's conservative layout pass: two-space structural indentation.
-  // It preserves all non-whitespace source and refuses a change unless both
-  // strict parses and their lossless token streams agree.
+  // Conservative two-space layout. Recovered documents are limited to lines
+  // with proven token/trivia ownership; a proposed edit must preserve the
+  // token stream, strict/recovered state, and diagnostic meaning.
   auto format_document(const source::document_snapshot &document) -> format_result;
   auto format_range(const source::document_snapshot &document, source::byte_range range)
     -> format_result;

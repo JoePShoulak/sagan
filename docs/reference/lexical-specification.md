@@ -92,7 +92,7 @@ delimiter contexts are preserved for the parser to interpret.
 ## Keywords
 
 ```text
-let const weak fun new class face enum dimension quantity unit affine
+let const weak fun test new class face enum dimension quantity unit affine
 if else match case for in while until break continue return yield
 import from as module export
 hope unless finally scream

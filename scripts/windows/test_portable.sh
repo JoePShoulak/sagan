@@ -25,6 +25,7 @@ else
 fi
 
 [[ -x "$install_dir/bin/sagan.exe" ]]
+[[ -x "$install_dir/bin/sagan-lsp.exe" ]]
 [[ -x "$install_dir/toolchain/ucrt64/bin/g++.exe" ]]
 [[ ! -e "$install_dir/bin/sagan-launch.exe" ]]
 

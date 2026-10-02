@@ -1,4 +1,1 @@
-fun main(): Int {
-  print("Hello from Sagan!")
-  return 0
-}
+print("Hello from Sagan!")

@@ -14,13 +14,12 @@ imported="${imported//$'\r'/}"
 [[ "$imported" == 'Imported speed: 3' ]]
 
 bin/sagan --emit-cpp tests/fixtures/runtime/constants.sagan build/constants.cpp
-grep -Eq '^extern const std::int[0-9]+_t sagan_' build/constants.cpp
-grep -Eq '^const std::int[0-9]+_t sagan_' build/constants.cpp
+grep -Eq '^std::shared_ptr<std::int[0-9]+_t> sagan_' build/constants.cpp
+grep -Eq '^std::shared_ptr<double> sagan_' build/constants.cpp
 grep -Eq '^  const std::int[0-9]+_t sagan_' build/constants.cpp
 grep -Fq 'const sagan_vector<' build/constants.cpp
 grep -Fq 'const sagan_point<' build/constants.cpp
 grep -Fq 'const std::shared_ptr<' build/constants.cpp
-grep -Fq 'const double sagan_' build/constants.cpp
 
 bin/sagan --ast tests/fixtures/runtime/constants.sagan > build/constants.ast.txt
 bin/sagan --ast-dot tests/fixtures/runtime/constants.sagan > build/constants.ast.dot

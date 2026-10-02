@@ -27,7 +27,7 @@ below are deliberate limits, not work for the extension to invent locally.
 | Implementations/conformances | Face/class conformance index | **LSP available** |
 | References/highlights | Identity-based workspace reference index | **LSP available** |
 | Signature help | Resolved overload/signature query | **LSP available; ambiguous incomplete calls remain conservative** |
-| Completion | Parser context, semantic scope/type state, module/catalog metadata | **LSP available for compiler-known candidates; no external package catalog** |
+| Completion | Parser context, semantic scope/type state, module/catalog metadata | **LSP available for compiler-known candidates; installed imports and unfinished module-path imports work, but full external-package completion/auto-import is blocked** |
 | Semantic highlighting | Stable classification vocabulary and ranges | **Full-document LSP semantic tokens available** |
 | Document symbols | Hierarchical declaration index | **LSP available** |
 | Workspace symbols | Workspace semantic index | **LSP available for package roots and open module graphs** |
@@ -35,15 +35,43 @@ below are deliberate limits, not work for the extension to invent locally.
 | Selection ranges | Syntax parent chains with precise ranges | **LSP available** |
 | Document links | Resolved import/module targets | **LSP available** |
 | Inlay hints | Resolved types/parameters with suppression rules | **LSP available** |
-| Rename | Versioned identity-based safe workspace edits | **LSP available for proven local rename; cross-file/public rename unavailable** |
+| Rename | Versioned identity-based safe workspace edits | **LSP available for proven local, private-member, exported-symbol, and imported public-member identities; ambiguous identities are refused** |
 | Quick fixes/code actions | Structured fixes and proven refactoring actions | **LSP quick fixes and organize imports available; other unsafe actions disabled** |
-| Formatting | Lossless deterministic formatter API | **LSP document/range/on-type available for strict source; incomplete-source formatting unsupported** |
+| Formatting | Lossless deterministic formatter API | **LSP document/range/on-type available; recovered source formats only proven complete lines and refuses uncertain edits** |
 | Type hierarchy | Type/conformance semantic index | **LSP available for indexed conformances** |
 | Call hierarchy | Resolved callable/call-site index | **LSP available for resolved calls** |
-| Check/build/run tasks | Structured cancellable operations | **Versioned check and native document/project build/run library operations available, with streams, artifacts, cancellation, overlays and stale-result checks; asynchronous orchestration and LSP transport blocked** |
-| Test explorer | Authoritative Sagan test discovery model | **Unavailable by design for now** |
-| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Source maps, candidate breakpoints, scopes, value metadata and launch plan available; live debugger, attach, optimized-local evaluation and DAP blocked** |
+| Check/build/run tasks | Structured cancellable operations | **Versioned document/project operations and `sagan/operation` transport are available; the extension provides commands and generated document/project tasks with cancellation and output** |
+| Test Explorer | Authoritative Sagan test discovery and execution model | **The extension provides document/project discovery and selected or all execution through granular compiler capabilities; Run results include duration, output, and pass/fail/error/skipped state** |
+| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level step-over/in/out probes including imported modules; reliable values, exceptions, release packaging, and capability advertisement remain blocked** |
 | Lexical TextMate coloring | Existing extension grammar | **Already available, outside this task** |
+
+The remaining compiler-side milestones, in dependency order, are:
+
+1. Finish operation stress tests and cancellation checkpoints inside strict
+   parsing, type analysis, code generation, and module linking. The current
+   transport can cancel queued/active requests and child processes, but those
+   compiler loops still have some phase-boundary-only checkpoints.
+2. **Project test-runner and VS Code client implemented:** imported tests execute from
+   linked programs, package-root runs retain package identity, and overlays,
+   selection, cancellation, stale runs, and LSP framing have focused tests.
+   The extension consumes stable IDs and project runs through Test Explorer.
+   A public terminal runner and debug-test profile remain unavailable.
+3. Complete contextual package completion and navigation. Manifest dependency
+   aliases, exact lockfile verification, offline installed-package linking,
+   transitive imports, and navigation/hover for imported package symbols now
+   work. The compiler also supplies module-path candidates and bounded
+   selective-export candidates for incomplete imports, plus definition targets
+   for module paths and definition/hover targets for selective import names.
+   Export/member completion in every context, safe import edits,
+   missing-source documentation targets, and multi-root collision behavior
+   still need implementation and focused tests. No unfinished package
+   capability is advertised.
+4. Finish the experimental Windows DAP executable using GDB native DAP,
+   source maps, and debug metadata. It already has a live launch/breakpoint/
+   stack and step-over/in/out probes; verify all source contexts, Sagan scopes
+   and values, exceptions,
+   cancellation, shutdown, and runtime packaging before
+   advertising debugger support.
 
 The extension may begin consuming a feature only when:
 

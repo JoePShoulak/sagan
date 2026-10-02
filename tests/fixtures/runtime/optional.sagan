@@ -38,3 +38,5 @@ fun main(): Int {
   if direct == 7 and fallback == 42 and chained == 7 and safe_field == 40 and safe_method == 42 and absent_method == -1 and matched == 7 and choose(None) == 42 return 0
   else return 1
 }
+
+exit(main())

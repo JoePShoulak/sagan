@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -32,7 +34,9 @@ auto main() -> int
               action("diagnostic.fix") != actions.end() && action("diagnostic.fix")->available &&
               action("imports.add") != actions.end() && action("imports.add")->available &&
               action("rename.function") != actions.end() && action("rename.function")->available &&
-              action("rename.workspace") != actions.end() && !action("rename.workspace")->available &&
+              action("rename.privateMember") != actions.end() &&
+              action("rename.privateMember")->available &&
+              action("rename.workspace") != actions.end() && action("rename.workspace")->available &&
               !action("rename.workspace")->limitation.empty() &&
               action("extract.function") != actions.end() && !action("extract.function")->available,
           "source-edit capability contract advertised an unsafe action or omitted a safe action");
@@ -109,9 +113,94 @@ auto main() -> int
   const source::document_snapshot incomplete(
       {{source::document_id{102}, source::document_uri{"untitled:incomplete"}, {}}, 1,
        "fun main(): Int {\nlet value = \n"});
-  require(language_service::format_document(incomplete).state ==
-              language_service::edit_state::unsupported,
-          "formatter modified incomplete source");
+  const auto incomplete_format = language_service::format_document(incomplete);
+  require(incomplete_format.state == language_service::edit_state::ready &&
+              language_service::preview_edits(incomplete_format.edits, {&incomplete}).documents.front().text ==
+                  incomplete.text(),
+          "formatter changed an incomplete declaration");
+  const source::document_snapshot recoverable(
+      {{source::document_id{112}, source::document_uri{"untitled:recoverable"}, {}}, 4,
+       "fun main(): Int {\nlet complete=2\nlet pending = \n"});
+  const auto partial = language_service::format_document(recoverable);
+  const auto partial_preview = language_service::preview_edits(partial.edits, {&recoverable});
+  require(partial.state == language_service::edit_state::ready &&
+              partial_preview.state == language_service::edit_state::ready &&
+              partial_preview.documents.front().text ==
+                  "fun main(): Int {\n  let complete = 2\nlet pending = \n",
+          "formatter did not isolate a complete line from an incomplete declaration");
+  const source::document_snapshot partial_again(recoverable.identity(), 5,
+                                                 partial_preview.documents.front().text);
+  require(language_service::format_document(partial_again).edits.documents.front().edits.empty(),
+          "incomplete-source formatting was not idempotent");
+  const auto complete_at = static_cast<source::byte_offset>(recoverable.text().find("let complete"));
+  const auto partial_range = language_service::format_range(recoverable,
+                                                             {complete_at, complete_at + 3});
+  require(partial_range.state == language_service::edit_state::ready &&
+              language_service::preview_edits(partial_range.edits, {&recoverable}).documents.front().text ==
+                  partial_preview.documents.front().text,
+          "range formatting did not isolate a complete line in recovered source");
+  const auto partial_on_type = language_service::format_on_type(recoverable, complete_at + 13, '\n');
+  require(partial_on_type.state == language_service::edit_state::ready &&
+              language_service::preview_edits(partial_on_type.edits, {&recoverable}).documents.front().text ==
+                  partial_preview.documents.front().text,
+          "on-type formatting did not isolate a complete line in recovered source");
+  const std::vector<std::pair<std::string, std::string>> unfinished_cases{
+      {"print(\n", "print("},
+      {"let text = \"unterminated\n", "let text = \"unterminated"},
+      {"/* unterminated\n", "/* unterminated"},
+      {"let values = [1,\n", "let values = [1,"},
+      {"let pending = 1 +\n", "let pending = 1 +"},
+      {"let strange = @\n", "let strange = @"},
+      {"let typed: \n", "let typed:"},
+      {"fun incomplete(value: \n", "fun incomplete(value:"},
+      {"let closure = (value: Int) =>\n", "let closure = (value: Int) =>"},
+      {"import tools.\n", "import tools."},
+      {"export \n", "export "},
+      {"module \n", "module "},
+      {"let value = {\n", "let value = {"},
+      {"let value = [1, 2\n", "let value = [1, 2"},
+      {"let value = <Int\n", "let value = <Int"},
+      {"let text = r\"unfinished\n", "let text = r\"unfinished"},
+      {"let text = \"\"\"unfinished\n", "let text = \"\"\"unfinished"},
+      {"let text = \"${value\n", "let text = \"${value"},
+      {"/* outer /* inner */\n", "/* outer /* inner */"},
+      {"let dictionary = {\"x\": 1,\n", "let dictionary = {\"x\": 1,"},
+      {"let comparison = 2 <\n", "let comparison = 2 <"},
+      {"test \"orbit\" { assert(\n", "test \"orbit\" { assert("}};
+  for (std::size_t index = 0; index < unfinished_cases.size(); ++index)
+  {
+    const auto &[ending, preserved] = unfinished_cases[index];
+    const source::document_snapshot editing(
+        {{source::document_id{static_cast<std::uint64_t>(120 + index)},
+          source::document_uri{"untitled:editing-" + std::to_string(index)}, {}}, 3,
+         "fun main(): Int {\nlet 🚀=1\n" + ending});
+    const auto plan = language_service::format_document(editing);
+    require(plan.state == language_service::edit_state::ready ||
+                (plan.state == language_service::edit_state::unsupported && !plan.reason.empty()),
+            "malformed source produced neither safe edits nor a structured refusal");
+    if (plan.state != language_service::edit_state::ready) continue;
+    const auto preview = language_service::preview_edits(plan.edits, {&editing});
+    require(preview.state == language_service::edit_state::ready &&
+                preview.documents.front().text.find(preserved) != std::string::npos,
+            "formatter rewrote uncertain source");
+    const source::document_snapshot repeated(editing.identity(), 4, preview.documents.front().text);
+    require(language_service::format_document(repeated).edits.documents.front().edits.empty(),
+            "malformed-source formatting was not idempotent");
+  }
+  const source::document_snapshot lone_cr(
+      {{source::document_id{130}, source::document_uri{"untitled:lone-cr"}, {}}, 2,
+       "fun main(): Int {\rlet value=1\rlet pending = \r"});
+  const auto cr_plan = language_service::format_document(lone_cr);
+  require(cr_plan.state == language_service::edit_state::unsupported && !cr_plan.reason.empty(),
+          "formatter did not refuse unsupported lone-CR syntax safely");
+  const source::document_snapshot crlf(
+      {{source::document_id{131}, source::document_uri{"untitled:crlf"}, {}}, 2,
+       "fun main(): Int {\r\nlet value=1\r\nlet pending = \r\n"});
+  const auto crlf_plan = language_service::format_document(crlf);
+  require(crlf_plan.state == language_service::edit_state::ready &&
+              language_service::preview_edits(crlf_plan.edits, {&crlf}).documents.front().text ==
+                  "fun main(): Int {\r\n  let value = 1\r\nlet pending = \r\n",
+          "recovered formatter did not preserve CRLF line endings");
   const source::document_snapshot missing_brace(
       {{source::document_id{111}, source::document_uri{"untitled:missing-brace"}, {}}, 3,
        "fun main(): Int {\n  return 0\n"});
@@ -181,7 +270,13 @@ auto main() -> int
           "workspace edit accepted invalid UTF-8 replacement text");
   const auto indexed = language_service::index_document(document);
   require(indexed.value.has_value(), "rename fixture did not index");
+  const auto declaration = static_cast<source::byte_offset>(document.text().find("value ="));
   const auto use = static_cast<source::byte_offset>(document.text().find("return value") + 7);
+  const auto declaration_rename = language_service::rename_local(
+      document, indexed.value->index, declaration, "altitude");
+  require(declaration_rename.state == language_service::edit_state::ready &&
+              declaration_rename.edits.documents.front().edits.size() == 2,
+          "identity-based local rename failed from the declaration position");
   const auto rename = language_service::rename_local(document, indexed.value->index, use, "altitude");
   require(rename.state == language_service::edit_state::ready &&
               rename.edits.documents.front().edits.size() == 2,
@@ -201,15 +296,22 @@ auto main() -> int
               language_service::edit_state::conflict,
           "rename accepted a name already present in scope");
   require(language_service::rename_local(document, indexed.value->index, 4, "launch").state ==
-              language_service::edit_state::unsupported,
-          "rename offered the main entry function");
+              language_service::edit_state::ready,
+          "rename rejected an ordinary function named main");
   const source::document_snapshot function_document(
       {{source::document_id{107}, source::document_uri{"untitled:function-rename"}, {}}, 1,
        "fun double(value: Int): Int => value + value\n"
        "fun main(): Int => double(21)\n"});
   const auto indexed_function = language_service::index_document(function_document);
   require(indexed_function.value.has_value(), "function rename fixture did not index");
+  const auto function_declaration = static_cast<source::byte_offset>(
+      function_document.text().find("double(value"));
   const auto function_use = static_cast<source::byte_offset>(function_document.text().find("double(21)"));
+  const auto function_declaration_rename = language_service::rename_local(
+      function_document, indexed_function.value->index, function_declaration, "twice");
+  require(function_declaration_rename.state == language_service::edit_state::ready &&
+              function_declaration_rename.edits.documents.front().edits.size() == 2,
+          "function rename failed from the declaration position");
   const auto function_rename = language_service::rename_local(
       function_document, indexed_function.value->index, function_use, "twice");
   require(function_rename.state == language_service::edit_state::ready &&
@@ -220,6 +322,109 @@ auto main() -> int
               function_preview.documents.front().text.find("fun twice(") != std::string::npos &&
               function_preview.documents.front().text.find("=> twice(21)") != std::string::npos,
           "function rename preview did not update both uses");
+  const auto parameter_declaration = static_cast<source::byte_offset>(
+      function_document.text().find("value: Int"));
+  const auto parameter_rename = language_service::rename_local(
+      function_document, indexed_function.value->index, parameter_declaration, "input");
+  require(parameter_rename.state == language_service::edit_state::ready &&
+              parameter_rename.edits.documents.front().edits.size() == 3,
+          "parameter rename failed from the declaration position");
+  const source::document_snapshot loop_document(
+      {{source::document_id{109}, source::document_uri{"untitled:loop-rename"}, {}}, 1,
+       "fun main(): Int {\n"
+       "let indices: Array<Int> = 5.times\n"
+       "for index in indices {\n"
+       "print(index)\n"
+       "}\n"
+       "return 0\n"
+       "}\n"});
+  const auto indexed_loop = language_service::index_document(loop_document);
+  require(indexed_loop.value.has_value(), "loop-binding rename fixture did not index");
+  const auto loop_declaration = static_cast<source::byte_offset>(
+      loop_document.text().find("index in"));
+  const auto loop_rename = language_service::rename_local(
+      loop_document, indexed_loop.value->index, loop_declaration, "item");
+  require(loop_rename.state == language_service::edit_state::ready &&
+              loop_rename.edits.documents.front().edits.size() == 2,
+          "loop-binding rename failed from the declaration position");
+  const source::document_snapshot constant_document(
+      {{source::document_id{110}, source::document_uri{"untitled:constant-rename"}, {}}, 1,
+       "fun answer(): Int {\n"
+       "const OFFSET = 2\n"
+       "return OFFSET + 40\n"
+       "}\n"
+       "fun main(): Int => answer()\n"});
+  const auto indexed_constant = language_service::index_document(constant_document);
+  require(indexed_constant.value.has_value(), "constant rename fixture did not index");
+  const auto constant_declaration = static_cast<source::byte_offset>(
+      constant_document.text().find("OFFSET ="));
+  const auto constant_rename = language_service::rename_local(
+      constant_document, indexed_constant.value->index, constant_declaration, "DISTANCE");
+  require(constant_rename.state == language_service::edit_state::ready &&
+              constant_rename.edits.documents.front().edits.size() == 2,
+          "constant rename failed from the declaration position");
+  const source::document_snapshot match_document(
+      {{source::document_id{111}, source::document_uri{"untitled:match-rename"}, {}}, 1,
+       "enum Result {\n"
+       "Success(Int) = 200\n"
+       "Failure(String) = 500\n"
+       "}\n"
+       "fun unwrap(result: Result): Int {\n"
+       "match result {\n"
+       "case Success(value) return value\n"
+       "case Failure(message) return 0\n"
+       "}\n"
+       "}\n"
+       "fun main(): Int => unwrap(Success(42))\n"});
+  const auto indexed_match = language_service::index_document(match_document);
+  require(indexed_match.value.has_value(), "match-binding rename fixture did not index");
+  const auto match_declaration = static_cast<source::byte_offset>(
+      match_document.text().find("value) return"));
+  const auto match_rename = language_service::rename_local(
+      match_document, indexed_match.value->index, match_declaration, "payload");
+  require(match_rename.state == language_service::edit_state::ready &&
+              match_rename.edits.documents.front().edits.size() == 2,
+          "match-binding rename failed from the declaration position");
+  const source::document_snapshot private_member_document(
+      {{source::document_id{112}, source::document_uri{"untitled:private-member-rename"}, {}}, 1,
+       "class Counter {\n"
+       "let .value: Int\n"
+       "new(start: Int) { self.value = start }\n"
+       "fun .advance!(): Int {\n"
+       "self.value += 1\n"
+       "return self.value\n"
+       "}\n"
+       "fun run!(): Int => self.advance!()\n"
+       "}\n"
+       "fun main(): Int {\n"
+       "let counter = Counter(0)\n"
+       "return counter.run!()\n"
+       "}\n"});
+  const auto indexed_private_member = language_service::index_document(private_member_document);
+  require(indexed_private_member.value.has_value(), "private-member rename fixture did not index");
+  const auto private_field_declaration = static_cast<source::byte_offset>(
+      private_member_document.text().find("value: Int"));
+  const auto private_field_rename = language_service::rename_local(
+      private_member_document, indexed_private_member.value->index,
+      private_field_declaration, "count");
+  require(private_field_rename.state == language_service::edit_state::ready &&
+              private_field_rename.edits.documents.front().edits.size() == 4,
+          "private-field rename did not cover its declaration and typed references");
+  const auto private_method_declaration = static_cast<source::byte_offset>(
+      private_member_document.text().find("advance!():"));
+  const auto private_method_rename = language_service::rename_local(
+      private_member_document, indexed_private_member.value->index,
+      private_method_declaration, "step!");
+  require(private_method_rename.state == language_service::edit_state::ready &&
+              private_method_rename.edits.documents.front().edits.size() == 2,
+          "private mutating-method rename did not cover its declaration and reference");
+  const auto public_method_declaration = static_cast<source::byte_offset>(
+      private_member_document.text().find("run!():"));
+  require(language_service::rename_local(private_member_document,
+                                         indexed_private_member.value->index,
+                                         public_method_declaration, "execute!").state ==
+              language_service::edit_state::unsupported,
+          "public member rename was offered without workspace proof");
   const source::document_snapshot exported_document(
       {{source::document_id{108}, source::document_uri{"untitled:exported-rename"}, {}}, 1,
        "module helper\nfun double(value: Int): Int => value + value\nexport double\n"});
@@ -281,6 +486,167 @@ auto main() -> int
   { return entry.module == "guidance" && entry.public_name == "course"; });
   require(course != exports.end() && course->targets.size() == 1,
           "workspace fixture did not expose one public course symbol");
+  require(course->local_name == "calculate" &&
+              course->declaration.document.value != 0 &&
+              course->declaration.bytes.end > course->declaration.bytes.begin,
+          "workspace export lost its local identity or declaration range");
+  const auto &workspace_imports = workspace_index.imports();
+  const auto course_import = std::find_if(workspace_imports.begin(), workspace_imports.end(), [](const auto &entry)
+  {
+    return entry.source_module == "guidance" && entry.imported_name == "course";
+  });
+  require(course_import != workspace_imports.end() &&
+              course_import->binding_name == "calculate_course" &&
+              course_import->targets == course->targets &&
+              course_import->declaration.bytes.end > course_import->declaration.bytes.begin,
+          "workspace import lost its public name, alias, target, or declaration range");
+  const auto guidance_document = disk.read_path("tests/fixtures/modules/module_demo/guidance.sagan");
+  require(guidance_document.value.has_value(), "workspace rename fixture source was not readable");
+  const auto guidance_module = std::find_if(workspace_index.modules().begin(),
+                                             workspace_index.modules().end(), [](const auto &entry)
+  { return entry.name == "guidance"; });
+  require(guidance_module != workspace_index.modules().end(),
+          "workspace rename fixture module was not indexed");
+  const auto public_rename = language_service::rename_workspace(
+      *guidance_document.value, guidance_module->index, workspace_index, disk,
+      static_cast<source::byte_offset>(guidance_document.value->text().find("course")), "trajectory");
+  const auto main_document = disk.read_path("tests/fixtures/modules/module_demo/main.sagan");
+  const auto main_module = std::find_if(workspace_index.modules().begin(),
+                                        workspace_index.modules().end(), [](const auto &entry)
+  { return entry.name == "main"; });
+  require(main_document.value.has_value() && main_module != workspace_index.modules().end(),
+          "workspace import-site rename fixture was unavailable");
+  const auto import_public_name = static_cast<source::byte_offset>(
+      main_document.value->text().find("course from guidance"));
+  const auto import_site_rename = language_service::rename_workspace(
+      *main_document.value, main_module->index, workspace_index, disk,
+      import_public_name, "trajectory");
+  require(public_rename.state == language_service::edit_state::ready &&
+              public_rename.edits.documents.size() == 2 &&
+              import_site_rename.state == language_service::edit_state::ready &&
+              import_site_rename.edits.documents.size() == 2,
+          "workspace public export rename did not produce an atomic two-document edit");
+  std::vector<source::document_snapshot> workspace_documents;
+  std::vector<const source::document_snapshot *> workspace_document_views;
+  for (const auto &module : workspace_index.modules())
+  {
+    const auto loaded = disk.read(module.index.document().uri);
+    require(loaded.value.has_value(), "workspace rename preview source was not readable");
+    workspace_documents.push_back(*loaded.value);
+  }
+  for (const auto &loaded : workspace_documents) workspace_document_views.push_back(&loaded);
+  const auto public_preview = language_service::preview_edits(public_rename.edits,
+                                                               workspace_document_views);
+  require(public_preview.state == language_service::edit_state::ready,
+          "workspace public export rename could not be previewed atomically");
+  const auto renamed_guidance = std::find_if(public_preview.documents.begin(),
+                                              public_preview.documents.end(), [](const auto &entry)
+  { return entry.text.find("export calculate as trajectory") != std::string::npos; });
+  const auto renamed_import = std::find_if(public_preview.documents.begin(),
+                                            public_preview.documents.end(), [](const auto &entry)
+  {
+    return entry.text.find("import trajectory from guidance as calculate_course") != std::string::npos &&
+           entry.text.find("calculate_course(40)") != std::string::npos;
+  });
+  require(renamed_guidance != public_preview.documents.end() &&
+              renamed_import != public_preview.documents.end(),
+          "workspace rename failed to preserve an explicit import alias");
+  const auto telemetry_document = disk.read_path("tests/fixtures/modules/module_demo/telemetry.sagan");
+  const auto telemetry_module = std::find_if(workspace_index.modules().begin(),
+                                              workspace_index.modules().end(), [](const auto &entry)
+  { return entry.name == "telemetry"; });
+  require(telemetry_document.value.has_value() && telemetry_module != workspace_index.modules().end(),
+          "grouped exported-type rename fixture was unavailable");
+  const auto type_rename = language_service::rename_workspace(
+      *telemetry_document.value, telemetry_module->index, workspace_index, disk,
+      static_cast<source::byte_offset>(telemetry_document.value->text().find("Signal")), "Beacon");
+  const auto type_preview = language_service::preview_edits(type_rename.edits,
+                                                             workspace_document_views);
+  require(type_rename.state == language_service::edit_state::ready &&
+              type_preview.state == language_service::edit_state::ready &&
+              std::any_of(type_preview.documents.begin(), type_preview.documents.end(), [](const auto &entry)
+              {
+                return entry.text.find("enum Beacon") != std::string::npos &&
+                       entry.text.find("export Beacon") != std::string::npos;
+              }) &&
+              std::any_of(type_preview.documents.begin(), type_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("flight_data.Beacon.nominal") != std::string::npos; }),
+          "workspace type/constructor identity group was not renamed through namespace references");
+  const auto member_graph = modules::resolve(
+      "tests/fixtures/modules/workspace_member_rename/main.sagan", disk);
+  const auto member_workspace = semantic::build_workspace_index(member_graph, disk);
+  const auto vehicle_module = std::find_if(member_workspace.modules().begin(),
+                                            member_workspace.modules().end(), [](const auto &entry)
+  { return entry.name == "vehicle"; });
+  const auto vehicle_document = disk.read_path(
+      "tests/fixtures/modules/workspace_member_rename/vehicle.sagan");
+  require(vehicle_module != member_workspace.modules().end() && vehicle_document.value.has_value(),
+          "public-member workspace rename fixture was unavailable");
+  const auto member_rename = language_service::rename_workspace(
+      *vehicle_document.value, vehicle_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(vehicle_document.value->text().find("sample")), "measure");
+  const auto member_main_module = std::find_if(member_workspace.modules().begin(),
+                                                member_workspace.modules().end(), [](const auto &entry)
+  { return entry.name == "main"; });
+  const auto member_main_document = disk.read_path(
+      "tests/fixtures/modules/workspace_member_rename/main.sagan");
+  require(member_main_module != member_workspace.modules().end() && member_main_document.value.has_value(),
+          "imported public-member invocation fixture was unavailable");
+  const auto invoked_member_rename = language_service::rename_workspace(
+      *member_main_document.value, member_main_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(member_main_document.value->text().find("sample")), "measure");
+  std::vector<source::document_snapshot> member_documents;
+  std::vector<const source::document_snapshot *> member_document_views;
+  for (const auto &module : member_workspace.modules())
+  {
+    const auto loaded = disk.read(module.index.document().uri);
+    require(loaded.value.has_value(), "public-member rename preview source was unavailable");
+    member_documents.push_back(*loaded.value);
+  }
+  for (const auto &loaded : member_documents) member_document_views.push_back(&loaded);
+  const auto member_preview = language_service::preview_edits(member_rename.edits,
+                                                               member_document_views);
+  require(member_rename.state == language_service::edit_state::ready &&
+              invoked_member_rename.state == language_service::edit_state::ready &&
+              invoked_member_rename.edits.documents.size() == member_rename.edits.documents.size() &&
+              member_preview.state == language_service::edit_state::ready &&
+              std::any_of(member_preview.documents.begin(), member_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("fun measure()") != std::string::npos; }) &&
+              std::any_of(member_preview.documents.begin(), member_preview.documents.end(), [](const auto &entry)
+              {
+                return entry.text.find("probe.measure()") != std::string::npos &&
+                       entry.text.find("sensor.measure()") != std::string::npos;
+              }),
+          "F2 did not rename a public method through annotated and inferred imported receivers");
+  const auto field_rename = language_service::rename_workspace(
+      *vehicle_document.value, vehicle_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(vehicle_document.value->text().find("reading")), "value");
+  const auto field_preview = language_service::preview_edits(field_rename.edits,
+                                                              member_document_views);
+  require(field_rename.state == language_service::edit_state::ready &&
+              field_preview.state == language_service::edit_state::ready &&
+              std::any_of(field_preview.documents.begin(), field_preview.documents.end(), [](const auto &entry)
+              {
+                return entry.text.find("let value: Int") != std::string::npos &&
+                       entry.text.find("self.value") != std::string::npos;
+              }) &&
+              std::any_of(field_preview.documents.begin(), field_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("probe.value") != std::string::npos; }),
+          "F2 did not rename a public field through an imported receiver");
+  const auto enum_case_rename = language_service::rename_workspace(
+      *telemetry_document.value, telemetry_module->index, workspace_index, disk,
+      static_cast<source::byte_offset>(telemetry_document.value->text().find("nominal")), "active");
+  const auto enum_case_preview = language_service::preview_edits(enum_case_rename.edits,
+                                                                 workspace_document_views);
+  require(enum_case_rename.state == language_service::edit_state::ready &&
+              enum_case_preview.state == language_service::edit_state::ready &&
+              std::any_of(enum_case_preview.documents.begin(), enum_case_preview.documents.end(),
+                          [](const auto &entry)
+              { return entry.text.find("\n  active\n") != std::string::npos; }) &&
+              std::any_of(enum_case_preview.documents.begin(), enum_case_preview.documents.end(),
+                          [](const auto &entry)
+              { return entry.text.find("flight_data.Signal.active") != std::string::npos; }),
+          "F2 did not rename an exported enum case through a namespace-qualified type");
   const source::document_snapshot needs_import(
       {{source::document_id{112}, source::document_uri{"untitled:needs-import"}, {}}, 1,
        "module scratch\nfun main(): Int => 0\n"});

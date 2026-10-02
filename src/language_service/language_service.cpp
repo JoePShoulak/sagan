@@ -1,5 +1,8 @@
 #include "language_service.hpp"
+#include "package_catalog.hpp"
+#include "../dap/breakpoints.hpp"
 #include "documentation.hpp"
+#include "formatter.hpp"
 #include "operations.hpp"
 #include "refactor.hpp"
 
@@ -83,10 +86,19 @@ namespace sagan::language_service
     std::ostringstream output;
     output << "{\"schema\":\"" << value.schema << "\",\"documentationCatalog\":\""
            << documentation_schema_version << "\",\"sourceEditsSchema\":\""
-           << source_edits_schema_version << "\",\"operationsSchema\":\""
+           << source_edits_schema_version << "\",\"formattingSchema\":\""
+           << formatting_schema_version << "\",\"operationsSchema\":\""
            << operations_schema_version << "\",\"sourceMapSchema\":\""
            << codegen::source_map_schema_version << "\",\"debugMetadataSchema\":\""
-           << debug_metadata_schema_version << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
+           << debug_metadata_schema_version << "\",\"breakpointMappingSchema\":\""
+           << dap::breakpoint_mapping_schema << "\",\"packageCatalogSchema\":\""
+           << package_catalog_schema << "\",\"debugAdapterExecutable\":\""
+#ifdef _WIN32
+           << "sagan-dap.exe"
+#else
+           << "sagan-dap"
+#endif
+           << "\",\"positionEncodings\":[\"utf-16\",\"utf-8-bytes\"],"
            << "\"capabilities\":{\"strictDocumentCheck\":" << boolean(value.strict_document_check)
            << ",\"structuredDiagnostics\":" << boolean(value.structured_diagnostics)
            << ",\"utf16Positions\":" << boolean(value.utf16_positions)
@@ -95,8 +107,18 @@ namespace sagan::language_service
            << ",\"documentOverlays\":" << boolean(value.document_overlays)
            << ",\"semanticIndex\":" << boolean(value.semantic_index)
            << ",\"nativeCheck\":true,\"nativeBuild\":true,\"nativeRun\":true"
-           << ",\"sourceMaps\":true,\"debugMetadata\":true,\"debugLaunchPlan\":true"
-           << ",\"debugAttach\":false,\"optimizedLocalEvaluation\":false,\"testDiscovery\":false"
+           << ",\"operationTransport\":true,\"operationCancellation\":true"
+           << ",\"recoveredFormatting\":true,\"rangeFormatting\":true,\"onTypeFormatting\":true"
+            << ",\"sourceMaps\":true,\"debugMetadata\":true,\"debugLaunchPlan\":true"
+            << ",\"debugAdapter\":false,\"debugLaunch\":false,\"debugAttach\":false"
+            << ",\"debugBreakpoints\":false,\"debugStepping\":false"
+            << ",\"debugVariables\":false,\"debugEvaluate\":false"
+            << ",\"debugExceptions\":false,\"optimizedLocalEvaluation\":false"
+           << ",\"testDocumentDiscovery\":true,\"testProjectDiscovery\":true"
+           << ",\"testDocumentRun\":true,\"testProjectRun\":true,\"testExplorer\":false"
+            << ",\"packageIndexReader\":true,\"packageQuery\":true,\"packageCatalog\":true"
+            << ",\"packageCompletion\":false,\"packageNavigation\":false"
+            << ",\"packageAutoImport\":false"
            << ",\"languageServer\":" << boolean(value.language_server) << "}}\n";
     return output.str();
   }

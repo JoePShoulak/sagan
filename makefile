@@ -10,6 +10,10 @@ SAGAN_VERSION := $(shell bash scripts/version.sh current 2>/dev/null || echo 0.0
 LIBRARY_SOURCES := \
 	src/codegen/cpp_generator.cpp \
 	src/codegen/source_map.cpp \
+	src/dap/breakpoints.cpp \
+	src/dap/adapter.cpp \
+	src/dap/framing.cpp \
+	src/dap/gdb_process.cpp \
 	src/diagnostics/diagnostic.cpp \
 	src/driver/native_runner.cpp \
 	src/driver/process.cpp \
@@ -20,6 +24,8 @@ LIBRARY_SOURCES := \
 	src/language_service/language_service.cpp \
 	src/language_service/native_operations.cpp \
 	src/language_service/operations.cpp \
+	src/language_service/package_catalog.cpp \
+	src/language_service/tests.cpp \
 	src/language_service/queries.cpp \
 	src/language_service/queries_structure.cpp \
 	src/language_service/refactor.cpp \
@@ -27,12 +33,15 @@ LIBRARY_SOURCES := \
 	src/language_service/refactor_capabilities.cpp \
 	src/language_service/refactor_fixes.cpp \
 	src/language_service/refactor_imports.cpp \
+	src/language_service/refactor_workspace.cpp \
 	src/language_service/workspace.cpp \
 	src/lsp/json.cpp \
 	src/lsp/server.cpp \
+	src/lsp/server_operations.cpp \
 	src/lsp/server_queries.cpp \
 	src/lsp/server_sync.cpp \
 	src/modules/resolver.cpp \
+	src/modules/package_index.cpp \
 	src/parser/ast_render.cpp \
 	src/parser/ast_node.cpp \
 	src/parser/lex.cpp \
@@ -50,12 +59,13 @@ LIBRARY_SOURCES := \
 	src/source/source.cpp \
 	src/syntax/syntax.cpp
 
-LIBRARY_OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(LIBRARY_SOURCES))
+LIBRARY_OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(LIBRARY_SOURCES)) obj/version.o
 CLI_OBJECTS := obj/main.o obj/version.o
 OBJECTS := $(LIBRARY_OBJECTS) $(CLI_OBJECTS)
 DEPENDENCIES := $(OBJECTS:.o=.d)
 TARGET := bin/$(APPNAME)
 LANGUAGE_SERVER := bin/sagan-lsp
+DEBUG_ADAPTER := bin/sagan-dap
 COMPILER_LIBRARY := build/lib/libsagan-compiler.a
 SOURCE_DIAGNOSTICS_TEST := bin/source-diagnostics-test
 WORKSPACE_TEST := bin/workspace-test
@@ -64,6 +74,11 @@ LANGUAGE_QUERIES_TEST := bin/language-queries-test
 LANGUAGE_EDITS_TEST := bin/language-edits-test
 OPERATIONS_TEST := bin/operations-test
 SOURCE_MAP_TEST := bin/source-map-test
+DAP_BREAKPOINT_TEST := bin/dap-breakpoint-test
+DAP_FRAMING_TEST := bin/dap-framing-test
+GDB_PROCESS_TEST := bin/gdb-process-test
+PACKAGE_CATALOG_TEST := bin/package-catalog-test
+PACKAGE_RESOLUTION_TEST := bin/package-resolution-test
 PROCESS_TEST := bin/process-test
 NATIVE_OPERATIONS_TEST := bin/native-operations-test
 LSP_TEST := bin/lsp-test
@@ -89,6 +104,10 @@ all: $(TARGET)
 $(LANGUAGE_SERVER): src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+
+$(DEBUG_ADAPTER): src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 libraries: $(COMPILER_LIBRARY)
 
@@ -118,47 +137,67 @@ $(TARGET): $(CLI_OBJECTS) $(COMPILER_LIBRARY)
 
 $(SOURCE_DIAGNOSTICS_TEST): tests/source_diagnostics_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(WORKSPACE_TEST): tests/workspace_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(SEMANTIC_INDEX_TEST): tests/semantic_index_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(LANGUAGE_QUERIES_TEST): tests/language_queries_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(LANGUAGE_EDITS_TEST): tests/language_edits_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(OPERATIONS_TEST): tests/operations_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(SOURCE_MAP_TEST): tests/source_map_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+
+$(DAP_BREAKPOINT_TEST): tests/dap_breakpoint_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+
+$(DAP_FRAMING_TEST): tests/dap_framing_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+
+$(GDB_PROCESS_TEST): tests/gdb_process_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+
+$(PACKAGE_CATALOG_TEST): tests/package_catalog_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+
+$(PACKAGE_RESOLUTION_TEST): tests/package_resolution_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(PROCESS_TEST): tests/process_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(NATIVE_OPERATIONS_TEST): tests/native_operations_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(LSP_TEST): tests/lsp_test.cpp obj/version.o $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(CONSTANTS_TEST): tests/constants_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 obj/%.o: src/%.cpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
@@ -172,9 +211,13 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(LANGUAGE_SERVER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(LSP_TEST) $(CONSTANTS_TEST)
+test: $(TARGET) $(LANGUAGE_SERVER) $(DEBUG_ADAPTER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(DAP_BREAKPOINT_TEST) $(DAP_FRAMING_TEST) $(GDB_PROCESS_TEST) $(PACKAGE_CATALOG_TEST) $(PACKAGE_RESOLUTION_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(LSP_TEST) $(CONSTANTS_TEST)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/check_runtime_imports.sh $(LANGUAGE_SERVER)
+	bash scripts/windows/check_runtime_imports.sh $(DEBUG_ADAPTER)
+	@for executable in $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(DAP_BREAKPOINT_TEST) $(DAP_FRAMING_TEST) $(GDB_PROCESS_TEST) $(PACKAGE_CATALOG_TEST) $(PACKAGE_RESOLUTION_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(LSP_TEST) $(CONSTANTS_TEST); do \
+		bash scripts/windows/check_runtime_imports.sh "$$executable"; \
+	done
 	bash scripts/windows/installer_policy_test.sh
 	bash scripts/release_policy_test.sh
 	bash scripts/main_release_policy_test.sh
@@ -186,6 +229,12 @@ test: $(TARGET) $(LANGUAGE_SERVER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) 
 	$(LANGUAGE_EDITS_TEST)
 	$(OPERATIONS_TEST)
 	$(SOURCE_MAP_TEST)
+	$(DAP_BREAKPOINT_TEST)
+	$(DAP_FRAMING_TEST)
+	$(GDB_PROCESS_TEST)
+	bash scripts/dap_protocol_test.sh
+	$(PACKAGE_CATALOG_TEST)
+	$(PACKAGE_RESOLUTION_TEST)
 	$(PROCESS_TEST)
 	$(NATIVE_OPERATIONS_TEST)
 	$(LSP_TEST)

@@ -8,9 +8,9 @@ const root = path.resolve(__dirname, "..");
 esbuild.buildSync({
   absWorkingDir: root,
   bundle: true,
-  entryPoints: [path.join(root, "src", "extension.js")],
+  entryPoints: ["./src/extension.js"],
   external: ["vscode"],
   format: "cjs",
-  outfile: path.join(root, "dist", "extension.js"),
+  outfile: "./dist/extension.js",
   platform: "node"
 });

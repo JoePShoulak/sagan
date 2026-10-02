@@ -48,8 +48,8 @@ pass, and prints scopes, symbols, and resolved references. It reports undefined
 or duplicate names, but it does not type-check or execute the program.
 `--types` additionally runs the implemented type checker and prints inferred
 declaration and expression types.
-`--entry` performs name and type checks, then validates the executable `main`
-contract. It does not generate or run a program.
+`--entry` performs name and type checks for the selected root file. It does
+not generate or run a program; no `main` function is required.
 `--modules` resolves an entry file's graph. It uses loose sibling mapping when
 there is no manifest, or discovers the nearest `sagan.toml` and maps qualified
 module names to nested files beneath its source root.
@@ -57,7 +57,7 @@ module names to nested files beneath its source root.
 manifest, resolves the configured entry, and prints the dependency-ordered graph.
 `--emit-cpp-modules` links selective imports and exported members accessed
 through whole-module namespaces into one isolated compilation unit, performs
-semantic, type, and entry-point validation, then prints or writes the generated
+semantic and type validation, then prints or writes the generated
 C++.
 `--emit-cpp-package` performs the same linked checks and generation starting
 from the package manifest's configured entry module.
@@ -72,9 +72,9 @@ lexical and syntax analysis followed, for complete syntax, by strict semantic
 and type checking through the reusable language-service API. It prints one
 machine-readable JSON document, including `recovered` state and multiple
 diagnostics where applicable. It exits successfully only for a complete check;
-this is an automation/testing interface, not the future
-stdio Language Server Protocol transport.
-`--emit-cpp` performs the same front-end and entry checks, then prints generated
+this is an automation/testing interface. Editors should use the existing
+`sagan-lsp` stdio server instead of parsing this CLI output.
+`--emit-cpp` performs the same front-end checks, then prints generated
 C++ or writes it to the optional output path. It does not itself invoke a C++
 compiler.
 
@@ -111,8 +111,8 @@ bin/sagan --run-package examples/package
 
 Successful AST output confirms only lexical and syntactic validity. Successful
 semantic output additionally confirms the implemented name and scope rules.
-Type output confirms the documented scalar/function, generic-function and
-generic-sum, collection, class, member, constructor, and face-dispatch subset.
+Type output confirms the documented scalar, callable, generic, collection,
+geometry, unit, class, member, constructor, and face-dispatch rules.
 Generated C++ supports the language surface documented under
 [code generation](../implementation/code-generation.md), with explicit
 limitations listed there.

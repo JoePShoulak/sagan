@@ -21,11 +21,20 @@ namespace sagan::language_service
 
   auto source_edit_capabilities() -> std::vector<source_edit_capability>;
 
-  // Rename a proven local binding or a non-exported, non-overloaded function
-  // in one document. Exported, entry-point, member, and cross-file rename
-  // remain unavailable until their workspace proofs exist.
+  // Rename a proven local binding, private member, or non-exported,
+  // non-overloaded function in one document. Workspace rename separately
+  // handles exported identities and exact imported public-member receivers.
   auto rename_local(const source::document_snapshot &document, const semantic::semantic_index &index,
                     source::byte_offset position, std::string_view new_name) -> edit_plan;
+
+  // Rename an exported source symbol or public member and every
+  // identity-resolved workspace reference. Explicit export and import aliases
+  // remain independent bindings; ambiguous receiver types are refused.
+  auto rename_workspace(const source::document_snapshot &document,
+                        const semantic::semantic_index &index,
+                        const semantic::workspace_semantic_index &workspace,
+                        const source::source_provider &source,
+                        source::byte_offset position, std::string_view new_name) -> edit_plan;
 
   // Sort one uninterrupted, comment-free import block at the top of a module.
   // Ambiguous trivia or interleaved imports cause a structured refusal.

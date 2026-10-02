@@ -34,3 +34,5 @@ fun main(): Int {
   if caught == 4 and cleaned == 1 return 0
   else return 1
 }
+
+exit(main())

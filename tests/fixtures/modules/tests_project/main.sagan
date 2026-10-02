@@ -1,0 +1,7 @@
+module main
+
+import tools
+
+test "root/🚀" {
+  print(1)
+}

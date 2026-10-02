@@ -10,12 +10,28 @@ verified_by: null
 # Declarations
 Declarations introduce names. `let` declares mutable variables; `const`
 declares immutable bindings; `fun` introduces
-functions; `face`, `class`, and `enum` introduce named types; and
+functions; `test` introduces an explicitly named test body; `face`, `class`,
+and `enum` introduce named types; and
 `dimension`, `quantity`, `unit`, and `affine unit` introduce compile-time
 measurement metadata. Measurement declarations are checked for duplicate names,
 inconsistent dimensions, unresolved references, and dependency cycles. See the
 [native units contract](../design/units-of-measure.md).
 `module`, `import`, and `export` participate in modular source.
+
+An explicit `test "name" { ... }` declaration is now recognized and
+type-checked. Its quoted name may contain Unicode but cannot be empty,
+interpolated, or duplicated in the same file. Slash-separated names, such as
+`"orbits/elliptical"`, create suite paths; leading, trailing, or doubled
+slashes are invalid. `assert(condition[, message])` requires a Bool and an
+optional String. A false assertion fails a test; outside a test it ends the
+program with status 1 and prints the failure message. Test bodies are not run
+by ordinary `sagan file.sagan` execution. Compiler-owned document and
+resolved-project discovery and selected test execution are available through
+the language-service and LSP APIs. The VS Code extension presents them through
+Test Explorer, including multi-module project selections, captured output,
+structured outcomes, and cancellation. There is not yet a public `sagan test`
+terminal command or a debug-test profile. See
+[Testing Sagan programs](../tooling/testing-sagan-programs.md).
 
 The parser accepts a single optional leading `module`
 declaration, imports with optional `from` and `as` clauses, and standalone
@@ -33,6 +49,20 @@ let altitude: Float = 125_000.0
 const MAX_RETRIES: Int = 5
 ```
 
+To introduce several mutable variables at once, use a parallel `let` with one
+initializer per name:
+
+```sagan
+let i, a, b = 0, 0, 1
+```
+
+All right-hand expressions are evaluated from left to right before any of the
+new names enters scope. An unannotated integer `let` variable uses `Int64`,
+including each name in this group; annotate a name to request a narrower type.
+Parallel `let` works at the executable root or inside a function; class fields
+cannot use the grouped form. Reassignment of existing names uses
+`a, b = b, a + b` instead.
+
 `const` always requires an initializer and an ASCII `SCREAMING_SNAKE_CASE`
 name (`[A-Z][A-Z0-9_]*`). The keyword creates the immutable binding;
 capitalization alone never does. Consequently `let MAX_RETRIES = 5` is an
@@ -42,10 +72,10 @@ compound assignment, indexed or field mutation rooted at the constant, and a
 mutating `!` method call through it are rejected. A mutable alias to the same
 referenced object can still mutate that object: this is a const view, not a
 transitive deep freeze or general compile-time expression evaluator.
-The compiler exposes the same naming check for future rename tooling; an
-editor must not offer a rename that would give a constant a lowercase name or
-a mutable variable the reserved constant spelling. A full rename operation is
-not implemented yet.
+The compiler exposes the same naming check for rename tooling; a safe local
+rename cannot give a constant a lowercase name or a mutable variable the
+reserved constant spelling. Cross-file and exported-symbol rename remain
+unavailable.
 
 Top-level declarations may define mutable variables, functions, faces, classes,
 and enums. Functions may use a block body or a short expression body:

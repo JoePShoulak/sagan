@@ -1,175 +1,197 @@
-/// Demonstrates every currently implemented parser feature.
-module orbital_demo
+/// A compiler-valid tour of Sagan syntax and editor features.
 
-import Vector from math
-import Renderer from rendering as SceneRenderer
-import physics as simulation_physics
+const STANDARD_ANSWER: Int = 42
 
-export ExplorerShip
-export GuidanceStatus as Status
+fun 🚀(value: Int): Int => value + 2
 
-dimension Distance
-quantity Speed = Distance / Time
-unit mission_meter: Distance = meter
-
-/// Produces rendered frames.
-face Renderable {
-  /// Renders the current object.
-  fun render(): Frame
+fun fast_fibonacci(n: Int): Int {
+  let i, a, b = 0, 0, 1
+  while i++ <= n  a, b = b, a + b
+  return b
 }
 
-face Navigable is Renderable, Trackable {
-  fun current_course(origin: Coordinate, destination: Coordinate): Vector
-  fun status_label(): String {
-    return "navigating"
-  }
+face Readable {
+  fun current(): Int
 }
 
-/**A spacecraft composed from navigation, rendering, and telemetry interfaces.*/
-class ExplorerShip has Navigable, TelemetrySource {
-  /// Human-readable spacecraft name.
-  let name: String = "Voyager"
-  let active = true
-  fun render(): Frame {
-    return self.renderer.draw(self)
-  }
-  fun .calculate_internal_state(): Vector {
-    return self.position + self.velocity
-  }
+face Countable is Readable {
+  fun increment!(): Int
+  fun next(): Int => self.current() + 1
 }
 
-/// A generic weak reference demonstrates Sagan's safe absence model.
-class Observer<T> {
-  weak let .target: T
-
-  fun target_or(fallback: T): T => self.target ?? fallback
-}
-
-enum GuidanceStatus {
+enum LaunchStatus {
   waiting
-  /// Guidance has converged and can be applied.
   ready
-  failed
+  launched
 }
 
-enum Result<T, E> {
-  success(T)
-  failure(E)
-}
+/** A mutable counter composed through the Countable interface. */
+class LaunchCounter is Countable {
+  let .value: Int
 
-fun identity<T>(value: T): T => value
-
-fun clamp(value: Float, minimum: Float, maximum: Float): Float =>
-  value < minimum ? minimum ; value > maximum ? maximum ; value
-
-/// Lazily yields telemetry samples in source order.
-fun telemetry_samples(samples) {
-  for sample in samples {
-    yield sample
+  new(start: Int) {
+    self.value = start
   }
+
+  /// Advances the counter and returns its new value.
+  fun increment!(): Int {
+    self.value += 1
+    return self.value
+  }
+
+  fun .read_value(): Int => self.value
+
+  fun current(): Int => self.read_value()
 }
 
-let select_greater = fun(left: Float, right: Float): Float =>
-  left > right ? left ; right
+fun finish_early(): Int {
+  hope return STANDARD_ANSWER
+  finally print("Finally ran before an early return")
+}
 
-let altitude: Float = 125_000.0
-let measured_altitude: Float64<mission_meter> = 125_000 mission_meter
-let target_altitude = (altitude)
-let telemetry_pending
-let orbital_energy = -2^3^2 + 4 * 5
-let selected = telemetry_ready and altitude >= 100_000 ? altitude ; target_altitude
-let captured = target_altitude := altitude := 125_500.0
-let previous_count = telemetry_count++
-let active_ship = fleet[active_index]
-let course = fleet[active_index]?.navigator.current_course(origin, destination).magnitude()
-let optional_course: Optional<Vector> = None
-let resolved_course = optional_course ?? Some(course)
-let predicted_position = trajectory.sample!(simulation_time + time_step).position
-let gravity = universe.systems[home_system].bodies[planet_index].gravity_at(ship.position)
-let telemetry_value = mission?.telemetry.latest().channels[channel_index].sample_count++
-let corrected_velocity = guidance.compute(ship.position, ship.velocity, target.position).normalized()
-let mission_name = "Voyager"
-let status = "mission ${mission_name}: altitude ${altitude}, course magnitude ${course}"
-let archive_path = r"C:\simulation\telemetry\${mission_name}"
-let formatted_name = "  ${mission_name}  ".trim().length()
-let flight_report = """Mission report
-Altitude and trajectory data are retained exactly.
-Current altitude: ${altitude}
-Computed course magnitude: ${course}
+fun run_demo(): Int {
+  let answer = 🚀(40)
+  let fibonacci = fast_fibonacci(10)
+  let first_five = 5.times
+  const PHI = (1 + 5 ^ 0.5) / 2
+  let rounded_power = Int.round(PHI ^ 5)
+  let countdown_start = [3]
+  let countdown_end = [1]
+  let countdown = [...countdown_start, 2, ...countdown_end]
+  let phase_defaults = {"countdown": 5, "liftoff": 1}
+  let phases = {...phase_defaults, "countdown": 3}
+  let configured_countdown = phases["countdown"]
+  let launch_number = 0
+  let squared = 3 ^ 2
+  let reciprocal = 2.0 ^ -1
+  let powered = 2
+  powered ^= 3
+
+  let arithmetic = 10
+  arithmetic += 5
+  arithmetic *= 2
+  arithmetic /= 3
+  arithmetic %= 6
+  arithmetic -= 1
+
+  let product = 6 * 7
+  let floating_remainder = 5.5 % 2.0
+  let scientific = 6.674_30e-11
+  let direction_start = <1.0, 2.0>
+  let direction = <...direction_start, 3.0>
+  let position = (10.0, 20.0, 30.0)
+  let direction_total = 0.0
+  for component in direction direction_total += component
+
+  let correction = <0.5, -1.0, 2.0>
+  let adjusted_direction = direction + correction
+  let restored_direction = adjusted_direction - correction
+  let doubled_direction = 2.0 * direction
+  let halved_direction = doubled_direction / 2.0
+  let reversed_direction = -direction
+  let maneuver_direction = direction
+  maneuver_direction += correction
+  maneuver_direction -= correction
+  maneuver_direction *= 2.0
+  maneuver_direction /= 2.0
+
+  let guided_direction = direction
+  guided_direction.x += 0.5
+  guided_direction.y = 4.0
+
+  let lambda_offset = 2
+  let launch_transform = fun(value: Int): Int => value + lambda_offset
+  let transformed_answer = launch_transform(40)
+  let immediate_answer = (fun(value: Int): Int => value * 2)(21)
+  let launch_counter = LaunchCounter(40)
+  let counted_launch = launch_counter.increment!()
+  let next_launch = launch_counter.next()
+  let countable: Countable = launch_counter
+  let dispatched_launch = countable.increment!()
+  let launch_status = LaunchStatus.ready
+  let guarded_answer = finish_early()
+  let exception_state = 0
+
+  let café = "Unicode identifiers work"
+  let 🌌message = "${café}: answer ${answer}"
+  let windows_path = r"C:\simulation\telemetry\${answer}"
+  let report = """Sagan demo
+Unicode: ${🌌message}
+Scientific value: ${scientific}
 """
-let sensor_values = [1.0, ...baseline_samples, calculate_sample(altitude, course,),]
-let mission_metadata = {
-  "mission": mission_name,
-  "active": true,
-  active_ship.name: active_ship,
-  ...default_metadata,
-}
-let thrust_direction = <
-  1.0,
-  0.0,
-  0.0,
->
-let orbital_position = (100.0, 200.0, altitude,)
-let trajectory_samples = [
-  orbital_position,
-  (110.0, 205.0, altitude + 10.0,),
-  ...historical_positions,
-]
-/// Updates guidance state from the latest telemetry sample.
-fun update_guidance(telemetry_ready: Bool, altitude: Float): GuidanceState {
-  telemetry_count += 1
-  remaining_fuel -= fuel_burn
-  thrust *= throttle
-  average_velocity /= sample_count
-  ring_index %= ring_capacity
-  correction_weight ^= correction_exponent
-  if telemetry_ready and altitude >= target_altitude {
-    /// Course calculated from the current orbital position.
-    let next_course = navigator.current_course(orbital_position, target_position)
-    ship.guidance.course = next_course
-    ship.guidance.commit!()
-  } else if retrying {
-    telemetry.retry()
-  } else {
-    let fallback_course = guidance.safe_course(orbital_position)
-    ship.guidance.course = fallback_course
-  }
-  for sample in trajectory_samples {
-    if sample.invalid {
-      continue
-    }
-    while sample.pending {
-      sample.refresh!()
-      if sample.failed {
-        break
-      }
-    }
-  }
-  until guidance.converged {
-    guidance.refine!(orbital_position, target_position)
-  }
-  match guidance.status {
-    case "ready" {
-      telemetry.record(guidance.state)
-    }
-    case "failed" {
-      return
-    }
-    case else {
-      guidance.wait()
-    }
-  }
+
   hope {
-    telemetry.publish(guidance.state)
-  } unless NetworkError {
-    telemetry.queue(guidance.state)
-  } unless error {
-    scream telemetry.wrap(error)
-  } finally {
-    telemetry.flush!()
+    hope scream "launch abort"
+    unless "different failure" exception_state = -1
+    finally {
+      exception_state += 2
+      print("Inner finally ran before propagation")
+    }
+  } unless "launch abort" {
+    exception_state += 40
+    print("Outer unless caught the propagated value")
   }
-  if guidance.failed {
-    return
+
+  print("The answer from 🚀 is:")
+  print(answer)
+  print("Fibonacci: ${fibonacci}")
+  print("First and last indices: ${first_five[0]}, ${first_five[4]}")
+  print("Rounded power of PHI: ${rounded_power}")
+  print("Countdown:")
+  print("Configured countdown: ${configured_countdown}")
+  print("Launch number before increment: ${launch_number++}")
+  print("Launch number after prefix increment: ${++launch_number}")
+  print("Three squared: ${squared}")
+  print("Two to the negative one: ${reciprocal}")
+  print("Two cubed through ^=: ${powered}")
+  print("Checked compound arithmetic result: ${arithmetic}")
+  print("Six times seven: ${product}")
+  print("Floating remainder: ${floating_remainder}")
+  print("Direction: ${direction}")
+  print("Position: ${position}")
+  print("Direction Z: ${direction.z}")
+  print("Position Y: ${position.y}")
+  print("Direction component total: ${direction_total}")
+  print("Adjusted direction: ${adjusted_direction}")
+  print("Reversed direction: ${reversed_direction}")
+  print("Restored direction: ${restored_direction}")
+  print("Guided direction: ${guided_direction}")
+  print("Captured lambda result: ${transformed_answer}")
+  print("Immediate lambda result: ${immediate_answer}")
+  print("Class method result: ${counted_launch}")
+  print("Class field result: ${launch_counter.current()}")
+  print("Face default result: ${next_launch}")
+  print("Face dispatch result: ${dispatched_launch}")
+  print("Enum status: ${launch_status}")
+  print("Exception state: ${exception_state}")
+  print("Guarded return: ${guarded_answer}")
+  print(windows_path)
+  print(report)
+
+  match launch_status {
+    case LaunchStatus.ready print("Enum match selected ready")
+    case else print("Enum match selected fallback")
   }
-  return guidance.state
+  match configured_countdown {
+    case 3 print("Match selected the nominal countdown")
+    case else print("Match selected the fallback")
+  }
+  for value in countdown print("Array item: ${value}")
+
+  let ignition = 3
+  while ignition > 0 {
+    print("Ignition: ${ignition}")
+    ignition -= 1
+  }
+
+  let launched = false
+  until launched {
+    print("Liftoff ${countdown[2]} 🚀")
+    launched = true
+  }
+
+  if answer == STANDARD_ANSWER and transformed_answer == 42 and immediate_answer == 42 and counted_launch == 41 and next_launch == 42 and dispatched_launch == 42 and launch_counter.current() == 42 and launch_status == LaunchStatus.ready and exception_state == 42 and guarded_answer == 42 and launch_number == 2 and squared == 9 and reciprocal == 0.5 and powered == 8 and arithmetic == 3 and product == 42 and floating_remainder == 1.5 and direction_total == 6.0 and position.y == 20.0 and restored_direction == direction and halved_direction == direction and maneuver_direction == direction and reversed_direction.x == -1.0 and guided_direction.x == 1.5 and guided_direction.y == 4.0 return 0
+  else return 1
 }
+
+exit(run_demo())

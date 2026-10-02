@@ -264,6 +264,22 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct parallel_let_binding
+  {
+    span name_range;
+    std::string name;
+    std::optional<std::string> type_name;
+    expression_ref initializer;
+  };
+
+  struct parallel_let_declaration final : statement
+  {
+    std::vector<parallel_let_binding> bindings;
+
+    parallel_let_declaration(span source_range, std::vector<parallel_let_binding> entries);
+    auto print(std::ostream &stream, int indent = 0) const -> void override;
+  };
+
   struct expression_statement final : statement
   {
     expression_ref value;
@@ -423,6 +439,10 @@ namespace parser
   struct function_declaration final : statement
   {
     std::string name;
+    // Explicit source tests are functions internally, but their generated
+    // callable name is not part of the user-visible namespace.
+    std::optional<std::string> test_name;
+    std::optional<span> test_name_range;
     bool private_member;
     bool constructor_member;
     std::vector<std::string> type_parameters;

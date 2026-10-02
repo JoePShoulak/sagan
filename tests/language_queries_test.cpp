@@ -214,6 +214,30 @@ auto main() -> int
   require(sugar_query.symbol_at(at(sugar_source, "a, b =")).value.has_value(),
           "parallel reassignment targets were not indexed");
 
+  const std::string grouped_source =
+      "fun fast(n: Int): Int {\n"
+      "  let i, a, b = 0, 0, 1\n"
+      "  while i++ <= n  a, b = b, a+b\n"
+      "  return b\n"
+      "}\n";
+  const source::document_snapshot grouped_document(
+      source::document_identity{source::document_id{82}, source::document_uri{"untitled:grouped-let"}, {}},
+      1, grouped_source);
+  const auto grouped_index = language_service::index_document(grouped_document);
+  require(grouped_index.value && grouped_index.value->types,
+          "parallel let declaration was not indexed and typed for editor queries");
+  const language_service::document_queries grouped_query(grouped_document, grouped_index.value->index,
+                                                           nullptr, &grouped_index.value->model,
+                                                           &*grouped_index.value->types);
+  const auto first_binding = at(grouped_source, "let i, a, b") + 4;
+  for (const auto offset : {0, 3, 6})
+    require(grouped_query.symbol_at(first_binding + offset).value.has_value(),
+            "a parallel let binding was not navigable by symbol identity");
+  const auto grouped_hints = grouped_query.inlay_hints(
+      source::byte_range{0, static_cast<source::byte_offset>(grouped_source.size())});
+  require(grouped_hints.value && grouped_hints.value->size() >= 3,
+          "parallel let bindings omitted inferred type hints");
+
   const std::string composition =
       "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
       "class Probe is Readable { fun read(): Int => 1 }\n"

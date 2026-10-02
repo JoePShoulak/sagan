@@ -1,0 +1,9 @@
+module main
+
+/// Return the answer from orbit.
+fun orbit_answer(): Int => 42
+export orbit_answer
+
+/// Advance by one.
+fun 🚀(value: Int): Int => value + 1
+export 🚀

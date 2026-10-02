@@ -1,0 +1,30 @@
+// Accurate up to F_75
+fun binet_fibonacci(n: Int): Int {
+  const PHI = (1 + 5 ^ 0.5) / 2
+  let num = PHI ^ n - (-PHI) ^-n
+  let denom = 5 ^ 0.5
+  return Int.round(num / denom)
+}
+
+// Runs out of variable memory after F_93
+fun standard_fibonacci(n: Int): Int {
+  let i, a, b = 0, 0, 1
+  while ++i < n  a, b = b, a + b
+  return b
+}
+
+// Slow after around F_27
+fun recursive_fibonacci(n: Int): Int {
+  if n == 1 or n == 2 return 1
+  else return recursive_fibonacci(n - 1) + recursive_fibonacci(n - 2)
+}
+
+fun main(): Int {
+  print(binet_fibonacci(10))
+  print(standard_fibonacci(10))
+  print(recursive_fibonacci(10))
+
+  return 0
+}
+
+exit(main())

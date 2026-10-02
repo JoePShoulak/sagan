@@ -1,0 +1,5 @@
+module helper
+
+fun answer(value: Int): Int => value + 2
+print("unexpected import side effect")
+export answer

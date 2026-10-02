@@ -17,6 +17,7 @@ namespace
       {"const", tokens::KWD_CONST},
       {"weak", tokens::KWD_WEAK},
       {"fun", tokens::KWD_FUN},
+      {"test", tokens::KWD_TEST},
       {"new", tokens::KWD_NEW},
       {"class", tokens::KWD_CLASS},
       {"face", tokens::KWD_FACE},

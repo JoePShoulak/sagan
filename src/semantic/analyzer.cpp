@@ -302,15 +302,22 @@ namespace semantic
                                               : symbol_visibility::public_access,
                   symbol_origin::source, documentation(declaration->documentation));
         }
+        else if (const auto *declaration = dynamic_cast<const parser::parallel_let_declaration *>(&value))
+        {
+          for (const auto &binding : declaration->bindings)
+            declare(binding.name, symbol_kind::variable, binding.name_range, symbol_visibility::public_access,
+                    symbol_origin::source, documentation(declaration->documentation));
+        }
         else if (const auto *function = dynamic_cast<const parser::function_declaration *>(&value))
         {
           declare(function->name, function->constructor_member ? symbol_kind::constructor
                                                                 : (current_scope == 0 ? symbol_kind::function
                                                                                       : symbol_kind::method),
                   function->range,
-                  function->private_member ? symbol_visibility::private_access
+                  (function->private_member || function->test_name) ? symbol_visibility::private_access
                                            : symbol_visibility::public_access,
-                  symbol_origin::source, documentation(function->documentation));
+                  function->test_name ? symbol_origin::generated : symbol_origin::source,
+                  documentation(function->documentation));
         }
         else if (const auto *type = dynamic_cast<const parser::type_declaration *>(&value))
         {
@@ -444,7 +451,8 @@ namespace semantic
         const std::size_t parent = open_scope(std::move(label), value.range);
         for (const auto &entry : value.statements)
         {
-          if (dynamic_cast<const parser::let_declaration *>(entry.get()))
+          if (dynamic_cast<const parser::let_declaration *>(entry.get()) ||
+              dynamic_cast<const parser::parallel_let_declaration *>(entry.get()))
           {
             statement(*entry, false);
           }
@@ -531,6 +539,18 @@ namespace semantic
                                          declaration->private_member ? symbol_visibility::private_access
                                                                      : symbol_visibility::public_access,
                                          symbol_origin::source, documentation(declaration->documentation));
+        }
+        else if (const auto *declaration = dynamic_cast<const parser::parallel_let_declaration *>(&value))
+        {
+          for (const auto &binding : declaration->bindings)
+          {
+            resolve_type(binding.type_name, binding.name_range);
+            expression(*binding.initializer);
+          }
+          if (!already_declared)
+            for (const auto &binding : declaration->bindings)
+              declare(binding.name, symbol_kind::variable, binding.name_range, symbol_visibility::public_access,
+                      symbol_origin::source, documentation(declaration->documentation));
         }
         else if (const auto *expression_statement = dynamic_cast<const parser::expression_statement *>(&value))
         {
@@ -657,6 +677,13 @@ namespace semantic
         declare("print", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Writes a value followed by a newline.",
                                          "@param value The value to display.", "@return Void"});
+        declare("assert", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin, {"Fails a test when its condition is false.",
+                                         "@param condition The condition that must be true.",
+                                         "@param message Optional failure explanation.", "@return Void"});
+        declare("exit", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin, {"Ends the program with an explicit process status.",
+                                         "@param code An integer exit status from 0 through 255.", "@return Void"});
         declare("Some", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Wraps a present value in an Optional.",
                                          "@param value The present value."});

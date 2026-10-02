@@ -13,8 +13,41 @@ const capabilityNames = [
   "recovery",
   "documentOverlays",
   "semanticIndex",
-  "languageServer"
+  "languageServer",
+  "nativeCheck",
+  "recoveredFormatting",
+  "rangeFormatting",
+  "onTypeFormatting",
+  "nativeBuild",
+  "nativeRun",
+  "testDocumentDiscovery",
+  "testProjectDiscovery",
+  "testDocumentRun",
+  "testProjectRun",
+  "testExplorer",
+  "packageIndexReader",
+  "packageQuery",
+  "packageCatalog",
+  "packageCompletion",
+  "packageNavigation",
+  "packageAutoImport",
+  "operationTransport",
+  "operationCancellation",
+  "sourceMaps",
+  "debugMetadata",
+  "debugLaunchPlan",
+  "debugAdapter",
+  "debugLaunch",
+  "debugAttach",
+  "debugBreakpoints",
+  "debugStepping",
+  "debugVariables",
+  "debugEvaluate",
+  "debugExceptions",
+  "optimizedLocalEvaluation"
 ];
+
+const requiredCapabilityNames = capabilityNames.slice(0, 8);
 
 function validateCapabilities(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -29,8 +62,14 @@ function validateCapabilities(value) {
   if (!value.capabilities || typeof value.capabilities !== "object" || Array.isArray(value.capabilities)) {
     throw new Error("Capability response is missing its capabilities object.");
   }
-  for (const name of capabilityNames) {
+  for (const name of requiredCapabilityNames) {
     if (typeof value.capabilities[name] !== "boolean") {
+      throw new Error(`Capability ${name} must be a boolean.`);
+    }
+  }
+  for (const name of capabilityNames.slice(requiredCapabilityNames.length)) {
+    if (value.capabilities[name] === undefined) value.capabilities[name] = false;
+    else if (typeof value.capabilities[name] !== "boolean") {
       throw new Error(`Capability ${name} must be a boolean.`);
     }
   }

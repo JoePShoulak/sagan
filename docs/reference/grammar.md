@@ -22,8 +22,9 @@ collection-like delimiters have the forms shown in the language tour.
 The implemented collection grammar is equivalent to this simplified notation:
 
 ```text
-program     := newline* (documented_declaration newline+)* documented_declaration? newline*
-declaration := let_declaration | const_declaration | function_declaration | face_declaration
+program     := newline* (top_level_item newline+)* top_level_item? newline*
+top_level_item := documented_declaration | statement
+declaration := let_declaration | const_declaration | function_declaration | test_declaration | face_declaration
              | class_declaration | enum_declaration | module_declaration
              | import_declaration | export_declaration
 statement   := let_declaration | const_declaration | assignment_statement | expression_statement
@@ -32,6 +33,9 @@ statement   := let_declaration | const_declaration | assignment_statement | expr
              | return_statement | yield_statement | match_statement
              | hope_statement | scream_statement
 let_declaration := "let" identifier (":" type)? ("=" expression)?
+               | parallel_let_declaration
+parallel_let_declaration := "let" typed_name ("," typed_name)+ "=" expression ("," expression)+
+typed_name := identifier (":" type)?
 const_declaration := "const" constant_identifier (":" type)? "=" expression
 constant_identifier := ASCII_SCREAMING_SNAKE_CASE
 array       := "[" (expression ("," expression)* ","?)? "]"
@@ -65,6 +69,7 @@ assignment_statement := expression ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=
 expression_statement := expression
 coalesce_expression := logical_or_expression ("??" coalesce_expression)?
 function_declaration := "fun" identifier generic_parameters? "(" parameters? ")" (":" type)? function_body
+test_declaration := "test" nonempty_quoted_string block
 function_body := block | "=>" expression
 lambda := "fun" "(" parameters? ")" (":" type)? "=>" expression
 method_signature := "fun" identifier "(" parameters? ")" (":" type)?

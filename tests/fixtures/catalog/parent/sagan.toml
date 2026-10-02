@@ -1,0 +1,8 @@
+[package]
+name = "parent"
+version = "1.0.0"
+source = "src"
+entry = "main"
+
+[dependencies]
+orbit_tools = { package = "orbit-tools", version = "^0.1.0" }

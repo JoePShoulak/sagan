@@ -28,3 +28,5 @@ fun main(): Int {
   if describe(success) == "Result: 42" return 0
   else return 1
 }
+
+exit(main())

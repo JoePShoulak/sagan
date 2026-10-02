@@ -27,7 +27,8 @@ if [[ -z "$objdump" || ! -x "$objdump" ]]; then
   echo "Installer testing requires objdump; set OBJDUMP to its path." >&2
   exit 1
 fi
-for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-launch.exe"; do
+for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-lsp.exe" \
+                  "$install_dir/bin/sagan-launch.exe"; do
   imports="$("$objdump" -p "$executable" | grep 'DLL Name')"
   if printf '%s\n' "$imports" | grep -Eiq 'lib(gcc|stdc\+\+|winpthread)'; then
     printf 'Installed executable imports a MinGW runtime DLL:\n%s\n' "$imports" >&2
@@ -82,6 +83,10 @@ MSYS2_ARG_CONV_EXCL='*' reg.exe query 'HKCU\Environment' /v Path | grep -Fq "$(c
 MSYS2_ARG_CONV_EXCL='*' "$install_dir/unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 if [[ -e "$install_dir/bin/sagan.exe" ]]; then
   echo "The installer smoke test could not remove the installed compiler." >&2
+  exit 1
+fi
+if [[ -e "$install_dir/bin/sagan-lsp.exe" ]]; then
+  echo "The installer smoke test could not remove the installed language server." >&2
   exit 1
 fi
 
