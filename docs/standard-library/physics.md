@@ -10,7 +10,7 @@ verified_by: null
 # Physics library
 
 !!! info "Initial implementation"
-    `sagan-physics` 0.2.0 implements the narrow P0 two-body and P1 circular
+    `sagan-physics` 0.2.1 implements the narrow P0 two-body and P1 circular
     restricted-three-body surfaces documented below. Broader astrodynamics,
     general N-body propagation, collisions, rigid bodies, atmospheres, and
     trajectory planning remain future work.
@@ -24,7 +24,7 @@ Native units are already a language feature; they do not require importing the
 physics library. The library will use those checked units rather than inventing
 a second unit system.
 
-The physics package is first-party but independently versioned. Its `0.2.0`
+The physics package is first-party but independently versioned. Its `0.2.1`
 version does not change Sagan's compiler version. A package imports it through
 an explicit dependency and an exact lockfile selection:
 
@@ -86,7 +86,7 @@ The `physics.restricted_three_body` module adds:
 | Symbol | Implemented contract |
 | --- | --- |
 | `LagrangeBodySeed` | Identity, inertial position/velocity, and a dimensionless rotating-frame reference coordinate for one massless tracer. |
-| `LagrangeBodySnapshot` | The P0 identity/position/velocity shape plus rotating reference and stability error in metres. |
+| `LagrangeBodySnapshot` | The P0 identity/position/velocity shape plus rotating reference, stability error in metres, and latched `escaped()` state. |
 | `RestrictedThreeBodySnapshot` | The massive P0 pair and exactly six read-only tertiary snapshots. |
 | `RestrictedThreeBodySolver` | Advances the P0 pair and six independent massless tracers using the same fixed timestep and velocity-Verlet scheme. |
 
@@ -106,6 +106,15 @@ At every snapshot, the solver reconstructs each tracer's reference position
 from the current primary-secondary axis and barycenter. `stability_error()` is
 the tracer's distance from that rotating reference, making the six results
 directly comparable without introducing rendering concerns into physics.
+
+`escaped()` becomes true when a tertiary has moved beyond twice the current
+primary-secondary separation, is moving outward from the barycenter, and has
+positive instantaneous specific orbital energy relative to both primaries.
+The result is latched once detected. This is a practical boundary for the
+isolated restricted-three-body demo, not a claim about escape from an external
+body's Hill sphere. Presentations should display `escaped` instead of the
+stability-error number after the flag becomes true; the numeric error remains
+available for diagnostics.
 
 Run the checked fixture with:
 

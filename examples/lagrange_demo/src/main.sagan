@@ -2,6 +2,7 @@ module main
 
 import TwoBodySolver from physics.two_body
 import LagrangeBodySeed from physics.restricted_three_body
+import LagrangeBodySnapshot from physics.restricted_three_body
 import RestrictedThreeBodySnapshot from physics.restricted_three_body
 import RestrictedThreeBodySolver from physics.restricted_three_body
 import open from render.window
@@ -86,6 +87,11 @@ fun lagrange_seed(identity: String, x: Float64, y: Float64): LagrangeBodySeed {
   let position = origin + <x, y> * SEPARATION
   let velocity = <-y, x> * ROTATING_SPEED_SCALE
   return LagrangeBodySeed(identity, position, velocity, x, y)
+}
+
+fun stability_result(body: LagrangeBodySnapshot): String {
+  if body.escaped() { return "escaped" }
+  return "${body.stability_error()}"
 }
 
 fun create_solver(): RestrictedThreeBodySolver {
@@ -322,12 +328,12 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     text_screen(20, 68, "simulation time: ${current.time() / (86400.0 second)} days", 12, 148, 210, 189)
     text_screen(20, 88, "playback: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
     text_screen(20, 108, "zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
-    text_screen(20, 122, "L1 error: ${current.tertiary(0).stability_error()}", 11, 244, 114, 182)
-    text_screen(20, 142, "L2 error: ${current.tertiary(1).stability_error()}", 11, 251, 146, 60)
-    text_screen(20, 162, "L3 error: ${current.tertiary(2).stability_error()}", 11, 167, 139, 250)
-    text_screen(20, 182, "L4 error: ${current.tertiary(3).stability_error()}", 11, 74, 222, 128)
-    text_screen(20, 202, "L5 error: ${current.tertiary(4).stability_error()}", 11, 34, 211, 238)
-    text_screen(20, 222, "Control error: ${current.tertiary(5).stability_error()}", 11, 248, 113, 113)
+    text_screen(20, 122, "L1 error: ${stability_result(current.tertiary(0))}", 11, 244, 114, 182)
+    text_screen(20, 142, "L2 error: ${stability_result(current.tertiary(1))}", 11, 251, 146, 60)
+    text_screen(20, 162, "L3 error: ${stability_result(current.tertiary(2))}", 11, 167, 139, 250)
+    text_screen(20, 182, "L4 error: ${stability_result(current.tertiary(3))}", 11, 74, 222, 128)
+    text_screen(20, 202, "L5 error: ${stability_result(current.tertiary(4))}", 11, 34, 211, 238)
+    text_screen(20, 222, "Control error: ${stability_result(current.tertiary(5))}", 11, 248, 113, 113)
     present()
   }
   print("final_playback_rate ${simulation_seconds_per_real_second}")
@@ -336,9 +342,9 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
 }
 
 print("final_time_s ${current.time()}")
-print("final_L1_error ${current.tertiary(0).stability_error()}")
-print("final_L2_error ${current.tertiary(1).stability_error()}")
-print("final_L3_error ${current.tertiary(2).stability_error()}")
-print("final_L4_error ${current.tertiary(3).stability_error()}")
-print("final_L5_error ${current.tertiary(4).stability_error()}")
-print("final_control_error ${current.tertiary(5).stability_error()}")
+print("final_L1_error ${stability_result(current.tertiary(0))}")
+print("final_L2_error ${stability_result(current.tertiary(1))}")
+print("final_L3_error ${stability_result(current.tertiary(2))}")
+print("final_L4_error ${stability_result(current.tertiary(3))}")
+print("final_L5_error ${stability_result(current.tertiary(4))}")
+print("final_control_error ${stability_result(current.tertiary(5))}")

@@ -9,14 +9,15 @@ export SAGAN_PACKAGE_INDEX="$repo_root/libraries/index.tsv"
 
 output="$(bin/sagan --run-package examples/lagrange_numeric_demo)"
 for expected in \
-  "day L1_m L2_m L3_m L4_m L5_m control_m" \
+  "day L1_error L2_error L3_error L4_error L5_error control_error" \
   "primary_energy_drift" \
   "primary_angular_momentum_drift" \
   "stable_L4_error" \
   "stable_L5_error" \
   "off_point_control_error" \
   "primary_back_reaction_error" \
-  "secondary_back_reaction_error"
+  "secondary_back_reaction_error" \
+  "escape_detection escaped"
 do
   if [[ "$output" != *"$expected"* ]]; then
     echo "Missing Lagrange output: $expected" >&2

@@ -32,6 +32,17 @@ fun lagrange_seed(identity: String, x: Float64, y: Float64): LagrangeBodySeed {
   return LagrangeBodySeed(identity, position, velocity, x, y)
 }
 
+fun stability_result(body: LagrangeBodySnapshot): String {
+  if body.escaped() { return "escaped" }
+  return "${body.stability_error()}"
+}
+
+fun escaping_seed(identity: String): LagrangeBodySeed {
+  let position = origin + <0.0, 1.99> * SEPARATION
+  let velocity = <0.0, 1.0> * 5000.0 (meter / second)
+  return LagrangeBodySeed(identity, position, velocity, 0.0, 1.99)
+}
+
 let primaries = TwoBodySolver(
   "Primary", PRIMARY_MASS, primary_position, primary_velocity,
   "Secondary", SECONDARY_MASS, secondary_position, secondary_velocity,
@@ -56,15 +67,15 @@ let current = initial
 let reference_current = reference_primaries.snapshot()
 let step_index = 0
 
-print("day L1_m L2_m L3_m L4_m L5_m control_m")
-print("0 ${initial.tertiary(0).stability_error()} ${initial.tertiary(1).stability_error()} ${initial.tertiary(2).stability_error()} ${initial.tertiary(3).stability_error()} ${initial.tertiary(4).stability_error()} ${initial.tertiary(5).stability_error()}")
+print("day L1_error L2_error L3_error L4_error L5_error control_error")
+print("0 ${stability_result(initial.tertiary(0))} ${stability_result(initial.tertiary(1))} ${stability_result(initial.tertiary(2))} ${stability_result(initial.tertiary(3))} ${stability_result(initial.tertiary(4))} ${stability_result(initial.tertiary(5))}")
 
 while step_index < 17280 {
   current = solver.step!()
   reference_current = reference_primaries.step!()
   step_index++
   if step_index % 2880 == 0 {
-    print("${step_index / 288} ${current.tertiary(0).stability_error()} ${current.tertiary(1).stability_error()} ${current.tertiary(2).stability_error()} ${current.tertiary(3).stability_error()} ${current.tertiary(4).stability_error()} ${current.tertiary(5).stability_error()}")
+    print("${step_index / 288} ${stability_result(current.tertiary(0))} ${stability_result(current.tertiary(1))} ${stability_result(current.tertiary(2))} ${stability_result(current.tertiary(3))} ${stability_result(current.tertiary(4))} ${stability_result(current.tertiary(5))}")
   }
 }
 
@@ -80,9 +91,9 @@ let secondary_back_reaction_error =
 
 print("primary_energy_drift ${energy_drift}")
 print("primary_angular_momentum_drift ${angular_momentum_drift}")
-print("stable_L4_error ${current.tertiary(3).stability_error()}")
-print("stable_L5_error ${current.tertiary(4).stability_error()}")
-print("off_point_control_error ${current.tertiary(5).stability_error()}")
+print("stable_L4_error ${stability_result(current.tertiary(3))}")
+print("stable_L5_error ${stability_result(current.tertiary(4))}")
+print("off_point_control_error ${stability_result(current.tertiary(5))}")
 print("primary_back_reaction_error ${primary_back_reaction_error}")
 print("secondary_back_reaction_error ${secondary_back_reaction_error}")
 
@@ -103,4 +114,23 @@ assert(primary_back_reaction_error == 0.0 meter,
        "massless tertiary bodies must not perturb the primary")
 assert(secondary_back_reaction_error == 0.0 meter,
        "massless tertiary bodies must not perturb the secondary")
+
+let escape_primaries = TwoBodySolver(
+  "Primary", PRIMARY_MASS, primary_position, primary_velocity,
+  "Secondary", SECONDARY_MASS, secondary_position, secondary_velocity,
+  STEP)
+let escape_solver = RestrictedThreeBodySolver(
+  escape_primaries, STEP,
+  escaping_seed("Escape 1"), escaping_seed("Escape 2"),
+  escaping_seed("Escape 3"), escaping_seed("Escape 4"),
+  escaping_seed("Escape 5"), escaping_seed("Escape 6"))
+let escape_snapshot = escape_solver.snapshot()
+let escape_step = 0
+while escape_step < 10 {
+  escape_snapshot = escape_solver.step!()
+  escape_step++
+}
+assert(escape_snapshot.tertiary(0).escaped(),
+       "outbound positive-energy tertiary should be detected as escaped")
+print("escape_detection ${stability_result(escape_snapshot.tertiary(0))}")
 

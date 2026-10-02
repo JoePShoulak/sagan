@@ -4,6 +4,8 @@ import BodySnapshot from two_body
 import TwoBodySnapshot from two_body
 import TwoBodySolver from two_body
 
+const ESCAPE_BOUNDARY_SCALE: Float64 = 2.0
+
 /// Immutable initial state for one massless tertiary body.
 class LagrangeBodySeed {
   let .identity_value: String
@@ -39,13 +41,15 @@ class LagrangeBodySnapshot {
   let .reference_x_value: Float64
   let .reference_y_value: Float64
   let .stability_error_value: Float64<meter>
+  let .escaped_value: Bool
 
   new(body: BodySnapshot, reference_x: Float64, reference_y: Float64,
-      stability_error: Float64<meter>) {
+      stability_error: Float64<meter>, escaped: Bool) {
     self.body_value = body
     self.reference_x_value = reference_x
     self.reference_y_value = reference_y
     self.stability_error_value = stability_error
+    self.escaped_value = escaped
   }
 
   fun identity(): String => self.body_value.identity()
@@ -54,6 +58,7 @@ class LagrangeBodySnapshot {
   fun reference_x(): Float64 => self.reference_x_value
   fun reference_y(): Float64 => self.reference_y_value
   fun stability_error(): Float64<meter> => self.stability_error_value
+  fun escaped(): Bool => self.escaped_value
 }
 
 /// Immutable primary pair plus six massless tertiary presentation snapshots.
@@ -100,6 +105,7 @@ class LagrangeBodyState {
   let .velocity_value: Vector2<Float64, meter / second>
   let .reference_x_value: Float64
   let .reference_y_value: Float64
+  let .escaped_value: Bool
 
   new(seed: LagrangeBodySeed) {
     self.identity_value = seed.identity()
@@ -107,6 +113,7 @@ class LagrangeBodyState {
     self.velocity_value = seed.velocity()
     self.reference_x_value = seed.reference_x()
     self.reference_y_value = seed.reference_y()
+    self.escaped_value = false
   }
 
   fun .acceleration(position: Point2<Float64, meter>,
@@ -148,6 +155,37 @@ class LagrangeBodyState {
       ((old_acceleration + next_acceleration) * (0.5 * step_duration)) as (meter / second)
     self.position_value = next_position
     self.velocity_value = self.velocity_value + velocity_change
+    if self.escaped_value == false {
+      self.escaped_value = self.has_escaped(new_primary, new_secondary)
+    }
+  }
+
+  fun .has_escaped(primary: BodySnapshot, secondary: BodySnapshot): Bool {
+    let total_mass = primary.mass() + secondary.mass()
+    let barycenter = (primary.position() +
+      (secondary.position() - primary.position()) *
+      (secondary.mass() / total_mass))
+    let barycenter_velocity =
+      ((primary.velocity() * primary.mass() +
+        secondary.velocity() * secondary.mass()) / total_mass) as (meter / second)
+    let displacement = self.position_value - barycenter
+    let relative_velocity = self.velocity_value - barycenter_velocity
+    let separation = length(secondary.position() - primary.position())
+    let outside_boundary =
+      length(displacement) > ESCAPE_BOUNDARY_SCALE * separation
+    let radial_motion = displacement.x * relative_velocity.x +
+      displacement.y * relative_velocity.y
+    let moving_outward = radial_motion > 0.0 (meter^2 / second)
+    let primary_distance = length(self.position_value - primary.position())
+    let secondary_distance = length(self.position_value - secondary.position())
+    let specific_energy =
+      0.5 * squared_length(relative_velocity) -
+      6.67430e-11 (meter^3 / kilogram / second^2) * primary.mass() /
+        primary_distance -
+      6.67430e-11 (meter^3 / kilogram / second^2) * secondary.mass() /
+        secondary_distance
+    let has_escape_energy = specific_energy > 0.0 (meter^2 / second^2)
+    return outside_boundary and moving_outward and has_escape_energy
   }
 
   fun snapshot(primary_system: TwoBodySnapshot): LagrangeBodySnapshot {
@@ -164,7 +202,8 @@ class LagrangeBodyState {
                             self.position_value, self.velocity_value)
     return LagrangeBodySnapshot(body, self.reference_x_value,
                                 self.reference_y_value,
-                                length(self.position_value - target))
+                                length(self.position_value - target),
+                                self.escaped_value)
   }
 }
 
