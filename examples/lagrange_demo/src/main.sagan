@@ -25,6 +25,8 @@ const PRIMARY_SPEED: Float64<meter / second> = 12.44242780569817 (meter / second
 const SECONDARY_SPEED: Float64<meter / second> = 1012.1038864231901 (meter / second)
 const ROTATING_SPEED_SCALE: Float64<meter / second> =
   1024.5463142288881 (meter / second)
+const INITIAL_PLAYBACK_RATE: Float64 = 432000.0
+const TRAIL_SAMPLE_INTERVAL: Float64<second> = 21600.0 second
 
 class Trail8 {
   let .one: Vector2<Float64>
@@ -83,20 +85,26 @@ fun lagrange_seed(identity: String, x: Float64, y: Float64): LagrangeBodySeed {
   return LagrangeBodySeed(identity, position, velocity, x, y)
 }
 
-let primaries = TwoBodySolver(
-  "Primary", PRIMARY_MASS, primary_position, primary_velocity,
-  "Secondary", SECONDARY_MASS, secondary_position, secondary_velocity,
-  STEP)
-let solver = RestrictedThreeBodySolver(
-  primaries, STEP,
-  lagrange_seed("L1", 0.8369459145954874, 0.0),
-  lagrange_seed("L2", 1.155658098131319, 0.0),
-  lagrange_seed("L3", -1.0050600391594884, 0.0),
-  lagrange_seed("L4", 0.4878556707169819, 0.8660254037844386),
-  lagrange_seed("L5", 0.4878556707169819, -0.8660254037844386),
-  lagrange_seed("Control", 0.25, 0.25))
+fun create_solver(): RestrictedThreeBodySolver {
+  let primaries = TwoBodySolver(
+    "Primary", PRIMARY_MASS, primary_position, primary_velocity,
+    "Secondary", SECONDARY_MASS, secondary_position, secondary_velocity,
+    STEP)
+  return RestrictedThreeBodySolver(
+    primaries, STEP,
+    lagrange_seed("L1", 0.8369459145954874, 0.0),
+    lagrange_seed("L2", 1.155658098131319, 0.0),
+    lagrange_seed("L3", -1.0050600391594884, 0.0),
+    lagrange_seed("L4", 0.4878556707169819, 0.8660254037844386),
+    lagrange_seed("L5", 0.4878556707169819, -0.8660254037844386),
+    lagrange_seed("Control", 0.25, 0.25))
+}
+
+let solver = create_solver()
 let current = solver.snapshot()
 
+let primary_trail = Trail8(display_coordinates(current.primary().position(), origin, 1000 kilometer))
+let secondary_trail = Trail8(display_coordinates(current.secondary().position(), origin, 1000 kilometer))
 let first_trail = Trail8(display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer))
 let second_trail = Trail8(display_coordinates(current.tertiary(1).position(), origin, 1000 kilometer))
 let third_trail = Trail8(display_coordinates(current.tertiary(2).position(), origin, 1000 kilometer))
@@ -108,8 +116,9 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
   set_view(-70.0, 0.0, 0.4)
   let previous_frame_time = elapsed_seconds()
   let accumulated_simulation_seconds = 0.0
-  let simulation_seconds_per_real_second = 2592000.0
+  let simulation_seconds_per_real_second = INITIAL_PLAYBACK_RATE
   let paused = false
+  let last_trail_sample = 0.0 second
 
   while poll() {
     let frame_time = elapsed_seconds()
@@ -126,6 +135,21 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     }
     if key_pressed("down") {
       simulation_seconds_per_real_second = simulation_seconds_per_real_second * 0.5
+    }
+    if key_pressed("r") {
+      solver = create_solver()
+      current = solver.snapshot()
+      accumulated_simulation_seconds = 0.0
+      last_trail_sample = 0.0 second
+      paused = false
+      primary_trail = Trail8(display_coordinates(current.primary().position(), origin, 1000 kilometer))
+      secondary_trail = Trail8(display_coordinates(current.secondary().position(), origin, 1000 kilometer))
+      first_trail = Trail8(display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer))
+      second_trail = Trail8(display_coordinates(current.tertiary(1).position(), origin, 1000 kilometer))
+      third_trail = Trail8(display_coordinates(current.tertiary(2).position(), origin, 1000 kilometer))
+      fourth_trail = Trail8(display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer))
+      fifth_trail = Trail8(display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer))
+      control_trail = Trail8(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
     }
 
     if paused == false {
@@ -145,16 +169,37 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     let fourth = display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer)
     let fifth = display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer)
     let control = display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer)
-    first_trail.record!(first)
-    second_trail.record!(second)
-    third_trail.record!(third)
-    fourth_trail.record!(fourth)
-    fifth_trail.record!(fifth)
-    control_trail.record!(control)
+    if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
+      primary_trail.record!(primary)
+      secondary_trail.record!(secondary)
+      first_trail.record!(first)
+      second_trail.record!(second)
+      third_trail.record!(third)
+      fourth_trail.record!(fourth)
+      fifth_trail.record!(fifth)
+      control_trail.record!(control)
+      last_trail_sample = current.time()
+    }
 
     clear(7, 13, 25)
     line(-700.0, 0.0, 700.0, 0.0, 1.0, 37, 52, 71)
     line(0.0, -500.0, 0.0, 500.0, 1.0, 37, 52, 71)
+    line(primary_trail.point_one().x, primary_trail.point_one().y, primary_trail.point_two().x, primary_trail.point_two().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_two().x, primary_trail.point_two().y, primary_trail.point_three().x, primary_trail.point_three().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_three().x, primary_trail.point_three().y, primary_trail.point_four().x, primary_trail.point_four().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_four().x, primary_trail.point_four().y, primary_trail.point_five().x, primary_trail.point_five().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_five().x, primary_trail.point_five().y, primary_trail.point_six().x, primary_trail.point_six().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_six().x, primary_trail.point_six().y, primary_trail.point_seven().x, primary_trail.point_seven().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_seven().x, primary_trail.point_seven().y, primary_trail.point_eight().x, primary_trail.point_eight().y, 2.0, 250, 204, 21)
+
+    line(secondary_trail.point_one().x, secondary_trail.point_one().y, secondary_trail.point_two().x, secondary_trail.point_two().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_two().x, secondary_trail.point_two().y, secondary_trail.point_three().x, secondary_trail.point_three().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_three().x, secondary_trail.point_three().y, secondary_trail.point_four().x, secondary_trail.point_four().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_four().x, secondary_trail.point_four().y, secondary_trail.point_five().x, secondary_trail.point_five().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_five().x, secondary_trail.point_five().y, secondary_trail.point_six().x, secondary_trail.point_six().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_six().x, secondary_trail.point_six().y, secondary_trail.point_seven().x, secondary_trail.point_seven().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_seven().x, secondary_trail.point_seven().y, secondary_trail.point_eight().x, secondary_trail.point_eight().y, 2.0, 96, 165, 250)
+
     line(first_trail.point_one().x, first_trail.point_one().y, first_trail.point_two().x, first_trail.point_two().y, 2.0, 244, 114, 182)
     line(first_trail.point_two().x, first_trail.point_two().y, first_trail.point_three().x, first_trail.point_three().y, 2.0, 244, 114, 182)
     line(first_trail.point_three().x, first_trail.point_three().y, first_trail.point_four().x, first_trail.point_four().y, 2.0, 244, 114, 182)
@@ -221,16 +266,18 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     text(control.x + 8.0, control.y - 14.0, "Control", 11, 248, 113, 113)
 
     text_screen(20, 18, "R3 Lagrange stability — six independent massless tracers", 17, 226, 232, 240)
-    text_screen(20, 45, "Space pause | Up/Down speed | Escape close", 12, 148, 163, 184)
+    text_screen(20, 45, "Space pause | Up/Down speed | R reset | Escape close", 12, 148, 163, 184)
     text_screen(20, 68, "simulation time: ${current.time()}", 12, 148, 210, 189)
-    text_screen(20, 102, "L1 error: ${current.tertiary(0).stability_error()}", 11, 244, 114, 182)
-    text_screen(20, 122, "L2 error: ${current.tertiary(1).stability_error()}", 11, 251, 146, 60)
-    text_screen(20, 142, "L3 error: ${current.tertiary(2).stability_error()}", 11, 167, 139, 250)
-    text_screen(20, 162, "L4 error: ${current.tertiary(3).stability_error()}", 11, 74, 222, 128)
-    text_screen(20, 182, "L5 error: ${current.tertiary(4).stability_error()}", 11, 34, 211, 238)
-    text_screen(20, 202, "Control error: ${current.tertiary(5).stability_error()}", 11, 248, 113, 113)
+    text_screen(20, 88, "playback: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
+    text_screen(20, 122, "L1 error: ${current.tertiary(0).stability_error()}", 11, 244, 114, 182)
+    text_screen(20, 142, "L2 error: ${current.tertiary(1).stability_error()}", 11, 251, 146, 60)
+    text_screen(20, 162, "L3 error: ${current.tertiary(2).stability_error()}", 11, 167, 139, 250)
+    text_screen(20, 182, "L4 error: ${current.tertiary(3).stability_error()}", 11, 74, 222, 128)
+    text_screen(20, 202, "L5 error: ${current.tertiary(4).stability_error()}", 11, 34, 211, 238)
+    text_screen(20, 222, "Control error: ${current.tertiary(5).stability_error()}", 11, 248, 113, 113)
     present()
   }
+  print("final_playback_rate ${simulation_seconds_per_real_second}")
   close()
 }
 

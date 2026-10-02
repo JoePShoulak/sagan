@@ -38,11 +38,14 @@ namespace
     bool space_pressed{};
     bool up_pressed{};
     bool down_pressed{};
+    bool reset_pressed{};
     std::int64_t poll_count{};
     std::int64_t present_count{};
     std::int64_t frame_limit{};
     std::int64_t test_frame_milliseconds{};
     std::int64_t capture_frame{1};
+    std::int64_t test_reset_frame{};
+    std::int64_t test_up_frame{};
     std::chrono::steady_clock::time_point opened_at{};
     std::chrono::milliseconds auto_close_after{};
   };
@@ -251,6 +254,7 @@ namespace
         if (word == VK_SPACE) state().space_pressed = true;
         if (word == VK_UP) state().up_pressed = true;
         if (word == VK_DOWN) state().down_pressed = true;
+        if (word == 'R') state().reset_pressed = true;
       }
       if (word == VK_ESCAPE)
       {
@@ -325,6 +329,8 @@ auto sagan_5f5f72656e6465725f77696e646f775f6f70656e(
   window.test_frame_milliseconds =
     configured_integer("SAGAN_RENDER_TEST_FRAME_MS", 60000, 0);
   window.capture_frame = configured_integer("SAGAN_RENDER_CAPTURE_FRAME", 1000000, 1);
+  window.test_reset_frame = configured_integer("SAGAN_RENDER_TEST_RESET_FRAME", 1000000, 0);
+  window.test_up_frame = configured_integer("SAGAN_RENDER_TEST_UP_FRAME", 1000000, 0);
 
   WNDCLASSEXW descriptor{};
   descriptor.cbSize = sizeof(descriptor);
@@ -376,6 +382,10 @@ auto sagan_5f5f72656e6465725f77696e646f775f706f6c6c() -> bool
     return false;
   }
   ++window.poll_count;
+  if (window.test_reset_frame > 0 && window.poll_count == window.test_reset_frame)
+    window.reset_pressed = true;
+  if (window.test_up_frame > 0 && window.poll_count == window.test_up_frame)
+    window.up_pressed = true;
   if (window.auto_close_after.count() > 0 &&
       std::chrono::steady_clock::now() - window.opened_at >= window.auto_close_after)
     release_window();
@@ -421,7 +431,8 @@ auto sagan_5f5f72656e6465725f6b65795f70726573736564(const std::string &key) -> b
   if (key == "space") pressed = &window.space_pressed;
   else if (key == "up") pressed = &window.up_pressed;
   else if (key == "down") pressed = &window.down_pressed;
-  else throw std::runtime_error("Supported render keys are space, up, and down");
+  else if (key == "r") pressed = &window.reset_pressed;
+  else throw std::runtime_error("Supported render keys are space, up, down, and r");
   const bool result = *pressed;
   *pressed = false;
   return result;
@@ -533,7 +544,7 @@ namespace
 {
   [[noreturn]] auto unsupported() -> void
   {
-    throw std::runtime_error("sagan-render 0.3.0 currently supports Windows only");
+    throw std::runtime_error("sagan-render 0.4.0 currently supports Windows only");
   }
 }
 

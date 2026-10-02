@@ -119,12 +119,15 @@ capture. The scene contains eight bodies total, despite the six tertiaries
 remaining gravitationally independent of one another.
 
 **Status: implemented at `7603ecc` and verified on 2026-10-01.** `make lagrange-demo`
-reuses `sagan-render` 0.3.0 and `sagan-physics` 0.2.0 without adding another
-renderer. It draws all eight bodies, distinct matching-color eight-sample
-trails for the six massless tracers, and all six rotating-frame errors. Space,
-Up/Down, and Escape retain R2 behavior. The deterministic test compares two
-display schedules at the same 60-day physics time and requires identical final
-errors; its checked 1180 by 720 capture comes from the exact demo source.
+reuses `sagan-render` 0.4.0 and `sagan-physics` 0.2.0 without adding another
+renderer. It draws all eight bodies with distinct matching-color eight-sample
+trails sampled every six simulation hours, plus all six rotating-frame errors.
+It begins at five simulated days per real second.
+Space, Up/Down, and Escape retain R2 behavior; R resets physics and trails while
+preserving the selected, displayed playback rate. The deterministic test
+compares two display schedules at the same 60-day physics time, requires
+identical final errors, and verifies reset-rate independence; its checked 1180
+by 720 capture comes from the exact demo source.
 
 ## Physics chat
 

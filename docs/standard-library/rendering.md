@@ -10,9 +10,10 @@ verified_by: null
 # Rendering library
 
 !!! warning "Work-in-progress library"
-    Version 0.3.0 implements the R0 single-window bridge, R1 basic 2D canvas,
-    and R2 snapshot animation support on Windows. It is not a general scene or
-    UI system, and its public API may change before 1.0.
+    Version 0.4.0 implements the R0 single-window bridge, R1 basic 2D canvas,
+    R2 snapshot animation support, and the reset input used by R3 on Windows.
+    It is not a general scene or UI system, and its public API may change
+    before 1.0.
 
 Rendering is intended to be a first-party Sagan core library integrated with
 the language's mathematical and simulation vocabulary. It will require an
@@ -45,7 +46,7 @@ and registration resources and is safe to call after the user closes the
 window.
 
 `elapsed_seconds()` reports monotonic wall time since `open`. `key_pressed`
-consumes one press of `space`, `up`, or `down`; Escape requests a clean close
+consumes one press of `space`, `up`, `down`, or `r`; Escape requests a clean close
 directly. These small primitives let an application schedule fixed simulation
 steps independently of display frames. They do not make the renderer the owner
 of simulation time or mutable physics state.
@@ -73,7 +74,7 @@ World coordinates use +X right and +Y up. The view center maps to the current
 client-area center, so resizing keeps the world origin centered. Circle radii
 scale with `pixels_per_unit`; line widths and screen text positions are physical
 pixels. Colors are integer RGB channels from 0 through 255. Coordinates, scale,
-radii, widths, point sizes, and colors are checked before drawing. Version 0.3
+radii, widths, point sizes, and colors are checked before drawing. Version 0.4
 does not yet expose alpha, clipping, rotation, font selection, paths as one
 object, or retained drawables.
 
@@ -119,19 +120,24 @@ are private test environment settings, not public Sagan APIs.
 `make lagrange-demo` reuses the same renderer and frame scheduler for
 `sagan-physics` 0.2.0's restricted-three-body snapshots. It displays the two
 massive primaries, L1 through L5, and an off-point control as eight distinctly
-colored bodies. Each massless tracer has an eight-sample trail and a matching
-numeric rotating-frame error. The representative capture below is the 60-day
+colored bodies. Every body has an eight-sample matching-color trail recorded
+at six-hour simulation intervals, and each tracer has a matching numeric
+rotating-frame error.
+The initial rate is five simulated days per real second. Up/Down change that
+rate, the overlay shows it, and R restores the physical initial state and
+clears the trails without changing the selected rate. The representative 60-day
 snapshot; it visibly distinguishes the small L4/L5 errors from the unstable L1
 and off-point control without claiming that every Lagrange point is stable.
 
 ![R3 Lagrange stability frame](../assets/images/render-r3-lagrange.bmp)
 
-`make lagrange-demo-test` runs 100 frames at 20 milliseconds and 20 frames at
-100 milliseconds. Both schedules must produce the same 60-day physics result
-and the test validates the captured 1180 by 720 frame. Trail sampling is a
-presentation concern and does not feed state back into the physics solver.
+`make lagrange-demo-test` runs 600 frames at 20 milliseconds and 120 frames at
+100 milliseconds. Both schedules must produce the same 60-day physics result.
+It also verifies that reset preserves a doubled playback rate and validates the
+captured 1180 by 720 frame. Trail sampling is a presentation concern and does
+not feed state back into the physics solver.
 
-Version 0.3.0 supports Windows only and links the
+Version 0.4.0 supports Windows only and links the
 system `user32` and `gdi32` libraries. The demo statically links its GCC/C++
 runtime support, so the resulting executable does not require MSYS2 runtime
 directories on `PATH`. It has no SDL or GPU dependency yet.

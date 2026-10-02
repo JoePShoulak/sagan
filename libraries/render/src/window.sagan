@@ -17,7 +17,7 @@ fun close(): Void => __render_window_close()
 /// Monotonic seconds since the window opened.
 fun elapsed_seconds(): Float64 => __render_elapsed_seconds()
 
-/// Consume one press of space, up, or down. Escape always requests a clean close.
+/// Consume one press of space, up, down, or r. Escape always requests a clean close.
 fun key_pressed(key: String): Bool => __render_key_pressed(key)
 
 export open

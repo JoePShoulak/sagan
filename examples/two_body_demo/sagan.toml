@@ -6,4 +6,4 @@ entry = "main"
 
 [dependencies]
 physics = { package = "sagan-physics", version = "^0.2.0" }
-render = { package = "sagan-render", version = "^0.3.0" }
+render = { package = "sagan-render", version = "^0.4.0" }
