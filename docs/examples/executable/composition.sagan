@@ -1,0 +1,30 @@
+face Counter {
+  fun value(): Int
+  fun describe(): String => "count ${self.value()}"
+}
+
+class MissionCounter is Counter {
+  let count: Int
+
+  new(start: Int) {
+    self.count = start
+  }
+
+  fun value(): Int => self.count
+
+  fun increment!(): Void {
+    self.count++
+  }
+}
+
+fun main(): Int {
+  let counter = MissionCounter(2)
+  let view: Counter = counter
+
+  print(view.describe())
+  counter.increment!()
+  print(view.describe())
+  return 0
+}
+
+exit(main())

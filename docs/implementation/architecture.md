@@ -8,6 +8,11 @@ verified_by: null
 ---
 
 # Architecture
+
+For the repository-wide inventory of languages, libraries, protocols, build
+tools, hosting, and the checks affected by common changes, see the
+[technology stack and change map](technology-stack.md).
+
 ## Current components
 
 - `src/main.cpp`: CLI, token printing, self-tests, file loading, and version output.

@@ -13,6 +13,9 @@ language design.
 
 Before changing code or documentation:
 
+- use the [technology stack and change map](../implementation/technology-stack.md)
+  to identify every affected compiler, tooling, test, documentation, and
+  release surface;
 - read the [development setup](development-setup.md);
 - run the [tests](testing.md);
 - follow the [documentation workflow](documentation.md);

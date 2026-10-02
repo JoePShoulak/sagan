@@ -140,6 +140,7 @@ nav:
       - Compiler implementation:
           - Overview: implementation/index.md
           - Architecture: implementation/architecture.md
+          - Technology stack and change map: implementation/technology-stack.md
           - Tokenizer: implementation/tokenizer.md
           - Parser: implementation/parser.md
           - Semantic analysis: implementation/semantic-analysis.md
