@@ -118,7 +118,7 @@ immutable snapshots and records a representative long-duration frame or
 capture. The scene contains eight bodies total, despite the six tertiaries
 remaining gravitationally independent of one another.
 
-**Status: implemented, pending named-commit acceptance.** `make lagrange-demo`
+**Status: implemented at `7603ecc` and verified on 2026-10-01.** `make lagrange-demo`
 reuses `sagan-render` 0.3.0 and `sagan-physics` 0.2.0 without adding another
 renderer. It draws all eight bodies, distinct matching-color eight-sample
 trails for the six massless tracers, and all six rotating-frame errors. Space,
