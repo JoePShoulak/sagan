@@ -139,7 +139,7 @@ proposed `make orbit-math-demo` runs a small Sagan source file showing the
 operations and expected numeric results, including one rejected unit mismatch.
 Document rounding/precision limits and each actual public symbol.
 
-**Status: implemented and locally verified on 2026-10-01; commit pending.**
+**Status: implemented at `779c281` and locally verified on 2026-10-01.**
 The automatically available M0 surface is `sqrt`, `squared_length`, `length`,
 `dot`, `normalized`, and `display_coordinates`. The checked
 `make orbit-math-demo` source preserves measured point/vector distinctions,
