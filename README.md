@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 2.2.0](https://img.shields.io/badge/development-2.2.0-2563eb)](docs/contributing/versioning.md)
+[![Development version 2.3.0](https://img.shields.io/badge/development-2.3.0-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -18,7 +18,7 @@ value must say that it might be missing. An emoji, however, is a perfectly good
 function name.
 
 > [!WARNING]
-> Sagan 1.0 can compile and run real programs on Windows x64. It remains an
+> Sagan 2.0 can compile and run real programs on Windows x64. It remains an
 > experimental language and is not recommended for production software yet.
 
 ## Hello, universe
@@ -113,11 +113,8 @@ sagan hello.sagan
 ```
 
 See the [installation guide](docs/getting-started/installation.md) for portable
-archives, file associations, windowed programs, upgrades, and building from
-source. The experimental `v0.88.0-rc.1` preview and the initial 1.0
-installer are disclosed unsigned exceptions, so Windows may show an
-unknown-publisher warning. Windows ARM64,
-Linux, and macOS remain future targets.
+archives, file associations, windowed programs, upgrades, signing status, and
+building from source. Windows ARM64, Linux, and macOS remain future targets.
 
 See the [code signing policy](docs/contributing/code-signing-policy.md) for
 the planned trusted publisher and the verification required of future releases.
@@ -142,29 +139,31 @@ bin/sagan docs/examples/executable/hello.sagan
 Curious about what the compiler sees? It can display tokens, symbols, inferred
 types, generated C++, and syntax trees—including SVG and zoomable HTML trees.
 Start with the [compiler tooling guide](docs/tooling/compiler.md).
-For editor integration, the compiler now has a
-[language server](docs/tooling/language-server.md); `make lsp-demo` shows its
-hover, navigation, and live-diagnostic responses without installing an editor
-extension.
+For editor integration, the Sagan VS Code extension provides syntax
+highlighting, compiler-backed language features, check/build/run commands, and
+Test Explorer support through the
+[language server](docs/tooling/language-server.md). See the
+[editor guide](docs/getting-started/editor-support.md) for installation and
+local development; `make lsp-demo` exercises the server without an editor.
 
-## Where Sagan is going
+## Core library stack
 
-Sagan's planned simulation stack has three closely related layers:
+Sagan's simulation stack has three closely related layers, each still growing:
 
-- **Math** is built in and automatically available.
-- **Rendering** will make simulations visible and debuggable.
-- **Physics** will grow from real simulation needs and share the same math,
-  geometry, units, and rendering conventions.
+- **Math** is automatically available. Its implemented M0 surface includes the
+  vector and scalar operations needed by the first orbital examples.
+- **Physics** is the explicit `sagan-physics` dependency. Version 0.1.0 provides
+  a headless two-body solver with unit-checked snapshots.
+- **Rendering** is the explicit `sagan-render` dependency. Version 0.2.0
+  provides a Windows single-window bridge and basic 2D canvas.
 
-Rendering and physics will be first-party libraries, but they will require
-explicit imports so lightweight command-line programs stay lightweight.
+Physics and rendering are independently versioned first-party libraries and
+require explicit imports so lightweight command-line programs stay lightweight.
 
 For the honest line between implemented, planned, and deliberately deferred
 work, see [project status](docs/design/status.md). The full documentation is
 also hosted at **[sagan.shoulak.org](https://sagan.shoulak.org/)** and remains
 visibly work-in-progress until its human audit is complete.
-That page-by-page audit is the first task after 1.0 and may lead to follow-up
-changes; the 1.0 release itself will remain immutable.
 
 ## Origins and license
 
