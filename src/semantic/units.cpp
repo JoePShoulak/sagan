@@ -578,7 +578,10 @@ namespace semantic::units
       if (result.dimension[name] == 0) result.dimension.erase(name);
     }
     result.quantity = unit_registry.infer_quantity(result.dimension);
-    result.name = left.name + ' ' + operation + ' ' + right.name;
+    const bool grouped_divisor = operation == '/' &&
+      (right.name.find(" * ") != std::string::npos || right.name.find(" / ") != std::string::npos);
+    result.name = left.name + ' ' + operation + ' ' +
+      (grouped_divisor ? '(' + right.name + ')' : right.name);
     return result;
   }
 }
