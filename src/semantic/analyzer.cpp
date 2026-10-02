@@ -684,8 +684,25 @@ namespace semantic
         declare("exit", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Ends the program with an explicit process status.",
                                          "@param code An integer exit status from 0 through 255.", "@return Void"});
+        declare("sqrt", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin, {"Returns the non-negative square root of a finite Float.",
+                                         "@param value A finite, non-negative Float."});
+        declare("squared_length", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin, {"Returns a Vector's squared displacement length."});
+        declare("length", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin, {"Returns a finite Float Vector's displacement length."});
+        declare("dot", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin, {"Returns the dot product of equal-dimension Vectors."});
+        declare("normalized", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
+                symbol_origin::builtin, {"Returns the unitless direction of a nonzero finite Vector."});
+        declare("display_coordinates", symbol_kind::function, parser::span{0, 0},
+                symbol_visibility::public_access, symbol_origin::builtin,
+                {"Converts a physical Point to dimensionless display coordinates using an origin and scale."});
         for (const std::string_view bridge : {"__render_window_open", "__render_window_poll",
-                                              "__render_window_clear", "__render_window_close"})
+                                              "__render_window_clear", "__render_window_close",
+                                              "__render_set_view", "__render_present",
+                                              "__render_circle", "__render_line", "__render_text",
+                                              "__render_text_screen"})
           declare(std::string(bridge), symbol_kind::function, parser::span{0, 0},
                   symbol_visibility::private_access, symbol_origin::builtin,
                   {"Private sagan-render native bridge."});

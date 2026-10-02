@@ -1,0 +1,35 @@
+module canvas
+
+/// Set a centered orthographic view. +X is right and +Y is up.
+fun set_view(center_x: Float64, center_y: Float64, pixels_per_unit: Float64): Void =>
+  __render_set_view(center_x, center_y, pixels_per_unit)
+
+/// Present the completed frame in the window.
+fun present(): Void => __render_present()
+
+/// Draw a filled circle in world coordinates.
+fun circle(x: Float64, y: Float64, radius: Float64,
+           red: Int64, green: Int64, blue: Int64): Void =>
+  __render_circle(x, y, radius, red, green, blue)
+
+/// Draw a line segment in world coordinates.
+fun line(start_x: Float64, start_y: Float64, end_x: Float64, end_y: Float64,
+         width: Float64, red: Int64, green: Int64, blue: Int64): Void =>
+  __render_line(start_x, start_y, end_x, end_y, width, red, green, blue)
+
+/// Draw text with its upper-left anchor at a world position.
+fun text(x: Float64, y: Float64, value: String, point_size: Int64,
+         red: Int64, green: Int64, blue: Int64): Void =>
+  __render_text(x, y, value, point_size, red, green, blue)
+
+/// Draw text at a screen-pixel position measured from the upper-left client corner.
+fun text_screen(x: Int64, y: Int64, value: String, point_size: Int64,
+                red: Int64, green: Int64, blue: Int64): Void =>
+  __render_text_screen(x, y, value, point_size, red, green, blue)
+
+export set_view
+export present
+export circle
+export line
+export text
+export text_screen

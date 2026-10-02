@@ -82,6 +82,13 @@ decision, not a prerequisite for the first visible orbit. **Demo:** proposed
 `make shape-text-demo` shows two stationary circles, trails/axes, names, and a
 text legend. Record a screenshot and the exact source used to produce it.
 
+**Status: implemented, pending named-commit acceptance.** `sagan-render` 0.2.0
+adds the `render.canvas` frame lifecycle, centered orthographic transform,
+filled circles, line segments, world and screen text, RGB colors, resize-aware
+back buffering, DPI-scaled Segoe UI text, `make shape-text-demo`, a BMP capture
+test, and the recorded 960 by 540 demo frame. The private backend remains Win32
+GDI; SDL3 and Dawn/WebGPU remain deferred backend choices.
+
 **R2 — Snapshot animation.** Consume timestamped, immutable positions from
 physics, update shapes and labels once per display frame, and optionally
 interpolate between fixed simulation steps. Pause/resume and a basic speed
@@ -131,6 +138,15 @@ unit dimensions intact. Define zero-length and non-finite behavior. **Demo:**
 proposed `make orbit-math-demo` runs a small Sagan source file showing the
 operations and expected numeric results, including one rejected unit mismatch.
 Document rounding/precision limits and each actual public symbol.
+
+**Status: implemented and locally verified on 2026-10-01; commit pending.**
+The automatically available M0 surface is `sqrt`, `squared_length`, `length`,
+`dot`, `normalized`, and `display_coordinates`. The checked
+`make orbit-math-demo` source preserves measured point/vector distinctions,
+produces the expected 3-4-5 results, and uses an explicit physical display
+scale. Focused tests reject a mismatched time scale, zero-length normalization,
+non-finite components, and a negative square root. M0 introduces no separate
+math package version; it follows the main Sagan version.
 
 **M1 — Optional three-body support.** Prefer no new public API: P1 should
 reuse M0's primitives. Add a tested operation only if a measured need appears,

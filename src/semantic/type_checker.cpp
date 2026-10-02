@@ -1372,6 +1372,88 @@ namespace semantic
           }
           if (const auto *identifier = dynamic_cast<const parser::identifier_expression *>(call->callee.get()))
           {
+            if (identifier->name == "sqrt")
+            {
+              require(arguments.size() == 1, "sqrt expects exactly one Float value", value.range);
+              require(float_width(arguments.front()) > 0,
+                      "sqrt requires Float32 or Float64, but received " + arguments.front(),
+                      call->arguments.front()->range);
+              static_cast<void>(record(*call->callee, "Function"));
+              model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                  arguments, arguments.front()});
+              return record(value, arguments.front());
+            }
+            if (identifier->name == "squared_length" || identifier->name == "length" ||
+                identifier->name == "normalized")
+            {
+              require(arguments.size() == 1, identifier->name + " expects exactly one Vector", value.range);
+              const auto shaped = dimensioned(arguments.front());
+              require(shaped && shaped->family == "Vector",
+                      identifier->name + " requires a Vector, but received " + arguments.front(),
+                      call->arguments.front()->range);
+              const auto measured = units::parse_measured_type(shaped->component, unit_registry,
+                                                               call->arguments.front()->range);
+              const std::string numeric = measured ? measured->numeric : shaped->component;
+              require(float_width(numeric) > 0,
+                      identifier->name + " requires Float32 or Float64 vector components, but received " +
+                          shaped->component,
+                      call->arguments.front()->range);
+              std::string result;
+              if (identifier->name == "squared_length")
+                result = arithmetic_type("*", shaped->component, shaped->component, value.range);
+              else if (identifier->name == "length") result = shaped->component;
+              else
+                result = "Vector" + std::to_string(shaped->dimensions) + "<" + numeric + ">";
+              static_cast<void>(record(*call->callee, "Function"));
+              model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                  arguments, result});
+              return record(value, result);
+            }
+            if (identifier->name == "dot")
+            {
+              require(arguments.size() == 2, "dot expects exactly two Vectors", value.range);
+              const auto left = dimensioned(arguments.front());
+              const auto right = dimensioned(arguments.back());
+              require(left && right && left->family == "Vector" && right->family == "Vector",
+                      "dot requires two Vectors", value.range);
+              require(left->dimensions == right->dimensions,
+                      "dot requires Vectors of equal dimension", value.range);
+              static_cast<void>(common_type(left->component, right->component, value.range,
+                                            "dot components"));
+              const std::string result = arithmetic_type("*", left->component, right->component, value.range);
+              static_cast<void>(record(*call->callee, "Function"));
+              model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                  {arguments.front(), arguments.front()}, result});
+              return record(value, result);
+            }
+            if (identifier->name == "display_coordinates")
+            {
+              require(arguments.size() == 3,
+                      "display_coordinates expects a world point, origin, and world-units-per-display-unit scale",
+                      value.range);
+              const auto point = dimensioned(arguments[0]);
+              const auto origin = dimensioned(arguments[1]);
+              require(point && origin && point->family == "Point" && origin->family == "Point",
+                      "display_coordinates requires Point values for its world point and origin", value.range);
+              require(point->dimensions == origin->dimensions,
+                      "display_coordinates requires Points of equal dimension", value.range);
+              const std::string component = common_type(point->component, origin->component, value.range,
+                                                        "display coordinate Points");
+              const auto measured_component = units::parse_measured_type(component, unit_registry, value.range);
+              const auto measured_scale = units::parse_measured_type(arguments[2], unit_registry, value.range);
+              require(measured_component && measured_scale &&
+                          units::compatible(measured_component->unit, measured_scale->unit),
+                      "display_coordinates scale must use the same physical dimension as the Points", value.range);
+              require(float_width(measured_component->numeric) > 0 && is_numeric(measured_scale->numeric),
+                      "display_coordinates requires Float32 or Float64 Points and a numeric scale", value.range);
+              const std::string numeric = common_type(measured_component->numeric, measured_scale->numeric,
+                                                      value.range, "display coordinate values");
+              const std::string result = "Vector" + std::to_string(point->dimensions) + "<" + numeric + ">";
+              static_cast<void>(record(*call->callee, "Function"));
+              model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                  {arguments[0], arguments[0], point->component}, result});
+              return record(value, result);
+            }
             if (identifier->name == "assert")
             {
               require(arguments.size() == 1 || arguments.size() == 2,
@@ -2514,6 +2596,9 @@ namespace semantic
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}, {}}});
         add_binding("assert", binding{"Function", callable_signature{{"Bool"}, "Void", {}, {}}});
         add_binding("exit", binding{"Function", callable_signature{{"Int64"}, "Void", {}, {}}});
+        for (const std::string name : {"sqrt", "squared_length", "length", "dot", "normalized",
+                                      "display_coordinates"})
+          add_binding(name, binding{"Function", {}});
         // Private native-package bridge used by sagan-render. These names are not
         // a public language API; the versioned package supplies the public facade.
         add_binding("__render_window_open",
@@ -2522,12 +2607,23 @@ namespace semantic
         add_binding("__render_window_clear",
                     binding{"Function", callable_signature{{"Int64", "Int64", "Int64"}, "Void", {}, {}}});
         add_binding("__render_window_close", binding{"Function", callable_signature{{}, "Void", {}, {}}});
+        add_binding("__render_set_view",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "Float64"}, "Void", {}, {}}});
+        add_binding("__render_present", binding{"Function", callable_signature{{}, "Void", {}, {}}});
+        add_binding("__render_circle",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "Float64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
+        add_binding("__render_line",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "Float64", "Float64", "Float64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
+        add_binding("__render_text",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "String", "Int64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
+        add_binding("__render_text_screen",
+                    binding{"Function", callable_signature{{"Int64", "Int64", "String", "Int64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
         add_binding("None", binding{"None", {}});
         add_binding("RuntimeError", binding{"Type", {}});
         enums["RuntimeError"] = {"integer_overflow", "division_by_zero", "modulo_by_zero",
                                   "undefined_exponentiation", "negative_integer_exponent",
                                   "index_out_of_bounds", "invalid_range", "invalid_conversion", "missing_key",
-                                  "uninitialized_binding"};
+                                  "uninitialized_binding", "math_domain", "non_finite", "zero_length"};
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_interface_type(*type);
