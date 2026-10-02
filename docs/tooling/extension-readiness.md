@@ -40,8 +40,8 @@ below are deliberate limits, not work for the extension to invent locally.
 | Formatting | Lossless deterministic formatter API | **LSP document/range/on-type available; recovered source formats only proven complete lines and refuses uncertain edits** |
 | Type hierarchy | Type/conformance semantic index | **LSP available for indexed conformances** |
 | Call hierarchy | Resolved callable/call-site index | **LSP available for resolved calls** |
-| Check/build/run tasks | Structured cancellable operations | **Versioned document/project library operations and `sagan/operation` LSP transport available with progress, cancellation, output, and stale-result checks; extension task UI not implemented** |
-| Test explorer | Authoritative Sagan test discovery and execution model | **Document/project discovery and selected or all test execution are available in the compiler and protocol; the extension UI is separate and `testExplorer` remains false** |
+| Check/build/run tasks | Structured cancellable operations | **Versioned document/project operations and `sagan/operation` transport are available; the extension provides commands and generated document/project tasks with cancellation and output** |
+| Test Explorer | Authoritative Sagan test discovery and execution model | **The extension provides document/project discovery and selected or all execution through granular compiler capabilities; Run results include duration, output, and pass/fail/error/skipped state** |
 | Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level step-over/in/out probes including imported modules; reliable values, exceptions, release packaging, and capability advertisement remain blocked** |
 | Lexical TextMate coloring | Existing extension grammar | **Already available, outside this task** |
 
@@ -51,10 +51,11 @@ The remaining compiler-side milestones, in dependency order, are:
    parsing, type analysis, code generation, and module linking. The current
    transport can cancel queued/active requests and child processes, but those
    compiler loops still have some phase-boundary-only checkpoints.
-2. **Project test-runner contract implemented:** imported tests execute from
+2. **Project test-runner and VS Code client implemented:** imported tests execute from
    linked programs, package-root runs retain package identity, and overlays,
    selection, cancellation, stale runs, and LSP framing have focused tests.
-   The editor Test Explorer UI remains outside this repository task.
+   The extension consumes stable IDs and project runs through Test Explorer.
+   A public terminal runner and debug-test profile remain unavailable.
 3. Complete contextual package completion and navigation. Manifest dependency
    aliases, exact lockfile verification, offline installed-package linking,
    transitive imports, and navigation/hover for imported package symbols now

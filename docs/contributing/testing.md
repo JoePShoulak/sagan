@@ -68,3 +68,26 @@ examples, and rendering with:
 ```bash
 bash scripts/docs.sh check
 ```
+
+## VS Code extension
+
+Run the extension's lexical, capability, lifecycle, operations, Test Explorer,
+bundle, and live Extension Host checks separately from the C++ suite. Build the
+matching compiler and language server first:
+
+```bash
+make all bin/sagan-lsp
+cd editors/vscode-sagan
+npm ci
+npm test
+npm run test:bundle
+npm run test:integration
+```
+
+The unit tests are offline. The integration command downloads or reuses the
+supported VS Code test runtime, starts a real Extension Development Host, and
+checks the extension against `bin/sagan-lsp`. CI repeats the extension gate on
+Linux, macOS, and Windows; Linux supplies Xvfb for the graphical host.
+
+These commands test the extension implementation. To write and run tests *in a
+Sagan program*, follow [Testing Sagan programs](../tooling/testing-sagan-programs.md).

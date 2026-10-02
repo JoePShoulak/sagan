@@ -135,6 +135,7 @@ nav:
       - C++ backend: tooling/cpp-backend.md
       - Editor support: tooling/editor-support.md
       - Language server: tooling/language-server.md
+      - Testing Sagan programs: tooling/testing-sagan-programs.md
   - Project development:
       - Current implementation status: design/status.md
       - Compiler implementation:

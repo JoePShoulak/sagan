@@ -332,8 +332,9 @@ executes all or selected document or linked-project tests by stable ID, emits
 output, source ranges, and diagnostic records. Project execution reads unsaved
 module overlays before disk and rechecks every resolved source snapshot between
 cases. Stale project runs publish no events or case results. The compiler
-advertises `testProjectRun`; the separate extension Test Explorer UI remains
-unimplemented here.
+advertises `testProjectRun`; the Test Explorer view remains client-owned. The
+current VS Code extension consumes the granular discovery and run flags to
+provide that UI; the compiler does not implement an editor view.
 
 The LSP server accepts `sagan/operation` with `kind` (`check`, `build`, or
 `run`), `scope` (`document` or `project`), `textDocument.uri` and optional

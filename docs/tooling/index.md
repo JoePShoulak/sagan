@@ -24,6 +24,8 @@ Current tooling includes:
 - a dedicated [Sagan language server](language-server.md) for editor clients;
 - a VS Code extension with tokenizer-aligned highlighting, LSP-backed
   language features, tasks, and Test Explorer;
+- a compiler-owned [Sagan program test model](testing-sagan-programs.md) with
+  document/project discovery and selected execution through Test Explorer;
 - offline installed-package and lockfile resolution, plus an experimental
   [debug adapter](debug-adapter-contract.md); and
 - MkDocs and Mike for experimental and released versioned documentation.

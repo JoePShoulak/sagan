@@ -67,6 +67,10 @@ independent of the compiler version.
 7. If discovery fails, set `sagan.compiler.path` and `sagan.server.path` to the
    matching executables. Relevant setting changes restart the server automatically.
 
+See [Testing Sagan programs](../tooling/testing-sagan-programs.md) for test
+syntax, suites, document versus project runs, selection, output, cancellation,
+and the current absence of a public terminal test command.
+
 The extension locates the compiler and [language server](../tooling/language-server.md),
 then enables only the capabilities advertised during LSP initialization.
 TextMate coloring remains lexical and is not proof that code parses or

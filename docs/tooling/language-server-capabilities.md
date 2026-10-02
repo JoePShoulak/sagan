@@ -73,8 +73,11 @@ field names `sagan-dap.exe` on Windows or `sagan-dap` elsewhere, located beside
 `sagan` and `sagan-lsp`; its presence does not override a false `debugAdapter`
 capability. Native check/build/run and cancellable LSP operation
 transport, source maps, debug metadata, and launch plans are true. Granular
-test-document discovery/run and project discovery/run are true; the separate
-Test Explorer UI contract, attach, and optimized-local evaluation remain false.
+test-document discovery/run and project discovery/run are true. The VS Code
+extension uses those granular flags to provide Test Explorer. The aggregate
+compiler field `testExplorer` remains false because the compiler does not own
+or advertise a particular editor UI; it does not negate the four test
+transport capabilities. Debug attach and optimized-local evaluation remain false.
 The local package index reader, `sagan/packages/query`, and the
 installed-source `sagan/packages/catalog` query are true. The catalog provides
 real exported symbols and source navigation metadata where installed source

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make the esbuild entry and output paths portable across Windows, Linux, and
+  macOS by resolving them from the declared extension working directory.
 - Refresh extension guidance for the post-1.0 compiler: script entry points,
   explicit tests, offline locked packages, and the still-disabled package
   auto-import and debugger capabilities.

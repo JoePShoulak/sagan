@@ -25,10 +25,13 @@ interpolated, or duplicated in the same file. Slash-separated names, such as
 slashes are invalid. `assert(condition[, message])` requires a Bool and an
 optional String. A false assertion fails a test; outside a test it ends the
 program with status 1 and prints the failure message. Test bodies are not run
-by ordinary `sagan file.sagan`
-execution. Compiler-owned selected document-test runs work through the
-language-service and LSP APIs, but project-wide testing and the full Test
-Explorer capability are still in progress.
+by ordinary `sagan file.sagan` execution. Compiler-owned document and
+resolved-project discovery and selected test execution are available through
+the language-service and LSP APIs. The VS Code extension presents them through
+Test Explorer, including multi-module project selections, captured output,
+structured outcomes, and cancellation. There is not yet a public `sagan test`
+terminal command or a debug-test profile. See
+[Testing Sagan programs](../tooling/testing-sagan-programs.md).
 
 The parser accepts a single optional leading `module`
 declaration, imports with optional `from` and `as` clauses, and standalone
