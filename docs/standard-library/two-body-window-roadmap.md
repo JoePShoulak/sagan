@@ -97,6 +97,15 @@ render-frame rate cannot alter the simulation's result. **Demo:** proposed
 `make two-body-demo` shows the actual physics-driven orbit, readable text,
 responsive input, and a clean close. Record its source and a short capture.
 
+**Status: implemented, pending named-commit acceptance.** `sagan-render` 0.3.0
+adds monotonic elapsed time and consumed key presses without taking ownership
+of physics. The Sagan demo advances `sagan-physics` 0.1.0 only through fixed
+300-second solver steps, draws each immutable snapshot, supports pause and
+playback-speed controls, and closes through Escape, the window button, or the
+test frame limit. Its deterministic test proves that 100 20-millisecond frames
+and 20 100-millisecond frames reach the identical 172800-second snapshot. The
+recorded 960 by 540 frame comes from the exact checked-in demo source.
+
 **R3 — Optional three-body display.** Reuse R2; add a third body, label, and
 trail without creating a second renderer. **Demo:** proposed
 `make three-body-demo` shows the three-body state from Physics P1. Stop after

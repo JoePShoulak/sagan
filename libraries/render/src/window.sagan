@@ -14,7 +14,15 @@ fun clear(red: Int64, green: Int64, blue: Int64): Void =>
 /// Close the window and release its native resources. Safe to call more than once.
 fun close(): Void => __render_window_close()
 
+/// Monotonic seconds since the window opened.
+fun elapsed_seconds(): Float64 => __render_elapsed_seconds()
+
+/// Consume one press of space, up, or down. Escape always requests a clean close.
+fun key_pressed(key: String): Bool => __render_key_pressed(key)
+
 export open
 export poll
 export clear
 export close
+export elapsed_seconds
+export key_pressed

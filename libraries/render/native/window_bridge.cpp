@@ -35,6 +35,14 @@ namespace
     bool capture_written{};
     bool class_registered{};
     bool close_requested{};
+    bool space_pressed{};
+    bool up_pressed{};
+    bool down_pressed{};
+    std::int64_t poll_count{};
+    std::int64_t present_count{};
+    std::int64_t frame_limit{};
+    std::int64_t test_frame_milliseconds{};
+    std::int64_t capture_frame{1};
     std::chrono::steady_clock::time_point opened_at{};
     std::chrono::milliseconds auto_close_after{};
   };
@@ -196,7 +204,8 @@ namespace
   {
     auto &window = state();
     const char *path = std::getenv("SAGAN_RENDER_CAPTURE_BMP");
-    if (!path || *path == '\0' || window.capture_written) return;
+    if (!path || *path == '\0' || window.capture_written ||
+        window.present_count != window.capture_frame) return;
     BITMAPINFO info{};
     info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     info.bmiHeader.biWidth = window.surface_width;
@@ -236,6 +245,19 @@ namespace
       state().handle = nullptr;
       state().close_requested = true;
       return 0;
+    case WM_KEYDOWN:
+      if ((data & (1LL << 30)) == 0)
+      {
+        if (word == VK_SPACE) state().space_pressed = true;
+        if (word == VK_UP) state().up_pressed = true;
+        if (word == VK_DOWN) state().down_pressed = true;
+      }
+      if (word == VK_ESCAPE)
+      {
+        state().close_requested = true;
+        DestroyWindow(handle);
+      }
+      return 0;
     case WM_ERASEBKGND:
       return 1;
     case WM_PAINT:
@@ -255,6 +277,19 @@ namespace
     if (*end != '\0' || value < 1 || value > 60000)
       throw std::runtime_error("SAGAN_RENDER_AUTOCLOSE_MS must be between 1 and 60000");
     return std::chrono::milliseconds(value);
+  }
+
+  auto configured_integer(const char *name, const std::int64_t maximum,
+                          const std::int64_t fallback) -> std::int64_t
+  {
+    const char *raw = std::getenv(name);
+    if (!raw || *raw == '\0') return fallback;
+    char *end{};
+    const long long value = std::strtoll(raw, &end, 10);
+    if (*end != '\0' || value < 1 || value > maximum)
+      throw std::runtime_error(std::string(name) + " must be between 1 and " +
+                               std::to_string(maximum));
+    return static_cast<std::int64_t>(value);
   }
 
   auto release_window() -> void
@@ -280,12 +315,16 @@ auto sagan_5f5f72656e6465725f77696e646f775f6f70656e(
     throw std::runtime_error("Window width and height must be positive Int32-sized values");
 
   auto &window = state();
-  if (window.handle) throw std::runtime_error("R0 supports only one open window");
+  if (window.handle) throw std::runtime_error("sagan-render currently supports only one open window");
   window = {};
   window.instance = GetModuleHandleW(nullptr);
   SetProcessDPIAware();
   window.clear_color = RGB(22, 30, 46);
   window.auto_close_after = configured_auto_close();
+  window.frame_limit = configured_integer("SAGAN_RENDER_FRAME_LIMIT", 1000000, 0);
+  window.test_frame_milliseconds =
+    configured_integer("SAGAN_RENDER_TEST_FRAME_MS", 60000, 0);
+  window.capture_frame = configured_integer("SAGAN_RENDER_CAPTURE_FRAME", 1000000, 1);
 
   WNDCLASSEXW descriptor{};
   descriptor.cbSize = sizeof(descriptor);
@@ -330,6 +369,13 @@ auto sagan_5f5f72656e6465725f77696e646f775f706f6c6c() -> bool
     TranslateMessage(&message);
     DispatchMessageW(&message);
   }
+  if (!window.handle || window.close_requested) return false;
+  if (window.frame_limit > 0 && window.poll_count >= window.frame_limit)
+  {
+    release_window();
+    return false;
+  }
+  ++window.poll_count;
   if (window.auto_close_after.count() > 0 &&
       std::chrono::steady_clock::now() - window.opened_at >= window.auto_close_after)
     release_window();
@@ -359,6 +405,28 @@ auto sagan_5f5f72656e6465725f77696e646f775f636c6f7365() -> void
   release_window();
 }
 
+auto sagan_5f5f72656e6465725f656c61707365645f7365636f6e6473() -> double
+{
+  const auto &window = state();
+  if (!window.handle) throw std::runtime_error("Cannot read time without an open window");
+  if (window.test_frame_milliseconds > 0)
+    return static_cast<double>(window.poll_count * window.test_frame_milliseconds) / 1000.0;
+  return std::chrono::duration<double>(std::chrono::steady_clock::now() - window.opened_at).count();
+}
+
+auto sagan_5f5f72656e6465725f6b65795f70726573736564(const std::string &key) -> bool
+{
+  auto &window = state();
+  bool *pressed{};
+  if (key == "space") pressed = &window.space_pressed;
+  else if (key == "up") pressed = &window.up_pressed;
+  else if (key == "down") pressed = &window.down_pressed;
+  else throw std::runtime_error("Supported render keys are space, up, and down");
+  const bool result = *pressed;
+  *pressed = false;
+  return result;
+}
+
 auto sagan_5f5f72656e6465725f7365745f76696577(
     const double center_x, const double center_y, const double pixels_per_unit) -> void
 {
@@ -382,6 +450,7 @@ auto sagan_5f5f72656e6465725f70726573656e74() -> void
                              window.surface, 0, 0, SRCCOPY);
   ReleaseDC(window.handle, device);
   if (!copied) throw std::runtime_error("Could not present the rendered frame");
+  ++window.present_count;
   capture_frame_if_requested();
 }
 
@@ -464,7 +533,7 @@ namespace
 {
   [[noreturn]] auto unsupported() -> void
   {
-    throw std::runtime_error("sagan-render 0.2.0 currently supports Windows only");
+    throw std::runtime_error("sagan-render 0.3.0 currently supports Windows only");
   }
 }
 
@@ -474,6 +543,8 @@ auto sagan_5f5f72656e6465725f77696e646f775f706f6c6c() -> bool { unsupported(); }
 auto sagan_5f5f72656e6465725f77696e646f775f636c656172(
     std::int64_t, std::int64_t, std::int64_t) -> void { unsupported(); }
 auto sagan_5f5f72656e6465725f77696e646f775f636c6f7365() -> void { unsupported(); }
+auto sagan_5f5f72656e6465725f656c61707365645f7365636f6e6473() -> double { unsupported(); }
+auto sagan_5f5f72656e6465725f6b65795f70726573736564(const std::string &) -> bool { unsupported(); }
 auto sagan_5f5f72656e6465725f7365745f76696577(double, double, double) -> void { unsupported(); }
 auto sagan_5f5f72656e6465725f70726573656e74() -> void { unsupported(); }
 auto sagan_5f5f72656e6465725f636972636c65(

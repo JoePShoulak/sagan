@@ -1,11 +1,9 @@
 [package]
-name = "window-demo"
+name = "two-body-demo"
 version = "0.1.0"
 source = "src"
 entry = "main"
 
-[application]
-mode = "windowed"
-
 [dependencies]
+physics = { package = "sagan-physics", version = "^0.1.0" }
 render = { package = "sagan-render", version = "^0.3.0" }
