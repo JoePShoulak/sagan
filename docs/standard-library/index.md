@@ -46,3 +46,8 @@ remain to be designed. The inclusion hierarchy itself is settled:
 automatically available: math
 explicit core imports:   physics, rendering
 ```
+
+For the first joint implementation, follow the [visible two-body orbit
+roadmap](two-body-window-roadmap.md). It separates rendering, physics, math,
+and language milestones and makes a runnable demo and documentation update
+part of every step.

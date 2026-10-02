@@ -126,6 +126,7 @@ nav:
           - Math: standard-library/math.md
           - Physics: standard-library/physics.md
           - Rendering: standard-library/rendering.md
+          - Two-body window roadmap: standard-library/two-body-window-roadmap.md
           - Implementation status: standard-library/status.md
   - Tools:
       - Tooling overview: tooling/index.md

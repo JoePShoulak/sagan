@@ -36,3 +36,7 @@ implemented.
 Open design work includes concrete APIs, module and package names, dependency
 boundaries, initialization behavior, linking strategy, and whether physics and
 rendering have smaller independently importable components.
+
+The [two-body window roadmap](two-body-window-roadmap.md) is the first
+cross-library implementation plan. Its proposed milestones are not completed
+features or approved public APIs.
