@@ -117,6 +117,16 @@ checks. Test a circular-orbit reference and bounded drift over a documented
 duration/timestep; specify tolerances instead of claiming exact floating-point
 equality across toolchains.
 
+**Status: implemented at `b12bc40` and locally verified on 2026-10-01.**
+`sagan-physics` 0.1.0 provides the independently versioned
+`physics.two_body` package, fixed-step velocity-Verlet propagation, read-only
+body and system snapshots, SI-unit-checked state and diagnostics,
+`make orbit-numeric-demo`, a circular-reference drift fixture, and invalid
+mass/timestep/overlap tests. The run uses one caller-defined 2D frame and makes
+no collision, softening, or cross-toolchain bit-equality promise. Compiler
+commit `d97f499` preserves grouping when composite units appear as divisors,
+which is required for the solver's inverse-square force calculation.
+
 **P1 — Optional simplified three-body solver.** Generalize only as far as
 three point masses with direct pairwise gravity and the same fixed-step
 integrator. Check pairwise force symmetry, finite states, barycenter behavior,
