@@ -9,9 +9,12 @@ verified_by: null
 
 # Release lifecycle
 
-Development is integrated directly on `dev`. The project owner promotes a
-validated `dev` commit to `main` only when intentionally preparing a release;
-ordinary feature and fix work does not land directly on `main`.
+Development occurs on focused branches created from `dev`. Changes merge into
+`dev` through pull requests, where the combined state receives the full
+integration suite. The project owner promotes validated `dev` history to `main`
+only when intentionally preparing a release; ordinary feature and fix work does
+not land directly on either protected branch. See the
+[change and publication lifecycle](change-lifecycle.md) for the complete path.
 
 Every push to `main` runs release-preparation CI. A new history-derived 0.x
 version gets a signed `-rc.1` preview tag; a new 1.x version gets a signed

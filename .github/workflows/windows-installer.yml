@@ -4,13 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [dev, main]
-    paths:
-      - "src/**"
-      - "scripts/windows/**"
-      - "packaging/windows/**"
-      - "makefile"
-      - "version.conf"
-      - ".github/workflows/windows-installer.yml"
 
 permissions:
   contents: read

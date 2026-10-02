@@ -2,14 +2,9 @@ name: VS Code Extension
 
 on:
   push:
-    paths:
-      - ".github/workflows/vscode-extension.yml"
-      - "editors/vscode-sagan/**"
-      - "makefile"
-      - "scripts/version.sh"
-      - "src/**"
-      - "third_party/uni-algo/**"
+    branches: [dev, main]
   pull_request:
+    branches: [dev, main]
     paths:
       - ".github/workflows/vscode-extension.yml"
       - "editors/vscode-sagan/**"

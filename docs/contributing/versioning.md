@@ -45,10 +45,12 @@ The helper changes only the README badge. It does not stage files, create a
 commit, or push. Documentation-only and maintenance commits have no version
 impact and do not require a badge update.
 
-Routine commits and pushes go directly to `dev`; the project does not require
-per-feature branches. When the integrated `dev` history is ready for a release,
-promote it deliberately to `main` without adding unrelated publication-only
-changes.
+Create each change on a short-lived branch from `dev`, validate its affected
+surfaces, and merge it into `dev` through a pull request. The merged `dev` state
+then receives the complete integration suite. When that integrated history is
+ready for a release, promote `dev` deliberately to `main` without unrelated
+publication-only changes. The canonical branch, CI, and publication sequence is
+documented in the [change and publication lifecycle](change-lifecycle.md).
 
 Every push to `main` runs the release-preparation workflow. It checks the
 history-derived version and README badge. For a new 0.x version, CI signs an

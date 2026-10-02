@@ -171,6 +171,7 @@ nav:
       - Contributing:
           - Overview: contributing/index.md
           - Development setup: contributing/development-setup.md
+          - Change and publication lifecycle: contributing/change-lifecycle.md
           - Versioning: contributing/versioning.md
           - Windows installer release gate: contributing/windows-installer-release.md
           - Code signing policy: contributing/code-signing-policy.md

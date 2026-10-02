@@ -1,0 +1,58 @@
+name: Integrated development
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sagan-integrated-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compiler-and-cli:
+    name: Complete compiler and CLI suite
+    runs-on: windows-latest
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up MSYS2 UCRT64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            diffutils
+            git
+            make
+            python
+            mingw-w64-ucrt-x86_64-binutils
+            mingw-w64-ucrt-x86_64-cc-libs
+            mingw-w64-ucrt-x86_64-crt
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-gcc-libs
+            mingw-w64-ucrt-x86_64-headers
+            mingw-w64-ucrt-x86_64-libgcc
+            mingw-w64-ucrt-x86_64-libstdc++
+            mingw-w64-ucrt-x86_64-libwinpthread
+            mingw-w64-ucrt-x86_64-winpthreads
+            zip
+            unzip
+
+      - name: Verify version identity
+        shell: msys2 {0}
+        run: bash scripts/version.sh check-badge
+
+      - name: Run the complete compiler and CLI suite
+        shell: msys2 {0}
+        run: bash scripts/test.sh
