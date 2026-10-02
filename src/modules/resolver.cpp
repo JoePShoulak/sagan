@@ -810,16 +810,18 @@ namespace modules
     return discover_manifest(entry_path);
   }
 
-  auto importable_modules(const std::filesystem::path &entry_path,
-                          const sagan::diagnostics::cancellation_token cancellation,
-                          const package_resolution_options &options) -> std::vector<std::string>
+  auto importable_module_sources(const std::filesystem::path &entry_path,
+                                 const sagan::diagnostics::cancellation_token cancellation,
+                                 const package_resolution_options &options)
+    -> std::vector<importable_module_source>
   {
     if (cancellation.is_cancelled()) throw std::runtime_error("Module discovery cancelled");
     const auto manifest = discover_manifest(entry_path);
     const auto local_root = manifest ? manifest->source_root :
         std::filesystem::absolute(entry_path).lexically_normal().parent_path();
-    std::set<std::string> names;
-    const auto add_tree = [&](const std::filesystem::path &root, const std::string &prefix)
+    std::map<std::string, importable_module_source> modules;
+    const auto add_tree = [&](const std::filesystem::path &root, const std::string &prefix,
+                              const bool external)
     {
       if (!std::filesystem::is_directory(root)) return;
       std::size_t visited = 0;
@@ -834,18 +836,34 @@ namespace modules
         const auto utf8 = relative.generic_u8string();
         std::string name(reinterpret_cast<const char *>(utf8.data()), utf8.size());
         std::replace(name.begin(), name.end(), '/', '.');
-        names.insert(prefix + name);
+        auto spelling = prefix + name;
+        auto candidate = importable_module_source{spelling, file.path(), external};
+        if (external && !prefix.empty()) modules.insert_or_assign(spelling, std::move(candidate));
+        else modules.try_emplace(spelling, std::move(candidate));
       }
     };
-    add_tree(local_root, {});
+    add_tree(local_root, {}, false);
     if (manifest)
     {
       const auto installed = installed_dependencies(*manifest, options);
       for (const auto &dependency : manifest->dependencies)
         if (const auto package = installed.find(dependency.name); package != installed.end())
-          add_tree(package->second.source_root, dependency.alias + ".");
+          add_tree(package->second.source_root, dependency.alias + ".", true);
     }
-    return {names.begin(), names.end()};
+    std::vector<importable_module_source> result;
+    result.reserve(modules.size());
+    for (auto &[name, module] : modules) result.push_back(std::move(module));
+    return result;
+  }
+
+  auto importable_modules(const std::filesystem::path &entry_path,
+                          const sagan::diagnostics::cancellation_token cancellation,
+                          const package_resolution_options &options) -> std::vector<std::string>
+  {
+    std::vector<std::string> names;
+    for (const auto &module : importable_module_sources(entry_path, cancellation, options))
+      names.push_back(module.name);
+    return names;
   }
 
   auto resolve_package(const std::filesystem::path &package_path) -> module_graph

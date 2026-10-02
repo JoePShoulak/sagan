@@ -72,6 +72,40 @@ namespace sagan::language_service
     std::vector<import_module_candidate> candidates;
   };
 
+  struct import_export_result
+  {
+    bool applicable{};
+    bool cancelled{};
+    bool incomplete{};
+    std::string error;
+    std::string module;
+    source::source_range replacement;
+    std::vector<catalog_export> candidates;
+  };
+
+  struct import_module_target_result
+  {
+    bool applicable{};
+    bool cancelled{};
+    std::string error;
+    source::document_uri source_uri;
+    source::utf16_position start;
+    source::utf16_position end;
+  };
+
+  auto query_import_module_target(const source::document_snapshot &document,
+                                  source::byte_offset offset,
+                                  const source::source_provider &provider,
+                                  diagnostics::cancellation_token cancellation = {},
+                                  const modules::package_resolution_options &options = {})
+    -> import_module_target_result;
+
+  auto query_import_exports(const source::document_snapshot &document,
+                            source::byte_offset offset,
+                            const source::source_provider &provider,
+                            diagnostics::cancellation_token cancellation = {},
+                            const modules::package_resolution_options &options = {}) -> import_export_result;
+
   // Completion for a partially typed import must not depend on successfully
   // parsing that same import or on a valid semantic index for the document.
   auto query_import_modules(const source::document_snapshot &document,

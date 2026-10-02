@@ -461,6 +461,22 @@ namespace sagan::lsp
       }
       return actions;
     }
+    if (method == "textDocument/definition")
+    {
+      const auto target = query_import_module_target(document, offset(document, field(params, "position")),
+                                                     *documents_, cancellation);
+      if (target.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
+      if (target.applicable)
+      {
+        if (!target.error.empty()) throw std::invalid_argument(target.error);
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        return J::array{J::object{{"uri", target.source_uri.value},
+                                  {"range", J::object{{"start", lsp_position(target.start)},
+                                                       {"end", lsp_position(target.end)}}}}};
+      }
+    }
     if (method == "textDocument/completion")
     {
       const auto imports = query_import_modules(document, offset(document, field(params, "position")),
@@ -481,6 +497,35 @@ namespace sagan::lsp
                                                                                   candidate.replacement.bytes)},
                                                              {"newText", candidate.name}}}});
         return entries;
+      }
+      const auto exports = query_import_exports(document, offset(document, field(params, "position")),
+                                                *documents_, cancellation);
+      if (exports.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
+      if (exports.applicable)
+      {
+        if (!exports.error.empty()) throw std::invalid_argument(exports.error);
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        J::array entries;
+        for (const auto &candidate : exports.candidates)
+        {
+          const auto kind = candidate.kind == "function" ? 3 :
+                            candidate.kind == "class" ? 7 :
+                            candidate.kind == "enum" ? 13 : 6;
+          entries.push_back(J::object{{"label", candidate.public_name}, {"kind", kind},
+                                      {"detail", candidate.signature},
+                                      {"documentation", candidate.documentation},
+                                      {"deprecated", candidate.deprecated},
+                                      {"filterText", candidate.public_name},
+                                      {"sortText", candidate.public_name},
+                                      {"textEdit", J::object{{"range", lsp_range(document,
+                                                                                  exports.replacement.bytes)},
+                                                             {"newText", candidate.public_name}}},
+                                      {"data", J::object{{"symbolId", candidate.symbol_id},
+                                                         {"sourceUri", candidate.source_uri.value}}}});
+        }
+        return J::object{{"isIncomplete", exports.incomplete}, {"items", entries}};
       }
     }
     std::optional<semantic::workspace_semantic_index> workspace;

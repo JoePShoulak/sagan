@@ -65,6 +65,22 @@ from the local source tree and locked installed dependencies, even if the
 buffer cannot parse. The module discovery scan is bounded; an unavailable or
 invalid index produces an error rather than invented candidates. This does
 not yet cover all package export/member contexts or safe auto-import edits.
+For a partial selective import such as `import orbit_a from orbit_tools.main`,
+standard LSP completion now returns the selected module's explicitly exported
+names, signatures, documentation, deprecation state, and replacement edit.
+This path returns a standard LSP `CompletionList` with at most 256 items and
+`isIncomplete` when the export set exceeds that bound.
+The compiler resolves the locked dependency and reads an unsaved source overlay
+before disk source. Non-exported declarations are excluded. An unreadable or
+incomplete imported module reports an error rather than an invented API.
+This is a tested subset of package completion, not the full `packageCompletion`
+capability.
+Go-to-definition on a module path in an `import` statement resolves to the
+module's source URI and UTF-16 `module` declaration range, including installed
+package modules. The same query honors source overlays and prefers the local
+module for an unqualified name. This does not yet cover every package alias,
+member, and source-unavailable navigation context, so `packageNavigation`
+remains false.
 
 The thin LSP request is `sagan/packages/catalog`:
 

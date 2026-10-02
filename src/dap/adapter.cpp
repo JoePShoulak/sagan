@@ -8,7 +8,9 @@
 #endif
 #include "../language_service/operations.hpp"
 #include "../lsp/json.hpp"
+#include "../parser/ast_node.hpp"
 #include "../source/provider.hpp"
+#include "../syntax/syntax.hpp"
 
 #include <atomic>
 #include <algorithm>
@@ -100,7 +102,8 @@ namespace sagan::dap
       throw std::runtime_error("Bundled GDB native DAP executable is unavailable");
     }
 
-    auto sagan_function_name(std::string name) -> std::string
+    auto sagan_function_name(std::string name, const std::filesystem::path &source_path,
+                             const source::source_provider &provider) -> std::string
     {
       if (name == "main" || name.starts_with("main(")) return "<top level>";
       if (const auto paren = name.find('('); paren != std::string::npos) name.resize(paren);
@@ -119,6 +122,23 @@ namespace sagan::dap
         if (high < 0 || low < 0) return "<Sagan function>";
         result.push_back(static_cast<char>((high << 4) | low));
       }
+      try
+      {
+        const auto loaded = provider.read_path(source_path);
+        if (loaded)
+        {
+          const auto parsed = syntax::analyze(*loaded.value);
+          if (parsed.value && parsed.value->strict_ast)
+            for (const auto &statement : parsed.value->strict_ast->statements)
+              if (const auto *module = dynamic_cast<const parser::module_declaration *>(statement.get()))
+              {
+                const auto prefix = module->name + "__";
+                if (result.starts_with(prefix)) result.erase(0, prefix.size());
+                break;
+              }
+        }
+      }
+      catch (const std::exception &) {}
       return result;
     }
 
@@ -142,8 +162,19 @@ namespace sagan::dap
       std::int64_t thread_id{};
       std::string source_path;
       std::int64_t source_line{};
+      std::string function_name;
+      std::string command;
+      std::size_t stack_depth{};
       std::size_t attempts{};
       J stopped_event;
+    };
+
+    struct source_location
+    {
+      std::string path;
+      std::int64_t line{};
+      std::string function_name;
+      std::size_t stack_depth{};
     };
 
     class session
@@ -166,7 +197,7 @@ namespace sagan::dap
       std::map<std::int64_t, pending_breakpoints> pending_breakpoints_;
       std::map<std::int64_t, std::string> forwarded_;
       std::map<std::int64_t, std::int64_t> stack_threads_;
-      std::map<std::int64_t, std::pair<std::string, std::int64_t>> last_location_;
+      std::map<std::int64_t, source_location> last_location_;
       std::optional<step_state> stepping_;
       std::int64_t stopped_thread_{};
       std::vector<J> queued_;
@@ -381,8 +412,17 @@ namespace sagan::dap
       std::vector<requested_breakpoint> requested;
       if (const auto *items = field(arguments, "breakpoints").elements())
         for (const auto &item : *items)
+        {
+          if (field(item, "condition").string() || field(item, "hitCondition").string() ||
+              field(item, "logMessage").string())
+          {
+            response(seq, "setBreakpoints", false, {},
+                     "Conditional breakpoints, hit counts, and logpoints are not supported");
+            return;
+          }
           requested.push_back({integer_field(item, "line"),
                                std::max<std::int64_t>(1, integer_field(item, "column"))});
+        }
       const auto canonical = path_utf8(std::filesystem::absolute(path_from_utf8(source_path)).lexically_normal());
       requested_by_file_.insert_or_assign(canonical, requested);
       J::array native_breakpoints;
@@ -470,7 +510,8 @@ namespace sagan::dap
         for (const auto &[key, value] : *location) result.insert_or_assign(key, value);
         result.erase("moduleId");
         result.erase("instructionPointerReference");
-        result.insert_or_assign("name", sagan_function_name(string_field(frame, "name")));
+        result.insert_or_assign("name", sagan_function_name(string_field(frame, "name"),
+            path_from_utf8(string_field(field(J(*location), "source"), "path")), source_));
         visible.emplace_back(std::move(result));
       }
       body.insert_or_assign("stackFrames", visible);
@@ -492,14 +533,30 @@ namespace sagan::dap
       const auto *frame = frames && !frames->empty() ? &frames->front() : nullptr;
       const auto path = frame ? string_field(field(*frame, "source"), "path") : std::string{};
       const auto line = frame ? integer_field(*frame, "line") : 0;
-      if ((!path.empty() && (path != current->source_path || line != current->source_line)) ||
-          current->attempts >= 100)
+      const auto function_name = frame ? string_field(*frame, "name") : std::string{};
+      const bool changed_location = !path.empty() &&
+          (path != current->source_path || line != current->source_line);
+      const bool changed_function = !path.empty() && function_name != current->function_name;
+      const auto depth = frames ? frames->size() : 0;
+      const bool complete = current->command == "stepOut"
+          ? changed_function || (depth != 0 && depth < current->stack_depth)
+          : current->command == "stepIn"
+              ? changed_location || changed_function || depth > current->stack_depth
+              : changed_location;
+      if (complete || current->attempts >= 100)
       {
         {
           std::scoped_lock lock(state_mutex_);
           stepping_.reset();
         }
         auto output = object_copy(current->stopped_event);
+        if (!complete)
+        {
+          auto body = object_copy(field(current->stopped_event, "body"));
+          body.insert_or_assign("reason", "pause");
+          body.insert_or_assign("description", "Sagan source-level step could not find a mapped location");
+          output.insert_or_assign("body", body);
+        }
         output.insert_or_assign("seq", next_seq_++);
         send(output);
         return;
@@ -514,7 +571,7 @@ namespace sagan::dap
         forwarded_.insert_or_assign(native_seq, "internalStepNext");
       }
       gdb_send(J::object{{"seq", native_seq}, {"type", "request"},
-                         {"command", "next"},
+                         {"command", current->command},
                          {"arguments", J::object{{"threadId", current->thread_id}}}});
     }
 
@@ -534,7 +591,29 @@ namespace sagan::dap
         { stack_thread = it->second; stack_threads_.erase(it); }
       }
       if (forwarded_command == "internalInitialize") return;
-      if (forwarded_command == "internalStepNext") return;
+      if (forwarded_command == "internalStepNext")
+      {
+        if (!field(message, "success").boolean().value_or(false))
+        {
+          std::optional<step_state> failed;
+          {
+            std::scoped_lock lock(state_mutex_);
+            failed = std::move(stepping_);
+            stepping_.reset();
+          }
+          if (failed)
+          {
+            auto stopped = object_copy(failed->stopped_event);
+            auto body = object_copy(field(failed->stopped_event, "body"));
+            body.insert_or_assign("reason", "pause");
+            body.insert_or_assign("description", "Native debugger could not complete the Sagan source step");
+            stopped.insert_or_assign("seq", next_seq_++);
+            stopped.insert_or_assign("body", body);
+            send(stopped);
+          }
+        }
+        return;
+      }
       if (forwarded_command == "internalStepStack")
       { process_step_stack(message); return; }
       if (pending)
@@ -565,6 +644,13 @@ namespace sagan::dap
         return;
       }
       if (forwarded_command.empty()) return;
+      if ((forwarded_command == "next" || forwarded_command == "stepIn" ||
+           forwarded_command == "stepOut") &&
+          !field(message, "success").boolean().value_or(false))
+      {
+        std::scoped_lock lock(state_mutex_);
+        stepping_.reset();
+      }
       auto output = forwarded_command == "stackTrace" ? map_stack_trace(message) : message;
       if (forwarded_command == "stackTrace" && stack_thread)
       {
@@ -574,7 +660,9 @@ namespace sagan::dap
           const auto &frame = frames->front();
           std::scoped_lock lock(state_mutex_);
           last_location_.insert_or_assign(stack_thread,
-              std::make_pair(string_field(field(frame, "source"), "path"), integer_field(frame, "line")));
+              source_location{string_field(field(frame, "source"), "path"),
+                              integer_field(frame, "line"), string_field(frame, "name"),
+                              frames->size()});
         }
       }
       auto object = object_copy(output);
@@ -772,11 +860,10 @@ namespace sagan::dap
         if (command == "setBreakpoints") set_breakpoints(request);
         else if (command == "attach") response(seq, command, false, {}, "Attach is not supported");
         else if (command == "evaluate") response(seq, command, false, {}, "Sagan expression evaluation is not supported");
-        else if (command == "stepIn" || command == "stepOut")
-          response(seq, command, false, {}, "Sagan source-level step-in and step-out are not supported yet");
         else if (command == "configurationDone" || command == "threads" ||
                  command == "stackTrace" || command == "scopes" || command == "variables" ||
-                 command == "continue" || command == "pause" || command == "next")
+                 command == "continue" || command == "pause" || command == "next" ||
+                 command == "stepIn" || command == "stepOut")
         {
           if (command == "stackTrace")
           {
@@ -788,14 +875,14 @@ namespace sagan::dap
             std::scoped_lock lock(state_mutex_);
             stepping_.reset();
           }
-          if (command == "next")
+          if (command == "next" || command == "stepIn" || command == "stepOut")
           {
             const auto thread_id = integer_field(field(request, "arguments"), "threadId");
             std::scoped_lock lock(state_mutex_);
             if (!last_location_.contains(thread_id))
             { response(seq, command, false, {}, "Request a Sagan stack trace before stepping"); return true; }
-            const auto &[path, line] = last_location_.at(thread_id);
-            stepping_ = step_state{thread_id, path, line, 0, {}};
+            const auto &[path, line, name, depth] = last_location_.at(thread_id);
+            stepping_ = step_state{thread_id, path, line, name, command, depth, 0, {}};
           }
           forward(request);
         }

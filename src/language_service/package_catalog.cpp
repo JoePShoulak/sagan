@@ -1,6 +1,7 @@
 #include "package_catalog.hpp"
 
 #include "documentation.hpp"
+#include "language_service.hpp"
 #include "../modules/resolver.hpp"
 #include "../semantic/workspace_index.hpp"
 #include "../semantic/type_checker.hpp"
@@ -80,6 +81,187 @@ namespace sagan::language_service
                                                           cancellation, options))
         if (name.starts_with(prefix))
           result.candidates.push_back({name, {document.identity().id, replacement}});
+    }
+    catch (const std::exception &error)
+    {
+      if (cancellation.is_cancelled()) result.cancelled = true;
+      else result.error = error.what();
+    }
+    return result;
+  }
+
+  auto query_import_exports(const source::document_snapshot &document,
+                            const source::byte_offset offset,
+                            const source::source_provider &provider,
+                            const diagnostics::cancellation_token cancellation,
+                            const modules::package_resolution_options &options) -> import_export_result
+  {
+    import_export_result result;
+    if (!document.identity().canonical_path || !document.to_utf16(offset)) return result;
+    const auto syntax = syntax::analyze(document, {}, cancellation);
+    if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
+    if (!syntax.value) return result;
+    const auto line = document.to_utf16(offset)->line;
+    const syntax::lossless_token *import_token = nullptr;
+    const syntax::lossless_token *from_token = nullptr;
+    for (const auto &token : syntax.value->tokens)
+    {
+      const auto position = document.to_utf16(token.range.begin);
+      if (!position || position->line != line) continue;
+      if (token.kind == tokens::KWD_IMPORT && token.range.end <= offset) import_token = &token;
+      if (import_token && token.kind == tokens::KWD_FROM && token.range.begin >= offset)
+      { from_token = &token; break; }
+    }
+    if (!import_token || !from_token) return result;
+    auto begin = import_token->range.end;
+    const auto text = document.text();
+    while (begin < offset && (text[begin] == ' ' || text[begin] == '\t')) ++begin;
+    source::byte_range replacement{begin, offset};
+    for (const auto &token : syntax.value->tokens)
+      if (token.kind == tokens::IDENTIFIER && token.range.begin < offset &&
+          offset <= token.range.end) replacement.end = token.range.end;
+    const auto prefix = unicode::normalize_nfc(text.substr(begin, offset - begin));
+    std::string module_name;
+    bool began = false;
+    for (const auto &token : syntax.value->tokens)
+    {
+      if (token.range.begin < from_token->range.end) continue;
+      if (!document.to_utf16(token.range.begin) ||
+          document.to_utf16(token.range.begin)->line != line ||
+          token.kind == tokens::KWD_AS || token.kind == tokens::NEWLINE) break;
+      if (token.kind != tokens::IDENTIFIER && token.kind != tokens::DOT) return result;
+      if (token.kind == tokens::DOT && !began) return result;
+      module_name += token.source_text;
+      began = true;
+    }
+    if (module_name.empty() || module_name.back() == '.') return result;
+    module_name = unicode::normalize_nfc(module_name);
+    result.applicable = true;
+    result.module = module_name;
+    result.replacement = {document.identity().id, replacement};
+    try
+    {
+      const auto modules = modules::importable_module_sources(
+          *document.identity().canonical_path, cancellation, options);
+      const auto target = std::find_if(modules.begin(), modules.end(), [&](const auto &candidate)
+      { return candidate.name == module_name; });
+      if (target == modules.end())
+      { result.error = "Module '" + module_name + "' is not installed or importable"; return result; }
+      const auto loaded = provider.read_path(target->path);
+      if (!loaded)
+      { result.error = loaded.error->message; return result; }
+      const auto parsed = syntax::analyze(*loaded.value, {}, cancellation);
+      if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
+      if (!parsed.value || !parsed.value->strict_ast)
+      { result.error = "Module '" + module_name + "' has incomplete source"; return result; }
+      const auto indexed = index_document(*loaded.value, cancellation);
+      if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
+      if (!indexed.value)
+      { result.error = "Module '" + module_name + "' could not be indexed"; return result; }
+      for (const auto &statement : parsed.value->strict_ast->statements)
+      {
+        const auto *exported = dynamic_cast<const parser::export_declaration *>(statement.get());
+        if (!exported) continue;
+        const auto public_name = exported->alias.value_or(exported->exported_name);
+        if (!public_name.starts_with(prefix)) continue;
+        const auto symbol = std::find_if(indexed.value->index.symbols().begin(),
+                                         indexed.value->index.symbols().end(), [&](const auto &item)
+        { return item.name == exported->exported_name && item.scope_id == 0 &&
+                 item.origin == semantic::symbol_origin::source; });
+        if (symbol == indexed.value->index.symbols().end()) continue;
+        const auto start = loaded.value->to_utf16(symbol->declaration.bytes.begin);
+        const auto end = loaded.value->to_utf16(symbol->declaration.bytes.end);
+        if (!start || !end) continue;
+        const auto documentation = documentation_for(*symbol, module_name);
+        result.candidates.push_back({symbol->id.value, public_name, exported->exported_name,
+                                     std::string(semantic::name(symbol->kind)),
+                                     signature_for(indexed.value->index, symbol->id),
+                                     documentation.summary, documentation.deprecated,
+                                     loaded.value->identity().uri, *start, *end});
+      }
+      std::sort(result.candidates.begin(), result.candidates.end(), [](const auto &left, const auto &right)
+      { return left.public_name < right.public_name; });
+      constexpr std::size_t completion_limit = 256;
+      if (result.candidates.size() > completion_limit)
+      {
+        result.incomplete = true;
+        result.candidates.resize(completion_limit);
+      }
+    }
+    catch (const std::exception &error)
+    {
+      if (cancellation.is_cancelled()) result.cancelled = true;
+      else result.error = error.what();
+    }
+    return result;
+  }
+
+  auto query_import_module_target(const source::document_snapshot &document,
+                                  const source::byte_offset offset,
+                                  const source::source_provider &provider,
+                                  const diagnostics::cancellation_token cancellation,
+                                  const modules::package_resolution_options &options)
+    -> import_module_target_result
+  {
+    import_module_target_result result;
+    if (!document.identity().canonical_path || !document.to_utf16(offset)) return result;
+    const auto parsed = syntax::analyze(document, {}, cancellation);
+    if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
+    if (!parsed.value) return result;
+    const auto line = document.to_utf16(offset)->line;
+    const syntax::lossless_token *import_token = nullptr;
+    const syntax::lossless_token *from_token = nullptr;
+    for (const auto &token : parsed.value->tokens)
+    {
+      const auto position = document.to_utf16(token.range.begin);
+      if (!position || position->line != line) continue;
+      if (token.kind == tokens::KWD_IMPORT) import_token = &token;
+      if (import_token && token.kind == tokens::KWD_FROM) from_token = &token;
+    }
+    if (!import_token) return result;
+    const auto begin = from_token ? from_token->range.end : import_token->range.end;
+    std::string name;
+    std::optional<source::byte_offset> name_begin;
+    source::byte_offset name_end = begin;
+    for (const auto &token : parsed.value->tokens)
+    {
+      if (token.range.begin < begin) continue;
+      const auto position = document.to_utf16(token.range.begin);
+      if (!position || position->line != line || token.kind == tokens::KWD_AS ||
+          token.kind == tokens::NEWLINE) break;
+      if (token.kind != tokens::IDENTIFIER && token.kind != tokens::DOT) break;
+      if (!name_begin) name_begin = token.range.begin;
+      name += token.source_text;
+      name_end = token.range.end;
+    }
+    if (!name_begin || name.empty() || name.back() == '.' ||
+        offset < *name_begin || offset > name_end) return result;
+    result.applicable = true;
+    try
+    {
+      const auto choices = modules::importable_module_sources(
+          *document.identity().canonical_path, cancellation, options);
+      const auto selected = std::find_if(choices.begin(), choices.end(), [&](const auto &candidate)
+      { return candidate.name == unicode::normalize_nfc(name); });
+      if (selected == choices.end())
+      { result.error = "Module '" + name + "' is not installed or importable"; return result; }
+      const auto loaded = provider.read_path(selected->path);
+      if (!loaded)
+      { result.error = loaded.error->message; return result; }
+      result.source_uri = loaded.value->identity().uri;
+      result.start = {0, 0};
+      result.end = {0, 0};
+      const auto target_syntax = syntax::analyze(*loaded.value, {}, cancellation);
+      if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
+      if (target_syntax.value)
+        for (const auto &token : target_syntax.value->tokens)
+          if (token.kind == tokens::KWD_MODULE)
+          {
+            const auto start = loaded.value->to_utf16(token.range.begin);
+            const auto end = loaded.value->to_utf16(token.range.end);
+            if (start && end) { result.start = *start; result.end = *end; }
+            break;
+          }
     }
     catch (const std::exception &error)
     {

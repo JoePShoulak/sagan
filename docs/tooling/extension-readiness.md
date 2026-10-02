@@ -42,7 +42,7 @@ below are deliberate limits, not work for the extension to invent locally.
 | Call hierarchy | Resolved callable/call-site index | **LSP available for resolved calls** |
 | Check/build/run tasks | Structured cancellable operations | **Versioned document/project library operations and `sagan/operation` LSP transport available with progress, cancellation, output, and stale-result checks; extension task UI not implemented** |
 | Test explorer | Authoritative Sagan test discovery and execution model | **Document/project discovery and selected or all test execution are available in the compiler and protocol; the extension UI is separate and `testExplorer` remains false** |
-| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental Windows `sagan-dap` launches, maps breakpoints/stacks, filters basic variables, and supports a source-level step-over probe; step-in/out, values, exceptions, Linux execution, release packaging, and capability advertisement remain blocked** |
+| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level step-over/in/out probes including imported modules; reliable values, exceptions, release packaging, and capability advertisement remain blocked** |
 | Lexical TextMate coloring | Existing extension grammar | **Already available, outside this task** |
 
 The remaining compiler-side milestones, in dependency order, are:
@@ -58,15 +58,17 @@ The remaining compiler-side milestones, in dependency order, are:
 3. Complete contextual package completion and navigation. Manifest dependency
    aliases, exact lockfile verification, offline installed-package linking,
    transitive imports, and navigation/hover for imported package symbols now
-   work. The compiler also supplies module-path candidates for incomplete
-   imports. Export/member completion in every context, safe import edits,
+   work. The compiler also supplies module-path candidates and bounded
+   selective-export candidates for incomplete imports, plus definition targets
+   for module paths. Export/member completion in every context, safe import edits,
    missing-source documentation targets, and multi-root collision behavior
    still need implementation and focused tests. No unfinished package
    capability is advertised.
 4. Finish the experimental Windows DAP executable using GDB native DAP,
    source maps, and debug metadata. It already has a live launch/breakpoint/
-   stack smoke test; verify stepping, Sagan scopes and values, exceptions,
-   cancellation, shutdown, runtime packaging, and Linux execution before
+   stack and step-over/in/out probes; verify all source contexts, Sagan scopes
+   and values, exceptions,
+   cancellation, shutdown, and runtime packaging before
    advertising debugger support.
 
 The extension may begin consuming a feature only when:

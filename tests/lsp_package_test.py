@@ -52,6 +52,15 @@ def run():
                        "params": {"textDocument": {"uri": uri}, "position": position}})
         hover = answer(3)
         assert hover and "orbit_answer" in str(hover), hover
+        import_line = next(i for i, line in enumerate(lines)
+                           if line == "import orbit_answer from orbit_tools.main")
+        send(process, {"jsonrpc": "2.0", "id": 10, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": import_line,
+                           "character": lines[import_line].index("orbit_tools.main") + 2,
+                       }}})
+        import_target = answer(10)
+        assert import_target and import_target[0]["uri"] == server_file_uri(installed), import_target
         member_line = next(i for i, line in enumerate(lines) if "package_tools.orbit_answer" in line)
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "textDocument/completion",
                        "params": {"textDocument": {"uri": uri}, "position": {
@@ -83,6 +92,34 @@ def run():
                        }}})
         qualified = answer(7)
         assert any(item["label"] == "orbit_tools.main" for item in qualified), qualified
+        selective = source + "import orbit_a from orbit_tools.main\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": uri, "version": 4},
+            "contentChanges": [{"text": selective}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 8, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": len(lines), "character": len("import orbit_a"),
+                       }}})
+        exported = answer(8)["items"]
+        orbit = next((item for item in exported if item["label"] == "orbit_answer"), None)
+        assert orbit and orbit["textEdit"]["newText"] == "orbit_answer", exported
+        assert orbit["data"]["sourceUri"] == server_file_uri(installed), orbit
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": server_file_uri(installed), "languageId": "sagan",
+                             "version": 1, "text": "module main\nfun overlay_answer(): Int => 7\nexport overlay_answer\n"},
+        }})
+        overlay_import = source + "import overlay_a from orbit_tools.main\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": uri, "version": 5},
+            "contentChanges": [{"text": overlay_import}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 9, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": len(lines), "character": len("import overlay_a"),
+                       }}})
+        overlaid = answer(9)["items"]
+        assert [item["label"] for item in overlaid] == ["overlay_answer"], overlaid
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

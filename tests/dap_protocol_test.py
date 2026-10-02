@@ -46,6 +46,29 @@ def malformed_frame(binary, environment=None):
     assert b"DAP transport error" in stderr, stderr
 
 
+def missing_debugger(binary):
+    environment = os.environ.copy()
+    environment["SAGAN_GDB"] = str(Path(tempfile.gettempdir()) / "missing-sagan-gdb.exe")
+    process = subprocess.Popen([str(binary)], stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               env=environment)
+    messages = queue.Queue()
+    threading.Thread(target=reader, args=(process.stdout, messages), daemon=True).start()
+    try:
+        process.stdin.write(frame({"seq": 1, "type": "request", "command": "initialize",
+                                   "arguments": {"adapterID": "sagan"}}))
+        process.stdin.flush()
+        answer = messages.get(timeout=10)
+        assert answer.get("request_seq") == 1 and not answer["success"], answer
+        assert "GDB" in answer["message"] or "gdb" in answer["message"], answer
+        process.stdin.close()
+        assert process.wait(timeout=10) == 0
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait(timeout=10)
+
+
 def cancelled_build(binary, gdb):
     with tempfile.TemporaryDirectory(prefix="sagan cancel ") as folder:
         source = Path(folder) / "cancel.sagan"
@@ -177,6 +200,20 @@ def imported_module_breakpoint(binary, gdb):
         stack = expect(lambda item: item.get("request_seq") == 5)
         assert stack["success"] and stack["body"]["stackFrames"], stack
         assert stack["body"]["stackFrames"][0]["source"]["path"] == str(source), stack
+        send(13, "stepIn", {"threadId": thread_id})
+        assert expect(lambda item: item.get("request_seq") == 13)["success"]
+        assert expect(lambda item: item.get("event") == "stopped")["body"]["reason"] == "step"
+        send(14, "stackTrace", {"threadId": thread_id})
+        nested = expect(lambda item: item.get("request_seq") == 14)["body"]["stackFrames"]
+        assert nested and nested[0]["name"] in ("helper", "offset") and \
+            nested[1]["source"]["path"] == str(source) and \
+            nested[1]["name"] == "calculate", nested
+        send(15, "stepOut", {"threadId": thread_id})
+        assert expect(lambda item: item.get("request_seq") == 15)["success"]
+        assert expect(lambda item: item.get("event") == "stopped")["body"]["reason"] == "step"
+        send(16, "stackTrace", {"threadId": thread_id})
+        resumed = expect(lambda item: item.get("request_seq") == 16)["body"]["stackFrames"]
+        assert resumed and resumed[0]["source"]["path"] == str(source), resumed
         send(6, "setBreakpoints", {"source": {"path": str(source)}, "breakpoints": []})
         assert expect(lambda item: item.get("request_seq") == 6)["success"]
         send(7, "continue", {"threadId": thread_id})
@@ -200,6 +237,80 @@ def imported_module_breakpoint(binary, gdb):
             process.wait(timeout=10)
 
 
+def source_step_in_out(binary, gdb):
+    source = Path("tests/fixtures/runtime/root_script.sagan").resolve()
+    environment = os.environ.copy()
+    environment["SAGAN_GDB"] = str(gdb)
+    process = subprocess.Popen([str(binary)], stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               env=environment)
+    messages = queue.Queue()
+    threading.Thread(target=reader, args=(process.stdout, messages), daemon=True).start()
+    pending = []
+
+    def send(seq, command, arguments=None):
+        process.stdin.write(frame({"seq": seq, "type": "request", "command": command,
+                                   "arguments": arguments or {}}))
+        process.stdin.flush()
+
+    def expect(predicate):
+        for index, item in enumerate(pending):
+            if predicate(item):
+                return pending.pop(index)
+        while True:
+            item = messages.get(timeout=60)
+            if isinstance(item, BaseException):
+                raise item
+            if predicate(item):
+                return item
+            pending.append(item)
+
+    try:
+        send(1, "initialize", {"adapterID": "sagan"})
+        assert expect(lambda item: item.get("request_seq") == 1)["success"]
+        expect(lambda item: item.get("event") == "initialized")
+        send(2, "launch", {"program": str(source)})
+        send(3, "setBreakpoints", {"source": {"path": str(source)},
+                                    "breakpoints": [{"line": 4, "column": 1}]})
+        assert expect(lambda item: item.get("request_seq") == 3)["success"]
+        send(4, "configurationDone")
+        assert expect(lambda item: item.get("request_seq") == 4)["success"]
+        assert expect(lambda item: item.get("request_seq") == 2)["success"]
+        stopped = expect(lambda item: item.get("event") == "stopped")
+        thread_id = stopped["body"]["threadId"]
+        send(11, "setBreakpoints", {"source": {"path": str(source)},
+                                     "breakpoints": [{"line": 4, "condition": "false"}]})
+        unsupported = expect(lambda item: item.get("request_seq") == 11)
+        assert not unsupported["success"] and "Conditional" in unsupported["message"], unsupported
+        send(5, "stackTrace", {"threadId": thread_id})
+        assert expect(lambda item: item.get("request_seq") == 5)["body"]["stackFrames"][0]["line"] == 4
+        send(6, "stepIn", {"threadId": thread_id})
+        assert expect(lambda item: item.get("request_seq") == 6)["success"]
+        stepped_in = expect(lambda item: item.get("event") == "stopped")
+        assert stepped_in["body"]["reason"] == "step", stepped_in
+        send(7, "stackTrace", {"threadId": thread_id})
+        inside = expect(lambda item: item.get("request_seq") == 7)["body"]["stackFrames"]
+        assert inside and inside[0]["source"]["path"] == str(source) and \
+            inside[0]["line"] == 1 and inside[0]["name"] == "answer", inside
+        send(14, "evaluate", {"frameId": inside[0]["id"], "expression": "value"})
+        assert not expect(lambda item: item.get("request_seq") == 14)["success"]
+        send(8, "stepOut", {"threadId": thread_id})
+        assert expect(lambda item: item.get("request_seq") == 8)["success"]
+        stepped_out = expect(lambda item: item.get("event") == "stopped")
+        assert stepped_out["body"]["reason"] == "step", stepped_out
+        send(9, "stackTrace", {"threadId": thread_id})
+        outside = expect(lambda item: item.get("request_seq") == 9)["body"]["stackFrames"]
+        assert outside and outside[0]["source"]["path"] == str(source) and \
+            outside[0]["name"] == "<top level>", outside
+        send(10, "disconnect", {"terminateDebuggee": True})
+        assert expect(lambda item: item.get("request_seq") == 10)["success"]
+        process.wait(timeout=10)
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait(timeout=10)
+
+
 def run():
     binary = Path(os.environ.get("SAGAN_DAP_BINARY",
                                  "bin/sagan-dap.exe" if os.name == "nt" else "bin/sagan-dap")).resolve()
@@ -208,6 +319,7 @@ def run():
     if not binary.is_file():
         raise AssertionError(f"Sagan DAP executable is missing: {binary}")
     malformed_frame(binary)
+    missing_debugger(binary)
     if os.name == "nt":
         isolated = os.environ.copy()
         isolated["PATH"] = os.pathsep.join([r"C:\Windows\System32", r"C:\Windows"])
@@ -218,6 +330,7 @@ def run():
     cancelled_build(binary, gdb)
     package_launch(binary, gdb)
     imported_module_breakpoint(binary, gdb)
+    source_step_in_out(binary, gdb)
     artifact_root = Path(tempfile.gettempdir()) / "sagan-dap"
     prior_artifacts = set(artifact_root.glob("session-*"))
     with tempfile.TemporaryDirectory(prefix="sagan dap ") as folder:
@@ -290,10 +403,6 @@ def run():
             for scope in scopes["body"]["scopes"]:
                 send(10, "variables", {"variablesReference": scope["variablesReference"]})
                 assert expect(lambda item: item.get("request_seq") == 10)["success"]
-            send(14, "stepIn", {"threadId": thread_id})
-            assert not expect(lambda item: item.get("request_seq") == 14)["success"]
-            send(15, "stepOut", {"threadId": thread_id})
-            assert not expect(lambda item: item.get("request_seq") == 15)["success"]
             send(12, "next", {"threadId": thread_id})
             assert expect(lambda item: item.get("request_seq") == 12)["success"]
             expect(lambda item: item.get("event") == "stopped")

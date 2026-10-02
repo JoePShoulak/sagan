@@ -90,6 +90,17 @@ namespace modules
             sagan::diagnostics::cancellation_token cancellation = {}) -> parser::program;
   auto load_package(const std::filesystem::path &package_path) -> package_manifest;
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>;
+  struct importable_module_source
+  {
+    std::string name;
+    std::filesystem::path path;
+    bool external{};
+  };
+
+  auto importable_module_sources(const std::filesystem::path &entry_path,
+                                 sagan::diagnostics::cancellation_token cancellation = {},
+                                 const package_resolution_options &options = {})
+    -> std::vector<importable_module_source>;
   // Lists import spellings from a package's source tree and its locked,
   // installed dependencies. This does not require the active editor buffer to
   // parse, so it remains usable while an import statement is incomplete.

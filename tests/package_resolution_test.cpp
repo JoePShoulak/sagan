@@ -87,6 +87,81 @@ auto main() -> int
                           { return item.name == "orbit_tools.main" &&
                                    item.replacement.bytes.begin == 37; }),
           "Dotted package import completion did not replace the full module path");
+  const std::string partial_export = "module main\nimport orbit_a from orbit_tools.main\n";
+  const sagan::source::document_snapshot export_document(entry.value->identity(), 4, partial_export);
+  const auto export_completion = sagan::language_service::query_import_exports(
+      export_document, static_cast<sagan::source::byte_offset>(partial_export.find(" from ")),
+      source, {}, options);
+  require(export_completion.applicable && export_completion.error.empty() &&
+              export_completion.module == "orbit_tools.main" &&
+              std::any_of(export_completion.candidates.begin(), export_completion.candidates.end(),
+                          [](const auto &item)
+                          { return item.public_name == "orbit_answer" &&
+                                   !item.symbol_id.empty() && !item.source_uri.value.empty(); }),
+          "Incomplete selective import did not offer installed package exports");
+  const auto imported_target = sagan::language_service::query_import_module_target(
+      export_document, static_cast<sagan::source::byte_offset>(partial_export.find("orbit_tools.main") + 2),
+      source, {}, options);
+  require(imported_target.applicable && imported_target.error.empty() &&
+              imported_target.source_uri == sagan::source::identity_from_path(
+                  {}, "tests/fixtures/catalog/orbit-tools/src/main.sagan").uri &&
+              imported_target.start.line == 0,
+          "Package import path did not navigate to installed module source");
+  const std::string local_import = "module main\nimport orbit_tools\n";
+  const sagan::source::document_snapshot local_document(entry.value->identity(), 7, local_import);
+  const auto local_target = sagan::language_service::query_import_module_target(
+      local_document, static_cast<sagan::source::byte_offset>(local_import.find("orbit_tools") + 2),
+      source, {}, options);
+  require(local_target.applicable && local_target.error.empty() &&
+              local_target.source_uri.value.find("/consumer-alias/src/orbit_tools.sagan") !=
+                  std::string::npos,
+          "Unqualified import navigation did not prefer the workspace module");
+  sagan::diagnostics::cancellation_source cancelled_navigation;
+  cancelled_navigation.cancel();
+  const auto cancelled_target = sagan::language_service::query_import_module_target(
+      export_document, static_cast<sagan::source::byte_offset>(partial_export.find("orbit_tools.main") + 2),
+      source, cancelled_navigation.token(), options);
+  require(cancelled_target.cancelled && cancelled_target.source_uri.value.empty(),
+          "Cancelled import navigation exposed a stale source target");
+  sagan::source::document_store overlays;
+  const auto installed_uri = sagan::source::identity_from_path(
+      {}, "tests/fixtures/catalog/orbit-tools/src/main.sagan").uri;
+  require(static_cast<bool>(overlays.open(installed_uri, 1,
+      "module main\nfun overlay_answer(): Int => 7\nexport overlay_answer\n")),
+      "Could not open an unsaved installed-module overlay");
+  const std::string overlay_import = "module main\nimport overlay_a from orbit_tools.main\n";
+  const sagan::source::document_snapshot overlay_document(entry.value->identity(), 5, overlay_import);
+  const auto overlay_completion = sagan::language_service::query_import_exports(
+      overlay_document, static_cast<sagan::source::byte_offset>(overlay_import.find(" from ")),
+      overlays, {}, options);
+  require(overlay_completion.applicable && overlay_completion.error.empty() &&
+              overlay_completion.candidates.size() == 1 &&
+              overlay_completion.candidates.front().public_name == "overlay_answer",
+          "Installed-package completion ignored the newer in-memory source overlay");
+  std::string many_exports = "module main\n";
+  for (int index = 0; index < 270; ++index)
+  {
+    const auto name = "item" + std::to_string(index);
+    many_exports += "fun " + name + "(): Int => " + std::to_string(index) + "\n";
+    many_exports += "export " + name + "\n";
+  }
+  require(static_cast<bool>(overlays.replace(installed_uri, 1, 2, many_exports)),
+          "Could not replace the installed-module overlay");
+  const std::string broad_import = "module main\nimport item from orbit_tools.main\n";
+  const sagan::source::document_snapshot broad_document(entry.value->identity(), 6, broad_import);
+  const auto bounded_completion = sagan::language_service::query_import_exports(
+      broad_document, static_cast<sagan::source::byte_offset>(broad_import.find(" from ")),
+      overlays, {}, options);
+  require(bounded_completion.applicable && bounded_completion.error.empty() &&
+              bounded_completion.incomplete && bounded_completion.candidates.size() == 256,
+          "Installed-package export completion did not bound its result set");
+  sagan::diagnostics::cancellation_source cancelled_import;
+  cancelled_import.cancel();
+  const auto cancelled_export = sagan::language_service::query_import_exports(
+      export_document, static_cast<sagan::source::byte_offset>(partial_export.find(" from ")),
+      source, cancelled_import.token(), options);
+  require(cancelled_export.cancelled && cancelled_export.candidates.empty(),
+          "Cancelled package-export completion returned stale candidates");
   const auto multi_index = "tests/fixtures/catalog/resolution-index.tsv";
   const auto newest = modules::resolve_indexed_dependencies(root, multi_index, "2.1.0");
   require(newest.state == modules::dependency_state::ready && newest.packages.size() == 1 &&

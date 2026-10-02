@@ -78,7 +78,9 @@ Test Explorer UI contract, attach, and optimized-local evaluation remain false.
 The local package index reader, `sagan/packages/query`, and the
 installed-source `sagan/packages/catalog` query are true. The catalog provides
 real exported symbols and source navigation metadata where installed source
-resolves; it does not resolve external dependencies into builds. Package
+resolves; manifest aliases and exact lockfiles resolve installed external
+dependencies into builds. Standard LSP now also serves incomplete module and
+selective-export imports plus go-to-definition on module paths. Package
 completion, package navigation, and package auto-import remain false. The
 breakpoint mapping library is available, but every live DAP/debugger capability
 remains false until the adapter and release payload pass end-to-end tests.
