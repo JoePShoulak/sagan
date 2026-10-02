@@ -98,7 +98,7 @@ fun create_solver(): RestrictedThreeBodySolver {
     lagrange_seed("L3", -1.0050600391594884, 0.0),
     lagrange_seed("L4", 0.4878556707169819, 0.8660254037844386),
     lagrange_seed("L5", 0.4878556707169819, -0.8660254037844386),
-    lagrange_seed("Control", 0.25, 0.25))
+    lagrange_seed("Control", 0.0, 1.0))
 }
 
 fun lagrange_target(snapshot: RestrictedThreeBodySnapshot,
