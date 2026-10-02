@@ -409,6 +409,7 @@ namespace semantic
       std::unordered_map<std::string, std::vector<std::string>> generic_enums;
       std::optional<std::string> expected_expression;
       std::optional<std::string> active_class;
+      std::optional<std::filesystem::path> active_source;
       units::registry unit_registry;
 
       auto open_scope() -> void
@@ -471,7 +472,7 @@ namespace semantic
 
       auto record(const parser::expression &value, std::string type) -> std::string
       {
-        model.expressions.push_back(typed_expression{value.range, type});
+        model.expressions.push_back(typed_expression{value.range, type, active_source});
         return type;
       }
 
@@ -2675,9 +2676,17 @@ namespace semantic
         // enter a function body. Check those bindings first so functions may
         // refer to them regardless of where the function is declared.
         for (const auto &entry : tree.statements)
-          if (!dynamic_cast<const parser::function_declaration *>(entry.get())) statement(*entry, true);
+          if (!dynamic_cast<const parser::function_declaration *>(entry.get()))
+          {
+            active_source = entry->origin_path;
+            statement(*entry, true);
+          }
         for (const auto &entry : tree.statements)
-          if (dynamic_cast<const parser::function_declaration *>(entry.get())) statement(*entry, true);
+          if (dynamic_cast<const parser::function_declaration *>(entry.get()))
+          {
+            active_source = entry->origin_path;
+            statement(*entry, true);
+          }
         return std::move(model);
       }
     };

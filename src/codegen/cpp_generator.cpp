@@ -259,7 +259,9 @@ namespace codegen
       {
         for (auto entry = types.expressions.rbegin(); entry != types.expressions.rend(); ++entry)
         {
-          if (entry->range.begin == value.range.begin && entry->range.end == value.range.end) return entry->type;
+          if (entry->range.begin != value.range.begin || entry->range.end != value.range.end) continue;
+          if (entry->source_path && active_source && *entry->source_path != *active_source) continue;
+          return entry->type;
         }
         fail("missing checked type for expression", value.range);
         return {};
@@ -822,7 +824,8 @@ namespace codegen
               const std::string_view names = "xyzw";
               if (member->member_name.size() == 1) component = names.find(member->member_name);
             }
-            if (component == std::string_view::npos) fail("dimensioned member access is invalid", value.range);
+            if (component == std::string_view::npos)
+              fail("dimensioned member access is invalid: " + target_type + "." + member->member_name, value.range);
             return expression(*member->target) + ".at(" + std::to_string(component) + ")";
           }
           if (weak_member(*member)) return "sagan_lock_weak(" + raw_member(*member) + ")";

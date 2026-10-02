@@ -89,14 +89,9 @@ fun lagrange_seed(identity: String, x: Float64, y: Float64): LagrangeBodySeed {
   return LagrangeBodySeed(identity, position, velocity, x, y)
 }
 
-fun stability_result(body: LagrangeBodySnapshot): String {
-  if body.escaped() { return "escaped" }
-  return "${body.stability_error()}"
-}
-
 fun stability_display(body: LagrangeBodySnapshot): String {
   if body.escaped() { return "escaped" }
-  return "${body.stability_error() / (1.0 kilometer)} km"
+  return "${body.stability_error() as kilometer}"
 }
 
 fun create_solver(): RestrictedThreeBodySolver {
@@ -332,8 +327,8 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
 
     text_screen(20, 18, "R3 Lagrange stability — six independent massless tracers", 17, 226, 232, 240)
     text_screen(20, 45, "Space play/pause | Wheel zoom | Up/Down speed (max 40 days/s) | R reset | Escape close", 12, 148, 163, 184)
-    text_screen(20, 68, "simulation time: ${current.time() / (86400.0 second)} days", 12, 148, 210, 189)
-    text_screen(20, 88, "playback: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
+    text_screen(20, 68, "elapsed simulation time: ${current.time() as day}", 12, 148, 210, 189)
+    text_screen(20, 88, "selected simulation rate: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
     text_screen(20, 108, "zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
     text_screen(20, 138, "L1 error: ${stability_display(current.tertiary(0))}", 11, 244, 114, 182)
     text_screen(20, 158, "L2 error: ${stability_display(current.tertiary(1))}", 11, 251, 146, 60)
@@ -344,14 +339,16 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     present()
   }
   print("final_playback_rate ${simulation_seconds_per_real_second}")
+  print("final_simulation_rate_days_per_real_second ${simulation_seconds_per_real_second / 86400.0}")
   print("final_kilometers_per_pixel ${kilometers_per_pixel}")
   close()
 }
 
 print("final_time_s ${current.time()}")
-print("final_L1_error ${stability_result(current.tertiary(0))}")
-print("final_L2_error ${stability_result(current.tertiary(1))}")
-print("final_L3_error ${stability_result(current.tertiary(2))}")
-print("final_L4_error ${stability_result(current.tertiary(3))}")
-print("final_L5_error ${stability_result(current.tertiary(4))}")
-print("final_control_error ${stability_result(current.tertiary(5))}")
+print("final_elapsed ${current.time() as day}")
+print("final_L1_error ${stability_display(current.tertiary(0))}")
+print("final_L2_error ${stability_display(current.tertiary(1))}")
+print("final_L3_error ${stability_display(current.tertiary(2))}")
+print("final_L4_error ${stability_display(current.tertiary(3))}")
+print("final_L5_error ${stability_display(current.tertiary(4))}")
+print("final_control_error ${stability_display(current.tertiary(5))}")

@@ -123,7 +123,7 @@ fun create_solver(): SolarLagrangeSolver => SolarLagrangeSolver(
 
 fun stability_display(body: SolarTertiarySnapshot): String {
   if body.escaped() { return "escaped" }
-  return "${body.stability_error() / (1000.0 meter)} km"
+  return "${body.stability_error() as kilometer}"
 }
 
 fun local_point(position: Point2<Float64, meter>,
@@ -159,7 +159,7 @@ let solver = create_solver()
 let current = solver.snapshot()
 let kilometers_per_pixel = 2500.0
 let simulation_seconds_per_real_second = INITIAL_PLAYBACK_RATE
-let paused = false
+let paused = true
 let accumulator = 0.0 second
 let last_trail_sample = current.time()
 let earth_trail = Trail8(local_point(current.earth().position(), current,
@@ -309,18 +309,21 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
 
     text_screen(20, 18, "Solar-perturbed Earth-Moon Lagrange experiment", 17, 226, 232, 240)
     text_screen(20, 45, "Space pause | Wheel zoom | Up/Down speed | R reset | Escape close", 12, 148, 163, 184)
-    text_screen(20, 68, "simulation time: ${current.time() / (86400.0 second)} days", 12, 148, 210, 189)
-    text_screen(20, 88, "local zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
-    text_screen(20, 118, "L1 error: ${stability_display(current.tertiary(0))}", 11, 244, 114, 182)
-    text_screen(20, 138, "L2 error: ${stability_display(current.tertiary(1))}", 11, 251, 146, 60)
-    text_screen(20, 158, "L3 error: ${stability_display(current.tertiary(2))}", 11, 167, 139, 250)
-    text_screen(20, 178, "L4 error: ${stability_display(current.tertiary(3))}", 11, 74, 222, 128)
-    text_screen(20, 198, "L5 error: ${stability_display(current.tertiary(4))}", 11, 34, 211, 238)
-    text_screen(20, 218, "Control error: ${stability_display(current.tertiary(5))}", 11, 248, 113, 113)
+    text_screen(20, 68, "elapsed simulation time: ${current.time() as day}", 12, 148, 210, 189)
+    text_screen(20, 88, "selected simulation rate: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
+    text_screen(20, 108, "local zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
+    text_screen(20, 138, "L1 error: ${stability_display(current.tertiary(0))}", 11, 244, 114, 182)
+    text_screen(20, 158, "L2 error: ${stability_display(current.tertiary(1))}", 11, 251, 146, 60)
+    text_screen(20, 178, "L3 error: ${stability_display(current.tertiary(2))}", 11, 167, 139, 250)
+    text_screen(20, 198, "L4 error: ${stability_display(current.tertiary(3))}", 11, 74, 222, 128)
+    text_screen(20, 218, "L5 error: ${stability_display(current.tertiary(4))}", 11, 34, 211, 238)
+    text_screen(20, 238, "Control error: ${stability_display(current.tertiary(5))}", 11, 248, 113, 113)
     present()
   }
 }
 
 print("final_time_s ${current.time()}")
+print("final_elapsed ${current.time() as day}")
+print("final_simulation_rate_days_per_real_second ${simulation_seconds_per_real_second / 86400.0}")
 print("final_L4_error ${stability_display(current.tertiary(3))}")
 print("final_L5_error ${stability_display(current.tertiary(4))}")

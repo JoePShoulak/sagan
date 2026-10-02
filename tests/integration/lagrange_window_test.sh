@@ -55,6 +55,15 @@ if [[ "$fast_final" != "$slow_final" ]]; then
     "$fast_final" "$slow_final" >&2
   exit 1
 fi
+if [[ "$fast_final" != *"final_elapsed 60 day"* ||
+      "$fast_final" != *"final_simulation_rate_days_per_real_second 5"* ||
+      "$fast_final" != *"final_L4_error "*" kilometer"* ||
+      "$fast_final" == *"meter / meter"* ||
+      "$fast_final" == *"second / second"* ]]; then
+  printf 'Expected elapsed days, selected simulation rate, and kilometer error readouts, got:\n%s\n' \
+    "$fast_final" >&2
+  exit 1
+fi
 if [[ "$reset_output" != *"final_playback_rate 864000"* ]]; then
   printf 'Expected reset to preserve the selected doubled playback rate, got:\n%s\n' \
     "$reset_output" >&2

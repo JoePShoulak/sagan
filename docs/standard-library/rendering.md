@@ -135,6 +135,9 @@ milliseconds. Both represent two real seconds and must produce the identical
 fixed-step snapshot at simulation time 172800 seconds. The test also captures
 and validates the displayed 960 by 540 frame. The deterministic timing controls
 are private test environment settings, not public Sagan APIs.
+The window shows elapsed simulation time in days and the selected playback
+rate in simulated days per real second. The rate remains selected while paused;
+no simulation time advances until playback resumes.
 
 `make lagrange-demo` reuses the same renderer and frame scheduler for
 `sagan-physics` 0.3.0's restricted-three-body snapshots. It displays the two
@@ -146,7 +149,9 @@ The demo opens paused at five simulated days per real second. Space toggles
 playback, Up/Down change the rate up to 40 simulated days per real second, and
 the mouse wheel changes the orthographic
 scale from 250 through 20,000 kilometers per pixel. The overlay shows elapsed
-days, playback rate, and the current scale. R restores the physical initial state,
+days, the selected simulation rate, and the current scale. Error readouts use
+an explicit conversion to kilometers, so unit-bearing output says `kilometer`
+instead of a misleading `meter / kilometer` ratio. R restores the physical initial state,
 pauses, and clears the trails without changing the selected rate. The representative 60-day
 snapshot visibly distinguishes the small L4/L5 errors from the unstable L1
 and off-point control without claiming that every Lagrange point is stable.
@@ -167,7 +172,10 @@ so it remains the live ideal reference rather than a fixed screen decoration.
 All six massless tracers feel the Sun, Earth, and Moon. A gold direction marker
 keeps the off-screen Sun legible, and a heliocentric inset shows the Earth-Moon
 group orbiting the Sun without shrinking the local Lagrange geometry to a
-pixel.
+pixel. Its overlay also separates elapsed simulation days from the selected
+simulated-days-per-real-second rate and displays tracer errors in kilometers.
+Like the restricted-three-body window, it opens paused; press Space to start
+or pause the simulation.
 
 The deterministic solar window fixture advances 600 20-millisecond frames to
 the same 60-day state as the headless fixture and captures the rendered frame.

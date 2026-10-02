@@ -27,6 +27,12 @@ if [[ "$fast_final" != "$slow_final" ]]; then
     "$fast_final" "$slow_final" >&2
   exit 1
 fi
+if [[ "$fast_final" != *"final_elapsed 2 day"* ||
+      "$fast_final" != *"final_simulation_rate_days_per_real_second 1"* ]]; then
+  printf 'Expected two elapsed simulation days and one selected simulation day per real second, got:\n%s\n' \
+    "$fast_final" >&2
+  exit 1
+fi
 
 test -s "$capture"
 dimensions="$(od -An -j18 -N8 -t d4 "$capture" | tr -s ' ' | sed 's/^ //')"

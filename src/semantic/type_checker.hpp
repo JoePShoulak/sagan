@@ -2,6 +2,8 @@
 
 #include "../parser/ast_node.hpp"
 
+#include <filesystem>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -12,6 +14,7 @@ namespace semantic
   {
     parser::span range;
     std::string type;
+    std::optional<std::filesystem::path> source_path;
   };
 
   struct typed_declaration

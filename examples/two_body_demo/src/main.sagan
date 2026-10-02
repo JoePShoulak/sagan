@@ -86,13 +86,16 @@ if open("Sagan R2: Physics-driven Two-body Orbit", 960, 540) {
     text(secondary.x + 8.0, secondary.y - 15.0, current.second().identity(), 13, 248, 250, 252)
     text_screen(20, 18, "Sagan Render 0.3 — immutable physics snapshots", 17, 226, 232, 240)
     text_screen(20, 45, "Space pause | Up/Down speed | Escape close", 12, 148, 163, 184)
-    text_screen(20, 68, "simulation time: ${current.time()}", 12, 148, 210, 189)
-    text_screen(20, 91, "display primary: ${primary} | secondary: ${secondary}", 11, 120, 138, 160)
+    text_screen(20, 68, "elapsed simulation time: ${current.time() as day}", 12, 148, 210, 189)
+    text_screen(20, 91, "selected simulation rate: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
+    text_screen(20, 114, "display primary: ${primary} | secondary: ${secondary}", 11, 120, 138, 160)
     present()
   }
+  print("final_simulation_rate_days_per_real_second ${simulation_seconds_per_real_second / 86400.0}")
   close()
 }
 
 print("final_time_s ${current.time()}")
+print("final_elapsed ${current.time() as day}")
 print("final_primary ${current.first().position().x} ${current.first().position().y}")
 print("final_secondary ${current.second().position().x} ${current.second().position().y}")
