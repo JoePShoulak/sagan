@@ -121,7 +121,7 @@ remaining gravitationally independent of one another.
 
 **Status: implemented at `7603ecc`, corrected at `2e767ff`, and verified on
 2026-10-01.** `make lagrange-demo`
-reuses `sagan-render` 0.4.0 and `sagan-physics` 0.3.0 without adding another
+reuses `sagan-render` 0.5.1 and `sagan-physics` 0.3.0 without adding another
 renderer. It draws all eight bodies with distinct matching-color eight-sample
 trails sampled every six simulation hours, plus all six rotating-frame errors.
 It begins at five simulated days per real second.
@@ -186,8 +186,10 @@ reference and add a separate planar model in which the Sun, Earth, and Moon
 mutually gravitate while the same six massless tracers feel all three massive
 bodies. Center the main presentation on the Earth-Moon barycenter and include
 a heliocentric inset so both scales remain legible. This is a controlled model
-comparison, not an ephemeris claim. **Status:** implemented in
-`sagan-physics` 0.3.0 with checked numeric and windowed 60-day fixtures.
+comparison, not an ephemeris claim. **Status: implemented at `1111d4a` and
+locally verified on 2026-10-02.** `sagan-physics` 0.3.0 provides checked
+numeric and windowed 60-day fixtures; the latter also records a representative
+1180 by 720 frame.
 
 ## Math chat
 

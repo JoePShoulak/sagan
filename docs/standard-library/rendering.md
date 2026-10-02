@@ -122,7 +122,7 @@ and validates the displayed 960 by 540 frame. The deterministic timing controls
 are private test environment settings, not public Sagan APIs.
 
 `make lagrange-demo` reuses the same renderer and frame scheduler for
-`sagan-physics` 0.2.0's restricted-three-body snapshots. It displays the two
+`sagan-physics` 0.3.0's restricted-three-body snapshots. It displays the two
 massive primaries, L1 through L5, and an off-point control as eight distinctly
 colored bodies. Every body has an eight-sample matching-color trail recorded
 at six-hour simulation intervals, and each tracer has a matching numeric
@@ -133,7 +133,7 @@ the mouse wheel changes the orthographic
 scale from 250 through 20,000 kilometers per pixel. The overlay shows elapsed
 days, playback rate, and the current scale. R restores the physical initial state,
 pauses, and clears the trails without changing the selected rate. The representative 60-day
-snapshot; it visibly distinguishes the small L4/L5 errors from the unstable L1
+snapshot visibly distinguishes the small L4/L5 errors from the unstable L1
 and off-point control without claiming that every Lagrange point is stable.
 
 ![R3 Lagrange stability frame](../assets/images/render-r3-lagrange.bmp)
@@ -143,6 +143,24 @@ and off-point control without claiming that every Lagrange point is stable.
 It also verifies that reset preserves a doubled playback rate and validates the
 captured 1180 by 720 frame. Trail sampling is a presentation concern and does
 not feed state back into the physics solver.
+
+`make solar-lagrange-demo` keeps the same Earth-Moon-centered Lagrange view,
+colors, trails, controls, and error presentation while adding the Sun as a
+third mutually gravitating massive body. All six massless tracers feel the
+Sun, Earth, and Moon. A gold direction marker keeps the off-screen Sun legible,
+and a heliocentric inset shows the Earth-Moon group orbiting the Sun without
+shrinking the local Lagrange geometry to a pixel.
+
+The deterministic solar window fixture advances 600 20-millisecond frames to
+the same 60-day state as the headless fixture and captures the rendered frame.
+At that point the model reports approximately 39,844 km of L4 error and
+48,369 km of L5 error. These values demonstrate the difference from the ideal
+circular restricted-three-body model; the planar circular setup is not an
+ephemeris-accuracy claim. Run the check with:
+
+```bash
+make solar-lagrange-demo-test
+```
 
 Version 0.5.1 supports Windows only and links the
 system `user32` and `gdi32` libraries. The demo statically links its GCC/C++
