@@ -10,8 +10,9 @@ verified_by: null
 # Physics library
 
 !!! info "Initial implementation"
-    `sagan-physics` 0.2.1 implements the narrow P0 two-body and P1 circular
-    restricted-three-body surfaces documented below. Broader astrodynamics,
+    `sagan-physics` 0.3.0 implements the narrow P0 two-body, P1 circular
+    restricted-three-body, and solar-perturbed Lagrange experiment documented
+    below. Broader astrodynamics,
     general N-body propagation, collisions, rigid bodies, atmospheres, and
     trajectory planning remain future work.
 
@@ -24,13 +25,13 @@ Native units are already a language feature; they do not require importing the
 physics library. The library will use those checked units rather than inventing
 a second unit system.
 
-The physics package is first-party but independently versioned. Its `0.2.1`
+The physics package is first-party but independently versioned. Its `0.3.0`
 version does not change Sagan's compiler version. A package imports it through
 an explicit dependency and an exact lockfile selection:
 
 ```toml
 [dependencies]
-physics = { package = "sagan-physics", version = "^0.2.0" }
+physics = { package = "sagan-physics", version = "^0.3.0" }
 ```
 
 ## Implemented P0 surface
@@ -127,6 +128,38 @@ run, checks its existing energy and angular-momentum tolerances, and requires
 both L4 and L5 to remain closer to their references than the off-point control.
 The demonstrated stability is specific to the stated mass ratio, starting
 conditions, duration, and timestep.
+
+## Solar-perturbed Lagrange experiment
+
+The `physics.solar_lagrange` module adds a deliberately narrow planar
+restricted-four-body experiment:
+
+| Symbol | Implemented contract |
+| --- | --- |
+| `SolarLagrangeSeed` | One massless tracer's inertial state and Earth-Moon rotating-frame reference. |
+| `SolarTertiarySnapshot` | Read-only tracer state, rotating-frame error, and Earth-Moon escape flag. |
+| `SolarLagrangeSnapshot` | Sun, Earth, Moon, and exactly six massless tracer snapshots. |
+| `SolarLagrangeSolver` | Mutually advances the three massive bodies and independently advances all six tracers under their combined gravity. |
+
+The checked setup starts a circular Earth-Moon approximation with its
+barycenter on a circular solar approximation at one astronomical unit. It is
+two-dimensional and omits orbital inclination, eccentricity, nonspherical
+gravity, radiation pressure, other planets, and ephemeris-fitted initial
+conditions. It exists to isolate the qualitative effect of solar gravity; it
+is not a real Earth-Moon ephemeris model.
+
+Run the numerical comparison or windowed visualization with:
+
+```bash
+make solar-lagrange-numeric-demo
+make solar-lagrange-demo
+```
+
+The window keeps an Earth-Moon-centered Lagrange view with colored trails and
+adds a heliocentric inset plus a Sun-direction indicator. In the checked
+60-day, 300-second-step fixture, the L4 and L5 rotating-frame errors grow to
+approximately 39,844 km and 48,369 km, respectively. Those values demonstrate
+the model difference; they are not an accuracy claim about the real system.
 
 ## Intended role beyond P0
 

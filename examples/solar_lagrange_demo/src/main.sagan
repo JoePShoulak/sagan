@@ -1,0 +1,290 @@
+module main
+
+import SolarLagrangeSeed from physics.solar_lagrange
+import SolarTertiarySnapshot from physics.solar_lagrange
+import SolarLagrangeSnapshot from physics.solar_lagrange
+import SolarLagrangeSolver from physics.solar_lagrange
+import open from render.window
+import poll from render.window
+import clear from render.window
+import elapsed_seconds from render.window
+import key_pressed from render.window
+import scroll_y from render.window
+import set_view from render.canvas
+import present from render.canvas
+import circle from render.canvas
+import line from render.canvas
+import text from render.canvas
+import text_screen from render.canvas
+
+const SUN_MASS: Float64<kilogram> = 1.98847e30 kilogram
+const EARTH_MASS: Float64<kilogram> = 5.9722e24 kilogram
+const MOON_MASS: Float64<kilogram> = 7.342e22 kilogram
+const SOLAR_SEPARATION: Float64<meter> = 149597870.7 kilometer
+const EARTH_MOON_SEPARATION: Float64<meter> = 384400.0 kilometer
+const STEP: Float64<second> = 300.0 second
+const SOLAR_RELATIVE_SPEED: Float64<meter / second> =
+  29784.691831696804 (meter / second)
+const LUNAR_RELATIVE_SPEED: Float64<meter / second> =
+  1024.5463142288881 (meter / second)
+const INITIAL_PLAYBACK_RATE: Float64 = 432000.0
+const MAX_PLAYBACK_RATE: Float64 = 3456000.0
+const TRAIL_SAMPLE_INTERVAL: Float64<second> = 21600.0 second
+
+class Trail8 {
+  let .one: Vector2<Float64>
+  let .two: Vector2<Float64>
+  let .three: Vector2<Float64>
+  let .four: Vector2<Float64>
+  let .five: Vector2<Float64>
+  let .six: Vector2<Float64>
+  let .seven: Vector2<Float64>
+  let .eight: Vector2<Float64>
+
+  new(point: Vector2<Float64>) {
+    self.one = point
+    self.two = point
+    self.three = point
+    self.four = point
+    self.five = point
+    self.six = point
+    self.seven = point
+    self.eight = point
+  }
+
+  new(one: Vector2<Float64>, two: Vector2<Float64>,
+      three: Vector2<Float64>, four: Vector2<Float64>,
+      five: Vector2<Float64>, six: Vector2<Float64>,
+      seven: Vector2<Float64>, eight: Vector2<Float64>) {
+    self.one = one
+    self.two = two
+    self.three = three
+    self.four = four
+    self.five = five
+    self.six = six
+    self.seven = seven
+    self.eight = eight
+  }
+
+  fun add(point: Vector2<Float64>): Trail8 =>
+    Trail8(self.two, self.three, self.four, self.five,
+           self.six, self.seven, self.eight, point)
+
+  fun point_one(): Vector2<Float64> => self.one
+  fun point_two(): Vector2<Float64> => self.two
+  fun point_three(): Vector2<Float64> => self.three
+  fun point_four(): Vector2<Float64> => self.four
+  fun point_five(): Vector2<Float64> => self.five
+  fun point_six(): Vector2<Float64> => self.six
+  fun point_seven(): Vector2<Float64> => self.seven
+  fun point_eight(): Vector2<Float64> => self.eight
+}
+
+let earth_moon_mass = EARTH_MASS + MOON_MASS
+let system_mass = SUN_MASS + earth_moon_mass
+let sun_radius = SOLAR_SEPARATION * earth_moon_mass / system_mass
+let earth_moon_radius = SOLAR_SEPARATION * SUN_MASS / system_mass
+let sun_speed = SOLAR_RELATIVE_SPEED * earth_moon_mass / system_mass
+let earth_moon_speed = SOLAR_RELATIVE_SPEED * SUN_MASS / system_mass
+let earth_radius = EARTH_MOON_SEPARATION * MOON_MASS / earth_moon_mass
+let moon_radius = EARTH_MOON_SEPARATION * EARTH_MASS / earth_moon_mass
+let earth_speed = LUNAR_RELATIVE_SPEED * MOON_MASS / earth_moon_mass
+let moon_speed = LUNAR_RELATIVE_SPEED * EARTH_MASS / earth_moon_mass
+let origin = (0.0, 0.0) meter
+let sun_position = origin + <-1.0, 0.0> * sun_radius
+let earth_moon_barycenter = origin + <1.0, 0.0> * earth_moon_radius
+let earth_position = earth_moon_barycenter + <-1.0, 0.0> * earth_radius
+let moon_position = earth_moon_barycenter + <1.0, 0.0> * moon_radius
+let sun_velocity = <0.0, -1.0> * sun_speed
+let earth_moon_velocity = <0.0, 1.0> * earth_moon_speed
+let earth_velocity = earth_moon_velocity + <0.0, -1.0> * earth_speed
+let moon_velocity = earth_moon_velocity + <0.0, 1.0> * moon_speed
+
+fun lagrange_seed(identity: String, normalized_x: Float64,
+                  normalized_y: Float64): SolarLagrangeSeed {
+  return SolarLagrangeSeed(
+    identity,
+    earth_moon_barycenter + <normalized_x, normalized_y> * EARTH_MOON_SEPARATION,
+    earth_moon_velocity + <-normalized_y, normalized_x> * LUNAR_RELATIVE_SPEED,
+    normalized_x, normalized_y)
+}
+
+fun create_solver(): SolarLagrangeSolver => SolarLagrangeSolver(
+  SUN_MASS, sun_position, sun_velocity,
+  EARTH_MASS, earth_position, earth_velocity,
+  MOON_MASS, moon_position, moon_velocity,
+  STEP,
+  lagrange_seed("L1", 0.8369459145954874, 0.0),
+  lagrange_seed("L2", 1.155658098131319, 0.0),
+  lagrange_seed("L3", -1.0050600391594884, 0.0),
+  lagrange_seed("L4", 0.4878556707169819, 0.8660254037844386),
+  lagrange_seed("L5", 0.4878556707169819, -0.8660254037844386),
+  lagrange_seed("Control", 0.0, 1.0))
+
+fun stability_display(body: SolarTertiarySnapshot): String {
+  if body.escaped() { return "escaped" }
+  return "${body.stability_error() / (1000.0 meter)} km"
+}
+
+fun local_point(position: Point2<Float64, meter>,
+                snapshot: SolarLagrangeSnapshot,
+                kilometers_per_pixel: Float64): Vector2<Float64> =>
+  display_coordinates(position, snapshot.earth_moon_barycenter(),
+                      kilometers_per_pixel * 1000.0 meter)
+
+fun draw_trail(trail: Trail8, red: Int64, green: Int64, blue: Int64): Void {
+  line(trail.point_one().x, trail.point_one().y, trail.point_two().x, trail.point_two().y, 2.0, red, green, blue)
+  line(trail.point_two().x, trail.point_two().y, trail.point_three().x, trail.point_three().y, 2.0, red, green, blue)
+  line(trail.point_three().x, trail.point_three().y, trail.point_four().x, trail.point_four().y, 2.0, red, green, blue)
+  line(trail.point_four().x, trail.point_four().y, trail.point_five().x, trail.point_five().y, 2.0, red, green, blue)
+  line(trail.point_five().x, trail.point_five().y, trail.point_six().x, trail.point_six().y, 2.0, red, green, blue)
+  line(trail.point_six().x, trail.point_six().y, trail.point_seven().x, trail.point_seven().y, 2.0, red, green, blue)
+  line(trail.point_seven().x, trail.point_seven().y, trail.point_eight().x, trail.point_eight().y, 2.0, red, green, blue)
+}
+
+let solver = create_solver()
+let current = solver.snapshot()
+let kilometers_per_pixel = 2500.0
+let simulation_seconds_per_real_second = INITIAL_PLAYBACK_RATE
+let paused = false
+let accumulator = 0.0 second
+let last_trail_sample = current.time()
+let earth_trail = Trail8(local_point(current.earth().position(), current,
+                                     kilometers_per_pixel))
+let moon_trail = Trail8(local_point(current.moon().position(), current,
+                                    kilometers_per_pixel))
+let first_trail = Trail8(local_point(current.tertiary(0).position(), current,
+                                     kilometers_per_pixel))
+let second_trail = Trail8(local_point(current.tertiary(1).position(), current,
+                                      kilometers_per_pixel))
+let third_trail = Trail8(local_point(current.tertiary(2).position(), current,
+                                     kilometers_per_pixel))
+let fourth_trail = Trail8(local_point(current.tertiary(3).position(), current,
+                                      kilometers_per_pixel))
+let fifth_trail = Trail8(local_point(current.tertiary(4).position(), current,
+                                     kilometers_per_pixel))
+let control_trail = Trail8(local_point(current.tertiary(5).position(), current,
+                                       kilometers_per_pixel))
+
+if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
+  let previous_frame_time = elapsed_seconds()
+  while poll() {
+    let frame_time = elapsed_seconds()
+    let frame_duration = frame_time - previous_frame_time
+    previous_frame_time = frame_time
+    if frame_duration > 0.25 { frame_duration = 0.25 }
+    if key_pressed("space") { paused = paused == false }
+    if key_pressed("up") {
+      simulation_seconds_per_real_second = simulation_seconds_per_real_second * 2.0
+      if simulation_seconds_per_real_second > MAX_PLAYBACK_RATE {
+        simulation_seconds_per_real_second = MAX_PLAYBACK_RATE
+      }
+    }
+    if key_pressed("down") {
+      simulation_seconds_per_real_second = simulation_seconds_per_real_second / 2.0
+    }
+    let wheel = scroll_y()
+    if wheel > 0.0 { kilometers_per_pixel = kilometers_per_pixel * 0.8 }
+    if wheel < 0.0 { kilometers_per_pixel = kilometers_per_pixel * 1.25 }
+    if key_pressed("r") {
+      solver = create_solver()
+      current = solver.snapshot()
+      accumulator = 0.0 second
+      last_trail_sample = current.time()
+      paused = true
+    }
+    if paused == false {
+      accumulator = accumulator +
+        frame_duration * simulation_seconds_per_real_second * 1.0 second
+      while accumulator >= STEP {
+        current = solver.step!()
+        accumulator = accumulator - STEP
+      }
+    }
+    if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
+      earth_trail = earth_trail.add(local_point(current.earth().position(), current,
+                                                kilometers_per_pixel))
+      moon_trail = moon_trail.add(local_point(current.moon().position(), current,
+                                              kilometers_per_pixel))
+      first_trail = first_trail.add(local_point(current.tertiary(0).position(), current,
+                                                kilometers_per_pixel))
+      second_trail = second_trail.add(local_point(current.tertiary(1).position(), current,
+                                                  kilometers_per_pixel))
+      third_trail = third_trail.add(local_point(current.tertiary(2).position(), current,
+                                                kilometers_per_pixel))
+      fourth_trail = fourth_trail.add(local_point(current.tertiary(3).position(), current,
+                                                  kilometers_per_pixel))
+      fifth_trail = fifth_trail.add(local_point(current.tertiary(4).position(), current,
+                                                kilometers_per_pixel))
+      control_trail = control_trail.add(local_point(current.tertiary(5).position(), current,
+                                                    kilometers_per_pixel))
+      last_trail_sample = current.time()
+    }
+
+    clear(7, 12, 22)
+    set_view(-70.0, 0.0, 1.0)
+    let earth = local_point(current.earth().position(), current, kilometers_per_pixel)
+    let moon = local_point(current.moon().position(), current, kilometers_per_pixel)
+    let l1_point = local_point(current.tertiary(0).position(), current, kilometers_per_pixel)
+    let l2_point = local_point(current.tertiary(1).position(), current, kilometers_per_pixel)
+    let l3_point = local_point(current.tertiary(2).position(), current, kilometers_per_pixel)
+    let l4_point = local_point(current.tertiary(3).position(), current, kilometers_per_pixel)
+    let l5_point = local_point(current.tertiary(4).position(), current, kilometers_per_pixel)
+    let control_point = local_point(current.tertiary(5).position(), current, kilometers_per_pixel)
+    let sun_direction = normalized(current.sun().position() -
+                                   current.earth_moon_barycenter())
+    line(0.0, 0.0, sun_direction.x * 250.0, sun_direction.y * 250.0,
+         3.0, 255, 182, 46)
+    text(sun_direction.x * 270.0, sun_direction.y * 270.0,
+         "Sun", 12, 255, 182, 46)
+    draw_trail(earth_trail, 76, 151, 255)
+    draw_trail(moon_trail, 210, 220, 235)
+    draw_trail(first_trail, 244, 114, 182)
+    draw_trail(second_trail, 251, 146, 60)
+    draw_trail(third_trail, 167, 139, 250)
+    draw_trail(fourth_trail, 74, 222, 128)
+    draw_trail(fifth_trail, 34, 211, 238)
+    draw_trail(control_trail, 248, 113, 113)
+    circle(earth.x, earth.y, 14.0, 76, 151, 255)
+    circle(moon.x, moon.y, 10.0, 210, 220, 235)
+    circle(l1_point.x, l1_point.y, 5.0, 244, 114, 182)
+    circle(l2_point.x, l2_point.y, 5.0, 251, 146, 60)
+    circle(l3_point.x, l3_point.y, 5.0, 167, 139, 250)
+    circle(l4_point.x, l4_point.y, 5.0, 74, 222, 128)
+    circle(l5_point.x, l5_point.y, 5.0, 34, 211, 238)
+    circle(control_point.x, control_point.y, 5.0, 248, 113, 113)
+    text(earth.x + 12.0, earth.y + 12.0, "Earth", 11, 76, 151, 255)
+    text(moon.x + 10.0, moon.y - 18.0, "Moon", 11, 210, 220, 235)
+    text(l1_point.x - 28.0, l1_point.y + 12.0, "L1", 10, 244, 114, 182)
+    text(l2_point.x + 7.0, l2_point.y + 7.0, "L2", 10, 251, 146, 60)
+    text(l3_point.x + 7.0, l3_point.y + 7.0, "L3", 10, 167, 139, 250)
+    text(l4_point.x + 7.0, l4_point.y + 7.0, "L4", 10, 74, 222, 128)
+    text(l5_point.x + 7.0, l5_point.y + 7.0, "L5", 10, 34, 211, 238)
+    text(control_point.x + 7.0, control_point.y + 7.0,
+         "Control", 10, 248, 113, 113)
+
+    let inset_sun = display_coordinates(current.sun().position(), origin,
+                                        SOLAR_SEPARATION / 90.0)
+    let inset_group = display_coordinates(current.earth_moon_barycenter(), origin,
+                                          SOLAR_SEPARATION / 90.0)
+    circle(390.0 + inset_sun.x, -240.0 + inset_sun.y, 8.0, 255, 182, 46)
+    circle(390.0 + inset_group.x, -240.0 + inset_group.y, 4.0, 76, 151, 255)
+    text(300.0, -300.0, "heliocentric inset", 11, 148, 163, 184)
+
+    text_screen(20, 18, "Solar-perturbed Earth-Moon Lagrange experiment", 17, 226, 232, 240)
+    text_screen(20, 45, "Space pause | Wheel zoom | Up/Down speed | R reset | Escape close", 12, 148, 163, 184)
+    text_screen(20, 68, "simulation time: ${current.time() / (86400.0 second)} days", 12, 148, 210, 189)
+    text_screen(20, 88, "local zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
+    text_screen(20, 118, "L1 error: ${stability_display(current.tertiary(0))}", 11, 244, 114, 182)
+    text_screen(20, 138, "L2 error: ${stability_display(current.tertiary(1))}", 11, 251, 146, 60)
+    text_screen(20, 158, "L3 error: ${stability_display(current.tertiary(2))}", 11, 167, 139, 250)
+    text_screen(20, 178, "L4 error: ${stability_display(current.tertiary(3))}", 11, 74, 222, 128)
+    text_screen(20, 198, "L5 error: ${stability_display(current.tertiary(4))}", 11, 34, 211, 238)
+    text_screen(20, 218, "Control error: ${stability_display(current.tertiary(5))}", 11, 248, 113, 113)
+    present()
+  }
+}
+
+print("final_time_s ${current.time()}")
+print("final_L4_error ${stability_display(current.tertiary(3))}")
+print("final_L5_error ${stability_display(current.tertiary(4))}")

@@ -121,7 +121,7 @@ remaining gravitationally independent of one another.
 
 **Status: implemented at `7603ecc`, corrected at `2e767ff`, and verified on
 2026-10-01.** `make lagrange-demo`
-reuses `sagan-render` 0.4.0 and `sagan-physics` 0.2.1 without adding another
+reuses `sagan-render` 0.4.0 and `sagan-physics` 0.3.0 without adding another
 renderer. It draws all eight bodies with distinct matching-color eight-sample
 trails sampled every six simulation hours, plus all six rotating-frame errors.
 It begins at five simulated days per real second.
@@ -171,7 +171,7 @@ do not describe all five points as stable. **Demo:** proposed
 then hands the same snapshot contract to R3.
 
 **Status: implemented at `abbc147` and locally verified on 2026-10-01.**
-`sagan-physics` 0.2.1 provides `physics.restricted_three_body`, retaining P0's
+`sagan-physics` 0.3.0 provides `physics.restricted_three_body`, retaining P0's
 massive pair while advancing six independent massless tracers. The checked
 60-day fixture uses a 300-second step and an Earth-Moon-like circular pair;
 the primary snapshots remain bit-identical to a separate P0 reference run.
@@ -180,6 +180,14 @@ and 71 micrometres, versus 962 million metres for the off-point control. The
 collinear-point traces remain available for comparison without claiming that
 L1, L2, or L3 are stable. R3 can consume these immutable snapshots without
 adding physics to the renderer.
+
+**P2 — Solar-perturbed Lagrange experiment.** Preserve P1 as the ideal
+reference and add a separate planar model in which the Sun, Earth, and Moon
+mutually gravitate while the same six massless tracers feel all three massive
+bodies. Center the main presentation on the Earth-Moon barycenter and include
+a heliocentric inset so both scales remain legible. This is a controlled model
+comparison, not an ephemeris claim. **Status:** implemented in
+`sagan-physics` 0.3.0 with checked numeric and windowed 60-day fixtures.
 
 ## Math chat
 

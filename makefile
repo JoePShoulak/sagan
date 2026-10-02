@@ -97,7 +97,7 @@ WINDOWS_RUNTIME_LDFLAGS :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test two-body-demo two-body-demo-test lagrange-demo lagrange-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test lagrange-numeric-demo lagrange-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test two-body-demo two-body-demo-test lagrange-demo lagrange-demo-test solar-lagrange-demo solar-lagrange-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test lagrange-numeric-demo lagrange-numeric-demo-test solar-lagrange-numeric-demo solar-lagrange-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -284,6 +284,12 @@ lagrange-demo: $(TARGET)
 lagrange-demo-test: $(TARGET)
 	bash tests/integration/lagrange_window_test.sh
 
+solar-lagrange-demo: $(TARGET)
+	bash scripts/solar_lagrange_demo.sh
+
+solar-lagrange-demo-test: $(TARGET)
+	bash tests/integration/solar_lagrange_window_test.sh
+
 run-demo: $(TARGET)
 	bash scripts/run_demo.sh
 
@@ -307,6 +313,12 @@ lagrange-numeric-demo: $(TARGET)
 
 lagrange-numeric-demo-test: $(TARGET)
 	bash tests/integration/lagrange_numeric_test.sh
+
+solar-lagrange-numeric-demo: $(TARGET)
+	bash scripts/solar_lagrange_numeric_demo.sh
+
+solar-lagrange-numeric-demo-test: $(TARGET)
+	bash tests/integration/solar_lagrange_numeric_test.sh
 
 editor-tooling-demo: $(TARGET)
 	bash scripts/editor_tooling_demo.sh
