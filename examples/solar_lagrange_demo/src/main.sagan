@@ -238,26 +238,26 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
       while accumulator >= STEP {
         current = solver.step!()
         accumulator = accumulator - STEP
-      }
-    }
-    if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
-      earth_trail = earth_trail.add(local_point(current.earth().position(), current,
-                                                kilometers_per_pixel))
-      moon_trail = moon_trail.add(local_point(current.moon().position(), current,
-                                              kilometers_per_pixel))
-      first_trail = first_trail.add(local_point(current.tertiary(0).position(), current,
-                                                kilometers_per_pixel))
-      second_trail = second_trail.add(local_point(current.tertiary(1).position(), current,
-                                                  kilometers_per_pixel))
-      third_trail = third_trail.add(local_point(current.tertiary(2).position(), current,
-                                                kilometers_per_pixel))
-      fourth_trail = fourth_trail.add(local_point(current.tertiary(3).position(), current,
-                                                  kilometers_per_pixel))
-      fifth_trail = fifth_trail.add(local_point(current.tertiary(4).position(), current,
-                                                kilometers_per_pixel))
-      control_trail = control_trail.add(local_point(current.tertiary(5).position(), current,
+        if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
+          earth_trail = earth_trail.add(local_point(current.earth().position(), current,
                                                     kilometers_per_pixel))
-      last_trail_sample = current.time()
+          moon_trail = moon_trail.add(local_point(current.moon().position(), current,
+                                                  kilometers_per_pixel))
+          first_trail = first_trail.add(local_point(current.tertiary(0).position(), current,
+                                                    kilometers_per_pixel))
+          second_trail = second_trail.add(local_point(current.tertiary(1).position(), current,
+                                                      kilometers_per_pixel))
+          third_trail = third_trail.add(local_point(current.tertiary(2).position(), current,
+                                                    kilometers_per_pixel))
+          fourth_trail = fourth_trail.add(local_point(current.tertiary(3).position(), current,
+                                                      kilometers_per_pixel))
+          fifth_trail = fifth_trail.add(local_point(current.tertiary(4).position(), current,
+                                                    kilometers_per_pixel))
+          control_trail = control_trail.add(local_point(current.tertiary(5).position(), current,
+                                                        kilometers_per_pixel))
+          last_trail_sample = current.time()
+        }
+      }
     }
 
     clear(7, 12, 22)

@@ -8,12 +8,12 @@ cd "$repo_root"
 capture="build/solar-lagrange-demo/solar-lagrange-window.bmp"
 rm -f "$capture"
 output="$(
-  SAGAN_RENDER_TEST_FRAME_MS=20 \
+  SAGAN_RENDER_TEST_FRAME_MS=100 \
   SAGAN_RENDER_TEST_SPACE_FRAME=1 \
-  SAGAN_RENDER_TEST_SCROLL_FRAME=300 \
+  SAGAN_RENDER_TEST_SCROLL_FRAME=60 \
   SAGAN_RENDER_TEST_SCROLL_DELTA=-3 \
-  SAGAN_RENDER_FRAME_LIMIT=600 \
-  SAGAN_RENDER_CAPTURE_FRAME=600 \
+  SAGAN_RENDER_FRAME_LIMIT=120 \
+  SAGAN_RENDER_CAPTURE_FRAME=120 \
   SAGAN_RENDER_CAPTURE_BMP="$capture" \
   bash scripts/solar_lagrange_demo.sh
 )"

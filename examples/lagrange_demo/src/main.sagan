@@ -200,6 +200,17 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     while accumulated_simulation_seconds >= 299.999999 {
       current = solver.step!()
       accumulated_simulation_seconds = accumulated_simulation_seconds - STEP_SECONDS
+      if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
+        primary_trail.record!(display_coordinates(current.primary().position(), origin, 1000 kilometer))
+        secondary_trail.record!(display_coordinates(current.secondary().position(), origin, 1000 kilometer))
+        first_trail.record!(display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer))
+        second_trail.record!(display_coordinates(current.tertiary(1).position(), origin, 1000 kilometer))
+        third_trail.record!(display_coordinates(current.tertiary(2).position(), origin, 1000 kilometer))
+        fourth_trail.record!(display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer))
+        fifth_trail.record!(display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer))
+        control_trail.record!(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
+        last_trail_sample = current.time()
+      }
     }
 
     let primary = display_coordinates(current.primary().position(), origin, 1000 kilometer)
@@ -215,18 +226,6 @@ if open("Sagan R3: Lagrange Stability", 1180, 720) {
     let third_target = display_coordinates(lagrange_target(current, 2), origin, 1000 kilometer)
     let fourth_target = display_coordinates(lagrange_target(current, 3), origin, 1000 kilometer)
     let fifth_target = display_coordinates(lagrange_target(current, 4), origin, 1000 kilometer)
-    if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
-      primary_trail.record!(primary)
-      secondary_trail.record!(secondary)
-      first_trail.record!(first)
-      second_trail.record!(second)
-      third_trail.record!(third)
-      fourth_trail.record!(fourth)
-      fifth_trail.record!(fifth)
-      control_trail.record!(control)
-      last_trail_sample = current.time()
-    }
-
     clear(7, 13, 25)
     line(-700.0, 0.0, 700.0, 0.0, 1.0, 37, 52, 71)
     line(0.0, -500.0, 0.0, 500.0, 1.0, 37, 52, 71)
