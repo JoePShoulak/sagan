@@ -96,10 +96,12 @@ versioned project diagnostics. It also offers section, `[package]` and
 `[application]` key completions, plus the compiler-defined `console` and
 `windowed` application-mode values, with replacement edits. Hover describes
 recognized sections and keys from compiler-owned metadata. Document symbols
-show section and key hierarchy, even while the buffer is incomplete. These are
-an initial manifest-document service, not a claim of complete TOML editing:
-dependency values, navigation, formatting, and quick fixes are not yet
-advertised.
+show section and key hierarchy, even while the buffer is incomplete. Entry
+paths and locked dependency keys navigate to their compiler-resolved targets.
+Quoted dependency requirements for an installed package, including the
+`{ package, version }` alias form, can complete to the newest compatible
+indexed version. These remain an initial manifest-document service:
+formatting and quick fixes are not yet advertised.
 
 Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.

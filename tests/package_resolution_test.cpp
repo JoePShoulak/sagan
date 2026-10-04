@@ -177,7 +177,43 @@ auto main() -> int
   require(newest_dependency.value && newest_dependency.value->size() == 1 &&
               newest_dependency.value->front().edit.replacement_utf8.find("^0.1.1") != std::string::npos,
           "Dependency completion did not prefer the newest compatible installed version");
+  const std::string dependency_value_text = "[dependencies]\norbit-tools = \"^0.\"";
+  const sagan::source::document_snapshot dependency_value_document(
+      manifest_document.value->identity(), 14, dependency_value_text);
+  const auto value_position = dependency_value_text.find("^0.") + 3;
+  const auto dependency_versions = sagan::language_service::complete_manifest_document(
+      dependency_value_document, static_cast<sagan::source::byte_offset>(value_position),
+      {}, multiple_versions);
+  require(dependency_versions.value && dependency_versions.value->size() == 1 &&
+              dependency_versions.value->front().label == "^0.1.1" &&
+              dependency_versions.value->front().edit.replacement_utf8 == "\"^0.1.1\"" &&
+              dependency_versions.value->front().edit.range.bytes ==
+                  sagan::source::byte_range{static_cast<sagan::source::byte_offset>(value_position - 4),
+                                            static_cast<sagan::source::byte_offset>(value_position + 1)},
+          "Installed package version completion lost its requirement or quoted replacement range");
+  const std::string alias_value_text =
+      "[dependencies]\norbit_tools = { package = \"orbit-tools\", version = \"^0.\" }";
+  const sagan::source::document_snapshot alias_value_document(
+      manifest_document.value->identity(), 15, alias_value_text);
+  const auto alias_value_position = alias_value_text.find("^0.") + 3;
+  const auto alias_versions = sagan::language_service::complete_manifest_document(
+      alias_value_document, static_cast<sagan::source::byte_offset>(alias_value_position),
+      {}, multiple_versions);
+  require(alias_versions.value && alias_versions.value->size() == 1 &&
+              alias_versions.value->front().label == "^0.1.1" &&
+              alias_versions.value->front().edit.replacement_utf8 == "\"^0.1.1\"",
+          "Aliased dependency requirement completion did not resolve its package name");
   const modules::package_resolution_options unavailable_index{"build/no-such-index.tsv", "2.1.0", {}};
+  const auto unavailable_versions = sagan::language_service::complete_manifest_document(
+      dependency_value_document, static_cast<sagan::source::byte_offset>(value_position),
+      {}, unavailable_index);
+  require(unavailable_versions.value && unavailable_versions.value->empty(),
+          "Dependency version completion invented a package without an installed index");
+  require(sagan::language_service::complete_manifest_document(
+              dependency_value_document, static_cast<sagan::source::byte_offset>(value_position),
+              cancelled_manifest.token(), multiple_versions).state ==
+              sagan::diagnostics::result_state::cancelled,
+          "Cancelled dependency version completion exposed a stale candidate");
   const auto unavailable_dependencies = sagan::language_service::complete_manifest_document(
       dependency_manifest, static_cast<sagan::source::byte_offset>(dependency_prefix.size()),
       {}, unavailable_index);

@@ -116,8 +116,9 @@ for continued local extension development:
   package/application key, and application-mode value completion have
   compiler-owned replacement edits. Recognized sections and keys have hover
   explanations, and document symbols show the section/key hierarchy.
-  Navigation, formatting, safe quick fixes, and
-  contextual dependency values remain. The extension must not reproduce
+  Entry-path and locked-dependency navigation and direct installed-package
+  requirement completion, including the inline-table alias form, are
+  available. Formatting and safe quick fixes remain. The extension must not reproduce
   manifest parsing or validation in TypeScript. Finish an explicit manifest
   document selector/capability and tests for required, duplicate, and unknown
   keys and sections, dependency aliases and requirements, paths, entry

@@ -138,9 +138,11 @@ installed index and compiler-compatibility rules to suggest importable aliases.
 For a package name containing a hyphen, the edit inserts an underscore alias
 and the explicit `{ package, version }` form. The suggestion uses the newest
 compatible installed version and never claims an available-only package is
-locally usable. Accepting a new dependency still requires updating the
-project lockfile; dependency-value completion and automatic lockfile edits
-remain unfinished.
+locally usable. Inside a quoted requirement for an installed package, including
+the inline-table `{ package, version }` alias form, completion can replace the
+whole quoted value with the newest compatible caret requirement. Accepting a
+new dependency still requires updating the project
+lockfile; automatic lockfile edits remain unfinished.
 
 The thin LSP request is `sagan/packages/catalog`:
 

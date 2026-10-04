@@ -317,6 +317,29 @@ def run():
         assert any(item["label"] == "orbit_tools" and item["textEdit"]["newText"] ==
                    'orbit_tools = { package = "orbit-tools", version = "^0.1.0" }'
                    for item in dependency_candidates), dependency_candidates
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 6},
+            "contentChanges": [{"text": '[dependencies]\norbit-tools = "^0."'}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 25, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1,
+                                               "character": len('orbit-tools = "^0.')}}})
+        dependency_versions = answer(25)
+        assert any(item["label"] == "^0.1.0" and item["textEdit"]["newText"] == '"^0.1.0"'
+                   for item in dependency_versions), dependency_versions
+        alias_requirement = 'orbit_tools = { package = "orbit-tools", version = "^0." }'
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 7},
+            "contentChanges": [{"text": '[dependencies]\n' + alias_requirement}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 26, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1,
+                                               "character": alias_requirement.find('^0.') + 3}}})
+        alias_versions = answer(26)
+        assert any(item["label"] == "^0.1.0" and item["textEdit"]["newText"] == '"^0.1.0"'
+                   for item in alias_versions), alias_versions
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

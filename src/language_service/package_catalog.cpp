@@ -167,6 +167,80 @@ namespace sagan::language_service
         }
       }
     }
+    if (section == "dependencies")
+    {
+      const auto full_line = text.substr(line_begin, line_limit - line_begin);
+      const auto equals = full_line.find('=');
+      if (equals != std::string_view::npos && line_begin + equals < offset &&
+          full_line.find('#') == std::string_view::npos)
+      {
+        auto key = full_line.substr(0, equals);
+        const auto key_start = key.find_first_not_of(" \t");
+        if (key_start != std::string_view::npos) key.remove_prefix(key_start);
+        while (!key.empty() && (key.back() == ' ' || key.back() == '\t')) key.remove_suffix(1);
+        std::string package_name(key);
+        auto value_begin = line_begin + equals + 1;
+        while (value_begin < line_limit && (text[value_begin] == ' ' || text[value_begin] == '\t'))
+          ++value_begin;
+        if (value_begin < line_limit && text[value_begin] == '{')
+        {
+          const auto package_field = full_line.find("package", equals + 1);
+          const auto package_equals = package_field == std::string_view::npos ?
+              std::string_view::npos : full_line.find('=', package_field + 7);
+          const auto package_quote = package_equals == std::string_view::npos ?
+              std::string_view::npos : full_line.find('"', package_equals + 1);
+          const auto package_end = package_quote == std::string_view::npos ?
+              std::string_view::npos : full_line.find('"', package_quote + 1);
+          const auto version_field = package_end == std::string_view::npos ?
+              std::string_view::npos : full_line.find("version", package_end + 1);
+          const auto version_equals = version_field == std::string_view::npos ?
+              std::string_view::npos : full_line.find('=', version_field + 7);
+          if (package_end != std::string_view::npos && version_equals != std::string_view::npos)
+          {
+            package_name = std::string(full_line.substr(package_quote + 1, package_end - package_quote - 1));
+            value_begin = line_begin + version_equals + 1;
+            while (value_begin < line_limit && (text[value_begin] == ' ' || text[value_begin] == '\t'))
+              ++value_begin;
+          }
+        }
+        if (!package_name.empty() && value_begin < line_limit && text[value_begin] == '"')
+        {
+          const auto content_begin = value_begin + 1;
+          const auto quote_end = text.find('"', content_begin);
+          if (quote_end != std::string_view::npos && quote_end <= line_limit &&
+              content_begin <= offset && offset <= quote_end)
+          {
+            const auto prefix = text.substr(content_begin, offset - content_begin);
+            const auto index_path = options.index_path.empty() ? modules::default_package_index_path() :
+                                    options.index_path;
+            std::string compiler_version = options.compiler_version.empty() ? SAGAN_VERSION :
+                                           options.compiler_version;
+            if (const auto suffix = compiler_version.find_first_of("+-"); suffix != std::string::npos)
+              compiler_version.erase(suffix);
+            const auto index = modules::query_package_index(index_path, compiler_version, {}, cancellation);
+            if (index.cancelled)
+              return {diagnostics::result_state::cancelled, {}, {}, version};
+            std::string installed_version;
+            for (const auto &package : index.packages)
+              if (package.name == package_name &&
+                  package.install_state == modules::package_install_state::installed &&
+                  package.compiler_compatible)
+                installed_version = package.version;
+            if (!installed_version.empty())
+            {
+              const auto requirement = "^" + installed_version;
+              if (requirement.starts_with(prefix))
+                return {diagnostics::result_state::complete,
+                        std::vector<manifest_completion_candidate>{{requirement,
+                            {{document.identity().id, {static_cast<source::byte_offset>(value_begin),
+                                                       static_cast<source::byte_offset>(quote_end + 1)}},
+                             "\"" + requirement + "\""}}}, {}, version};
+            }
+            return {diagnostics::result_state::complete, std::vector<manifest_completion_candidate>{}, {}, version};
+          }
+        }
+      }
+    }
     if (typed.find_first_of("=#\"'") != std::string_view::npos ||
         (typed.find_first_of(" \t") != std::string_view::npos && !typed.empty()))
       return {diagnostics::result_state::complete, std::vector<manifest_completion_candidate>{}, {}, version};
