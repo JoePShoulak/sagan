@@ -115,7 +115,8 @@ for continued local extension development:
   validation and versioned diagnostics now use the build parser; section,
   package/application key, and application-mode value completion have
   compiler-owned replacement edits. Recognized sections and keys have hover
-  explanations. Navigation, document symbols, formatting, safe quick fixes, and
+  explanations, and document symbols show the section/key hierarchy.
+  Navigation, formatting, safe quick fixes, and
   contextual dependency values remain. The extension must not reproduce
   manifest parsing or validation in TypeScript. Finish an explicit manifest
   document selector/capability and tests for required, duplicate, and unknown

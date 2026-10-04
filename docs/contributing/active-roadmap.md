@@ -42,7 +42,7 @@ only when its own library, protocol, and integration tests pass:
    optimized-local evaluation false unless separately proven.
 3. Complete compiler-owned `sagan.toml` document tooling beyond its initial
    overlay diagnostics, section/key and application-mode completion, and
-   section/key hover; finish remaining analysis
+   section/key hover and outline; finish remaining analysis
    cancellation checkpoints, as described in the
    [extension roadmap](../tooling/vscode-extension-roadmap.md).
 

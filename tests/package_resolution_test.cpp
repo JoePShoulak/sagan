@@ -133,6 +133,20 @@ auto main() -> int
   require(sagan::language_service::hover_manifest_document(mode_manifest, 15,
               cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
           "Cancelled manifest hover did not stop");
+  const sagan::source::document_snapshot outline_manifest(manifest_document.value->identity(), 13,
+      "[package]\r\nname = \"demo\"\r\n[application]\r\nmode = \"console\"\r\n");
+  const auto outline = sagan::language_service::manifest_document_symbols(outline_manifest);
+  require(outline.value && outline.value->size() == 2 &&
+              outline.value->front().name == "package" &&
+              outline.value->front().children.size() == 1 &&
+              outline.value->front().children.front().name == "name" &&
+              outline.value->back().name == "application" &&
+              outline.value->back().children.front().name == "mode" &&
+              outline.value->front().range.bytes.end == 26,
+          "CRLF manifest outline lost its section hierarchy or byte ranges");
+  require(sagan::language_service::manifest_document_symbols(outline_manifest,
+              cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
+          "Cancelled manifest symbol discovery did not stop");
   const modules::package_resolution_options options{index, "2.1.0", {}};
   const auto graph = modules::resolve_package(
       "tests/fixtures/catalog/consumer-alias", source, {}, options);

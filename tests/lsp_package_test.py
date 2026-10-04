@@ -261,6 +261,15 @@ def run():
         assert "windowed" in mode_hover["contents"]["value"], mode_hover
         assert mode_hover["range"] == {"start": {"line": 1, "character": 0},
                                         "end": {"line": 1, "character": 4}}, mode_hover
+        send(process, {"jsonrpc": "2.0", "id": 21, "method": "textDocument/documentSymbol",
+                       "params": {"textDocument": {"uri": manifest_uri}}})
+        manifest_outline = answer(21)
+        assert len(manifest_outline) == 1 and manifest_outline[0]["name"] == "application", (
+            manifest_outline)
+        assert manifest_outline[0]["children"][0]["name"] == "mode", manifest_outline
+        assert manifest_outline[0]["children"][0]["selectionRange"] == {
+            "start": {"line": 1, "character": 0}, "end": {"line": 1, "character": 4}}, (
+                manifest_outline)
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

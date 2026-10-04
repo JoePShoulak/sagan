@@ -287,6 +287,73 @@ namespace sagan::language_service
     return selected(line_begin + first, line_begin + key_end, description);
   }
 
+  auto manifest_document_symbols(const source::document_snapshot &document,
+                                 const diagnostics::cancellation_token cancellation)
+    -> diagnostics::analysis_result<std::vector<manifest_document_symbol>>
+  {
+    const auto version = document.version();
+    if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+    if (!document.identity().canonical_path ||
+        document.identity().canonical_path->filename() != "sagan.toml")
+      return {diagnostics::result_state::incomplete, {}, {}, version};
+    const auto text = document.text();
+    std::vector<manifest_document_symbol> sections;
+    std::size_t line_begin = 0;
+    while (line_begin < text.size())
+    {
+      if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+      const auto ending = text.find_first_of("\r\n", line_begin);
+      const auto line_end = ending == std::string_view::npos ? text.size() : ending;
+      const auto line = text.substr(line_begin, line_end - line_begin);
+      const auto first = line.find_first_not_of(" \t");
+      if (first != std::string_view::npos && line[first] != '#')
+      {
+        const auto absolute_first = line_begin + first;
+        if (line[first] == '[')
+        {
+          const auto closing = line.find(']', first + 1);
+          if (closing != std::string_view::npos && closing > first + 1)
+          {
+            if (!sections.empty())
+              sections.back().range.bytes.end = static_cast<source::byte_offset>(line_begin);
+            const auto selection = source::source_range{
+                document.identity().id,
+                {static_cast<source::byte_offset>(absolute_first),
+                 static_cast<source::byte_offset>(line_begin + closing + 1)}};
+            sections.push_back({std::string(line.substr(first + 1, closing - first - 1)),
+                                {document.identity().id,
+                                 {static_cast<source::byte_offset>(line_begin),
+                                  static_cast<source::byte_offset>(text.size())}},
+                                selection, {}});
+          }
+        }
+        else if (!sections.empty())
+        {
+          const auto equals = line.find('=', first);
+          if (equals != std::string_view::npos)
+          {
+            auto key_end = equals;
+            while (key_end > first && (line[key_end - 1] == ' ' || line[key_end - 1] == '\t'))
+              --key_end;
+            if (key_end > first)
+              sections.back().children.push_back({std::string(line.substr(first, key_end - first)),
+                  {document.identity().id,
+                   {static_cast<source::byte_offset>(line_begin),
+                    static_cast<source::byte_offset>(line_end)}},
+                  {document.identity().id,
+                   {static_cast<source::byte_offset>(absolute_first),
+                    static_cast<source::byte_offset>(line_begin + key_end)}}, {}});
+          }
+        }
+      }
+      if (ending == std::string_view::npos) break;
+      line_begin = ending + (text[ending] == '\r' && ending + 1 < text.size() &&
+                             text[ending + 1] == '\n' ? 2 : 1);
+    }
+    if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+    return {diagnostics::result_state::complete, std::move(sections), {}, version};
+  }
+
   auto query_import_modules(const source::document_snapshot &document,
                             const source::byte_offset offset,
                             const diagnostics::cancellation_token cancellation,

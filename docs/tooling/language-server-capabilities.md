@@ -95,9 +95,10 @@ buffer with the same manifest parser used for disk builds and publishes
 versioned project diagnostics. It also offers section, `[package]` and
 `[application]` key completions, plus the compiler-defined `console` and
 `windowed` application-mode values, with replacement edits. Hover describes
-recognized sections and keys from compiler-owned metadata. These are an initial
-manifest-document service, not a claim of complete TOML editing: dependency
-values, navigation, symbols, formatting, and quick fixes are not yet
+recognized sections and keys from compiler-owned metadata. Document symbols
+show section and key hierarchy, even while the buffer is incomplete. These are
+an initial manifest-document service, not a claim of complete TOML editing:
+dependency values, navigation, formatting, and quick fixes are not yet
 advertised.
 
 Clients must treat missing or false capabilities as unavailable. They must not

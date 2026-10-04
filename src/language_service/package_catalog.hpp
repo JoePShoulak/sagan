@@ -40,6 +40,17 @@ namespace sagan::language_service
                                diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<manifest_hover_information>;
 
+  struct manifest_document_symbol
+  {
+    std::string name;
+    source::source_range range;
+    source::source_range selection;
+    std::vector<manifest_document_symbol> children;
+  };
+  auto manifest_document_symbols(const source::document_snapshot &document,
+                                 diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<std::vector<manifest_document_symbol>>;
+
   struct catalog_export
   {
     std::string symbol_id;
