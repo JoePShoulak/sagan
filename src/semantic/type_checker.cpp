@@ -327,6 +327,12 @@ namespace semantic
       return -static_cast<std::int64_t>(magnitude);
     }
 
+    struct default_candidate
+    {
+      callable_signature signature;
+      const parser::function_declaration *origin{};
+    };
+
     struct interface_type
     {
       std::vector<std::string> type_parameters;
@@ -336,7 +342,7 @@ namespace semantic
       std::unordered_set<std::string> constant_fields;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
       std::unordered_set<std::string> private_methods;
-      std::unordered_map<std::string, std::vector<callable_signature>> defaults;
+      std::unordered_map<std::string, std::vector<default_candidate>> defaults;
       std::vector<std::string> faces;
     };
 
@@ -1254,7 +1260,7 @@ namespace semantic
           interface.methods[method->name].push_back(signature(*method));
           if (method->private_member) interface.private_methods.insert(method->name);
           if (method->body || method->expression_body)
-            interface.defaults[method->name].push_back(signature(*method));
+            interface.defaults[method->name].push_back(default_candidate{signature(*method), method});
         }
         interfaces.emplace(type.name, std::move(interface));
         interface_ranges.emplace(type.name, type.range);
@@ -1334,10 +1340,19 @@ namespace semantic
           for (const auto &[method_name, defaults] : parent.defaults)
             for (auto candidate : defaults)
             {
-              for (auto &parameter : candidate.parameters)
+              for (auto &parameter : candidate.signature.parameters)
                 parameter = substitute_type(parameter, parent.type_parameters, parent_instance.arguments);
-              candidate.result = substitute_type(candidate.result, parent.type_parameters, parent_instance.arguments);
-              resolved.defaults[method_name].push_back(std::move(candidate));
+              candidate.signature.result = substitute_type(candidate.signature.result,
+                                                           parent.type_parameters,
+                                                           parent_instance.arguments);
+              auto &resolved_defaults = resolved.defaults[method_name];
+              if (std::none_of(resolved_defaults.begin(), resolved_defaults.end(),
+                               [&](const default_candidate &existing)
+              {
+                return existing.origin == candidate.origin &&
+                       same_signature(existing.signature, candidate.signature);
+              }))
+                resolved_defaults.push_back(std::move(candidate));
             }
         }
         for (const auto &[field_name, field_type] : direct.fields)
@@ -1376,14 +1391,14 @@ namespace semantic
           {
             add_signature(resolved.methods[method_name], candidate);
             auto &defaults = resolved.defaults[method_name];
-            std::erase_if(defaults, [&](const callable_signature &existing)
+            std::erase_if(defaults, [&](const default_candidate &existing)
             {
-              return same_signature(existing, candidate);
+              return same_signature(existing.signature, candidate);
             });
             const auto own_defaults = direct.defaults.find(method_name);
             if (own_defaults != direct.defaults.end())
               for (const auto &own_default : own_defaults->second)
-                if (same_signature(own_default, candidate)) defaults.push_back(own_default);
+                if (same_signature(own_default.signature, candidate)) defaults.push_back(own_default);
           }
         }
         interfaces[name] = std::move(resolved);
@@ -1444,7 +1459,7 @@ namespace semantic
       auto validate_composition(const std::string &class_name, object_type &object,
                                 const parser::span range) -> void
       {
-        std::unordered_map<std::string, std::vector<callable_signature>> inherited_defaults;
+        std::unordered_map<std::string, std::vector<default_candidate>> inherited_defaults;
         std::map<std::string, std::pair<std::string, std::string>> required_fields;
         for (const auto &face_name : object.faces)
         {
@@ -1508,9 +1523,9 @@ namespace semantic
               const auto defaults = face->second.defaults.find(method_name);
               const std::size_t default_count = defaults == face->second.defaults.end() ? 0U :
                   static_cast<std::size_t>(std::count_if(defaults->second.begin(), defaults->second.end(),
-                                                         [&](const callable_signature &candidate)
+                                                         [&](const default_candidate &candidate)
               {
-                return same_signature(required, candidate);
+                return same_signature(required, candidate.signature);
               }));
               const bool has_default = default_count != 0;
               if (provided_match)
@@ -1529,8 +1544,18 @@ namespace semantic
                                 method_name + "' required by face '" + face_name + "'",
                       range);
               if (!provided_match)
-                for (std::size_t index = 0; index < default_count; ++index)
-                  inherited_defaults[method_name].push_back(required);
+                for (const auto &candidate : defaults->second)
+                  if (same_signature(required, candidate.signature))
+                  {
+                    auto &inherited = inherited_defaults[method_name];
+                    if (std::none_of(inherited.begin(), inherited.end(),
+                                     [&](const default_candidate &existing)
+                    {
+                      return existing.origin == candidate.origin &&
+                             same_signature(existing.signature, candidate.signature);
+                    }))
+                      inherited.push_back(candidate);
+                  }
             }
           }
         }
@@ -1539,9 +1564,9 @@ namespace semantic
           for (std::size_t index = 0; index < defaults.size(); ++index)
           {
             const std::size_t matches = static_cast<std::size_t>(std::count_if(
-                defaults.begin(), defaults.end(), [&](const callable_signature &candidate)
+                defaults.begin(), defaults.end(), [&](const default_candidate &candidate)
             {
-              return same_signature(defaults[index], candidate);
+              return same_signature(defaults[index].signature, candidate.signature);
             }));
             require(matches == 1,
                     "Class '" + class_name + "' inherits conflicting defaults for method '" + method_name +
@@ -1550,10 +1575,10 @@ namespace semantic
             auto &methods = object.methods[method_name];
             if (std::none_of(methods.begin(), methods.end(), [&](const callable_signature &candidate)
                 {
-                  return same_signature(defaults[index], candidate);
+                  return same_signature(defaults[index].signature, candidate);
                 }))
             {
-              methods.push_back(defaults[index]);
+              methods.push_back(defaults[index].signature);
               object.method_owners.try_emplace(method_name, class_name);
             }
           }

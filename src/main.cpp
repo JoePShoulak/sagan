@@ -2100,6 +2100,14 @@ namespace
         "class Invalid has Left, Right {\n}\n",
         "inherits conflicting defaults for method 'value'; provide an explicit override");
     passed &= expect_type_model(
+        "diamond composition deduplicates one default declaration",
+        "face Massive {\n  fun mass(): Int => 42\n}\n"
+        "face Gravity has Massive {}\n"
+        "face Physics has Massive {}\n"
+        "class NaturalBody has Gravity, Physics {}\n"
+        "fun valid(): Int {\n  let body = NaturalBody()\n  return body.mass()\n}\n",
+        {"body: NaturalBody", "Int64 @"});
+    passed &= expect_type_model(
         "transitive face requirements and defaults",
         "face Readable {\n  fun current(): Int\n}\n"
         "face Countable is Readable {\n  fun next(): Int => self.current() + 1\n}\n"

@@ -133,8 +133,17 @@ default. The compiler resolves each required signature as follows:
 1. An exact class method wins and overrides a face default.
 2. Otherwise, one unambiguous default is composed into the class.
 3. If no implementation or default exists, conformance fails.
-4. If multiple composed faces provide competing defaults with the same
-   signature, the class must write an explicit override.
+4. If the same default declaration arrives through multiple composition paths,
+   as in a diamond, those paths collapse to one inherited default.
+5. If different declarations provide competing defaults with the same
+   signature, the class must write an explicit override. Textually identical
+   bodies are still different declarations.
+
+Default resolution uses declaration identity rather than composition order.
+It never silently chooses whichever path was visited first. For example, if
+`Gravity` and `Physics` both compose `Massive`, a class composing both receives
+the single `Massive` default once. Defaults declared independently by `Gravity`
+and `Physics` remain an explicit conflict.
 
 Private class methods cannot satisfy public face requirements, but they can
 satisfy private face helper requirements. Parameter and

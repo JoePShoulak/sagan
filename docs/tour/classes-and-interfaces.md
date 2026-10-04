@@ -225,7 +225,9 @@ values.
 - The class must implement every requirement not supplied by an unambiguous
   default.
 - A class method overrides a face default with the same signature.
-- Competing defaults require the class to provide an explicit override.
+- Repeated paths to the same default declaration collapse into one default.
+- Competing defaults from different declarations require the class to provide
+  an explicit override, even when their bodies are textually identical.
 - Class inheritance includes parent fields and methods. Face composition adds
   promised fields and default methods, while required methods still need an
   implementation.
