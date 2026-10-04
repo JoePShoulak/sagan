@@ -11,6 +11,8 @@ The player will create outposts, extract and refine resources, establish
 additional outposts, and build a fleet capable of temporarily housing humanity
 while searching for a new home among the stars.
 
+All gameplay choices and implementations should be backed with hard science/data (preferable) or a reasonable sci-fi reference.
+
 ## Entities
 
 ### Natural Bodies
@@ -100,7 +102,7 @@ the drone may share many systems with ships.
 
 ### Overview
 
-*To be defined.*
+extract → refine → transport → build → maintain → expand → evacuate
 
 ### Mechanics
 
@@ -140,6 +142,14 @@ affecting it to cause it to eventually have a deteriorating orbit, such that
 orbital corrections would need to be performed by all Ships, Satellites, and
 Stations. This can be mitigated somewhat by placing them in Lagrange points.
 
+#### Power
+
+Power will need to be generated and stored for many things to be able to run. Ships may need nuclear reactors. There may be things like giant space-based solar arrays and beamed-energy technology.
+
+#### Heat
+
+Heat will need to be managed. Some things (like people) need to be kept warm. Other things (like nuclear reactors) need to be kept cool.
+
 #### Ships
 
 *To be defined.*
@@ -162,6 +172,11 @@ No system is perfect.
 
 Machines will degrade over time and need repair. Your satellite will not last
 forever.
+
+
+##### Random Events
+
+Sometimes, things can just suddenlyt degrade by a sizable amount due to random events, maybe sometimes involving crew members with low comfort.
 
 ##### Repair
 
@@ -338,8 +353,10 @@ most intensive part of the game.
 3. Vehicles enter the battlefield. Once we have both outposts and vehicles
    supported, the vast majority of gameplay is ready to be developed.
 4. Drones, a small milestone but needs to stand on its own.
-5. UI development. We'll need to get this to actually look and feel like a game
-   at this step, even if asset quality is terrible.
+5. UI polishing. We'll need to get this to actually look and feel like a game at this step, even if asset quality is terrible.
+
+Steps 1-5 should begin as a vertical slice: Earth and Moon, a few bases, a few stations, a few ships, a few trucks, etc.
+
 6. Mechanical refinement. Make sure that we have a strong understanding of what
    game balance looks like, and what levers we have to pull. We should be able
    to get a fully self-sustaining setup in our game such that we are able to
@@ -369,3 +386,5 @@ most intensive part of the game.
 
 - What exists outside the Solar System?
 - How is orbit stabilization handled?
+  - I am considering that, unless acted on by an outisde force, all orbits are frozen. For Natural bodies, this means that unless a ship is pushing a small body, gravity is not being actively calculated, but their paths are more happening like animations. For bodies being acted on (like a ship or base pushing one), gravity would be calculated to make sure the orbit is being accurately updated. For entities like sattions, ships, and satellites, their 1km deviation time would be calculated, as would the fuel required to rendezvous back to the correction point. This fuel usage / mechanical degradation could then either be used in a manuever at the specificed time intervals, or could be continuously drained from the vehicle such that it is "constantly correcting" to the proper orbital position, and stays animated like the natural bodies until it runs out of fuel. All of this would allow for basically zero gravitational calculations unless an entity is out of fuel or a massive object is being pushed by a ship or base. We could also limit the timescale during those operations, such that we limit the rendering speed when we have to do true gravity calculations. The downside would be not allowing the player to fast forward while a ship is out of fuel could be incredibly inconvenient, so probably avoided I guess.
+- Which systems for a ship provide real and interesting gameplay changes? For example, what do better sensors for a ship actually do? Better navigation? For some of the more subtle systems, we need to decide if they're better in your face and customizable, or behinjd the scenes and abstracted.
