@@ -11,12 +11,154 @@
 #include "../parser/unicode.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <set>
 #include <stdexcept>
 
 namespace sagan::language_service
 {
   namespace
   {
+    auto manifest_error_range(const source::document_snapshot &document,
+                              const std::size_t one_based_line) -> source::source_range
+    {
+      const auto text = document.text();
+      if (one_based_line == 0 || one_based_line > document.lines().line_count())
+        return {document.identity().id, {0, static_cast<source::byte_offset>(text.size())}};
+      const auto start = document.to_byte({static_cast<std::uint32_t>(one_based_line - 1), 0});
+      if (!start) return {document.identity().id, {0, static_cast<source::byte_offset>(text.size())}};
+      auto end = *start;
+      while (end < text.size() && text[end] != '\r' && text[end] != '\n') ++end;
+      return {document.identity().id, {*start, end}};
+    }
+  }
+
+  auto analyze_manifest_document(const source::document_snapshot &document,
+                                 const diagnostics::cancellation_token cancellation)
+    -> diagnostics::analysis_result<modules::package_manifest>
+  {
+    const auto version = document.version();
+    if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+    if (!document.identity().canonical_path ||
+        document.identity().canonical_path->filename() != "sagan.toml")
+      return {diagnostics::result_state::incomplete, {},
+              {{std::string(diagnostics::default_code(diagnostics::phase::project)),
+                diagnostics::severity::error, diagnostics::phase::project,
+                manifest_error_range(document, 0), "Expected a file named sagan.toml", {}, {}, {}}}, version};
+    try
+    {
+      auto manifest = modules::parse_package_manifest(*document.identity().canonical_path,
+                                                       document.text());
+      if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+      return {diagnostics::result_state::complete, std::move(manifest), {}, version};
+    }
+    catch (const modules::manifest_error &error)
+    {
+      if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+      return {diagnostics::result_state::incomplete, {},
+              {{std::string(diagnostics::default_code(diagnostics::phase::project)),
+                diagnostics::severity::error, diagnostics::phase::project,
+                manifest_error_range(document, error.line()), error.what(), {}, {}, {}}}, version};
+    }
+    catch (const std::exception &error)
+    {
+      if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+      return {diagnostics::result_state::incomplete, {},
+              {{std::string(diagnostics::default_code(diagnostics::phase::project)),
+                diagnostics::severity::error, diagnostics::phase::project,
+                manifest_error_range(document, 0), error.what(), {}, {}, {}}}, version};
+    }
+  }
+
+  auto complete_manifest_document(const source::document_snapshot &document,
+                                  const source::byte_offset offset,
+                                  const diagnostics::cancellation_token cancellation)
+    -> diagnostics::analysis_result<std::vector<manifest_completion_candidate>>
+  {
+    const auto version = document.version();
+    if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+    if (!document.identity().canonical_path ||
+        document.identity().canonical_path->filename() != "sagan.toml" ||
+        !document.to_utf16(offset))
+      return {diagnostics::result_state::incomplete, {}, {}, version};
+    const auto text = document.text();
+    std::string section;
+    std::set<std::string> seen_sections;
+    std::set<std::string> seen_keys;
+    std::size_t line_begin = 0;
+    while (line_begin < offset)
+    {
+      if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+      const auto end = text.find_first_of("\r\n", line_begin);
+      if (end == std::string_view::npos || end >= offset) break;
+      auto line = text.substr(line_begin, end - line_begin);
+      const auto first = line.find_first_not_of(" \t");
+      if (first != std::string_view::npos)
+      {
+        line.remove_prefix(first);
+        if (line.starts_with('[') && line.ends_with(']'))
+        {
+          section = std::string(line.substr(1, line.size() - 2));
+          seen_sections.insert(section);
+          seen_keys.clear();
+        }
+        else if (const auto equals = line.find('='); equals != std::string_view::npos)
+        {
+          auto key = line.substr(0, equals);
+          while (!key.empty() && (key.back() == ' ' || key.back() == '\t')) key.remove_suffix(1);
+          seen_keys.insert(std::string(key));
+        }
+      }
+      line_begin = end + (text[end] == '\r' && end + 1 < text.size() && text[end + 1] == '\n' ? 2 : 1);
+    }
+    const auto line = text.substr(line_begin, offset - line_begin);
+    const auto first = line.find_first_not_of(" \t");
+    const auto start = line_begin + (first == std::string_view::npos ? line.size() : first);
+    const auto typed = text.substr(start, offset - start);
+    if (typed.find_first_of("=#\"'") != std::string_view::npos ||
+        (typed.find_first_of(" \t") != std::string_view::npos && !typed.empty()))
+      return {diagnostics::result_state::complete, std::vector<manifest_completion_candidate>{}, {}, version};
+    const auto line_end = text.find_first_of("\r\n", offset);
+    const auto line_limit = line_end == std::string_view::npos ? text.size() : line_end;
+    auto replace_end = offset;
+    while (replace_end < line_limit &&
+           (std::isalnum(static_cast<unsigned char>(text[replace_end])) != 0 ||
+            text[replace_end] == '_' || text[replace_end] == '-')) ++replace_end;
+    if (typed.starts_with('[') && replace_end < line_limit && text[replace_end] == ']') ++replace_end;
+    if (!typed.starts_with('[') && text.substr(offset, line_limit - offset).find('=') != std::string_view::npos)
+      return {diagnostics::result_state::complete, std::vector<manifest_completion_candidate>{}, {}, version};
+    std::vector<manifest_completion_candidate> values;
+    const auto add = [&](const std::string_view label, const std::string_view prefix,
+                         const source::byte_offset replace_begin,
+                         const std::string &replacement)
+    {
+      if (!label.starts_with(prefix)) return;
+      values.push_back({std::string(label), {{document.identity().id, {replace_begin, replace_end}}, replacement}});
+    };
+    if (typed.starts_with('['))
+    {
+      for (const auto name : modules::manifest_sections)
+        if (!seen_sections.contains(std::string(name)))
+          add(name, typed.substr(1), static_cast<source::byte_offset>(start + 1),
+              std::string(name) + "]");
+    }
+    else if (section == "package" || section == "application")
+    {
+      const auto keys = section == "package" ? modules::manifest_package_keys.data() :
+                                               modules::manifest_application_keys.data();
+      const auto count = section == "package" ? modules::manifest_package_keys.size() :
+                                                modules::manifest_application_keys.size();
+      for (std::size_t index = 0; index < count; ++index)
+        if (!seen_keys.contains(std::string(keys[index])))
+          add(keys[index], typed, static_cast<source::byte_offset>(start),
+              std::string(keys[index]) + (keys[index] == "mode" ? " = \"console\"" : " = \"\""));
+    }
+    else if (section.empty() && typed.empty())
+      for (const auto name : modules::manifest_sections)
+        if (!seen_sections.contains(std::string(name)))
+          add(name, {}, static_cast<source::byte_offset>(start), "[" + std::string(name) + "]");
+    if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+    return {diagnostics::result_state::complete, std::move(values), {}, version};
   }
 
   auto query_import_modules(const source::document_snapshot &document,

@@ -2,6 +2,7 @@
 #include "conversions.hpp"
 
 #include "../language_service/language_service.hpp"
+#include "../language_service/package_catalog.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -38,12 +39,26 @@ namespace sagan::lsp
     const auto loaded = documents_->read(uri);
     if (!loaded) throw std::invalid_argument(loaded.error->message);
     const auto &document = *loaded.value;
-    const auto analysis = language_service::analyze_project_document(document, *documents_);
+    std::vector<diagnostics::diagnostic> analyzed;
+    diagnostics::result_state state;
+    if (document.identity().canonical_path &&
+        document.identity().canonical_path->filename() == "sagan.toml")
+    {
+      auto result = language_service::analyze_manifest_document(document);
+      state = result.state;
+      analyzed = std::move(result.diagnostics);
+    }
+    else
+    {
+      auto result = language_service::analyze_project_document(document, *documents_);
+      state = result.state;
+      analyzed = std::move(result.diagnostics);
+    }
     J::array issues;
     if (documents_->current_version(uri) == document.version() &&
-        analysis.state != diagnostics::result_state::cancelled &&
-        analysis.state != diagnostics::result_state::stale)
-      for (const auto &issue : analysis.diagnostics)
+        state != diagnostics::result_state::cancelled &&
+        state != diagnostics::result_state::stale)
+      for (const auto &issue : analyzed)
         if (issue.primary.document == document.identity().id)
           issues.push_back(lsp_diagnostic(document, issue));
     return J::object{{"jsonrpc", "2.0"}, {"method", "textDocument/publishDiagnostics"},

@@ -420,6 +420,33 @@ namespace sagan::lsp
     const auto loaded = documents_->read(uri);
     if (!loaded) throw std::invalid_argument(loaded.error->message);
     const auto &document = *loaded.value;
+    if (document.identity().canonical_path &&
+        document.identity().canonical_path->filename() == "sagan.toml")
+    {
+      if (method == "textDocument/completion")
+      {
+        const auto result = complete_manifest_document(document,
+            offset(document, field(params, "position")), cancellation);
+        if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
+          throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        J::array entries;
+        if (result.value)
+          for (const auto &candidate : *result.value)
+            entries.push_back(J::object{{"label", candidate.label}, {"kind", 14},
+                                        {"textEdit", J::object{{"range", lsp_range(document,
+                                            candidate.edit.range.bytes)},
+                                                               {"newText", candidate.edit.replacement_utf8}}}});
+        return entries;
+      }
+      if (method == "textDocument/formatting" || method == "textDocument/rangeFormatting" ||
+          method == "textDocument/onTypeFormatting" || method == "textDocument/documentSymbol" ||
+          method == "textDocument/definition" || method == "textDocument/typeDefinition" ||
+          method == "textDocument/references") return J::array{};
+      return nullptr;
+    }
     if (method == "textDocument/formatting")
       return formatting_edits(document, format_document(document));
     if (method == "textDocument/rangeFormatting")

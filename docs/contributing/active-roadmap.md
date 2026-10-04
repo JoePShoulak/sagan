@@ -40,7 +40,8 @@ only when its own library, protocol, and integration tests pass:
    source-mapped failures, breakpoint/step/termination coverage, cancellation,
    child-process cleanup, and packaged debugger dependencies. Keep attach and
    optimized-local evaluation false unless separately proven.
-3. Compiler-owned `sagan.toml` document tooling and remaining analysis
+3. Complete compiler-owned `sagan.toml` document tooling beyond its initial
+   overlay diagnostics and section/key completion, and remaining analysis
    cancellation checkpoints, as described in the
    [extension roadmap](../tooling/vscode-extension-roadmap.md).
 

@@ -16,6 +16,20 @@ namespace sagan::language_service
 {
   inline constexpr std::string_view package_catalog_schema = "sagan-package-catalog-v1";
 
+  auto analyze_manifest_document(const source::document_snapshot &document,
+                                 diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<modules::package_manifest>;
+
+  struct manifest_completion_candidate
+  {
+    std::string label;
+    source::text_edit edit;
+  };
+  auto complete_manifest_document(const source::document_snapshot &document,
+                                  source::byte_offset offset,
+                                  diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<std::vector<manifest_completion_candidate>>;
+
   struct catalog_export
   {
     std::string symbol_id;

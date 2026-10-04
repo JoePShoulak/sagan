@@ -194,6 +194,52 @@ def run():
                       "end": {"line": 1, "character": 0}},
             "newText": "import 🚀 from orbit_tools.main\n",
         }], auto_imports
+        manifest_path = project / "sagan.toml"
+        manifest_uri = server_file_uri(manifest_path)
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        invalid_manifest = manifest_text.replace("[dependencies]", "mystery = \"value\"\n[dependencies]")
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": manifest_uri, "languageId": "toml", "version": 1,
+                             "text": invalid_manifest},
+        }})
+        while True:
+            publication = received.get(timeout=30)
+            if isinstance(publication, BaseException):
+                raise publication
+            if publication.get("method") == "textDocument/publishDiagnostics" and (
+                    publication["params"]["uri"] == manifest_uri):
+                break
+        issues = publication["params"]["diagnostics"]
+        assert len(issues) == 1 and "mystery" in issues[0]["message"], publication
+        assert issues[0]["range"]["start"]["line"] == invalid_manifest.splitlines().index(
+            'mystery = "value"'), publication
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 2},
+            "contentChanges": [{"text": manifest_text}],
+        }})
+        while True:
+            publication = received.get(timeout=30)
+            if isinstance(publication, BaseException):
+                raise publication
+            if publication.get("method") == "textDocument/publishDiagnostics" and (
+                    publication["params"]["uri"] == manifest_uri and
+                    publication["params"].get("version") == 2):
+                break
+        assert publication["params"]["diagnostics"] == [], publication
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 3},
+            "contentChanges": [{"text": "[package]\nna"}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 18, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 2}}})
+        manifest_candidates = answer(18)
+        assert manifest_candidates == [{
+            "label": "name", "kind": 14,
+            "textEdit": {"range": {"start": {"line": 1, "character": 0},
+                                   "end": {"line": 1, "character": 2}},
+                         "newText": 'name = ""'},
+        }], manifest_candidates
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

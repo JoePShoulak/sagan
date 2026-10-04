@@ -111,13 +111,14 @@ for continued local extension development:
 
 ## Compiler- or protocol-blocked goals
 
-- Add a compiler-owned `sagan.toml` document service with precise diagnostics,
-  completion, hover, navigation, document symbols, formatting, and safe quick
-  fixes. The extension already recognizes and highlights the current manifest
-  schema, but must not reproduce manifest parsing or validation in TypeScript.
-  The server needs an explicit manifest document selector/capability, UTF-16
-  ranges, overlays, cancellation, and tests for required, duplicate, and
-  unknown keys and sections, dependency aliases and requirements, paths, entry
+- Complete the compiler-owned `sagan.toml` document service. Unsaved-buffer
+  validation and versioned diagnostics now use the build parser; section and
+  package/application key completion have compiler-owned replacement edits.
+  Hover, navigation, document symbols, formatting, safe quick fixes, and
+  contextual dependency values remain. The extension must not reproduce
+  manifest parsing or validation in TypeScript. Finish an explicit manifest
+  document selector/capability and tests for required, duplicate, and unknown
+  keys and sections, dependency aliases and requirements, paths, entry
   modules, application modes, lockfile state, and installed-package targets.
 - Finish package completion in every relevant import, export, qualified-name,
   type, expression, and receiver context. Add compiler-owned safe auto-import

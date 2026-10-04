@@ -154,10 +154,11 @@ namespace modules
       return value.substr(1, value.size() - 2);
     }
 
-    auto manifest_from_file(const std::filesystem::path &manifest_path) -> package_manifest
+    auto manifest_from_text(const std::filesystem::path &manifest_path,
+                            const std::string_view text) -> package_manifest
     {
       const auto absolute_manifest = std::filesystem::absolute(manifest_path).lexically_normal();
-      std::istringstream input(read_file(absolute_manifest));
+      std::istringstream input{std::string(text)};
       std::unordered_map<std::string, std::string> package_values;
       std::unordered_map<std::string, std::string> application_values;
       std::unordered_map<std::string, std::string> dependency_values;
@@ -174,30 +175,37 @@ namespace modules
         if (line.front() == '[' && line.back() == ']')
         {
           section = trim(line.substr(1, line.size() - 2));
-          if (section != "package" && section != "application" && section != "dependencies")
-            throw std::runtime_error("Unknown package manifest section '[" + section + "]'");
+          if (std::find(manifest_sections.begin(), manifest_sections.end(), section) ==
+              manifest_sections.end())
+            throw manifest_error("Unknown package manifest section '[" + section + "]'", line_number);
           continue;
         }
         if (section.empty())
-          throw std::runtime_error("Package manifest values must appear under [package], [application], or [dependencies]");
+          throw manifest_error("Package manifest values must appear under [package], [application], or [dependencies]", line_number);
         const std::size_t equals = line.find('=');
         if (equals == std::string::npos)
-          throw std::runtime_error("Invalid package manifest line " + std::to_string(line_number));
+          throw manifest_error("Invalid package manifest line " + std::to_string(line_number), line_number);
         const std::string key = trim(line.substr(0, equals));
         const bool package_key = section == "package" &&
-                                 (key == "name" || key == "version" || key == "source" || key == "entry");
-        const bool application_key = section == "application" && key == "mode";
+                                 std::find(manifest_package_keys.begin(), manifest_package_keys.end(), key) !=
+                                     manifest_package_keys.end();
+        const bool application_key = section == "application" &&
+                                     std::find(manifest_application_keys.begin(), manifest_application_keys.end(), key) !=
+                                         manifest_application_keys.end();
         const bool dependency_key = section == "dependencies" &&
                                     std::regex_match(key, std::regex{"[A-Za-z][A-Za-z0-9_-]*"});
         if (!package_key && !application_key && !dependency_key)
-          throw std::runtime_error("Unknown package manifest key '" + key + "'");
+          throw manifest_error("Unknown package manifest key '" + key + "'", line_number);
         auto &values = section == "package" ? package_values :
                        section == "application" ? application_values : dependency_values;
         const auto raw = trim(line.substr(equals + 1));
-        if (!values.emplace(key, section == "dependencies" ? raw : quoted_value(raw, key)).second)
-          throw std::runtime_error("Duplicate package manifest key '" + key + "'");
+        std::string value;
+        try { value = section == "dependencies" ? raw : quoted_value(raw, key); }
+        catch (const std::runtime_error &error) { throw manifest_error(error.what(), line_number); }
+        if (!values.emplace(key, std::move(value)).second)
+          throw manifest_error("Duplicate package manifest key '" + key + "'", line_number);
       }
-      for (const std::string_view required : {"name", "version", "source", "entry"})
+      for (const std::string_view required : manifest_package_keys)
         if (!package_values.contains(std::string(required)))
           throw std::runtime_error("Package manifest is missing required key '" + std::string(required) + "'");
       if (!std::regex_match(package_values.at("name"), std::regex{"[A-Za-z][A-Za-z0-9_-]*"}))
@@ -260,6 +268,9 @@ namespace modules
                               package_root, source_root, package_values.at("entry"), mode,
                               std::move(dependencies)};
     }
+
+    auto manifest_from_file(const std::filesystem::path &manifest_path) -> package_manifest
+    { return manifest_from_text(manifest_path, read_file(manifest_path)); }
 
     auto discover_manifest(std::filesystem::path path) -> std::optional<package_manifest>
     {
@@ -825,6 +836,14 @@ namespace modules
     if (!std::filesystem::is_regular_file(manifest))
       throw std::runtime_error("Could not find package manifest '" + manifest.string() + "'");
     return manifest_from_file(manifest);
+  }
+
+  auto parse_package_manifest(const std::filesystem::path &manifest_path,
+                              const std::string_view text) -> package_manifest
+  {
+    if (manifest_path.filename() != "sagan.toml")
+      throw std::runtime_error("Package path must name sagan.toml");
+    return manifest_from_text(manifest_path, text);
   }
 
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>

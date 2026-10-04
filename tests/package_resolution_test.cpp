@@ -51,6 +51,59 @@ auto main() -> int
               aliased.packages.front().name == "orbit-tools",
           "Aliased dependency did not select its actual package identity");
   const sagan::source::disk_source_provider source;
+  const auto manifest_document = source.read_path("tests/fixtures/catalog/consumer-alias/sagan.toml");
+  require(manifest_document.value.has_value(), "Manifest fixture was not readable");
+  const auto manifest_check = sagan::language_service::analyze_manifest_document(*manifest_document.value);
+  require(manifest_check.state == sagan::diagnostics::result_state::complete &&
+              manifest_check.value && manifest_check.value->dependencies.size() == 1,
+          "In-memory manifest analysis disagreed with disk resolution");
+  auto invalid_manifest_text = std::string(manifest_document.value->text());
+  const auto invalid_line = invalid_manifest_text.find("[dependencies]");
+  require(invalid_line != std::string::npos, "Manifest fixture has no dependency section");
+  invalid_manifest_text.insert(invalid_line, "mystery = \"value\"\n");
+  const sagan::source::document_snapshot invalid_manifest(manifest_document.value->identity(), 7,
+                                                            invalid_manifest_text);
+  const auto invalid_check = sagan::language_service::analyze_manifest_document(invalid_manifest);
+  require(invalid_check.state == sagan::diagnostics::result_state::incomplete &&
+              invalid_check.diagnostics.size() == 1 &&
+              invalid_check.diagnostics.front().primary.bytes.begin == invalid_line &&
+              invalid_check.diagnostics.front().message.find("mystery") != std::string::npos,
+          "Unsaved manifest key error lost its precise source line");
+  const sagan::source::document_snapshot duplicate_manifest(manifest_document.value->identity(), 10,
+                                                              "[package]\r\nname = \"demo\"\r\nname = \"again\"\r\n");
+  const auto duplicate_check = sagan::language_service::analyze_manifest_document(duplicate_manifest);
+  const auto duplicate_offset = duplicate_manifest.text().find("name", duplicate_manifest.text().find("name") + 1);
+  require(duplicate_check.state == sagan::diagnostics::result_state::incomplete &&
+              duplicate_check.diagnostics.size() == 1 &&
+              duplicate_check.diagnostics.front().primary.bytes.begin == duplicate_offset &&
+              duplicate_check.diagnostics.front().message.find("Duplicate") != std::string::npos,
+          "Duplicate CRLF manifest key lost its source location");
+  sagan::diagnostics::cancellation_source cancelled_manifest;
+  cancelled_manifest.cancel();
+  require(sagan::language_service::analyze_manifest_document(*manifest_document.value,
+              cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
+          "Cancelled manifest analysis did not stop");
+  const std::string unfinished_manifest_text = "[package]\nna";
+  const sagan::source::document_snapshot unfinished_manifest(manifest_document.value->identity(), 8,
+                                                               unfinished_manifest_text);
+  const auto manifest_keys = sagan::language_service::complete_manifest_document(
+      unfinished_manifest, static_cast<sagan::source::byte_offset>(unfinished_manifest_text.size()));
+  require(manifest_keys.value && manifest_keys.value->size() == 1 &&
+              manifest_keys.value->front().label == "name" &&
+              manifest_keys.value->front().edit.replacement_utf8 == "name = \"\"",
+          "Incomplete manifest did not receive compiler-owned key completion");
+  require(sagan::language_service::complete_manifest_document(
+              unfinished_manifest, static_cast<sagan::source::byte_offset>(unfinished_manifest_text.size()),
+              cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
+          "Cancelled manifest completion did not stop");
+  const sagan::source::document_snapshot section_manifest(manifest_document.value->identity(), 9,
+                                                            "[pa]");
+  const auto section_items = sagan::language_service::complete_manifest_document(section_manifest, 3);
+  require(section_items.value && section_items.value->size() == 1 &&
+              section_items.value->front().label == "package" &&
+              section_items.value->front().edit.range.bytes == sagan::source::byte_range{1, 4} &&
+              section_items.value->front().edit.replacement_utf8 == "package]",
+          "Manifest section completion duplicated an existing closing bracket");
   const modules::package_resolution_options options{index, "2.1.0", {}};
   const auto graph = modules::resolve_package(
       "tests/fixtures/catalog/consumer-alias", source, {}, options);
