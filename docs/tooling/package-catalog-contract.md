@@ -63,8 +63,12 @@ symbols for *already imported* installed package declarations. Namespace
 completion uses public export names (including aliases) and semantic-index
 callable signatures rather than private implementation names. Unqualified
 exported-name suggestions carry those signatures and a compiler-produced
-import edit. These are tested slices, not a claim that every contextual
-completion or import-edit case is safe yet. An incomplete `import` or `from`
+import edit. That edit is offered only for strictly parsed documents with a
+safe module-header insertion line, preserves the document's line ending, and
+avoids names already declared anywhere in the document. Ambiguous or damaged
+source is deliberately not offered an edit. These are tested slices, not a
+claim that every contextual completion or import-edit case is safe yet. An
+incomplete `import` or `from`
 module path also receives compiler-owned module suggestions
 from the local source tree and locked installed dependencies, even if the
 buffer cannot parse. The module discovery scan is bounded; an unavailable or

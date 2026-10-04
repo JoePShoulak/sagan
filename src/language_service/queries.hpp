@@ -167,6 +167,7 @@ namespace sagan::language_service
     std::vector<syntax::lossless_token> tokens_;
     std::vector<syntax::trivia> trailing_trivia_;
     std::unique_ptr<parser::program> tree_;
+    bool strict_syntax_{};
 
     auto occurrence_at(source::byte_offset offset) const -> std::optional<symbol_occurrence>;
 

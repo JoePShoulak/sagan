@@ -92,6 +92,7 @@ namespace sagan::language_service
     auto analyzed = syntax::analyze(document);
     if (analyzed.value)
     {
+      strict_syntax_ = static_cast<bool>(analyzed.value->strict_ast);
       tokens_ = std::move(analyzed.value->tokens);
       trailing_trivia_ = std::move(analyzed.value->trailing_trivia);
       tree_ = analyzed.value->strict_ast ? std::move(analyzed.value->strict_ast)
@@ -703,51 +704,68 @@ namespace sagan::language_service
       if (scope_id == 0) break;
       scope_id = scope.parent;
     }
-    if (workspace_ && tree_)
+    if (workspace_ && tree_ && strict_syntax_)
     {
       std::string current_module;
-      source::byte_offset import_offset = 0;
-      for (const auto &statement : tree_->statements)
-        if (const auto *module = dynamic_cast<const parser::module_declaration *>(statement.get()))
+      std::optional<source::byte_offset> import_offset;
+      std::string line_ending;
+      if (!tree_->statements.empty())
+      {
+        if (const auto *module = dynamic_cast<const parser::module_declaration *>(
+                tree_->statements.front().get()))
         {
           current_module = module->name;
-          const auto newline = document_.text().find('\n', static_cast<std::size_t>(module->range.end));
-          import_offset = newline == std::string_view::npos ?
-                              static_cast<source::byte_offset>(document_.text().size()) :
-                              static_cast<source::byte_offset>(newline + 1);
-          break;
-        }
-      for (const auto &exported : workspace_->exported_symbols())
-      {
-        if (exported.module == current_module || exported.targets.empty() ||
-            !exported.public_name.starts_with(prefix) || seen.contains(exported.public_name)) continue;
-        const bool imported = std::any_of(workspace_->imports().begin(), workspace_->imports().end(),
-                                          [&](const auto &link)
-                                          {
-                                            if (!index_.find(link.binding)) return false;
-                                            return std::any_of(exported.targets.begin(), exported.targets.end(),
-                                                               [&](const auto &target)
-                                                               { return std::find(link.targets.begin(),
-                                                                                  link.targets.end(), target) !=
-                                                                        link.targets.end(); });
-                                          });
-        if (imported) continue;
-        const auto *target = workspace_->find(exported.targets.front());
-        if (!target) continue;
-        std::string detail(semantic::name(target->kind));
-        for (const auto &module : workspace_->modules())
-          if (module.name == exported.module)
+          const auto text = document_.text();
+          const auto header_end = static_cast<std::size_t>(module->range.end);
+          const auto newline = text.find_first_of("\r\n", header_end);
+          if (header_end <= text.size() && newline != std::string_view::npos &&
+              std::all_of(text.begin() + static_cast<std::ptrdiff_t>(header_end),
+                          text.begin() + static_cast<std::ptrdiff_t>(newline),
+                          [](const char byte) { return byte == ' ' || byte == '\t'; }))
           {
-            const auto signature = semantic::callable_signature(module.index, target->id);
-            if (!signature.empty()) detail = signature;
-            break;
+            line_ending = text[newline] == '\r' && newline + 1 < text.size() &&
+                          text[newline + 1] == '\n' ? "\r\n" :
+                          text[newline] == '\r' ? "\r" : "\n";
+            import_offset = static_cast<source::byte_offset>(newline + line_ending.size());
           }
-        source::text_edit edit{{document_.identity().id, {import_offset, import_offset}},
-                               "import " + exported.public_name + " from " + exported.module + "\n"};
-        values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
-                                         exported.public_name, std::move(detail),
-                                         target->documentation, exported.module, exported.public_name,
-                                         exported.public_name, false, {std::move(edit)}});
+        }
+      }
+      if (import_offset)
+      {
+        for (const auto &exported : workspace_->exported_symbols())
+        {
+          if (exported.module == current_module || exported.targets.empty() ||
+              !exported.public_name.starts_with(prefix) || seen.contains(exported.public_name)) continue;
+          if (std::any_of(index_.symbols().begin(), index_.symbols().end(), [&](const auto &symbol)
+                          { return symbol.name == exported.public_name; })) continue;
+          const bool imported = std::any_of(workspace_->imports().begin(), workspace_->imports().end(),
+                                            [&](const auto &link)
+                                            {
+                                              if (!index_.find(link.binding)) return false;
+                                              return std::any_of(exported.targets.begin(), exported.targets.end(),
+                                                                 [&](const auto &target)
+                                                                 { return std::find(link.targets.begin(),
+                                                                                    link.targets.end(), target) !=
+                                                                          link.targets.end(); });
+                                            });
+          if (imported) continue;
+          const auto *target = workspace_->find(exported.targets.front());
+          if (!target) continue;
+          std::string detail(semantic::name(target->kind));
+          for (const auto &module : workspace_->modules())
+            if (module.name == exported.module)
+            {
+              const auto signature = semantic::callable_signature(module.index, target->id);
+              if (!signature.empty()) detail = signature;
+              break;
+            }
+          source::text_edit edit{{document_.identity().id, {*import_offset, *import_offset}},
+                                 "import " + exported.public_name + " from " + exported.module + line_ending};
+          values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
+                                           exported.public_name, std::move(detail),
+                                           target->documentation, exported.module, exported.public_name,
+                                           exported.public_name, false, {std::move(edit)}});
+        }
       }
     }
     if (previous && (previous->kind == tokens::KWD_IS || previous->kind == tokens::KWD_HAS))

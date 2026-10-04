@@ -106,6 +106,51 @@ auto main() -> int
                                    item.additional_import_edits.front().replacement_utf8 ==
                                        "import orbit_answer from orbit_tools.main\n"; }),
           "Installed-package auto-import omitted the signature or dependency alias");
+  const std::string crlf_text = "module scratch\r\n\r\nfun main(): Int {\r\n  return 0\r\n}\r\n";
+  const sagan::source::document_snapshot crlf(entry.value->identity(), 13, crlf_text);
+  const auto crlf_index = sagan::language_service::index_document(crlf);
+  require(crlf_index.value.has_value(), "CRLF package fixture did not index");
+  const sagan::language_service::document_queries crlf_query(
+      crlf, crlf_index.value->index, &workspace, &crlf_index.value->model);
+  const auto crlf_imports = crlf_query.completions(
+      static_cast<sagan::source::byte_offset>(crlf_text.find("return 0")));
+  require(crlf_imports.value &&
+              std::any_of(crlf_imports.value->begin(), crlf_imports.value->end(),
+                          [](const auto &item)
+                          { return item.label == "orbit_answer" &&
+                                   item.additional_import_edits.size() == 1 &&
+                                   item.additional_import_edits.front().replacement_utf8 ==
+                                       "import orbit_answer from orbit_tools.main\r\n"; }),
+          "Package auto-import did not preserve the document's CRLF line endings");
+  const std::string collision_text = "module scratch\n"
+      "fun other(): Int {\n  let orbit_answer = 1\n  return orbit_answer\n}\n"
+      "fun main(): Int {\n  return 0\n}\n";
+  const sagan::source::document_snapshot collision(entry.value->identity(), 14, collision_text);
+  const auto collision_index = sagan::language_service::index_document(collision);
+  require(collision_index.value.has_value(), "Package import-collision fixture did not index");
+  const sagan::language_service::document_queries collision_query(
+      collision, collision_index.value->index, &workspace, &collision_index.value->model);
+  const auto collision_imports = collision_query.completions(
+      static_cast<sagan::source::byte_offset>(collision_text.rfind("return 0")));
+  require(collision_imports.value &&
+              std::none_of(collision_imports.value->begin(), collision_imports.value->end(),
+                           [](const auto &item)
+                           { return item.label == "orbit_answer" &&
+                                    !item.additional_import_edits.empty(); }),
+          "Package auto-import offered a binding that collides elsewhere in the document");
+  const std::string annotated_header =
+      "module scratch // keep this comment\nfun main(): Int {\n  return 0\n}\n";
+  const sagan::source::document_snapshot annotated(entry.value->identity(), 15, annotated_header);
+  const auto annotated_index = sagan::language_service::index_document(annotated);
+  require(annotated_index.value.has_value(), "Annotated module-header fixture did not index");
+  const sagan::language_service::document_queries annotated_query(
+      annotated, annotated_index.value->index, &workspace, &annotated_index.value->model);
+  const auto annotated_imports = annotated_query.completions(
+      static_cast<sagan::source::byte_offset>(annotated_header.find("return 0")));
+  require(annotated_imports.value &&
+              std::none_of(annotated_imports.value->begin(), annotated_imports.value->end(),
+                           [](const auto &item) { return !item.additional_import_edits.empty(); }),
+          "Package auto-import edited a module header without a proven insertion line");
   const std::string partial = "module main\nimport orbit_t";
   const sagan::source::document_snapshot unsaved(entry.value->identity(), 2, partial);
   const auto completions = sagan::language_service::query_import_modules(
