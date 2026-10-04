@@ -230,19 +230,13 @@ tasks needed by the space program. In actuality, this may just be a way to
 "promote" people from civilians into employees, but considering these pilots
 can't live forever, there will need to be new humans taking over.
 
-*To be defined.*
-
 ##### Life Support
 
 Same as on a ship, the health of the population must be satisfied
 
-*To be defined.*
-
 ##### Transportation
 
 Transport ships must be built to move them from the dying earth to whever their new refuge will be
-
-*To be defined.*
 
 #### Terraforming
 
@@ -253,14 +247,10 @@ restored to close to its previous status in order to ensure the teraforming of
 next best options (Like Mars), and likewise no body can ever be terraformed to
 the point that it is perfectly habitable, otherwise
 
-*To be defined.*
-
 #### Exploration
 
 The player will need to explore other bodies and star systems to be able to find
 a new home among the stars.
-
-*To be defined.*
 
 #### Research
 
@@ -269,13 +259,9 @@ progression needed for there to be such a capability disparity as being
 basically not far from where we are right now in real life to eventually
 becoming a truly space faring civilzation.
 
-*To be defined.*
-
 ##### Technology Tree
 
 There will be one
-
-*To be defined.*
 
 #### Combat (Unresolved)
 
@@ -289,8 +275,6 @@ would persist throughout. This has to be balanced against the fact that Earth
 would have likely united a fair amount behind the shared goal of surviging
 eradication.
 
-*To be defined.*
-
 ##### Enemy Aliens (Unresolved)
 
 In other star systems, the player may find hostile entities, which may have
@@ -301,8 +285,6 @@ and varied combat experience moving forward.
 
 Vehicle and Outpost Management is the absolute core of the game and the vast
 majority of the game loop.
-
-*To be defined.*
 
 ## Physics
 
