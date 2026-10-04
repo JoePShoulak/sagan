@@ -99,7 +99,8 @@ def run():
                            "line": len(lines), "character": len("import orbit_t"),
                        }}})
         imports = answer(6)
-        assert any(item["label"] == "orbit_tools.main" for item in imports), imports
+        assert not imports["isIncomplete"] and any(
+            item["label"] == "orbit_tools.main" for item in imports["items"]), imports
         dotted = source + "import orbit_answer from orbit_tools."
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 3},
@@ -111,7 +112,8 @@ def run():
                            "character": len("import orbit_answer from orbit_tools."),
                        }}})
         qualified = answer(7)
-        assert any(item["label"] == "orbit_tools.main" for item in qualified), qualified
+        assert not qualified["isIncomplete"] and any(
+            item["label"] == "orbit_tools.main" for item in qualified["items"]), qualified
         selective = source + "import orbit_a from orbit_tools.main\n"
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 4},

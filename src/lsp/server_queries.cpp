@@ -591,7 +591,7 @@ namespace sagan::lsp
                                       {"textEdit", J::object{{"range", lsp_range(document,
                                                                                   candidate.replacement.bytes)},
                                                              {"newText", candidate.name}}}});
-        return entries;
+        return J::object{{"isIncomplete", imports.incomplete}, {"items", entries}};
       }
       const auto exports = query_import_exports(document, offset(document, field(params, "position")),
                                                 *documents_, cancellation);

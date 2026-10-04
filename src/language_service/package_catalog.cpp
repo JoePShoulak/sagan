@@ -575,7 +575,10 @@ namespace sagan::language_service
       for (const auto &name : modules::importable_modules(*document.identity().canonical_path,
                                                           cancellation, options))
         if (name.starts_with(prefix))
+        {
+          if (result.candidates.size() == 256) { result.incomplete = true; break; }
           result.candidates.push_back({name, {document.identity().id, replacement}});
+        }
     }
     catch (const std::exception &error)
     {

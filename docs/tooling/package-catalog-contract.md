@@ -84,7 +84,11 @@ An incomplete `import` or `from` module path also receives
 compiler-owned module suggestions
 from the local source tree and locked installed dependencies, even if the
 buffer cannot parse. The module discovery scan is bounded; an unavailable or
-invalid index produces an error rather than invented candidates. This does
+invalid index produces an error rather than invented candidates. The query
+returns a standard LSP `CompletionList` capped at 256 module names;
+`isIncomplete` is true when more matching names exist, so the editor can
+request a narrower prefix. Local and locked dependency names retain their
+deterministic order. This does
 not yet cover all package export/member contexts or conflict-safe auto-import edits.
 For a partial selective import such as `import orbit_a from orbit_tools.main`,
 standard LSP completion now returns the selected module's explicitly exported

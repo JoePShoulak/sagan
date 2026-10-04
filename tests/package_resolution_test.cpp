@@ -9,6 +9,8 @@
 #include "../src/source/provider.hpp"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 
 namespace
@@ -349,6 +351,20 @@ auto main() -> int
                           { return item.name == "orbit_tools.main" &&
                                    item.replacement.bytes.begin == 37; }),
           "Dotted package import completion did not replace the full module path");
+  const auto bounded_root = std::filesystem::path("build/package-resolution-module-bound");
+  std::filesystem::create_directories(bounded_root);
+  for (int module_index = 0; module_index < 270; ++module_index)
+    std::ofstream(bounded_root / ("sample" + std::to_string(module_index) + ".sagan")) << "";
+  const std::string bounded_text = "module main\nimport sample";
+  const sagan::source::document_snapshot bounded_document(
+      sagan::source::identity_from_path({}, bounded_root / "main.sagan"), 1, bounded_text);
+  const auto bounded_modules = sagan::language_service::query_import_modules(
+      bounded_document, static_cast<sagan::source::byte_offset>(bounded_text.size()));
+  require(bounded_modules.applicable && bounded_modules.error.empty() &&
+              bounded_modules.incomplete && bounded_modules.candidates.size() == 256 &&
+              bounded_modules.candidates.front().name == "sample0",
+          "Import module completion did not bound and sort its result set");
+  std::filesystem::remove_all(bounded_root);
   const std::string partial_export = "module main\nimport orbit_a from orbit_tools.main\n";
   const sagan::source::document_snapshot export_document(entry.value->identity(), 4, partial_export);
   const auto export_completion = sagan::language_service::query_import_exports(

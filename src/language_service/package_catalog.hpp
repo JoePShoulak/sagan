@@ -122,6 +122,7 @@ namespace sagan::language_service
   {
     bool applicable{};
     bool cancelled{};
+    bool incomplete{};
     std::string error;
     std::vector<import_module_candidate> candidates;
   };
