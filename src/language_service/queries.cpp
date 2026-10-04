@@ -527,15 +527,23 @@ namespace sagan::language_service
           if (imported.binding == receiver.value->id && imported.whole_module)
             for (const auto &module : workspace_->modules())
               if (module.name == imported.source_module)
-                for (const auto &symbol : module.index.symbols())
-                  if (symbol.origin == semantic::symbol_origin::source && symbol.scope_id == 0 &&
-                      symbol.visibility == semantic::symbol_visibility::public_access &&
-                      symbol.name.starts_with(prefix) &&
-                      !workspace_->exported(module.name, symbol.name).empty())
-                    values.push_back(completion_item{symbol.name, symbol.id, symbol.kind, replacement,
-                                                     symbol.name, std::string(semantic::name(symbol.kind)),
-                                                     symbol.documentation, module.name, symbol.name,
-                                                     symbol.name, false, {}});
+                for (const auto &exported : workspace_->exported_symbols())
+                  if (exported.module == module.name && exported.public_name.starts_with(prefix))
+                    for (const auto &target : exported.targets)
+                      if (const auto *symbol = module.index.find(target);
+                          symbol && symbol->visibility == semantic::symbol_visibility::public_access)
+                      {
+                        const auto signature = semantic::callable_signature(module.index, target);
+                        values.push_back(completion_item{exported.public_name, symbol->id,
+                                                         symbol->kind, replacement,
+                                                         exported.public_name,
+                                                         signature.empty() ?
+                                                             std::string(semantic::name(symbol->kind)) :
+                                                             signature,
+                                                         symbol->documentation, module.name,
+                                                         exported.public_name, exported.public_name,
+                                                         false, {}});
+                      }
       }
       else
       {
@@ -644,7 +652,7 @@ namespace sagan::language_service
         return left.id.value < right.id.value;
       });
       values.erase(std::unique(values.begin(), values.end(), [](const auto &left, const auto &right)
-      { return left.id == right.id; }), values.end());
+      { return left.id == right.id && left.label == right.label; }), values.end());
       return result<std::vector<completion_item>>(document_.version(), diagnostics::result_state::complete,
                                                   std::move(values));
     }
@@ -726,10 +734,18 @@ namespace sagan::language_service
         if (imported) continue;
         const auto *target = workspace_->find(exported.targets.front());
         if (!target) continue;
+        std::string detail(semantic::name(target->kind));
+        for (const auto &module : workspace_->modules())
+          if (module.name == exported.module)
+          {
+            const auto signature = semantic::callable_signature(module.index, target->id);
+            if (!signature.empty()) detail = signature;
+            break;
+          }
         source::text_edit edit{{document_.identity().id, {import_offset, import_offset}},
                                "import " + exported.public_name + " from " + exported.module + "\n"};
         values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
-                                         exported.public_name, std::string(semantic::name(target->kind)),
+                                         exported.public_name, std::move(detail),
                                          target->documentation, exported.module, exported.public_name,
                                          exported.public_name, false, {std::move(edit)}});
       }

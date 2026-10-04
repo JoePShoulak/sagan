@@ -476,7 +476,8 @@ auto main() -> int
   const auto namespace_completion = workspace_query.completions(at(std::string(source.value->text()),
                                                                  "flight_data.offset()") + 13);
   require(namespace_completion.value && namespace_completion.value->size() == 1 &&
-              namespace_completion.value->front().label == "offset",
+              namespace_completion.value->front().label == "offset" &&
+              namespace_completion.value->front().detail == "(): Int",
           "namespace completion did not use exported members");
   const std::string unimported = "module scratch\n\nfun main(): Int {\n  return 0\n}\n";
   const source::document_snapshot unimported_document(

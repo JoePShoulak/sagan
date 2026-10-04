@@ -1,7 +1,10 @@
 #include "../src/modules/package_index.hpp"
 #include "../src/modules/resolver.hpp"
 #include "../src/language_service/package_catalog.hpp"
+#include "../src/language_service/queries.hpp"
+#include "../src/language_service/language_service.hpp"
 #include "../src/semantic/type_checker.hpp"
+#include "../src/semantic/workspace_index.hpp"
 #include "../src/source/provider.hpp"
 
 #include <algorithm>
@@ -69,6 +72,40 @@ auto main() -> int
           "Import discovery omitted the package-qualified or local module");
   const auto entry = source.read_path("tests/fixtures/catalog/consumer-alias/src/main.sagan");
   require(static_cast<bool>(entry), "Import completion fixture was not readable");
+  const auto workspace = semantic::build_workspace_index(graph, source);
+  const semantic::semantic_index *entry_index = nullptr;
+  for (const auto &module : workspace.modules())
+    if (module.name == "main") entry_index = &module.index;
+  require(entry_index, "Installed-package fixture omitted the consumer module");
+  const sagan::language_service::document_queries package_query(*entry.value, *entry_index, &workspace);
+  const std::string entry_text(entry.value->text());
+  const auto package_dot = entry_text.find("package_tools.orbit_answer()");
+  require(package_dot != std::string::npos, "Package namespace fixture is missing");
+  const auto package_members = package_query.completions(
+      static_cast<sagan::source::byte_offset>(package_dot + std::string("package_tools.").size()));
+  require(package_members.value &&
+              std::any_of(package_members.value->begin(), package_members.value->end(),
+                          [](const auto &item)
+                          { return item.label == "orbit_answer" && item.detail == "(): Int" &&
+                                   item.source_module == "orbit_tools.main" &&
+                                   !item.documentation.empty(); }),
+          "Standard package namespace completion omitted signature or documentation");
+  const std::string unimported_text = "module scratch\nfun main(): Int {\n  return 0\n}\n";
+  const sagan::source::document_snapshot unimported(entry.value->identity(), 12, unimported_text);
+  const auto unimported_index = sagan::language_service::index_document(unimported);
+  require(unimported_index.value.has_value(), "Unimported package fixture did not index");
+  const sagan::language_service::document_queries unimported_query(
+      unimported, unimported_index.value->index, &workspace, &unimported_index.value->model);
+  const auto package_imports = unimported_query.completions(
+      static_cast<sagan::source::byte_offset>(unimported_text.find("return 0")));
+  require(package_imports.value &&
+              std::any_of(package_imports.value->begin(), package_imports.value->end(),
+                          [](const auto &item)
+                          { return item.label == "orbit_answer" && item.detail == "(): Int" &&
+                                   item.additional_import_edits.size() == 1 &&
+                                   item.additional_import_edits.front().replacement_utf8 ==
+                                       "import orbit_answer from orbit_tools.main\n"; }),
+          "Installed-package auto-import omitted the signature or dependency alias");
   const std::string partial = "module main\nimport orbit_t";
   const sagan::source::document_snapshot unsaved(entry.value->identity(), 2, partial);
   const auto completions = sagan::language_service::query_import_modules(

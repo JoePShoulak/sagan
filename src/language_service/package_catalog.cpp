@@ -17,25 +17,6 @@ namespace sagan::language_service
 {
   namespace
   {
-    auto signature_for(const semantic::semantic_index &index,
-                       const semantic::symbol_id &id) -> std::string
-    {
-      for (const auto &call : index.parameters())
-      {
-        if (call.callable != id) continue;
-        std::string text{"("};
-        for (std::size_t i = 0; i < call.types.size(); ++i)
-        {
-          if (i) text += ", ";
-          if (i < call.names.size()) text += call.names[i] + ": ";
-          text += call.types[i];
-        }
-        text += ")";
-        if (!call.result_type.empty()) text += ": " + call.result_type;
-        return text;
-      }
-      return {};
-    }
   }
 
   auto query_import_modules(const source::document_snapshot &document,
@@ -175,7 +156,7 @@ namespace sagan::language_service
         const auto documentation = documentation_for(*symbol, module_name);
         result.candidates.push_back({symbol->id.value, public_name, exported->exported_name,
                                      std::string(semantic::name(symbol->kind)),
-                                     signature_for(indexed.value->index, symbol->id),
+                                     semantic::callable_signature(indexed.value->index, symbol->id),
                                      documentation.summary, documentation.deprecated,
                                      loaded.value->identity().uri, *start, *end});
       }
@@ -372,7 +353,7 @@ namespace sagan::language_service
                 const auto documentation = documentation_for(*symbol, module.name);
                 catalog.exports.push_back({symbol->id.value, exported.public_name,
                                            exported.local_name, std::string(semantic::name(symbol->kind)),
-                                           signature_for(module.index, target), documentation.summary,
+                                           semantic::callable_signature(module.index, target), documentation.summary,
                                            documentation.deprecated, module.index.document().uri,
                                            *start, *end});
               }

@@ -17,17 +17,14 @@ paused, not a promise to implement every possible language or library feature.
 
 ## 1. Restore green development CI
 
-**Current evidence (2026-10-03, `dev` at `dbf6b14`):** integrated development,
-documentation, VS Code Extension, and Windows Installer workflows pass.
-Coverage alone fails at 88.6% (14,175 of 15,998 lines) against the 90% floor.
-The earlier multi-root LSP integration failure is no longer a failing gate.
+**Completed (2026-10-03, `dev` at `641d29d`):** all five integrated
+development workflows pass. Hosted coverage is 92.09% (15,150 of 16,451
+lines), above the unchanged 90% floor. The earlier multi-root LSP integration
+failure is no longer a failing gate.
 
-- Add focused tests for real, uncovered compiler/service behavior. Do not lower
-  the threshold or exclude implementation code merely to change the score.
-- Run the local coverage suite and confirm a hosted `dev` coverage run reaches
-  at least 90%, with the other four workflows still green.
-- Keep the generated coverage report and the failing run ID available as
-  evidence: GitHub Actions run `37055126294` contains the baseline LCOV artifact.
+The baseline failing run is GitHub Actions `37055126294`; the coverage repair
+was merged through PR #2. Continue adding behavior tests as features land,
+without weakening the floor.
 
 **Visible finish line:** five green `dev` workflows, including Coverage.
 

@@ -59,12 +59,17 @@ This version does not claim complete nested-member, generic-constraint,
 transitive-resolution, or documentation-location metadata.
 
 Standard LSP completion, hover, and definition use compiler-owned workspace
-symbols for *already imported* installed package declarations. An incomplete
-`import` or `from` module path also receives compiler-owned module suggestions
+symbols for *already imported* installed package declarations. Namespace
+completion uses public export names (including aliases) and semantic-index
+callable signatures rather than private implementation names. Unqualified
+exported-name suggestions carry those signatures and a compiler-produced
+import edit. These are tested slices, not a claim that every contextual
+completion or import-edit case is safe yet. An incomplete `import` or `from`
+module path also receives compiler-owned module suggestions
 from the local source tree and locked installed dependencies, even if the
 buffer cannot parse. The module discovery scan is bounded; an unavailable or
 invalid index produces an error rather than invented candidates. This does
-not yet cover all package export/member contexts or safe auto-import edits.
+not yet cover all package export/member contexts or conflict-safe auto-import edits.
 For a partial selective import such as `import orbit_a from orbit_tools.main`,
 standard LSP completion now returns the selected module's explicitly exported
 names, signatures, documentation, deprecation state, and replacement edit.
