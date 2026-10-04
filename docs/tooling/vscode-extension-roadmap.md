@@ -118,7 +118,8 @@ for continued local extension development:
   explanations, and document symbols show the section/key hierarchy.
   Entry-path and locked-dependency navigation and direct installed-package
   requirement completion, including the inline-table alias form, are
-  available. Formatting and safe quick fixes remain. The extension must not reproduce
+  available. Complete, valid manifests now have conservative whole-document
+  formatting; safe quick fixes remain. The extension must not reproduce
   manifest parsing or validation in TypeScript. Finish an explicit manifest
   document selector/capability and tests for required, duplicate, and unknown
   keys and sections, dependency aliases and requirements, paths, entry

@@ -5,6 +5,7 @@
 #include "../modules/resolver.hpp"
 #include "../source/source.hpp"
 #include "../source/provider.hpp"
+#include "formatter.hpp"
 
 #include <filesystem>
 #include <optional>
@@ -19,6 +20,10 @@ namespace sagan::language_service
   auto analyze_manifest_document(const source::document_snapshot &document,
                                  diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<modules::package_manifest>;
+
+  // Normalize only proven complete manifest lines. Incomplete documents and
+  // commented lines are left untouched rather than guessed at.
+  auto format_manifest_document(const source::document_snapshot &document) -> format_result;
 
   struct manifest_completion_candidate
   {

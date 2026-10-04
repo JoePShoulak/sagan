@@ -59,6 +59,29 @@ auto main() -> int
   require(manifest_check.state == sagan::diagnostics::result_state::complete &&
               manifest_check.value && manifest_check.value->dependencies.size() == 1,
           "In-memory manifest analysis disagreed with disk resolution");
+  auto spaced_manifest_text = std::string(manifest_document.value->text());
+  const auto name_key = spaced_manifest_text.find("name = \"consumer-alias\"");
+  require(name_key != std::string::npos, "Manifest fixture has no package name");
+  spaced_manifest_text.replace(name_key, std::string_view{"name = \"consumer-alias\""}.size(),
+                               "  name  =  \"consumer-alias\"  ");
+  const sagan::source::document_snapshot spaced_manifest(manifest_document.value->identity(), 24,
+                                                           spaced_manifest_text);
+  const auto manifest_format = sagan::language_service::format_manifest_document(spaced_manifest);
+  require(manifest_format.state == sagan::language_service::edit_state::ready &&
+              manifest_format.edits.documents.size() == 1 &&
+              manifest_format.edits.documents.front().expected_version == 24 &&
+              manifest_format.edits.documents.front().edits.size() == 1 &&
+              manifest_format.edits.documents.front().edits.front().replacement_utf8 ==
+                  "name = \"consumer-alias\"",
+          "Manifest formatter did not return a versioned, conservative edit");
+  const auto &name_edit = manifest_format.edits.documents.front().edits.front();
+  spaced_manifest_text.replace(name_edit.range.bytes.begin,
+                               name_edit.range.bytes.end - name_edit.range.bytes.begin,
+                               name_edit.replacement_utf8);
+  const sagan::source::document_snapshot formatted_manifest(manifest_document.value->identity(), 25,
+                                                              spaced_manifest_text);
+  require(sagan::language_service::format_manifest_document(formatted_manifest).edits.documents.empty(),
+          "Manifest formatter was not idempotent");
   const auto entry_offset = manifest_document.value->text().find("entry = \"main\"");
   require(entry_offset != std::string_view::npos, "Manifest fixture has no entry key");
   const auto entry_target = sagan::language_service::query_manifest_entry_target(
@@ -126,6 +149,9 @@ auto main() -> int
               invalid_check.diagnostics.front().primary.bytes.begin == invalid_line &&
               invalid_check.diagnostics.front().message.find("mystery") != std::string::npos,
           "Unsaved manifest key error lost its precise source line");
+  require(sagan::language_service::format_manifest_document(invalid_manifest).state ==
+              sagan::language_service::edit_state::unsupported,
+          "Invalid manifest must not receive speculative formatting edits");
   const sagan::source::document_snapshot duplicate_manifest(manifest_document.value->identity(), 10,
                                                               "[package]\r\nname = \"demo\"\r\nname = \"again\"\r\n");
   const auto duplicate_check = sagan::language_service::analyze_manifest_document(duplicate_manifest);

@@ -72,6 +72,49 @@ namespace sagan::language_service
     }
   }
 
+  auto format_manifest_document(const source::document_snapshot &document) -> format_result
+  {
+    const auto parsed = analyze_manifest_document(document);
+    if (parsed.state != diagnostics::result_state::complete)
+      return {edit_state::unsupported, "Incomplete or invalid manifest; no formatting edits are safe", {}};
+    std::vector<source::text_edit> edits;
+    const auto text = document.text();
+    const auto trim = [](std::string_view value) -> std::string_view
+    {
+      const auto begin = value.find_first_not_of(" \t");
+      if (begin == std::string_view::npos) return {};
+      const auto end = value.find_last_not_of(" \t");
+      return value.substr(begin, end - begin + 1);
+    };
+    std::size_t begin = 0;
+    while (begin < text.size())
+    {
+      const auto ending = text.find_first_of("\r\n", begin);
+      const auto end = ending == std::string_view::npos ? text.size() : ending;
+      const auto original = text.substr(begin, end - begin);
+      const auto content = trim(original);
+      if (!content.empty() && content.find('#') == std::string_view::npos)
+      {
+        std::string replacement;
+        if (content.starts_with('[') && content.ends_with(']'))
+          replacement = "[" + std::string(trim(content.substr(1, content.size() - 2))) + "]";
+        else if (const auto equals = content.find('='); equals != std::string_view::npos)
+          replacement = std::string(trim(content.substr(0, equals))) + " = " +
+                        std::string(trim(content.substr(equals + 1)));
+        if (!replacement.empty() && replacement != original)
+          edits.push_back({{document.identity().id,
+                            {static_cast<source::byte_offset>(begin), static_cast<source::byte_offset>(end)}},
+                           std::move(replacement)});
+      }
+      if (ending == std::string_view::npos) break;
+      begin = end + (text[end] == '\r' && end + 1 < text.size() && text[end + 1] == '\n' ? 2 : 1);
+    }
+    workspace_edit result;
+    if (!edits.empty())
+      result.documents.push_back({document.identity().uri, document.version(), std::move(edits)});
+    return {edit_state::ready, {}, std::move(result)};
+  }
+
   auto complete_manifest_document(const source::document_snapshot &document,
                                   const source::byte_offset offset,
                                   const diagnostics::cancellation_token cancellation,

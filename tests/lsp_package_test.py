@@ -14,7 +14,7 @@ def run():
     entry = project / "src" / "main.sagan"
     installed = ROOT / "tests" / "fixtures" / "catalog" / "orbit-tools" / "src" / "main.sagan"
     environment = os.environ.copy()
-    environment["SAGAN_PACKAGE_INDEX"] = str(ROOT / "tests" / "fixtures" / "catalog" / "current-index.tsv")
+    environment["SAGAN_PACKAGE_INDEX"] = str(ROOT / "tests" / "fixtures" / "catalog" / "current-compiler-index.tsv")
     process = subprocess.Popen([str(SERVER)], cwd=ROOT, env=environment,
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)

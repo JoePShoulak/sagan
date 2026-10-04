@@ -100,8 +100,11 @@ show section and key hierarchy, even while the buffer is incomplete. Entry
 paths and locked dependency keys navigate to their compiler-resolved targets.
 Quoted dependency requirements for an installed package, including the
 `{ package, version }` alias form, can complete to the newest compatible
-indexed version. These remain an initial manifest-document service:
-formatting and quick fixes are not yet advertised.
+indexed version. The standard `textDocument/formatting` request also formats
+complete, valid `sagan.toml` buffers conservatively: it normalizes section and
+key spacing without changing comments, quoted values, or line endings.
+Invalid or incomplete manifests return no edits. Manifest range/on-type
+formatting and quick fixes remain unsupported.
 
 Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.

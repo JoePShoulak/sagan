@@ -315,6 +315,35 @@ auto main() -> int
   const auto formatted = request(service, "textDocument/formatting",
                                  J::object{{"textDocument", J::object{{"uri", uri}}}});
   require(formatted.elements(), "formatting handler failed");
+  const auto manifest_uri = sagan::source::identity_from_path(
+      sagan::source::document_id{}, "tests/fixtures/catalog/consumer-alias/sagan.toml").uri.value;
+  const auto manifest_source = sagan::source::disk_source_provider{}.read_path(
+      "tests/fixtures/catalog/consumer-alias/sagan.toml");
+  require(manifest_source.value.has_value(), "LSP manifest fixture was not readable");
+  auto manifest_text = std::string(manifest_source.value->text());
+  const auto manifest_name = manifest_text.find("name = \"consumer-alias\"");
+  require(manifest_name != std::string::npos, "LSP manifest fixture has no package name");
+  manifest_text.replace(manifest_name, std::string_view{"name = \"consumer-alias\""}.size(),
+                        "  name  =  \"consumer-alias\"  ");
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}, {"version", 31},
+                                           {"text", manifest_text}}}}));
+  const auto manifest_formatted = request(service, "textDocument/formatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}}});
+  require(manifest_formatted.elements() && manifest_formatted.elements()->size() == 1 &&
+              manifest_formatted.elements()->front().get("newText") &&
+              manifest_formatted.elements()->front().get("newText")->string() ==
+                  "name = \"consumer-alias\"",
+          "LSP did not format a valid unsaved manifest");
+  static_cast<void>(notify(service, "textDocument/didChange",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}, {"version", 32}}},
+                {"contentChanges", J::array{J::object{{"text", "[package]\nname = \"broken\"\nunknown = 1\n"}}}}}));
+  const auto invalid_manifest_format = request(service, "textDocument/formatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}}});
+  require(invalid_manifest_format.elements() && invalid_manifest_format.elements()->empty(),
+          "LSP formatted an invalid manifest instead of refusing safely");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}}}));
   const auto range_formatted = request(service, "textDocument/rangeFormatting",
       J::object{{"textDocument", J::object{{"uri", uri}}},
                 {"range", J::object{{"start", J::object{{"line", 1}, {"character", 0}}},
