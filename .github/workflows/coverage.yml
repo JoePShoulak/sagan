@@ -24,7 +24,8 @@ permissions:
 jobs:
   codecov:
     name: GCC coverage
-    runs-on: ubuntu-latest
+    # The native GDB DAP launch suite needs GDB 16+; ubuntu-26.04 provides it.
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Check out repository
