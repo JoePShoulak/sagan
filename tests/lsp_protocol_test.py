@@ -382,6 +382,29 @@ def main():
             "textDocument": {"uri": local_type_uri},
         }})
 
+        local_case_uri = "untitled:local-case-f2"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": local_case_uri, "languageId": "sagan", "version": 1,
+                             "text": "enum Signal { nominal }\nlet status = Signal.nominal\nprint(status)\n"},
+        }})
+        opened_case = next_message(received)
+        while (opened_case.get("method") != "textDocument/publishDiagnostics" or
+               opened_case["params"]["uri"] != local_case_uri):
+            opened_case = next_message(received)
+        assert opened_case["params"]["diagnostics"] == []
+        send(process, {"jsonrpc": "2.0", "id": 11, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": local_case_uri},
+            "position": {"line": 1, "character": 21}, "newName": "ready",
+        }})
+        renamed_case = next_message(received)
+        while renamed_case.get("id") != 11:
+            renamed_case = next_message(received)
+        assert len(renamed_case["result"]["documentChanges"]) == 1
+        assert len(renamed_case["result"]["documentChanges"][0]["edits"]) == 2
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didClose", "params": {
+            "textDocument": {"uri": local_case_uri},
+        }})
+
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "shutdown", "params": {}})
         shutdown = next_message(received)
         while shutdown.get("id") != 4:

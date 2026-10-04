@@ -436,6 +436,20 @@ auto main() -> int
           "F2 did not rename an unexported class from its constructor reference");
   static_cast<void>(notify(service, "textDocument/didClose",
       J::object{{"textDocument", J::object{{"uri", local_type_uri}}}}));
+  const std::string local_case_uri = "untitled:local-case-f2";
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", local_case_uri}, {"version", 1},
+          {"text", "enum Signal { nominal }\nlet status = Signal.nominal\nprint(status)\n"}}}}));
+  const auto renamed_case = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", local_case_uri}}},
+                {"position", J::object{{"line", 1}, {"character", 21}}},
+                {"newName", "ready"}});
+  require(renamed_case.get("documentChanges") &&
+              renamed_case.get("documentChanges")->elements()->size() == 1 &&
+              renamed_case.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 did not rename an unexported enum case from a qualified reference");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", local_case_uri}}}}));
   const auto actions = request(service, "textDocument/codeAction",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"context", J::object{{"diagnostics", J::array{}}}},

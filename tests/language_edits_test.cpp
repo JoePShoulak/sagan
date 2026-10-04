@@ -424,6 +424,12 @@ auto main() -> int
   require(enum_rename.state == language_service::edit_state::ready &&
               enum_rename.edits.documents.front().edits.size() == 2,
           "F2 did not rename an unexported enum and qualified reference together");
+  const auto case_rename = language_service::rename_local(
+      face_enum_document, indexed_face_enum.value->index,
+      static_cast<source::byte_offset>(face_enum_document.text().find("Signal.nominal") + 7), "ready");
+  require(case_rename.state == language_service::edit_state::ready &&
+              case_rename.edits.documents.front().edits.size() == 2,
+          "F2 did not rename an unexported enum case and qualified reference together");
   const source::document_snapshot loop_document(
       {{source::document_id{109}, source::document_uri{"untitled:loop-rename"}, {}}, 1,
        "fun main(): Int {\n"

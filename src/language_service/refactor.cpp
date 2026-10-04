@@ -7,6 +7,7 @@
 #include "../parser/unicode.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <optional>
 
@@ -73,13 +74,27 @@ namespace sagan::language_service
     const bool local = local_binding(symbol->kind) && symbol->scope_id != 0;
     const bool function = symbol->kind == semantic::symbol_kind::function;
     const bool type = symbol->kind == semantic::symbol_kind::type;
+    const bool enum_case = symbol->kind == semantic::symbol_kind::enum_case;
     const bool private_member = symbol->visibility == semantic::symbol_visibility::private_access &&
         (symbol->kind == semantic::symbol_kind::field ||
          symbol->kind == semantic::symbol_kind::constant_field ||
          symbol->kind == semantic::symbol_kind::method);
-    if (!local && !function && !type && !private_member)
+    if (!local && !function && !type && !enum_case && !private_member)
       return {edit_state::unsupported,
-              "Only local bindings, private members, unexported types, and non-exported functions can be renamed safely", {}};
+              "Only local bindings, private members, unexported types and enum cases, and non-exported functions can be renamed safely", {}};
+    if (enum_case)
+    {
+      const auto owner = std::find_if(index.symbols().begin(), index.symbols().end(), [&](const auto &candidate)
+      { return candidate.kind == semantic::symbol_kind::type && candidate.name == symbol->owner_type; });
+      if (owner == index.symbols().end() ||
+          std::any_of(std::next(owner), index.symbols().end(), [&](const auto &candidate)
+          { return candidate.kind == semantic::symbol_kind::type && candidate.name == symbol->owner_type; }))
+        return {edit_state::unsupported, "Enum case owner identity is not unique", {}};
+      if (std::any_of(index.references().begin(), index.references().end(), [&](const auto &reference)
+          { return reference.target == owner->id &&
+                   reference.kind == semantic::reference_kind::export_reference; }))
+        return {edit_state::unsupported, "Cases of exported enums require a workspace-wide rename proof", {}};
+    }
     if (function || type || symbol->kind == semantic::symbol_kind::method)
     {
       if (std::any_of(index.references().begin(), index.references().end(), [&](const auto &reference)
