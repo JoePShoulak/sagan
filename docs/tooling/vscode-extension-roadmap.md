@@ -135,10 +135,12 @@ for continued local extension development:
 - Finish the experimental Debug Adapter Protocol implementation. `sagan-dap`
   can launch programs and exercise breakpoints, mapped stacks, source-mapped
   stop-on-entry, and source-level
-  stepping, but it still needs reliable Sagan values, runtime-failure and
-  exception mapping, broader source-context and cleanup coverage, Linux
-  execution validation, and release packaging of GDB and its runtime verified
-  outside an MSYS2 environment. The extension must not register a supported
+  stepping. Windows portable packaging now contains GDB, its Python runtime,
+  and the adapter, and an extracted ZIP passed the DAP suite outside MSYS2.
+  Initialized scalar locals and parameters have a guarded value probe, while
+  collections, strings, nested values, exception stops, broader source-context
+  and cleanup coverage, Linux distribution validation, and isolated installer
+  smoke validation remain. The extension must not register a supported
   Sagan debug type while all granular debugger capability flags remain false.
 
 ## Resume sequence

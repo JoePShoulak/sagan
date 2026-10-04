@@ -24,6 +24,12 @@ Before changing code or documentation:
 - use the [post-1.0 documentation audit](documentation-roadmaps.md) as the
   first task after the initial stable release, leaving pages work-in-progress
   until reviewed;
+- preserve the release-blocking
+  [maintainer handoff and project-survivability requirement](maintainer-handoff-roadmap.md),
+  including a root `MAINTAINERS.md` and clean owner drill for every repository;
+- follow the [multi-repository fracture roadmap](repository-fracturing-roadmap.md),
+  including holistic documentation, Space Game extraction, and a tested root
+  `CODEX_START.md` onboarding prompt in every repository;
 - preserve the [Windows installer release gate](windows-installer-release.md);
 - follow the [release lifecycle](release-lifecycle.md) for public tags and artifacts;
 - record unsettled design as provisional or open rather than inventing semantics;

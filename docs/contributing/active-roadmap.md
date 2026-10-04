@@ -28,7 +28,84 @@ without weakening the floor.
 
 **Visible finish line:** five green `dev` workflows, including Coverage.
 
-## 2. Finish compiler-owned extension contracts
+## 2. Establish an owner-operable maintenance handoff
+
+**Release-blocking and repository-split-blocking requirement:** before Sagan is
+divided into independently versioned repositories, create and verify the
+[maintainer handoff and project-survivability guide](maintainer-handoff-roadmap.md).
+Every repository must have a root-level `MAINTAINERS.md` that lets the owner
+operate that repository and understand its place in the complete ecosystem
+without relying on undocumented history, a particular contributor, or access
+to an AI assistant.
+
+The handoff must document exact Bash commands and decision rules rather than
+high-level summaries. It must cover repository purpose and boundaries,
+directory topology, dependency direction, every `sagan.toml` and lock/index
+contract, local bootstrap and multi-repository workspace setup, build and test
+entry points, branch and commit conventions, direct work on `dev`, promotion
+to `main`, pull requests, CI workflows and recovery, version calculation,
+release and rollback procedures, documentation aggregation, deployment,
+secrets and external services, platform-specific behavior, troubleshooting,
+and disaster recovery. Commands, filenames, expected outputs, prerequisites,
+failure modes, and safe recovery steps must be kept current with the code.
+
+No extraction milestone is complete merely because code was moved. The new
+repository must pass an owner-survivability drill from a clean checkout, and
+CI must reject missing required sections, stale command references, invalid
+links, or undocumented workflow entry points. Any change to a command,
+manifest, workflow, branch rule, release path, integration boundary, or
+deployment mechanism must update the affected `MAINTAINERS.md` in the same
+change.
+
+**Visible finish line:** Joe can start from the organization landing page,
+follow only checked-in maintainer documentation, reproduce a complete local
+workspace, explain how all repositories connect, make and validate a safe
+change, interpret or repair CI, promote it according to policy, build the
+holistic documentation site, and recover the project from a new machine.
+
+## 3. Fracture the repository without fracturing the project
+
+Carry out the checked-in
+[multi-repository fracture roadmap](repository-fracturing-roadmap.md). The
+target organization contains independently versioned repositories for the
+language, VS Code extension, physics, rendering, holistic documentation,
+integrated workspace, and the application currently named Space Game. The
+workspace and documentation aggregators must preserve one-command development
+and one official documentation site across those boundaries.
+
+Every extracted repository must satisfy the maintainer-handoff gate and include
+a root `CODEX_START.md`: a ready-to-paste prompt for a new Codex chat that
+teaches the agent both that repository and the Sagan ecosystem before work
+begins. Prompts must name the canonical files to read, dependency boundaries,
+workflow and validation commands, current compatibility metadata, and rules
+for preserving unrelated changes. A clean-chat onboarding drill must verify
+that each prompt produces an accurate repo map and safe first-step plan without
+depending on hidden conversation history.
+
+Every prompt must preserve the owner's teaching-first preference: explain what
+to code, why, and how before offering to implement it. Planning, diagnosis, and
+design discussion are not implementation authorization. Before the owner
+explicitly declares the language secure, language implementation still
+requires a direct request. After that declaration, chats should teach and
+review rather than write language/tooling code; only rendering, physics, and
+Space Game code may be written, and only when explicitly requested.
+
+Space Game becomes its own Sagan application repository. It must declare its
+required Sagan installation and package dependencies, own the canonical
+`SPACE_GAME_DESIGN.md`, and use that document as the sole source of game-design
+context. Its `CODEX_START.md` must invite a new chat to ask the owner as many
+clarifying questions as useful, both to understand the owner's goals and to
+help the owner deliberately resolve design and execution decisions. Confirmed
+decisions, exploratory ideas, and unresolved questions must remain distinct,
+and old chat history must not be a required source.
+
+**Visible finish line:** every component has independent history, CI,
+versioning, issues, maintainer guidance, and new-chat onboarding; a clean
+workspace can build the locked ecosystem and Space Game; all component docs
+publish into the official Sagan site; and the owner can operate the result
+without undocumented cross-repository knowledge.
+
+## 4. Finish compiler-owned extension contracts
 
 Complete these as separately testable increments; advertise each capability
 only when its own library, protocol, and integration tests pass:
@@ -53,7 +130,7 @@ consumes those contracts, rebuilds its VSIX, and passes isolated activation,
 live-host, and cross-platform smoke tests. Marketplace publication remains an
 optional later decision.
 
-## 3. Complete the unified Sagan error experience
+## 5. Complete the unified Sagan error experience
 
 Retain the agreed friendly error style while covering lexical, parse,
 semantic, type, module, project, build, and runtime failures. Give each case a
@@ -65,7 +142,7 @@ must share structured compiler diagnostics rather than separate error logic.
 CLI, LSP, and runtime output without raw native implementation messages.
 This is explicitly deferred until the extension-contract milestone is stable.
 
-## 4. Audit documentation with the owner
+## 6. Audit documentation with the owner
 
 The existing pages remain `work-in-progress` until Joe's page-by-page review.
 First reconcile stale version/status claims with the tested implementation,
@@ -77,7 +154,7 @@ change language semantics. See the
 **Visible finish line:** every page has an explicit reviewed status and
 publication-ready pages pass the documentation release check.
 
-## 5. Complete Windows distribution acceptance
+## 7. Complete Windows distribution acceptance
 
 Resume the SignPath Foundation application when a decision arrives. Set up
 trusted Authenticode signing if accepted, then test the exact signed candidate
