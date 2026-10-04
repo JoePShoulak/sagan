@@ -16,10 +16,10 @@ contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 
 ## Paused compiler handoff checkpoint
 
-Extension work is paused against Sagan development version 1.8.0 at compiler
-commit `dc52099`. This is a stable development checkpoint, not the final
-compiler-to-extension handoff: it has not been pushed or released, and the
-extension must not enable capabilities that discovery still reports as false.
+Extension work remains paused at the current `dev` checkpoint while the
+compiler-side package and debugger contracts below are completed. The earlier
+1.8.0 checkpoint is historical, not the present handoff. The extension must
+not enable capabilities that discovery still reports as false.
 
 Most ordinary editor support is ready. The language server supplies compiler-
 backed diagnostics, formatting, hover, definition, references, completion,

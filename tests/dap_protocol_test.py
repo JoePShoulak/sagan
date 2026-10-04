@@ -191,7 +191,8 @@ def imported_module_breakpoint(binary, gdb):
                                     "breakpoints": [{"line": 10, "column": 1}]})
         assert expect(lambda item: item.get("request_seq") == 9)["success"]
         send(4, "configurationDone")
-        assert expect(lambda item: item.get("request_seq") == 4)["success"]
+        configured = expect(lambda item: item.get("request_seq") == 4)
+        assert configured["success"], configured
         assert expect(lambda item: item.get("request_seq") == 2)["success"]
         stopped = expect(lambda item: item.get("event") == "stopped")
         assert stopped["body"]["reason"] == "breakpoint", stopped
@@ -325,6 +326,8 @@ def run():
         isolated["PATH"] = os.pathsep.join([r"C:\Windows\System32", r"C:\Windows"])
         malformed_frame(binary, isolated)
     if not gdb.is_file():
+        if os.environ.get("SAGAN_DAP_TEST_REQUIRE_GDB") == "1":
+            raise AssertionError(f"GDB is required for the DAP protocol suite: {gdb}")
         print("GDB unavailable; executable launch probe skipped")
         return
     cancelled_build(binary, gdb)

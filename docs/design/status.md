@@ -14,10 +14,9 @@ today from planned libraries and external release gates. The `work-in-progress`
 metadata at the top means the prose still awaits the owner's documentation
 audit; it does not mean every listed compiler feature is unfinished.
 
-Current development commits are preparation for a future 2.0 release. Their
-1.x commit versions are checkpoints, not a declaration that the 2.0 migration
-or release gates are complete. The major-version commit is reserved for the
-coordinated 2.0 publication decision.
+Sagan 2.0 has been published. Current `dev` development follows the
+[active roadmap](../contributing/active-roadmap.md); a development commit is
+not itself approval to promote or publish the next stable release.
 
 The current units work also preserves compound-denominator grouping and shows
 the selected unit in native `print` output and string interpolation. Named
