@@ -191,7 +191,8 @@ def imported_module_breakpoint(binary, gdb):
                                     "breakpoints": [{"line": 10, "column": 1}]})
         assert expect(lambda item: item.get("request_seq") == 9)["success"]
         send(4, "configurationDone")
-        assert expect(lambda item: item.get("request_seq") == 4)["success"]
+        configured = expect(lambda item: item.get("request_seq") == 4)
+        assert configured["success"], configured
         assert expect(lambda item: item.get("request_seq") == 2)["success"]
         stopped = expect(lambda item: item.get("event") == "stopped")
         assert stopped["body"]["reason"] == "breakpoint", stopped
