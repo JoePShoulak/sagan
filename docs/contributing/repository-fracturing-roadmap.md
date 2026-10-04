@@ -198,6 +198,36 @@ then point to versioned canonical files for details. Do not paste volatile
 version numbers, file inventories, or status claims into the prompt when they
 can be read from manifests and locks. This reduces prompt drift.
 
+### Cross-chat awareness and routing
+
+Every `CODEX_START.md` must identify the intended specialized chat for each
+repository in the ecosystem and explain the ownership boundary of those chats.
+The list must come from a versioned organization-level chat map so repository
+prompts do not silently drift apart as repositories are added or renamed.
+
+A chat must recognize when a request belongs wholly or partly to another
+repository's chat. In that case it should explain the boundary, recommend the
+specific destination chat, and provide a concise ready-to-paste handoff prompt
+containing the relevant goal, evidence, constraints, dependency versions, and
+verification expectations. It must not use chat routing to abandon work that
+belongs to its own repository, and it must not assume that another chat shares
+unrecorded conversation context.
+
+### Documentation edits invalidate publication review
+
+Every `CODEX_START.md` must state that any documentation-content edit,
+regardless of which chat or contributor makes it, automatically invalidates
+the page's previous human publication review. The same change must reset the
+page to `status: review-needed`, set `publication_ready: false`, and clear
+`verified_in`, `verified_on`, and `verified_by`. A page may return to complete
+and publication-ready only after a new human audit explicitly records the
+review metadata.
+
+This is a required repository workflow and CI invariant, not a suggestion for
+chat behavior. Documentation checks must reject a changed page that retains
+stale approval metadata, and aggregate documentation publication must refuse
+that page until the fresh human review is complete.
+
 ### Prompt verification
 
 Extraction requires a clean-chat onboarding drill. Start a new chat using only
@@ -212,10 +242,14 @@ The drill fails if the chat:
 - cannot find the correct build and test commands;
 - recommends the wrong branch or publication workflow;
 - misses the holistic documentation pipeline;
+- does not know the other specialized chats or cannot produce a useful handoff
+  when work crosses a repository boundary;
 - overlooks required compatibility locks;
 - treats proposals as accepted decisions;
 - writes code when the prompt requires teaching, or mistakes discussion for an
   implementation request;
+- edits documentation without resetting that page to `review-needed` and
+  clearing its prior human verification metadata;
 - edits during familiarization; or
 - depends on conversation context that was not captured in source control.
 
@@ -368,6 +402,8 @@ indirection.
 - Record dependency direction and forbidden dependencies.
 - Define package artifacts, compatibility metadata, workspace locks,
   documentation manifests, `MAINTAINERS.md`, and `CODEX_START.md` schemas.
+- Define the versioned organization-level chat map, cross-chat handoff format,
+  and documentation-review invalidation check shared by every repository.
 - Confirm that `SPACE_GAME_DESIGN.md` contains the game context intended to
   survive extraction.
 - Establish baseline versions and a known-good monorepo commit.
@@ -497,8 +533,13 @@ The fracture is complete only when:
 - each has independent history, `dev`/`main`, protection, CI, versioning,
   issues, releases where applicable, `MAINTAINERS.md`, and `CODEX_START.md`;
 - all maintainer and clean-chat onboarding drills pass;
+- every repository prompt can identify the other specialized chats, route
+  cross-repository work, and produce a context-complete handoff prompt;
 - `sagan-workspace` recreates a known-good ecosystem from exact commits;
 - every component's canonical docs appear in one official Sagan site;
+- every documentation edit automatically returns the affected page to
+  `review-needed`, and CI prevents stale human approval metadata from reaching
+  publication;
 - Space Game builds using an installed Sagan toolchain and locked packages;
 - its reviewed design document is the sole canonical source of game-design
   context in the game repository;
