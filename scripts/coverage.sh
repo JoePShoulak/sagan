@@ -54,7 +54,7 @@ if lcov --version 2>&1 | grep -Eq 'LCOV version ([2-9]|[1-9][0-9])\.'; then
   # GCC 15 can report inconsistent line/function hits in libstdc++ headers.
   # Those headers are removed below; the Sagan coverage floor is still enforced.
   capture_compat=(--ignore-errors mismatch,inconsistent)
-  remove_compat=(--ignore-errors unused)
+  remove_compat=(--ignore-errors unused,inconsistent)
 fi
 
 lcov --capture \
