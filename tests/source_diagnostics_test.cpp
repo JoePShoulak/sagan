@@ -2,6 +2,7 @@
 #include "../src/language_service/language_service.hpp"
 #include "../src/language_service/workspace.hpp"
 #include "../src/modules/resolver.hpp"
+#include "../src/parser/parser.hpp"
 #include "../src/semantic/semantic_error.hpp"
 #include "../src/semantic/units.hpp"
 #include "../src/source/provider.hpp"
@@ -53,6 +54,15 @@ auto main() -> int
   diagnostics::cancellation_source cancellation;
   passed &= check(!cancellation.token().is_cancelled(), "cancellation begins clear");
   cancellation.cancel();
+  bool parser_cancelled = false;
+  try
+  {
+    parser::syntax_parser strict({}, cancellation.token());
+    static_cast<void>(strict.parse());
+  }
+  catch (const parser::parse_cancelled &)
+  { parser_cancelled = true; }
+  passed &= check(parser_cancelled, "strict parser honors a cancellation token");
   passed &= check(cancellation.token().is_cancelled(), "cancellation propagates");
 
   diagnostics::diagnostic value{

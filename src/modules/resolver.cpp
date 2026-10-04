@@ -104,9 +104,11 @@ namespace modules
           if (cancellation.is_cancelled()) throw std::runtime_error("Module traversal cancelled");
         }
         if (cancellation.is_cancelled()) throw std::runtime_error("Module traversal cancelled");
-        parser::syntax_parser syntax(std::move(tokens));
+        parser::syntax_parser syntax(std::move(tokens), cancellation);
         return syntax.parse();
       }
+      catch (const parser::parse_cancelled &)
+      { throw std::runtime_error("Module traversal cancelled"); }
       catch (const parser::parse_error &error)
       {
         throw std::runtime_error("Invalid module '" + path.string() + "' at byte " +

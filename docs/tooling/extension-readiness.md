@@ -47,10 +47,11 @@ below are deliberate limits, not work for the extension to invent locally.
 
 The remaining compiler-side milestones, in dependency order, are:
 
-1. Finish operation stress tests and cancellation checkpoints inside strict
-   parsing, type analysis, code generation, and module linking. The current
-   transport can cancel queued/active requests and child processes, but those
-   compiler loops still have some phase-boundary-only checkpoints.
+1. Finish operation stress tests and cancellation checkpoints inside type
+   analysis, code generation, and module linking. Strict parsing now checks
+   cancellation as it consumes tokens; the transport can cancel queued/active
+   requests and child processes, but the remaining compiler loops still have
+   some phase-boundary-only checkpoints.
 2. **Project test-runner and VS Code client implemented:** imported tests execute from
    linked programs, package-root runs retain package identity, and overlays,
    selection, cancellation, stale runs, and LSP framing have focused tests.

@@ -9,7 +9,9 @@
 
 namespace parser
 {
-  syntax_parser::syntax_parser(std::vector<token> tokens) : input(std::move(tokens)) {}
+  syntax_parser::syntax_parser(std::vector<token> tokens,
+                               const sagan::diagnostics::cancellation_token stop)
+      : input(std::move(tokens)), cancellation(stop) {}
 
   auto syntax_parser::at_end() const -> bool
   {
@@ -28,6 +30,7 @@ namespace parser
 
   auto syntax_parser::advance() -> const token &
   {
+    if (cancellation.is_cancelled()) throw parse_cancelled{};
     if (!at_end())
     {
       current++;
@@ -97,6 +100,7 @@ namespace parser
 
   auto syntax_parser::parse() -> program
   {
+    if (cancellation.is_cancelled()) throw parse_cancelled{};
     std::vector<statement_ref> body;
     bool seen_module = false;
     bool seen_non_module = false;
