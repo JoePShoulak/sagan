@@ -531,7 +531,7 @@ namespace semantic
 
       auto require(const bool condition, const std::string &message, const parser::span range) const -> void
       {
-        if (!condition) throw semantic_error(message, range);
+        if (!condition) throw semantic_error(message, range, active_source);
       }
 
       auto compatible(const std::string_view expected, const std::string_view actual) const -> bool

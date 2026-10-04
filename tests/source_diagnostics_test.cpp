@@ -113,6 +113,16 @@ auto main() -> int
                       invalid.analyzed_version == 10,
                   "service returns structured type diagnostic");
 
+  source::document_snapshot equivalent_units_document(
+      source::document_identity{source::document_id{11}, source::document_uri{"file:///equivalent-units.sagan"}, {}},
+      1,
+      "fun accept(value: Vector3<Float64, kilometer / second^2>): Void {}\n"
+      "fun apply(force: Vector3<Float, newton>, mass: Float<kilogram>): Void { accept(force / mass) }\n");
+  const auto equivalent_units = language_service::check_document(equivalent_units_document);
+  passed &= check(equivalent_units.state == diagnostics::result_state::complete &&
+                      equivalent_units.value.has_value() && equivalent_units.diagnostics.empty(),
+                  "derived equivalent units normalize default Float aliases");
+
   diagnostics::cancellation_source pre_cancelled;
   pre_cancelled.cancel();
   const auto stopped = language_service::check_document(valid_document, {}, pre_cancelled.token());
