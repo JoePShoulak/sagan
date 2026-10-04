@@ -45,6 +45,10 @@ The library query `query_package_catalog` in
 `sagan-package-catalog-v1`. It accepts an index path, compiler version, name
 prefix, result limit, and cancellation token. It distinguishes index
 `ready`, `unavailable`, and `invalid`; cancellation discards partial results.
+The underlying index reader checks cancellation before opening and between
+rows and installed-manifest validation. Both custom package queries and
+manifest dependency completion propagate cancellation instead of publishing
+an incomplete package set.
 The index format itself remains `sagan-package-index-v1`.
 
 Each result has a stable `name@version` identity, compatibility requirement

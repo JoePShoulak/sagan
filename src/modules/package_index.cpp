@@ -64,9 +64,12 @@ namespace modules
 
   auto query_package_index(const std::filesystem::path &index_path,
                            const std::string_view compiler_version,
-                           const std::string_view name_prefix) -> package_index_result
+                           const std::string_view name_prefix,
+                           const sagan::diagnostics::cancellation_token cancellation)
+    -> package_index_result
   {
     package_index_result result;
+    if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
     std::ifstream input(index_path, std::ios::binary);
     if (!input)
     { result.message = "Local package index is unavailable"; return result; }
@@ -81,6 +84,8 @@ namespace modules
     std::size_t line_number = 1;
     while (std::getline(input, line))
     {
+      if (cancellation.is_cancelled())
+      { result.cancelled = true; result.packages.clear(); return result; }
       ++line_number;
       if (!line.empty() && line.back() == '\r') line.pop_back();
       if (line.empty() || line.front() == '#') continue;
@@ -116,6 +121,8 @@ namespace modules
           version_satisfies(fields[2], compiler_version)};
       if (package.install_state == package_install_state::installed)
       {
+        if (cancellation.is_cancelled())
+        { result.cancelled = true; result.packages.clear(); return result; }
         try
         {
           const auto manifest = load_package(package.manifest_path);
@@ -132,6 +139,8 @@ namespace modules
       }
       result.packages.push_back(std::move(package));
     }
+    if (cancellation.is_cancelled())
+    { result.cancelled = true; result.packages.clear(); return result; }
     std::sort(result.packages.begin(), result.packages.end(), [](const auto &left, const auto &right)
     {
       if (left.name != right.name) return left.name < right.name;

@@ -154,6 +154,12 @@ auto main() -> int
               installed_index.packages.size() == 1 &&
               installed_index.packages.front().install_state == modules::package_install_state::installed,
           "local package index did not validate an installed manifest");
+  sagan::diagnostics::cancellation_source stopped_index;
+  stopped_index.cancel();
+  const auto cancelled_index = modules::query_package_index(
+      "tests/fixtures/package_index/index.tsv", "2.1.0", {}, stopped_index.token());
+  require(cancelled_index.cancelled && cancelled_index.packages.empty(),
+          "Cancelled package-index analysis exposed partial candidates");
   require(modules::query_package_index("tests/fixtures/package_index/absent.tsv", "2.1.0").state ==
               modules::package_index_state::unavailable,
           "missing local package index was not represented explicitly");

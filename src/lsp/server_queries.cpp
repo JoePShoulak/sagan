@@ -198,7 +198,8 @@ namespace sagan::lsp
       if (const auto suffix = version.find_first_of("+-"); suffix != std::string::npos)
         version.erase(suffix);
       const auto prefix = string_field(params, "prefix");
-      const auto found = modules::query_package_index(path, version, prefix);
+      const auto found = modules::query_package_index(path, version, prefix, cancellation);
+      if (found.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       J::array packages;
       for (const auto &entry : found.packages)
         packages.push_back(J::object{{"name", entry.name}, {"version", entry.version},

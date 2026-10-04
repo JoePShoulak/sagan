@@ -211,7 +211,9 @@ namespace sagan::language_service
                                      options.compiler_version;
       if (const auto suffix = compiler_version.find_first_of("+-"); suffix != std::string::npos)
         compiler_version.erase(suffix);
-      const auto index = modules::query_package_index(index_path, compiler_version);
+      const auto index = modules::query_package_index(index_path, compiler_version, {}, cancellation);
+      if (index.cancelled)
+        return {diagnostics::result_state::cancelled, {}, {}, version};
       if (index.state == modules::package_index_state::ready)
       {
         std::map<std::string, std::string> latest;
@@ -856,8 +858,9 @@ namespace sagan::language_service
   {
     package_catalog_result result;
     if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
-    const auto index = modules::query_package_index(index_path, compiler_version, prefix);
+    const auto index = modules::query_package_index(index_path, compiler_version, prefix, cancellation);
     result.state = index.state;
+    result.cancelled = index.cancelled;
     result.message = index.message;
     if (index.state != modules::package_index_state::ready) return result;
     const source::disk_source_provider source;
