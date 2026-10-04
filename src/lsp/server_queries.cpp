@@ -744,6 +744,7 @@ namespace sagan::lsp
           if (candidate.deprecated) item["deprecated"] = true;
           if (!candidate.additional_import_edits.empty())
           {
+            item["detail"] = candidate.detail + " (from " + candidate.source_module + ")";
             J::array edits;
             for (const auto &edit : candidate.additional_import_edits)
               edits.push_back(lsp_edit(document, edit));

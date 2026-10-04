@@ -741,7 +741,7 @@ namespace sagan::language_service
           const bool imported = std::any_of(workspace_->imports().begin(), workspace_->imports().end(),
                                             [&](const auto &link)
                                             {
-                                              if (!index_.find(link.binding)) return false;
+                                              if (link.whole_module || !index_.find(link.binding)) return false;
                                               return std::any_of(exported.targets.begin(), exported.targets.end(),
                                                                  [&](const auto &target)
                                                                  { return std::find(link.targets.begin(),
@@ -764,7 +764,8 @@ namespace sagan::language_service
           values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
                                            exported.public_name, std::move(detail),
                                            target->documentation, exported.module, exported.public_name,
-                                           exported.public_name, false, {std::move(edit)}});
+                                           exported.public_name + ":" + exported.module, false,
+                                           {std::move(edit)}});
         }
       }
     }

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -499,5 +500,30 @@ auto main() -> int
                                        "import course from guidance\n";
                           }),
           "exported workspace completion did not provide a missing-import edit");
+  const auto collision_graph = modules::resolve(
+      "tests/fixtures/modules/completion_collision/main.sagan", disk);
+  const auto collision_workspace = semantic::build_workspace_index(collision_graph, disk);
+  const auto collision_source = disk.read_path(
+      "tests/fixtures/modules/completion_collision/main.sagan");
+  require(collision_source.value.has_value(), "completion collision fixture was not readable");
+  const auto collision_index = language_service::index_document(*collision_source.value);
+  require(collision_index.value.has_value(), "completion collision fixture did not index");
+  const language_service::document_queries collision_query(
+      *collision_source.value, collision_index.value->index, &collision_workspace,
+      &collision_index.value->model);
+  const auto collision_items = collision_query.completions(
+      at(std::string(collision_source.value->text()), "return 0"));
+  require(collision_items.value.has_value(), "collision completion did not return candidates");
+  std::vector<std::string> answer_modules;
+  for (const auto &item : *collision_items.value)
+    if (item.label == "answer" && item.additional_import_edits.size() == 1)
+    {
+      answer_modules.push_back(item.source_module);
+      require(item.additional_import_edits.front().replacement_utf8 ==
+                  "import answer from " + item.source_module + "\n",
+              "colliding export used an ambiguous import edit");
+    }
+  require(answer_modules == std::vector<std::string>{"alpha", "beta"},
+          "colliding exports did not remain distinct and deterministic");
   return 0;
 }

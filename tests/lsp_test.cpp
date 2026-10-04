@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 namespace
 {
@@ -522,6 +523,30 @@ auto main() -> int
           "closing imported overlay did not restore importer diagnostics");
   notify(service, "textDocument/didClose",
          J::object{{"textDocument", J::object{{"uri", module_uri}}}});
+  const auto collision = disk.read_path("tests/fixtures/modules/completion_collision/main.sagan");
+  require(static_cast<bool>(collision), "completion collision fixture missing");
+  const auto collision_uri = collision.value->identity().uri.value;
+  notify(service, "textDocument/didOpen",
+         J::object{{"textDocument", J::object{{"uri", collision_uri}, {"version", 1},
+                                              {"text", std::string(collision.value->text())}}}});
+  const auto collision_completion = request(service, "textDocument/completion",
+                                            at(collision_uri, 6, 2));
+  require(collision_completion.elements(), "colliding export completion returned no candidates");
+  std::vector<std::string> collision_details;
+  for (const auto &item : *collision_completion.elements())
+    if (item.get("label") && item.get("label")->string() == "answer")
+    {
+      const auto *edits = item.get("additionalTextEdits");
+      require(edits && edits->elements() && edits->elements()->size() == 1 &&
+                  item.get("detail") && item.get("detail")->string(),
+              "colliding export completion omitted its module-specific edit or detail");
+      collision_details.push_back(std::string(*item.get("detail")->string()));
+    }
+  require(collision_details == std::vector<std::string>{"(): Int (from alpha)",
+                                                       "(): Int (from beta)"},
+          "standard LSP completion did not distinguish colliding module exports");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", collision_uri}}}});
   const std::string composition_uri = "untitled:composition-lsp";
   const std::string composition =
       "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
