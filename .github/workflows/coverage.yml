@@ -33,9 +33,11 @@ jobs:
           fetch-depth: 0
 
       - name: Install coverage tools
-        run: sudo apt-get update && sudo apt-get install --yes lcov
+        run: sudo apt-get update && sudo apt-get install --yes lcov gdb
 
       - name: Build and collect coverage
+        env:
+          SAGAN_DAP_TEST_REQUIRE_GDB: "1"
         run: bash scripts/coverage.sh --require-lcov
 
       - name: Preserve coverage report

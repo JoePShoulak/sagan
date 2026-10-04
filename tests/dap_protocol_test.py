@@ -325,6 +325,8 @@ def run():
         isolated["PATH"] = os.pathsep.join([r"C:\Windows\System32", r"C:\Windows"])
         malformed_frame(binary, isolated)
     if not gdb.is_file():
+        if os.environ.get("SAGAN_DAP_TEST_REQUIRE_GDB") == "1":
+            raise AssertionError(f"GDB is required for the DAP protocol suite: {gdb}")
         print("GDB unavailable; executable launch probe skipped")
         return
     cancelled_build(binary, gdb)
