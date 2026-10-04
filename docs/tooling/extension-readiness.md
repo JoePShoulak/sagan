@@ -28,7 +28,7 @@ below are deliberate limits, not work for the extension to invent locally.
 | References/highlights | Identity-based workspace reference index | **LSP available** |
 | Signature help | Resolved overload/signature query | **LSP available; ambiguous incomplete calls remain conservative** |
 | Completion | Parser context, semantic scope/type state, module/catalog metadata | **LSP available for compiler-known candidates; installed imports and unfinished module-path imports work, but full external-package completion/auto-import is blocked** |
-| `sagan.toml` editing | Compiler-owned manifest parser over versioned overlays | **Unsaved-buffer diagnostics, section/key, application-mode, and installed-dependency-key completion, section/key hover and outline, and entry/dependency navigation available; formatting and safe fixes remain blocked** |
+| `sagan.toml` editing | Compiler-owned manifest parser over versioned overlays | **Unsaved-buffer diagnostics, section/key, application-mode, and installed-dependency-key completion, section/key hover and outline, entry/dependency navigation, and conservative document/range formatting available; on-type formatting and safe fixes remain blocked** |
 | Semantic highlighting | Stable classification vocabulary and ranges | **Full-document LSP semantic tokens available** |
 | Document symbols | Hierarchical declaration index | **LSP available** |
 | Workspace symbols | Workspace semantic index | **LSP available for package roots and open module graphs** |

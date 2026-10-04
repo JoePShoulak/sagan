@@ -507,8 +507,17 @@ namespace sagan::lsp
             current.value->text() != document.text()) throw request_cancelled{};
         return formatting_edits(document, result);
       }
-      if (method == "textDocument/rangeFormatting" ||
-          method == "textDocument/onTypeFormatting" || method == "textDocument/documentSymbol" ||
+      if (method == "textDocument/rangeFormatting")
+      {
+        if (cancellation.is_cancelled()) throw request_cancelled{};
+        const auto result = format_manifest_range(document, byte_range(document, field(params, "range")));
+        if (cancellation.is_cancelled()) throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        return formatting_edits(document, result);
+      }
+      if (method == "textDocument/onTypeFormatting" || method == "textDocument/documentSymbol" ||
           method == "textDocument/definition" || method == "textDocument/typeDefinition" ||
           method == "textDocument/references") return J::array{};
       return nullptr;

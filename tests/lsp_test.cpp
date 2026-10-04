@@ -335,6 +335,21 @@ auto main() -> int
               manifest_formatted.elements()->front().get("newText")->string() ==
                   "name = \"consumer-alias\"",
           "LSP did not format a valid unsaved manifest");
+  const auto manifest_range = request(service, "textDocument/rangeFormatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}},
+                {"range", J::object{{"start", J::object{{"line", 1}, {"character", 0}}},
+                                    {"end", J::object{{"line", 2}, {"character", 0}}}}}});
+  require(manifest_range.elements() && manifest_range.elements()->size() == 1 &&
+              manifest_range.elements()->front().get("newText") &&
+              manifest_range.elements()->front().get("newText")->string() ==
+                  "name = \"consumer-alias\"",
+          "LSP manifest range formatting omitted a selected safe line");
+  const auto manifest_other_range = request(service, "textDocument/rangeFormatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}},
+                {"range", J::object{{"start", J::object{{"line", 2}, {"character", 0}}},
+                                    {"end", J::object{{"line", 2}, {"character", 10}}}}}});
+  require(manifest_other_range.elements() && manifest_other_range.elements()->empty(),
+          "LSP manifest range formatting changed a line outside the selected range");
   static_cast<void>(notify(service, "textDocument/didChange",
       J::object{{"textDocument", J::object{{"uri", manifest_uri}, {"version", 32}}},
                 {"contentChanges", J::array{J::object{{"text", "[package]\nname = \"broken\"\nunknown = 1\n"}}}}}));

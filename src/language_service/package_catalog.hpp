@@ -24,6 +24,9 @@ namespace sagan::language_service
   // Normalize only proven complete manifest lines. Incomplete documents and
   // commented lines are left untouched rather than guessed at.
   auto format_manifest_document(const source::document_snapshot &document) -> format_result;
+  // Restrict the same proven-valid line edits to a requested source range.
+  auto format_manifest_range(const source::document_snapshot &document,
+                             source::byte_range range) -> format_result;
 
   struct manifest_completion_candidate
   {

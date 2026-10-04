@@ -115,6 +115,21 @@ namespace sagan::language_service
     return {edit_state::ready, {}, std::move(result)};
   }
 
+  auto format_manifest_range(const source::document_snapshot &document,
+                             const source::byte_range range) -> format_result
+  {
+    if (range.begin > range.end || range.end > document.text().size() ||
+        !document.to_utf16(range.begin) || !document.to_utf16(range.end))
+      return {edit_state::invalid, "Invalid manifest formatting range", {}};
+    auto result = format_manifest_document(document);
+    if (result.state != edit_state::ready || result.edits.documents.empty()) return result;
+    auto &edits = result.edits.documents.front().edits;
+    std::erase_if(edits, [&](const auto &edit)
+    { return edit.range.bytes.begin < range.begin || edit.range.bytes.end > range.end; });
+    if (edits.empty()) result.edits.documents.clear();
+    return result;
+  }
+
   auto complete_manifest_document(const source::document_snapshot &document,
                                   const source::byte_offset offset,
                                   const diagnostics::cancellation_token cancellation,

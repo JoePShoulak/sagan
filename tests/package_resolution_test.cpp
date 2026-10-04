@@ -75,6 +75,39 @@ auto main() -> int
                   "name = \"consumer-alias\"",
           "Manifest formatter did not return a versioned, conservative edit");
   const auto &name_edit = manifest_format.edits.documents.front().edits.front();
+  const auto selected_manifest_range = sagan::language_service::format_manifest_range(
+      spaced_manifest, name_edit.range.bytes);
+  require(selected_manifest_range.state == sagan::language_service::edit_state::ready &&
+              selected_manifest_range.edits.documents.size() == 1 &&
+              selected_manifest_range.edits.documents.front().edits.size() == 1 &&
+              selected_manifest_range.edits.documents.front().expected_version == 24,
+          "Manifest range formatting omitted the selected proven-valid line");
+  const auto excluded_manifest_range = sagan::language_service::format_manifest_range(
+      spaced_manifest, {0, name_edit.range.bytes.begin});
+  require(excluded_manifest_range.state == sagan::language_service::edit_state::ready &&
+              excluded_manifest_range.edits.documents.empty(),
+          "Manifest range formatting edited outside the selected source range");
+  require(sagan::language_service::format_manifest_range(
+              spaced_manifest, {name_edit.range.bytes.end, name_edit.range.bytes.begin}).state ==
+              sagan::language_service::edit_state::invalid,
+          "Manifest range formatting accepted a reversed source range");
+  auto crlf_manifest_text = spaced_manifest_text;
+  for (std::size_t newline = crlf_manifest_text.find('\n'); newline != std::string::npos;
+       newline = crlf_manifest_text.find('\n', newline + 2))
+    crlf_manifest_text.insert(newline, "\r");
+  const sagan::source::document_snapshot crlf_format_manifest(manifest_document.value->identity(), 26,
+                                                               crlf_manifest_text);
+  const auto crlf_name = crlf_manifest_text.find("  name  =");
+  const auto crlf_end = crlf_manifest_text.find("\r\n", crlf_name);
+  const auto crlf_range = sagan::language_service::format_manifest_range(
+      crlf_format_manifest, {static_cast<sagan::source::byte_offset>(crlf_name),
+                      static_cast<sagan::source::byte_offset>(crlf_end)});
+  require(crlf_range.state == sagan::language_service::edit_state::ready &&
+              crlf_range.edits.documents.size() == 1 &&
+              crlf_range.edits.documents.front().edits.size() == 1 &&
+              crlf_range.edits.documents.front().edits.front().replacement_utf8 ==
+                  "name = \"consumer-alias\"",
+          "Manifest range formatting did not preserve a CRLF document's line boundaries");
   spaced_manifest_text.replace(name_edit.range.bytes.begin,
                                name_edit.range.bytes.end - name_edit.range.bytes.begin,
                                name_edit.replacement_utf8);
