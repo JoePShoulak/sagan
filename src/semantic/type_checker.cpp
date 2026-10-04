@@ -3230,6 +3230,8 @@ namespace semantic
         add_binding("__render_scroll_y", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
         add_binding("__render_set_view",
                     binding{"Function", callable_signature{{"Float64", "Float64", "Float64"}, "Void", {}, {}}});
+        add_binding("__render_is_visible",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "Float64"}, "Bool", {}, {}}});
         add_binding("__render_present", binding{"Function", callable_signature{{}, "Void", {}, {}}});
         add_binding("__render_circle",
                     binding{"Function", callable_signature{{"Float64", "Float64", "Float64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});

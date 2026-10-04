@@ -66,6 +66,8 @@ The `render.canvas` module exports:
 
 - `set_view(center_x, center_y, pixels_per_unit)` for a centered orthographic
   world-to-screen transform;
+- `is_visible(x, y, radius)` for a deterministic test of whether the same
+  world-space circle would intersect the current drawable client viewport;
 - `circle(x, y, radius, red, green, blue)` for filled world-space circles;
 - `line(start_x, start_y, end_x, end_y, width, red, green, blue)` for
   world-space line segments;
