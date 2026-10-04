@@ -106,27 +106,39 @@ the drone may share many systems with ships.
 
 #### Resources
 
-*To be defined.*
+As much as possible, for every feature in the game that requires a consumable
+resource, that resource will be present in the game and accurate to its real
+life counterpart. For example, if you want rocket fuel you better be prepared
+to procure some methane or hydrogren and oxygen.
 
 ##### Extraction
 
-*To be defined.*
+Resources can be extracted from Natrual Bodies by Bases, and some Vehicles, by
+having the requisite machine installed (and storage available).
 
 ##### Refinement
 
-*To be defined.*
+Likewise, resources can be refined by having the corresponding machine
+installed and the proper materials present (and storage for the inputs and
+outputs, of course).
 
 ##### Transportation
 
-*To be defined.*
+Resources can be transported along automated routes by Vehicles. Automated
+Routes are calculated and simulated, but things like the final rendezvous and
+docking are "hand-waved" so that the math does not need to be perfect for a
+planned mission to go as planned. NOTE: This has to be carefully guranteed.
 
 ##### Consumption
 
-*To be defined.*
+Systems and Machines may consume Resources.
 
 #### Orbital Decay
 
-*To be defined.*
+If something is put into orbit, it will have enough gravitational influence
+affecting it to cause it to eventually have a deteriorating orbit, such that
+orbital corrections would need to be performed by all Ships, Satellites, and
+Stations. This can be mitigated somewhat by placing them in Lagrange points.
 
 #### Ships
 
@@ -134,31 +146,41 @@ the drone may share many systems with ships.
 
 ##### Creation
 
-*To be defined.*
+Outposts will be able to crate ships.
 
 ##### Customization
 
-*To be defined.*
+The core of each ship is its Chassis, which has Slots that allow you to install
+systems and machines that determine the capabilites and other details of the
+ship. Hopefully paint schemes can be a thing too.
 
 #### Mechanical Systems
 
-*To be defined.*
+No system is perfect
 
 ##### Degradation
 
-*To be defined.*
+Machines will degrade over time and need repair. Your satellite will not last
+forever.
 
 ##### Repair
 
-*To be defined.*
+Anything can be repaired. Unlike resources, this will not be as real-life
+accurate; we'll do some major handwaving allowing things to be able to be fixed
+with a limited list of "Parts" (advanced parts, electronic parts, chassis parts
+grade 3, what have you) such that the ability to repair things is not the most
+crunchy part of the game.
 
 #### Life Support
 
-*To be defined.*
+Folks can die. Like the math and science in other parts of the game, this is
+going to be accurate to the age and activity of the people in the game. Folks
+will need to have the appropriate provided resources, with things like oxygen
+consumption being directly calculated.
 
 ##### Food
 
-*To be defined.*
+Gotta feed them.
 
 ##### Water
 
@@ -170,15 +192,26 @@ the drone may share many systems with ships.
 
 ##### Sleep
 
-*To be defined.*
+Not sure exactly how to tie this in, this may just fall under the heading of
+comfot. If nothing else, it helps determine the available number of man-hours
+you have per day. Some number of people have to be asleep at a certain time.
 
 ##### Comfort
 
-*To be defined.*
+I don't want to go tooooo crazy on this at the get go, but I do want it to be a
+bad thing if you cut the corners on absolutely everything for everyone. For
+example, maybe providing more food and water than they need and enabling them to
+eat more than the bare minnimum provides a boost. Maybe having amenities raises
+morale and gives people a temporary buff to their job performance.
 
 #### Population
 
-*To be defined.*
+All the people not employed in the running of the space program. The goal of the
+game is to eventually get as many as you can to a new home among the stars. At
+every step of the journey though, not all of the population will be willing to
+make the move, nor may there be transportation available for everyone. Tough
+choices will need to be made, and some will be made as fait accompli. You can't
+save everyone, but you must save humanity.
 
 ##### Management
 
@@ -186,45 +219,88 @@ the drone may share many systems with ships.
 
 ##### Housing
 
+They need to have a safe place to live until we can find all of humanity a new
+home among the stars
+
+##### Education
+
+Some effor has to be put in by the player to guarantee that in further
+generations, humanity is still able to train people to be able to perform the
+tasks needed by the space program. In actuality, this may just be a way to
+"promote" people from civilians into employees, but considering these pilots
+can't live forever, there will need to be new humans taking over.
+
 *To be defined.*
 
 ##### Life Support
+
+Same as on a ship, the health of the population must be satisfied
 
 *To be defined.*
 
 ##### Transportation
 
+Transport ships must be built to move them from the dying earth to whever their new refuge will be
+
 *To be defined.*
 
 #### Terraforming
+
+Earth is doomed (why is TBD), but other planets may have things performed to
+affect their environment to ease the pressure on needing to find their new home
+quite as urgently. NOTE: We likely need to ensure that earth can never be
+restored to close to its previous status in order to ensure the teraforming of
+next best options (Like Mars), and likewise no body can ever be terraformed to
+the point that it is perfectly habitable, otherwise
 
 *To be defined.*
 
 #### Exploration
 
+The player will need to explore other bodies and star systems to be able to find
+a new home among the stars.
+
 *To be defined.*
 
 #### Research
+
+Science points must be able to be gathered to allow a tech tree and tech
+progression needed for there to be such a capability disparity as being
+basically not far from where we are right now in real life to eventually
+becoming a truly space faring civilzation.
 
 *To be defined.*
 
 ##### Technology Tree
 
+There will be one
+
 *To be defined.*
 
 #### Combat (Unresolved)
+
+It would be so disappointing to have no combat in this game.
+
+##### Enemy Factions (Unresolved)
+
+In the solar system, there should be some sort of enemy faction to get the
+player familiar with combat, or else it may be the only combat in the game and
+would persist throughout. This has to be balanced against the fact that Earth
+would have likely united a fair amount behind the shared goal of surviging
+eradication.
 
 *To be defined.*
 
 ##### Enemy Aliens (Unresolved)
 
-*To be defined.*
-
-##### Enemy Factions (Unresolved)
-
-*To be defined.*
+In other star systems, the player may find hostile entities, which may have
+been tutorialized by enemy factions in the solar system. This allows a robust
+and varied combat experience moving forward.
 
 #### Fleet Management
+
+Vehicle and Outpost Management is the absolute core of the game and the vast
+majority of the game loop.
 
 *To be defined.*
 
