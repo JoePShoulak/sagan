@@ -59,6 +59,16 @@ namespace sagan::dap
       return field(object, key).integer().value_or(0);
     }
 
+    auto scalar_text(const std::string_view type, std::string value) -> std::string
+    {
+      if (type == "Bool")
+      {
+        if (value == "1") return "true";
+        if (value == "0") return "false";
+      }
+      return value;
+    }
+
     auto object_copy(const J &value) -> J::object
     {
       return value.fields() ? *value.fields() : J::object{};
@@ -273,11 +283,12 @@ namespace sagan::dap
       }
 
       auto scalar_expression(const language_service::debug_variable &known,
-                             const std::int64_t frame_id) -> std::optional<std::string>
+                             const std::int64_t frame_id,
+                             const bool visible_in_native_scope = false) -> std::optional<std::string>
       {
-        if (known.scope_id != 0 ||
-            !(known.type == "Bool" || known.type.starts_with("Int") ||
+        if (!(known.type == "Bool" || known.type.starts_with("Int") ||
               known.type.starts_with("UInt") || known.type.starts_with("Float"))) return {};
+        if (known.parameter && !visible_in_native_scope) return {};
         std::optional<source_location> frame_location;
         {
           std::scoped_lock lock(state_mutex_);
@@ -290,7 +301,12 @@ namespace sagan::dap
         const auto source_document = source_.read_path(*known.source_path);
         const auto declared_end = source_document ?
             source_document.value->to_utf16(known.declaration.bytes.end) : std::nullopt;
+        const auto lifetime_end = source_document ?
+            source_document.value->to_utf16(known.lifetime.bytes.end) : std::nullopt;
         if (!declared_end || frame_location->line <= static_cast<std::int64_t>(declared_end->line + 1))
+          return {};
+        if ((!lifetime_end || frame_location->line > static_cast<std::int64_t>(lifetime_end->line + 1)) &&
+            !(known.parameter && visible_in_native_scope))
           return {};
         if (known.representation == language_service::debug_value_representation::direct_value)
           return known.generated_name;
@@ -308,14 +324,27 @@ namespace sagan::dap
         const auto &probe = batch.probes.at(batch.next);
         const auto frame_id = batch.frame_id;
         const auto expression = probe.expression;
+        const auto client_seq = integer_field(J(batch.response), "request_seq");
         {
           std::scoped_lock lock(state_mutex_);
           forwarded_.insert_or_assign(native_seq, "internalVariablesEvaluate");
           pending_variable_batches_.insert_or_assign(native_seq, std::move(batch));
         }
-        gdb_send(J::object{{"seq", native_seq}, {"type", "request"}, {"command", "evaluate"},
-                           {"arguments", J::object{{"frameId", frame_id},
-                                                    {"expression", expression}, {"context", "watch"}}}});
+        try
+        {
+          gdb_send(J::object{{"seq", native_seq}, {"type", "request"}, {"command", "evaluate"},
+                             {"arguments", J::object{{"frameId", frame_id},
+                                                      {"expression", expression}, {"context", "watch"}}}});
+        }
+        catch (const std::exception &error)
+        {
+          {
+            std::scoped_lock lock(state_mutex_);
+            forwarded_.erase(native_seq);
+            pending_variable_batches_.erase(native_seq);
+          }
+          response(client_seq, "variables", false, {}, error.what());
+        }
       }
 
       auto forward(const J &request) -> void
@@ -795,7 +824,8 @@ namespace sagan::dap
         if (field(message, "success").boolean().value_or(false))
         {
           auto variable = object_copy(pending_values->variables.at(probe.index));
-          variable.insert_or_assign("value", string_field(field(message, "body"), "result"));
+          variable.insert_or_assign("value", scalar_text(probe.type,
+              string_field(field(message, "body"), "result")));
           variable.insert_or_assign("type", probe.type);
           pending_values->variables[probe.index] = variable;
         }
@@ -886,6 +916,7 @@ namespace sagan::dap
           return;
         }
         auto body = object_copy(field(message, "body"));
+        body.insert_or_assign("result", scalar_text(sagan_type, string_field(J(body), "result")));
         body.insert_or_assign("type", sagan_type);
         body.insert_or_assign("variablesReference", 0);
         body.erase("memoryReference");
@@ -949,24 +980,35 @@ namespace sagan::dap
         if (build && build->debug)
           if (const auto *variables = field(field(output, "body"), "variables").elements())
             for (const auto &item : *variables)
+            {
+              const language_service::debug_variable *selected = nullptr;
+              std::optional<std::string> selected_expression;
               for (const auto &known : build->debug->variables)
                 if (string_field(item, "name") == known.generated_name)
                 {
-                  auto variable = object_copy(item);
-                  variable.insert_or_assign("name", known.name);
-                  variable.insert_or_assign("type", known.type);
-                  variable.insert_or_assign("value", "<value unavailable>");
-                  variable.insert_or_assign("variablesReference", 0);
-                  variable.erase("namedVariables");
-                  variable.erase("indexedVariables");
-                  variable.erase("evaluateName");
-                  variable.erase("memoryReference");
-                  if (variable_frame)
-                    if (const auto expression = scalar_expression(known, *variable_frame))
-                      probes.push_back({visible.size(), *expression, known.type});
-                  visible.emplace_back(std::move(variable));
-                  break;
+                  if (!selected) selected = &known;
+                  if (!variable_frame) continue;
+                  const auto expression = scalar_expression(known, *variable_frame, true);
+                  if (!expression) continue;
+                  const auto width = known.lifetime.bytes.end - known.lifetime.bytes.begin;
+                  const auto previous_width = selected->lifetime.bytes.end - selected->lifetime.bytes.begin;
+                  if (!selected_expression || width < previous_width)
+                  { selected = &known; selected_expression = expression; }
                 }
+              if (!selected) continue;
+              auto variable = object_copy(item);
+              variable.insert_or_assign("name", selected->name);
+              variable.insert_or_assign("type", selected->type);
+              variable.insert_or_assign("value", "<value unavailable>");
+              variable.insert_or_assign("variablesReference", 0);
+              variable.erase("namedVariables");
+              variable.erase("indexedVariables");
+              variable.erase("evaluateName");
+              variable.erase("memoryReference");
+              if (selected_expression)
+                probes.push_back({visible.size(), *selected_expression, selected->type});
+              visible.emplace_back(std::move(variable));
+            }
         body.insert_or_assign("variables", visible);
         object.insert_or_assign("body", body);
         if (!probes.empty())
@@ -1203,18 +1245,27 @@ namespace sagan::dap
             build = build_;
           }
           const language_service::debug_variable *known = nullptr;
+          std::optional<std::string> native_expression;
+          const auto frame_id = integer_field(arguments, "frameId");
           if (build && build->debug)
             for (const auto &candidate : build->debug->variables)
               if (candidate.name == expression)
-              { known = &candidate; break; }
-          if (!known || !field(arguments, "frameId").integer())
+              {
+                const auto current = scalar_expression(candidate, frame_id);
+                if (!current) continue;
+                const auto width = candidate.lifetime.bytes.end - candidate.lifetime.bytes.begin;
+                const auto previous_width = known ?
+                    known->lifetime.bytes.end - known->lifetime.bytes.begin : 0;
+                if (!known || width < previous_width)
+                { known = &candidate; native_expression = current; }
+              }
+          if (!field(arguments, "frameId").integer())
           {
             response(seq, command, false, {},
                      "Only scalar Sagan variable lookup in a stack frame is supported");
             return true;
           }
-          const auto native_expression = scalar_expression(*known, integer_field(arguments, "frameId"));
-          if (!native_expression)
+          if (!known || !native_expression)
           {
             response(seq, command, false, {}, "Sagan variable is unavailable or not yet initialized");
             return true;

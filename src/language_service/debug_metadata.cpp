@@ -117,10 +117,16 @@ namespace sagan::language_service
         const auto path = symbol.scope_id < scope_paths.size()
                               ? scope_paths[symbol.scope_id] : std::nullopt;
         if (provider && !path) continue;
+        // Parameter symbols currently carry the whole function span. Their
+        // boxed native storage is initialized at function entry, so use the
+        // function start as the conservative source-order boundary.
+        const auto declaration = symbol.kind == semantic::symbol_kind::parameter ?
+            parser::span{symbol.declaration.begin, symbol.declaration.begin} : symbol.declaration;
         result.variables.push_back({symbol.id, symbol.name,
                                     codegen::generated_identifier(symbol.name), type,
-                                    symbol.scope_id, range_for(id_for(path), symbol.declaration),
+                                    symbol.scope_id, range_for(id_for(path), declaration),
                                     range_for(id_for(path), lifetime), path,
+                                    symbol.kind == semantic::symbol_kind::parameter,
                                     representation, false});
       }
     for (const auto &resolution : model.resolutions)
