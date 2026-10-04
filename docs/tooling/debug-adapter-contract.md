@@ -63,10 +63,12 @@ rejected because it invokes an overloaded operator in the debuggee. The
 experimental adapter now materializes initialized scalar bindings (including
 locals and visible parameters) in DAP `variables`. DAP `evaluate` accepts an
 exact scalar binding name after its declaration has completed in a matching
-source-mapped stack frame; direct parameter lookup remains refused until scope
-identity is authoritative. It reads the generated pointer field without a
-debuggee call and returns the Sagan type. A pre-initialization function-entry
-probe and arbitrary expressions are refused. Strings, collections, nested
+source-mapped stack frame. Parameter lookup additionally requires that a prior
+`variables` response proved the binding visible in that exact stopped frame;
+the proof is cleared on continue and every new stop. It reads the generated
+pointer field without a debuggee call and returns the Sagan type. A
+pre-initialization function-entry probe and arbitrary expressions are refused.
+Strings, collections, nested
 values, optimized builds, and general expression evaluation remain unsupported.
 `debugEvaluate` and `debugVariables` remain false.
 

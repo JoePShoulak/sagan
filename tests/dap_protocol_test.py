@@ -479,7 +479,7 @@ def local_scalar_values(binary, gdb):
             expect(lambda item: item.get("event") == "initialized")
             send(2, "launch", {"program": str(source)})
             send(3, "setBreakpoints", {"source": {"path": str(source)},
-                                       "breakpoints": [{"line": 6}]})
+                                       "breakpoints": [{"line": 6}, {"line": 7}]})
             assert expect(lambda item: item.get("request_seq") == 3)["success"]
             send(4, "configurationDone")
             assert expect(lambda item: item.get("request_seq") == 4)["success"]
@@ -491,6 +491,8 @@ def local_scalar_values(binary, gdb):
             frame_id = stack["body"]["stackFrames"][0]["id"]
             send(6, "scopes", {"frameId": frame_id})
             scopes = expect(lambda item: item.get("request_seq") == 6)
+            send(10, "evaluate", {"frameId": frame_id, "expression": "value", "context": "hover"})
+            assert not expect(lambda item: item.get("request_seq") == 10)["success"]
             observed = {}
             for scope in scopes["body"]["scopes"]:
                 send(7, "variables", {"variablesReference": scope["variablesReference"]})
@@ -503,8 +505,17 @@ def local_scalar_values(binary, gdb):
             send(9, "evaluate", {"frameId": frame_id, "expression": "local", "context": "hover"})
             local_value = expect(lambda item: item.get("request_seq") == 9)
             assert local_value["success"] and local_value["body"]["result"] == "7", local_value
-            send(10, "evaluate", {"frameId": frame_id, "expression": "value", "context": "hover"})
-            assert not expect(lambda item: item.get("request_seq") == 10)["success"]
+            send(11, "evaluate", {"frameId": frame_id, "expression": "value", "context": "hover"})
+            parameter_value = expect(lambda item: item.get("request_seq") == 11)
+            assert parameter_value["success"] and parameter_value["body"]["result"] == "2", parameter_value
+            send(12, "continue", {"threadId": stopped["body"]["threadId"]})
+            assert expect(lambda item: item.get("request_seq") == 12)["success"]
+            resumed_stop = expect(lambda item: item.get("event") == "stopped")
+            send(13, "stackTrace", {"threadId": resumed_stop["body"]["threadId"]})
+            resumed_stack = expect(lambda item: item.get("request_seq") == 13)
+            resumed_frame = resumed_stack["body"]["stackFrames"][0]["id"]
+            send(14, "evaluate", {"frameId": resumed_frame, "expression": "value", "context": "hover"})
+            assert not expect(lambda item: item.get("request_seq") == 14)["success"]
             send(8, "disconnect")
             assert expect(lambda item: item.get("request_seq") == 8)["success"]
             process.wait(timeout=10)

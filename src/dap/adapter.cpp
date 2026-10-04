@@ -24,6 +24,7 @@
 #include <mutex>
 #include <optional>
 #include <ostream>
+#include <set>
 #include <stdexcept>
 #include <system_error>
 #include <string>
@@ -228,6 +229,7 @@ namespace sagan::dap
       std::map<std::int64_t, std::string> evaluated_types_;
       std::map<std::int64_t, std::int64_t> scope_requests_;
       std::map<std::int64_t, std::int64_t> variable_frames_;
+      std::map<std::int64_t, std::set<std::string>> visible_parameters_;
       std::map<std::int64_t, std::int64_t> variable_requests_;
       std::map<std::int64_t, pending_variable_batch> pending_variable_batches_;
       std::map<std::int64_t, std::int64_t> stack_threads_;
@@ -1006,7 +1008,14 @@ namespace sagan::dap
               variable.erase("evaluateName");
               variable.erase("memoryReference");
               if (selected_expression)
+              {
                 probes.push_back({visible.size(), *selected_expression, selected->type});
+                if (selected->parameter && variable_frame)
+                {
+                  std::scoped_lock lock(state_mutex_);
+                  visible_parameters_[*variable_frame].insert(selected->symbol.value);
+                }
+              }
               visible.emplace_back(std::move(variable));
             }
         body.insert_or_assign("variables", visible);
@@ -1098,6 +1107,7 @@ namespace sagan::dap
               std::scoped_lock lock(state_mutex_);
               frame_locations_.clear();
               variable_frames_.clear();
+              visible_parameters_.clear();
               ++stop_generation_;
               stopped_thread_ = thread_id;
               if (stop_on_entry_pending_ &&
@@ -1134,6 +1144,7 @@ namespace sagan::dap
             std::scoped_lock lock(state_mutex_);
             frame_locations_.clear();
             variable_frames_.clear();
+            visible_parameters_.clear();
             ++stop_generation_;
             if (stepping_) continue;
           }
@@ -1251,7 +1262,15 @@ namespace sagan::dap
             for (const auto &candidate : build->debug->variables)
               if (candidate.name == expression)
               {
-                const auto current = scalar_expression(candidate, frame_id);
+                bool parameter_visible = false;
+                if (candidate.parameter)
+                {
+                  std::scoped_lock lock(state_mutex_);
+                  if (const auto frame = visible_parameters_.find(frame_id);
+                      frame != visible_parameters_.end())
+                    parameter_visible = frame->second.contains(candidate.symbol.value);
+                }
+                const auto current = scalar_expression(candidate, frame_id, parameter_visible);
                 if (!current) continue;
                 const auto width = candidate.lifetime.bytes.end - candidate.lifetime.bytes.begin;
                 const auto previous_width = known ?
