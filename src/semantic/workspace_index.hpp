@@ -15,6 +15,7 @@ namespace semantic
   {
     std::string name;
     semantic_index index;
+    bool external{};
   };
 
   struct import_link

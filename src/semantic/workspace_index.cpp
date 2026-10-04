@@ -10,6 +10,7 @@
 #include <functional>
 #include <optional>
 #include <stdexcept>
+#include <system_error>
 #include <unordered_map>
 #include <utility>
 
@@ -246,7 +247,11 @@ namespace semantic
       if (!document) throw std::runtime_error(document.error ? document.error->message : "Could not read module");
       const auto tree = parse(*document.value);
       const auto model = analyze(tree, analysis_identity{package, module.name});
-      indexed.push_back(indexed_module{module.name, build_index(*document.value, model)});
+      std::error_code relative_error;
+      const auto relative = std::filesystem::relative(module.path, graph.source_root, relative_error);
+      const bool external = relative_error || relative.empty() ||
+          *relative.begin() == std::filesystem::path{".."};
+      indexed.push_back(indexed_module{module.name, build_index(*document.value, model), external});
     }
 
     std::unordered_map<std::string, std::vector<symbol_id>> exports;

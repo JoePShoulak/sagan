@@ -909,6 +909,10 @@ namespace sagan::lsp
     }
     if (method == "textDocument/prepareRename")
     {
+      if (workspace && std::any_of(workspace->modules().begin(), workspace->modules().end(),
+          [&](const auto &module)
+          { return module.external && module.index.document().id == document.identity().id; }))
+        throw request_failed("Installed package source is not editable by workspace rename");
       const auto symbol = queries.symbol_at(selected());
       std::string placeholder;
       source::byte_range selection;
@@ -940,6 +944,10 @@ namespace sagan::lsp
     }
     if (method == "textDocument/rename")
     {
+      if (workspace && std::any_of(workspace->modules().begin(), workspace->modules().end(),
+          [&](const auto &module)
+          { return module.external && module.index.document().id == document.identity().id; }))
+        throw request_failed("Installed package source is not editable by workspace rename");
       auto result = rename_local(document, *index, selected(), string_field(params, "newName"));
       if (result.state == edit_state::unsupported && workspace)
         result = rename_workspace(document, *index, *workspace, *documents_, selected(),

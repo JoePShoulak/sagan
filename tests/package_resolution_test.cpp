@@ -356,10 +356,37 @@ auto main() -> int
   const auto entry = source.read_path("tests/fixtures/catalog/consumer-alias/src/main.sagan");
   require(static_cast<bool>(entry), "Import completion fixture was not readable");
   const auto workspace = semantic::build_workspace_index(graph, source);
+  require(std::any_of(workspace.modules().begin(), workspace.modules().end(), [](const auto &module)
+              { return module.name == "orbit_tools.main" && module.external; }) &&
+              std::any_of(workspace.modules().begin(), workspace.modules().end(), [](const auto &module)
+              { return module.name == "main" && !module.external; }) &&
+              std::any_of(workspace.modules().begin(), workspace.modules().end(), [](const auto &module)
+              { return module.name == "orbit_tools" && !module.external; }),
+          "Workspace index did not distinguish installed source from local modules");
   const semantic::semantic_index *entry_index = nullptr;
   for (const auto &module : workspace.modules())
     if (module.name == "main") entry_index = &module.index;
   require(entry_index, "Installed-package fixture omitted the consumer module");
+  const auto external_import_position = entry.value->text().find("orbit_answer from orbit_tools.main");
+  require(external_import_position != std::string_view::npos,
+          "Installed-package rename fixture has no selective import");
+  const auto external_rename = sagan::language_service::rename_workspace(
+      *entry.value, *entry_index, workspace, source,
+      static_cast<sagan::source::byte_offset>(external_import_position), "new_answer");
+  require(external_rename.state == sagan::language_service::edit_state::unsupported &&
+              external_rename.reason.find("Installed package") != std::string::npos &&
+              external_rename.edits.documents.empty(),
+          "F2 offered to edit a locked dependency's installed source");
+  const auto local_alias_position = entry.value->text().find("package_tools.orbit_answer()");
+  require(local_alias_position != std::string_view::npos,
+          "Installed-package rename fixture has no local import alias use");
+  const auto alias_rename = sagan::language_service::rename_workspace(
+      *entry.value, *entry_index, workspace, source,
+      static_cast<sagan::source::byte_offset>(local_alias_position), "tools");
+  require(alias_rename.state == sagan::language_service::edit_state::ready &&
+              alias_rename.edits.documents.size() == 1 &&
+              alias_rename.edits.documents.front().edits.size() == 2,
+          "F2 blocked a local alias merely because it imports an installed package");
   const sagan::language_service::document_queries package_query(*entry.value, *entry_index, &workspace);
   const std::string entry_text(entry.value->text());
   const auto package_dot = entry_text.find("package_tools.orbit_answer()");

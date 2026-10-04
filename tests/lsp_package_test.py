@@ -21,14 +21,18 @@ def run():
     received = Queue()
     Thread(target=read_frames, args=(process.stdout, received), daemon=True).start()
 
-    def answer(request_id):
+    def reply(request_id):
         while True:
             item = received.get(timeout=30)
             if isinstance(item, BaseException):
                 raise item
             if item.get("id") == request_id:
-                assert "error" not in item, item
-                return item["result"]
+                return item
+
+    def answer(request_id):
+        item = reply(request_id)
+        assert "error" not in item, item
+        return item["result"]
 
     uri = server_file_uri(entry)
     try:
@@ -61,6 +65,22 @@ def run():
                        }}})
         import_target = answer(10)
         assert import_target and import_target[0]["uri"] == server_file_uri(installed), import_target
+        send(process, {"jsonrpc": "2.0", "id": 27, "method": "textDocument/prepareRename",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": import_line,
+                           "character": lines[import_line].index("orbit_answer") + 2,
+                       }}})
+        refused_package_rename = reply(27)
+        assert refused_package_rename.get("error", {}).get("code") == -32803 and \
+            "Installed package" in refused_package_rename["error"]["message"], refused_package_rename
+        send(process, {"jsonrpc": "2.0", "id": 28, "method": "textDocument/rename",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": import_line,
+                           "character": lines[import_line].index("orbit_answer") + 2,
+                       }, "newName": "new_answer"}})
+        refused_package_edit = reply(28)
+        assert refused_package_edit.get("error", {}).get("code") == -32803 and \
+            "Installed package" in refused_package_edit["error"]["message"], refused_package_edit
         member_line = next(i for i, line in enumerate(lines) if "package_tools.orbit_answer" in line)
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "textDocument/completion",
                        "params": {"textDocument": {"uri": uri}, "position": {

@@ -238,7 +238,8 @@ the semantic index proves their identity. A name used in an independent
 lexical scope does not block a local rename; a same-scope or ancestor/descendant
 collision does. `rename_workspace` handles compiler-proven public exports and
 members across resolved modules, preserving independent import aliases and
-returning one versioned, atomic workspace edit. Unresolved or ambiguous
+returning one versioned, atomic workspace edit. It refuses edits to modules
+identified as installed dependency source. Unresolved or ambiguous
 identities, incomplete source, and uneditable package targets are refused.
 `organize_imports` handles only an uninterrupted, comment-free top-level
 import block. `add_missing_import` uses an exact public workspace symbol ID,

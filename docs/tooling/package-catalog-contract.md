@@ -12,6 +12,9 @@ verified_by: null
 The compiler owns a local, offline package index and an installed-source
 catalog. Editors should not crawl package directories or parse manifests.
 Installed packages can now be imported through a locked dependency alias.
+The workspace semantic index marks installed dependency modules as external.
+F2 may rename an alias declared in the current project, but it refuses to
+propose source edits to an installed dependency or its exported declarations.
 The complete contextual completion contract is still unfinished, so
 `packageCompletion`, `packageNavigation`, and `packageAutoImport` remain false.
 
