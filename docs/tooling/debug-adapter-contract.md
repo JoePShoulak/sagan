@@ -47,6 +47,13 @@ arbitrary expression evaluation are absent, and GDB
 plus its Python/runtime closure is not packaged. All live debugger capability
 flags remain false.
 
+The adapter recognizes generated programs' structured runtime error and
+traceback records, then emits one DAP `output` event with the Sagan diagnostic
+code, message, traceback notes, and mapped source/line/column. The CLI and
+DAP share the same runtime-diagnostic parser. Executable probes cover integer
+overflow and assertion failure. This reports a failure after it occurs; it
+does not pause on exceptions, so `debugExceptions` remains false.
+
 A direct C++ `std::shared_ptr` dereference through GDB's DAP `evaluate` was
 rejected because it invokes an overloaded operator in the debuggee. Reading
 the generated pointer field is call-free, but a function-entry probe returned

@@ -209,6 +209,8 @@ namespace sagan::dap
       bool launch_pending_{};
       bool stop_on_entry_pending_{};
       std::optional<std::pair<std::size_t, std::size_t>> entry_breakpoint_;
+      std::string runtime_stderr_;
+      bool runtime_failure_published_{};
 
       auto send(const J &message) -> void
       {
@@ -286,6 +288,7 @@ namespace sagan::dap
       }
 
       auto launch(const J &request) -> void;
+      auto publish_runtime_failure() -> void;
       auto set_breakpoints(const J &request) -> void;
       auto clear_entry_breakpoint() -> void;
       auto flush_queued() -> void;
@@ -823,6 +826,47 @@ namespace sagan::dap
       send(object);
     }
 
+    auto session::publish_runtime_failure() -> void
+    {
+      if (runtime_failure_published_ ||
+          runtime_stderr_.find("SAGAN_RUNTIME_ERROR\t") == std::string::npos) return;
+      runtime_failure_published_ = true;
+      std::shared_ptr<language_service::native_operation_result> build;
+      {
+        std::scoped_lock lock(state_mutex_);
+        build = build_;
+      }
+      if (!build || !build->document.canonical_path) return;
+      const auto entry = source_.read_path(*build->document.canonical_path);
+      if (!entry) return;
+      const auto issue = language_service::map_runtime_failure(*entry.value, runtime_stderr_, &source_);
+      if (!issue) return;
+      std::string text = "error[" + issue->code + "]: " + issue->message + "\n";
+      for (const auto &note : issue->notes) text += "  " + note + "\n";
+      J::object body{{"category", "stderr"}, {"output", std::move(text)}};
+      std::optional<source::document_snapshot> source_document;
+      if (issue->primary.document == entry.value->identity().id)
+        source_document = *entry.value;
+      else
+      {
+        for (const auto &dependency : build->dependencies)
+          if (dependency.document.id == issue->primary.document)
+          {
+            const auto loaded = source_.read_path(dependency.path);
+            if (loaded) source_document = *loaded.value;
+            break;
+          }
+      }
+      if (source_document && source_document->identity().canonical_path)
+        if (const auto point = source_document->to_utf16(issue->primary.bytes.begin))
+        {
+          body.emplace("source", J::object{{"path", path_utf8(*source_document->identity().canonical_path)}});
+          body.emplace("line", static_cast<std::int64_t>(point->line + 1));
+          body.emplace("column", static_cast<std::int64_t>(point->character + 1));
+        }
+      event("output", body);
+    }
+
     auto session::read_gdb() -> void
     {
       try
@@ -836,7 +880,11 @@ namespace sagan::dap
           const auto name = string_field(message, "event");
           if (name == "terminated" || name == "exited")
           {
-            if (name == "terminated") terminated_.store(true);
+            if (name == "terminated")
+            {
+              publish_runtime_failure();
+              terminated_.store(true);
+            }
             std::scoped_lock lock(state_mutex_);
             stepping_.reset();
           }
@@ -901,6 +949,12 @@ namespace sagan::dap
           if (name == "output")
           {
             const auto printed = string_field(field(message, "body"), "output");
+            if (printed.find("SAGAN_RUNTIME_ERROR\t") != std::string::npos ||
+                printed.find("SAGAN_RUNTIME_FRAME\t") != std::string::npos)
+            {
+              if (runtime_stderr_.size() + printed.size() <= 65536) runtime_stderr_ += printed;
+              continue;
+            }
             std::shared_ptr<language_service::native_operation_result> build;
             {
               std::scoped_lock lock(state_mutex_);

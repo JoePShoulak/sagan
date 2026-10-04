@@ -46,6 +46,10 @@ below are deliberate limits, not work for the extension to invent locally.
 | Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level stop-on-entry and step-over/in/out probes; reliable values, exceptions, release packaging, and capability advertisement remain blocked** |
 | Lexical TextMate coloring | Existing extension grammar | **Already available, outside this task** |
 
+The experimental adapter also emits Sagan-mapped runtime failure output using
+the CLI's structured diagnostic parser. It does not yet pause on exceptions
+or advertise debugger support.
+
 The remaining compiler-side milestones, in dependency order, are:
 
 1. Finish operation stress tests and cancellation checkpoints inside type

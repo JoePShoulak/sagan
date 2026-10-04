@@ -445,6 +445,14 @@ namespace sagan::language_service
     return compiler_issues(document, generated, compiler_stderr, provider);
   }
 
+  auto map_runtime_failure(const source::document_snapshot &document,
+                           const std::string &runtime_stderr,
+                           const source::source_provider *provider)
+    -> std::optional<diagnostics::diagnostic>
+  {
+    return runtime_issue(document, runtime_stderr, provider);
+  }
+
   auto plan_debug_launch(const native_operation_result &build) -> std::optional<debug_launch_plan>
   {
     if (build.state != diagnostics::result_state::complete || !build.executable ||

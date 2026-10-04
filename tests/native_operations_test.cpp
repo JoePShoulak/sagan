@@ -231,12 +231,16 @@ auto main() -> int
                              language_service::native_build_profile::optimized})
   {
     const auto failed_run = language_service::run_document(runtime_failure, "build/operations-test", profile);
+    const auto shared_runtime_issue = language_service::map_runtime_failure(
+        runtime_failure, failed_run.standard_error);
     require(failed_run.state == diagnostics::result_state::incomplete &&
                 failed_run.exit_status && *failed_run.exit_status != 0 &&
                 failed_run.diagnostics.size() == 1 &&
                 failed_run.diagnostics.front().owner == diagnostics::phase::runtime &&
                 failed_run.diagnostics.front().message.find("division by zero") != std::string::npos &&
                 failed_run.diagnostics.front().primary.bytes.begin == failure_text.find("print") &&
+                shared_runtime_issue && shared_runtime_issue->code == failed_run.diagnostics.front().code &&
+                shared_runtime_issue->primary == failed_run.diagnostics.front().primary &&
                 failed_run.debug &&
                 std::any_of(failed_run.debug->variables.begin(), failed_run.debug->variables.end(),
                             [](const auto &variable)

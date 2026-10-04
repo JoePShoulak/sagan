@@ -214,6 +214,56 @@ def package_launch(binary, gdb):
             process.wait(timeout=10)
 
 
+def mapped_runtime_failure(binary, gdb, fixture, expected_code):
+    source = Path(fixture).resolve()
+    environment = os.environ.copy()
+    environment["SAGAN_GDB"] = str(gdb)
+    process = subprocess.Popen([str(binary)], stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               env=environment)
+    messages = queue.Queue()
+    threading.Thread(target=reader, args=(process.stdout, messages), daemon=True).start()
+
+    def send(seq, command, arguments=None):
+        process.stdin.write(frame({"seq": seq, "type": "request", "command": command,
+                                   "arguments": arguments or {}}))
+        process.stdin.flush()
+
+    try:
+        send(1, "initialize", {"adapterID": "sagan"})
+        output_events = []
+        while messages.get(timeout=15).get("request_seq") != 1:
+            pass
+        send(2, "launch", {"program": str(source)})
+        send(3, "configurationDone")
+        launched = terminated = False
+        while not (launched and terminated):
+            item = messages.get(timeout=60)
+            if isinstance(item, BaseException):
+                raise item
+            if item.get("request_seq") == 2:
+                assert item["success"], item
+                launched = True
+            if item.get("event") == "output":
+                output_events.append(item["body"])
+            if item.get("event") == "terminated":
+                terminated = True
+        failures = [item for item in output_events if expected_code in item.get("output", "")]
+        assert len(failures) == 1, output_events
+        assert failures[0]["source"]["path"] == str(source), failures[0]
+        assert failures[0]["line"] >= 1 and failures[0]["column"] >= 1, failures[0]
+        assert not any("SAGAN_RUNTIME_ERROR" in item.get("output", "")
+                       for item in output_events), output_events
+        send(4, "disconnect")
+        while messages.get(timeout=15).get("request_seq") != 4:
+            pass
+        process.wait(timeout=10)
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait(timeout=10)
+
+
 def imported_module_breakpoint(binary, gdb):
     root = Path("tests/fixtures/modules/module_demo").resolve()
     source = root / "guidance.sagan"
@@ -397,6 +447,10 @@ def run():
         print("GDB unavailable; executable launch probe skipped")
         return
     cancelled_build(binary, gdb)
+    mapped_runtime_failure(binary, gdb, "tests/fixtures/runtime/source_trace_error.sagan",
+                           "SAG-RUN-0101")
+    mapped_runtime_failure(binary, gdb, "tests/fixtures/runtime/assert_fail.sagan",
+                           "SAG-RUN-0200")
     source_stop_on_entry(binary, gdb)
     package_launch(binary, gdb)
     imported_module_breakpoint(binary, gdb)
