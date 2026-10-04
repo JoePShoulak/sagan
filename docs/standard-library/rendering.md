@@ -196,10 +196,9 @@ its GCC/C++
 runtime support, so the resulting executable does not require MSYS2 runtime
 directories on `PATH`. It has no SDL or GPU dependency yet.
 Text uses Windows' Segoe UI system font; no separate font file is bundled.
-The catalog declares compiler compatibility `^2.0.0`. A shallow development
-checkout whose unavailable version baseline makes the compiler identify itself
-as `0.0.0+gunknown` receives a demo-local compatibility index only; released
-package metadata retains the declared 2.x range.
+The installed first-party catalog declares compiler compatibility `^4.0.0` for
+the current development language. This range is catalog metadata; the renderer
+retains its independent package version, 0.5.1.
 
 ## Relationship to math and physics
 

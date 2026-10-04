@@ -75,6 +75,12 @@ Run **Sagan: Show Tooling Status** from the Command Palette to inspect the compi
 
 The extension locates `sagan-lsp` beside the configured compiler, in the workspace `bin` directory, or on `PATH`. Set `sagan.server.path` to override discovery. Changes to server, compiler, or trace settings restart the client automatically; **Sagan: Restart Language Server** remains available for manual recovery. Optional sanitized protocol-method tracing is controlled by `sagan.server.trace`.
 
+The compiler and server must be rebuilt after local language changes. An
+installed VSIX does not contain `sagan-lsp`; reinstalling the extension alone
+cannot refresh stale semantic diagnostics. Use **Sagan: Show Tooling Status** to
+check the executable paths, then restart the server or reload the editor after
+rebuilding. On Windows, close VS Code before replacing an in-use server binary.
+
 Installed packages and locked dependencies already have compiler-backed import
 suggestions and some navigation and hover support. Complete package completion
 and automatic import edits are still in development. The compiler also has an

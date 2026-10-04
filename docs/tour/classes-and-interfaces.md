@@ -216,7 +216,9 @@ values.
 
 ## Rules to remember
 
-- Faces declare methods, not stored fields.
+- Faces can promise typed fields. A class adopting the face receives compatible
+  storage unless it declares that field itself; its constructor still initializes
+  the field.
 - A method without a body is a requirement.
 - A method with a body is a default implementation.
 - A class must explicitly name every face it adopts, directly or transitively.
@@ -224,8 +226,9 @@ values.
   default.
 - A class method overrides a face default with the same signature.
 - Competing defaults require the class to provide an explicit override.
-- Class inheritance includes parent fields and methods; face composition does
-  not add stored fields.
+- Class inheritance includes parent fields and methods. Face composition adds
+  promised fields and default methods, while required methods still need an
+  implementation.
 - A face-typed variable refers to the same reference-counted object as the
   concrete class value.
 
