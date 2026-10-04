@@ -9,6 +9,7 @@
 #include "../language_service/operations.hpp"
 #include "../lsp/json.hpp"
 #include "../parser/ast_node.hpp"
+#include "../parser/unicode.hpp"
 #include "../source/provider.hpp"
 #include "../syntax/syntax.hpp"
 
@@ -66,6 +67,31 @@ namespace sagan::dap
       {
         if (value == "1") return "true";
         if (value == "0") return "false";
+      }
+      if (type == "String")
+      {
+        // GDB quotes non-ASCII UTF-8 bytes as octal escapes on some Windows
+        // hosts, even when its target charset is UTF-8. Restore only octal
+        // bytes; keep ordinary C escapes and invalid byte sequences visible.
+        std::string decoded;
+        for (std::size_t i = 0; i < value.size(); ++i)
+        {
+          if (value[i] == '\\' && i + 1 < value.size() &&
+              value[i + 1] >= '0' && value[i + 1] <= '7')
+          {
+            unsigned byte = 0;
+            std::size_t digits = 0;
+            while (digits < 3 && i + 1 < value.size() &&
+                   value[i + 1] >= '0' && value[i + 1] <= '7')
+            {
+              byte = byte * 8 + static_cast<unsigned>(value[++i] - '0');
+              ++digits;
+            }
+            decoded.push_back(static_cast<char>(byte));
+          }
+          else decoded.push_back(value[i]);
+        }
+        if (!unicode::first_invalid_utf8(decoded)) return decoded;
       }
       return value;
     }
@@ -288,7 +314,7 @@ namespace sagan::dap
                              const std::int64_t frame_id,
                              const bool visible_in_native_scope = false) -> std::optional<std::string>
       {
-        if (!(known.type == "Bool" || known.type.starts_with("Int") ||
+        if (!(known.type == "Bool" || known.type == "String" || known.type.starts_with("Int") ||
               known.type.starts_with("UInt") || known.type.starts_with("Float"))) return {};
         if (known.parameter && !visible_in_native_scope) return {};
         std::optional<source_location> frame_location;
@@ -314,6 +340,7 @@ namespace sagan::dap
           return known.generated_name;
         if (known.representation != language_service::debug_value_representation::shared_value)
           return {};
+        if (known.type == "String") return "*(" + known.generated_name + "._M_ptr)";
         const auto native_type = known.type == "Bool" ? "bool" :
             known.type.starts_with("Float") ? "double" :
             known.type.starts_with("UInt") ? "unsigned long long" : "long long";

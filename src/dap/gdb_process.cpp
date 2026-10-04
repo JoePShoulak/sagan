@@ -63,7 +63,8 @@ namespace sagan::dap
         !SetHandleInformation(parent_input, HANDLE_FLAG_INHERIT, 0) ||
         !SetHandleInformation(parent_output, HANDLE_FLAG_INHERIT, 0))
     { cleanup(); throw std::runtime_error("Could not create GDB DAP pipes"); }
-    std::wstring command = L"\"" + gdb.wstring() + L"\" --interpreter=dap --quiet";
+    std::wstring command = L"\"" + gdb.wstring() +
+                           L"\" --interpreter=dap --quiet -iex \"set charset UTF-8\"";
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESTDHANDLES;
@@ -126,7 +127,8 @@ namespace sagan::dap
       ::dup2(child_output[1], STDOUT_FILENO);
       for (auto &fd : child_input) close_fd(fd);
       for (auto &fd : child_output) close_fd(fd);
-      ::execl(gdb.c_str(), gdb.c_str(), "--interpreter=dap", "--quiet", nullptr);
+      ::execl(gdb.c_str(), gdb.c_str(), "--interpreter=dap", "--quiet",
+              "-iex", "set charset UTF-8", nullptr);
       ::_exit(127);
     }
     ::setpgid(child, child);

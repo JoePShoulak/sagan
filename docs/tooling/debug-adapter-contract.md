@@ -60,16 +60,20 @@ does not pause on exceptions, so `debugExceptions` remains false.
 
 A direct C++ `std::shared_ptr` dereference through GDB's DAP `evaluate` was
 rejected because it invokes an overloaded operator in the debuggee. The
-experimental adapter now materializes initialized scalar bindings (including
-locals and visible parameters) in DAP `variables`. DAP `evaluate` accepts an
-exact scalar binding name after its declaration has completed in a matching
+experimental adapter now materializes initialized scalar bindings and
+`String` values (including locals and visible parameters) in DAP `variables`.
+Windows GDB starts with UTF-8 host/target character sets; its octal-escaped
+UTF-8 string bytes are decoded only when they form valid UTF-8. An executable
+probe covers an emoji-bearing local. DAP `evaluate` accepts an
+exact supported binding name after its declaration has completed in a matching
 source-mapped stack frame. Parameter lookup additionally requires that a prior
 `variables` response proved the binding visible in that exact stopped frame;
 the proof is cleared on continue and every new stop. It reads the generated
 pointer field without a debuggee call and returns the Sagan type. A
 pre-initialization function-entry probe and arbitrary expressions are refused.
-Strings, collections, nested
-values, optimized builds, and general expression evaluation remain unsupported.
+Collections, nested values, optimized builds, and general expression
+evaluation remain unsupported. String display is verified for a local value,
+not yet for every string storage or lifetime context.
 `debugEvaluate` and `debugVariables` remain false.
 
 The Windows prototype uses GDB 16.3's native DAP interpreter behind a

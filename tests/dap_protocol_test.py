@@ -443,6 +443,7 @@ def local_scalar_values(binary, gdb):
             "  let local = value + 5\n"
             "  let rate = 2.5\n"
             "  let ready = true\n"
+            "  let message = \"launch 🚀\"\n"
             "  print(local)\n"
             "  return local\n"
             "}\n"
@@ -479,7 +480,7 @@ def local_scalar_values(binary, gdb):
             expect(lambda item: item.get("event") == "initialized")
             send(2, "launch", {"program": str(source)})
             send(3, "setBreakpoints", {"source": {"path": str(source)},
-                                       "breakpoints": [{"line": 6}, {"line": 7}]})
+                                       "breakpoints": [{"line": 7}, {"line": 8}]})
             assert expect(lambda item: item.get("request_seq") == 3)["success"]
             send(4, "configurationDone")
             assert expect(lambda item: item.get("request_seq") == 4)["success"]
@@ -487,7 +488,7 @@ def local_scalar_values(binary, gdb):
             stopped = expect(lambda item: item.get("event") == "stopped")
             send(5, "stackTrace", {"threadId": stopped["body"]["threadId"]})
             stack = expect(lambda item: item.get("request_seq") == 5)
-            assert stack["body"]["stackFrames"][0]["line"] == 6, stack
+            assert stack["body"]["stackFrames"][0]["line"] == 7, stack
             frame_id = stack["body"]["stackFrames"][0]["id"]
             send(6, "scopes", {"frameId": frame_id})
             scopes = expect(lambda item: item.get("request_seq") == 6)
@@ -502,12 +503,16 @@ def local_scalar_values(binary, gdb):
                                  for item in values["body"]["variables"]})
             assert observed.get("local") == "7" and observed.get("value") == "2", observed
             assert observed.get("rate") == "2.5" and observed.get("ready") == "true", observed
+            assert observed.get("message") == '"launch 🚀"', observed
             send(9, "evaluate", {"frameId": frame_id, "expression": "local", "context": "hover"})
             local_value = expect(lambda item: item.get("request_seq") == 9)
             assert local_value["success"] and local_value["body"]["result"] == "7", local_value
             send(11, "evaluate", {"frameId": frame_id, "expression": "value", "context": "hover"})
             parameter_value = expect(lambda item: item.get("request_seq") == 11)
             assert parameter_value["success"] and parameter_value["body"]["result"] == "2", parameter_value
+            send(15, "evaluate", {"frameId": frame_id, "expression": "message", "context": "hover"})
+            message_value = expect(lambda item: item.get("request_seq") == 15)
+            assert message_value["success"] and message_value["body"]["result"] == '"launch 🚀"', message_value
             send(12, "continue", {"threadId": stopped["body"]["threadId"]})
             assert expect(lambda item: item.get("request_seq") == 12)["success"]
             resumed_stop = expect(lambda item: item.get("event") == "stopped")
