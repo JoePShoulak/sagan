@@ -11,6 +11,7 @@ import elapsed_seconds from render.window
 import key_pressed from render.window
 import scroll_y from render.window
 import set_view from render.canvas
+import is_visible from render.canvas
 import present from render.canvas
 import circle from render.canvas
 import line from render.canvas
@@ -29,6 +30,7 @@ const LUNAR_RELATIVE_SPEED: Float64<meter / second> =
   1024.5463142288881 (meter / second)
 const INITIAL_PLAYBACK_RATE: Float64 = 432000.0
 const MAX_PLAYBACK_RATE: Float64 = 3456000.0
+const MAX_KILOMETERS_PER_PIXEL: Float64 = 20000.0
 const TRAIL_SAMPLE_INTERVAL: Float64<second> = 21600.0 second
 
 class Trail8 {
@@ -129,7 +131,52 @@ fun create_solver(): SolarLagrangeSolver => SolarLagrangeSolver(
 
 fun stability_display(body: SolarTertiarySnapshot): String {
   if body.escaped() { return "escaped" }
-  return "${body.stability_error() as kilometer}"
+  let error = body.stability_error()
+  if error < 1.0 meter {
+    return "${error as millimeter}"
+  }
+  if error < 1000.0 meter {
+    return "${error as meter}"
+  }
+  if error < 1000000.0 meter {
+    return "${error as kilometer}"
+  }
+  if error < 1000000000.0 meter {
+    return "${error as megameter}"
+  }
+  return "${error as gigameter}"
+}
+
+fun elapsed_display(elapsed_steps: Int64): String {
+  let total_days = elapsed_steps / 288
+  let years = total_days / 365
+  let days = total_days % 365
+  return "${years} years, ${days} days (${total_days} total days)"
+}
+
+fun motion_arrow(body: SolarTertiarySnapshot,
+                 snapshot: SolarLagrangeSnapshot): String {
+  let group_velocity =
+    (snapshot.earth().velocity() * EARTH_MASS +
+     snapshot.moon().velocity() * MOON_MASS) / earth_moon_mass
+  let displacement = body.position() - snapshot.earth_moon_barycenter()
+  let relative_velocity = body.velocity() - group_velocity
+  let radial_motion = displacement.x * relative_velocity.x +
+    displacement.y * relative_velocity.y
+  if radial_motion <= 0.0 (meter * meter / second) {
+    return " ←"
+  }
+  return " →"
+}
+
+fun viewport_stability_display(body: SolarTertiarySnapshot,
+                               snapshot: SolarLagrangeSnapshot,
+                               point: Vector2<Float64>): String {
+  let display = stability_display(body)
+  if is_visible(point.x, point.y, 5.0) == false {
+    return "${display}${motion_arrow(body, snapshot)}"
+  }
+  return display
 }
 
 fun local_point(position: Point2<Float64, meter>,
@@ -137,6 +184,19 @@ fun local_point(position: Point2<Float64, meter>,
                 kilometers_per_pixel: Float64): Vector2<Float64> =>
   display_coordinates(position, snapshot.earth_moon_barycenter(),
                       kilometers_per_pixel * 1000.0 meter)
+
+fun stop_if_gone(active_solver: SolarLagrangeSolver,
+                 snapshot: SolarLagrangeSnapshot,
+                 index: Int64): Void {
+  let body = snapshot.tertiary(index)
+  if body.escaped() {
+    let point = local_point(body.position(), snapshot,
+                            MAX_KILOMETERS_PER_PIXEL)
+    if is_visible(point.x, point.y, 5.0) == false {
+      active_solver.stop_tertiary!(index)
+    }
+  }
+}
 
 fun lagrange_target(snapshot: SolarLagrangeSnapshot,
                     index: Int64): Point2<Float64, meter> {
@@ -168,6 +228,7 @@ let simulation_seconds_per_real_second = INITIAL_PLAYBACK_RATE
 let paused = true
 let accumulator = 0.0 second
 let last_trail_sample = current.time()
+let elapsed_steps: Int64 = 0
 let earth_trail = Trail8(local_point(current.earth().position(), current,
                                      kilometers_per_pixel))
 let moon_trail = Trail8(local_point(current.moon().position(), current,
@@ -213,7 +274,9 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
       wheel = wheel + 1.0
     }
     if kilometers_per_pixel < 250.0 { kilometers_per_pixel = 250.0 }
-    if kilometers_per_pixel > 20000.0 { kilometers_per_pixel = 20000.0 }
+    if kilometers_per_pixel > MAX_KILOMETERS_PER_PIXEL {
+      kilometers_per_pixel = MAX_KILOMETERS_PER_PIXEL
+    }
     if kilometers_per_pixel != previous_kilometers_per_pixel {
       let trail_scale = previous_kilometers_per_pixel / kilometers_per_pixel
       earth_trail = earth_trail.scaled(trail_scale)
@@ -230,6 +293,7 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
       current = solver.snapshot()
       accumulator = 0.0 second
       last_trail_sample = current.time()
+      elapsed_steps = 0
       paused = true
     }
     if paused == false {
@@ -237,6 +301,7 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
         frame_duration * simulation_seconds_per_real_second * 1.0 second
       while accumulator >= STEP {
         current = solver.step!()
+        elapsed_steps = elapsed_steps + 1
         accumulator = accumulator - STEP
         if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
           earth_trail = earth_trail.add(local_point(current.earth().position(), current,
@@ -260,8 +325,14 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
       }
     }
 
-    clear(7, 12, 22)
     set_view(-70.0, 0.0, 1.0)
+    stop_if_gone(solver, current, 0)
+    stop_if_gone(solver, current, 1)
+    stop_if_gone(solver, current, 2)
+    stop_if_gone(solver, current, 3)
+    stop_if_gone(solver, current, 4)
+    stop_if_gone(solver, current, 5)
+    clear(7, 12, 22)
     let earth = local_point(current.earth().position(), current, kilometers_per_pixel)
     let moon = local_point(current.moon().position(), current, kilometers_per_pixel)
     let l1_point = local_point(current.tertiary(0).position(), current, kilometers_per_pixel)
@@ -334,22 +405,23 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
     text(300.0, -300.0, "heliocentric inset", 11, 148, 163, 184)
 
     text_screen(20, 18, "Solar-perturbed Earth-Moon Lagrange experiment", 17, 226, 232, 240)
-    text_screen(20, 45, "Space pause | Wheel zoom | Up/Down speed | R reset | Escape close", 12, 148, 163, 184)
-    text_screen(20, 68, "elapsed simulation time: ${current.time() as day}", 12, 148, 210, 189)
+    text_screen(20, 45, "Space pause | Wheel zoom | Up/Down speed (max 40 days/s) | R reset | Escape close", 12, 148, 163, 184)
+    text_screen(20, 68, "elapsed simulation time: ${elapsed_display(elapsed_steps)}", 12, 148, 210, 189)
     text_screen(20, 88, "selected simulation rate: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
     text_screen(20, 108, "local zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
-    text_screen(20, 138, "L1 error: ${stability_display(current.tertiary(0))}", 11, 244, 114, 182)
-    text_screen(20, 158, "L2 error: ${stability_display(current.tertiary(1))}", 11, 251, 146, 60)
-    text_screen(20, 178, "L3 error: ${stability_display(current.tertiary(2))}", 11, 167, 139, 250)
-    text_screen(20, 198, "L4 error: ${stability_display(current.tertiary(3))}", 11, 74, 222, 128)
-    text_screen(20, 218, "L5 error: ${stability_display(current.tertiary(4))}", 11, 34, 211, 238)
-    text_screen(20, 238, "Control error: ${stability_display(current.tertiary(5))}", 11, 248, 113, 113)
+    text_screen(20, 138, "L1 error: ${viewport_stability_display(current.tertiary(0), current, l1_point)}", 11, 244, 114, 182)
+    text_screen(20, 158, "L2 error: ${viewport_stability_display(current.tertiary(1), current, l2_point)}", 11, 251, 146, 60)
+    text_screen(20, 178, "L3 error: ${viewport_stability_display(current.tertiary(2), current, l3_point)}", 11, 167, 139, 250)
+    text_screen(20, 198, "L4 error: ${viewport_stability_display(current.tertiary(3), current, l4_point)}", 11, 74, 222, 128)
+    text_screen(20, 218, "L5 error: ${viewport_stability_display(current.tertiary(4), current, l5_point)}", 11, 34, 211, 238)
+    text_screen(20, 238, "Control error: ${viewport_stability_display(current.tertiary(5), current, control_point)}", 11, 248, 113, 113)
     present()
   }
 }
 
 print("final_time_s ${current.time()}")
 print("final_elapsed ${current.time() as day}")
+print("final_elapsed_display ${elapsed_display(elapsed_steps)}")
 print("final_simulation_rate_days_per_real_second ${simulation_seconds_per_real_second / 86400.0}")
 print("final_L4_error ${stability_display(current.tertiary(3))}")
 print("final_L5_error ${stability_display(current.tertiary(4))}")
