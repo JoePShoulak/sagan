@@ -89,6 +89,11 @@ namespace sagan::dap
             }
             decoded.push_back(static_cast<char>(byte));
           }
+          else if (value[i] == '\\' && i + 1 < value.size())
+          {
+            decoded.push_back(value[i]);
+            decoded.push_back(value[++i]);
+          }
           else decoded.push_back(value[i]);
         }
         if (!unicode::first_invalid_utf8(decoded)) return decoded;

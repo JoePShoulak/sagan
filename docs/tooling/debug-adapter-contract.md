@@ -64,7 +64,9 @@ experimental adapter now materializes initialized scalar bindings and
 `String` values (including locals and visible parameters) in DAP `variables`.
 Windows GDB starts with UTF-8 host/target character sets; its octal-escaped
 UTF-8 string bytes are decoded only when they form valid UTF-8. An executable
-probe covers an emoji-bearing local. DAP `evaluate` accepts an
+probe covers an emoji-bearing local and preserves a literal backslash followed by octal-looking
+digits rather than mistaking it for GDB's escaped UTF-8 bytes.
+DAP `evaluate` accepts an
 exact supported binding name after its declaration has completed in a matching
 source-mapped stack frame. Parameter lookup additionally requires that a prior
 `variables` response proved the binding visible in that exact stopped frame;
