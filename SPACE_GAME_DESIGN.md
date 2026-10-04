@@ -107,13 +107,13 @@ the drone may share many systems with ships.
 #### Resources
 
 As much as possible, for every feature in the game that requires a consumable
-resource, that resource will be present in the game and accurate to its real
-life counterpart. For example, if you want rocket fuel you better be prepared
-to procure some methane or hydrogren and oxygen.
+resource, that resource will be present in the game and accurate to its
+real-life counterpart. For example, if you want rocket fuel you better be
+prepared to procure some methane or hydrogen and oxygen.
 
 ##### Extraction
 
-Resources can be extracted from Natrual Bodies by Bases, and some Vehicles, by
+Resources can be extracted from Natural Bodies by Bases, and some Vehicles, by
 having the requisite machine installed (and storage available).
 
 ##### Refinement
@@ -127,7 +127,7 @@ outputs, of course).
 Resources can be transported along automated routes by Vehicles. Automated
 Routes are calculated and simulated, but things like the final rendezvous and
 docking are "hand-waved" so that the math does not need to be perfect for a
-planned mission to go as planned. NOTE: This has to be carefully guranteed.
+planned mission to go as planned. NOTE: This has to be carefully guaranteed.
 
 ##### Consumption
 
@@ -146,17 +146,17 @@ Stations. This can be mitigated somewhat by placing them in Lagrange points.
 
 ##### Creation
 
-Outposts will be able to crate ships.
+Outposts will be able to create ships.
 
 ##### Customization
 
 The core of each ship is its Chassis, which has Slots that allow you to install
-systems and machines that determine the capabilites and other details of the
+systems and machines that determine the capabilities and other details of the
 ship. Hopefully paint schemes can be a thing too.
 
 #### Mechanical Systems
 
-No system is perfect
+No system is perfect.
 
 ##### Degradation
 
@@ -193,15 +193,15 @@ Gotta feed them.
 ##### Sleep
 
 Not sure exactly how to tie this in, this may just fall under the heading of
-comfot. If nothing else, it helps determine the available number of man-hours
+comfort. If nothing else, it helps determine the available number of man-hours
 you have per day. Some number of people have to be asleep at a certain time.
 
 ##### Comfort
 
-I don't want to go tooooo crazy on this at the get go, but I do want it to be a
+I don't want to go tooooo crazy on this at the get-go, but I do want it to be a
 bad thing if you cut the corners on absolutely everything for everyone. For
 example, maybe providing more food and water than they need and enabling them to
-eat more than the bare minnimum provides a boost. Maybe having amenities raises
+eat more than the bare minimum provides a boost. Maybe having amenities raises
 morale and gives people a temporary buff to their job performance.
 
 #### Population
@@ -220,11 +220,11 @@ save everyone, but you must save humanity.
 ##### Housing
 
 They need to have a safe place to live until we can find all of humanity a new
-home among the stars
+home among the stars.
 
 ##### Education
 
-Some effor has to be put in by the player to guarantee that in further
+Some effort has to be put in by the player to guarantee that in further
 generations, humanity is still able to train people to be able to perform the
 tasks needed by the space program. In actuality, this may just be a way to
 "promote" people from civilians into employees, but considering these pilots
@@ -232,19 +232,20 @@ can't live forever, there will need to be new humans taking over.
 
 ##### Life Support
 
-Same as on a ship, the health of the population must be satisfied
+Same as on a ship, the health of the population must be satisfied.
 
 ##### Transportation
 
-Transport ships must be built to move them from the dying earth to whever their new refuge will be
+Transport ships must be built to move them from the dying Earth to wherever
+their new refuge will be.
 
 #### Terraforming
 
 Earth is doomed (why is TBD), but other planets may have things performed to
 affect their environment to ease the pressure on needing to find their new home
-quite as urgently. NOTE: We likely need to ensure that earth can never be
-restored to close to its previous status in order to ensure the teraforming of
-next best options (Like Mars), and likewise no body can ever be terraformed to
+quite as urgently. NOTE: We likely need to ensure that Earth can never be
+restored to close to its previous status in order to ensure the terraforming of
+next best options (like Mars), and likewise no body can ever be terraformed to
 the point that it is perfectly habitable, otherwise
 
 #### Exploration
@@ -257,11 +258,11 @@ a new home among the stars.
 Science points must be able to be gathered to allow a tech tree and tech
 progression needed for there to be such a capability disparity as being
 basically not far from where we are right now in real life to eventually
-becoming a truly space faring civilzation.
+becoming a truly space-faring civilization.
 
 ##### Technology Tree
 
-There will be one
+There will be one.
 
 #### Combat (Unresolved)
 
@@ -272,7 +273,7 @@ It would be so disappointing to have no combat in this game.
 In the solar system, there should be some sort of enemy faction to get the
 player familiar with combat, or else it may be the only combat in the game and
 would persist throughout. This has to be balanced against the fact that Earth
-would have likely united a fair amount behind the shared goal of surviging
+would have likely united a fair amount behind the shared goal of surviving
 eradication.
 
 ##### Enemy Aliens (Unresolved)
@@ -291,9 +292,78 @@ majority of the game loop.
 The game aims for a high level of physical realism, including support for
 Lagrange points. The exact simulation model remains to be defined.
 
+One important facet is how we're going to simulate gravity. Certain things
+should be true:
+
+- A Ship, Satellite, or Station placed in an orbit should not be able to remain
+  in that orbit indefinitely but should experience solar pressure and/or
+  gravitational perturbations from other bodies such that, if unmanaged, the
+  orbit will decay over time, requiring all orbiting Entities to make orbital
+  correction maneuvers over time, making there no free lunch in this universe.
+- Natural bodies should not be able to deviate from their true and defined
+  orbits due to our bad math, while some should be able to be moved by the
+  player. We have not yet ruled out the idea that the player may be able to
+  meaningfully change the orbits of asteroids and other small natural bodies.
+  However, things like moons should not be able to have their orbits
+  non-deliberately noticeably deviate from their counterparts. For example,
+  very small moons and moons of very large planets need to operate under sound
+  enough orbital rules as to not be able to go rogue or anything like that.
+
+Perhaps the solution is to have 3 categories of mass for entities:
+
+- hypomassive (receives gravitational force from locally relevant bodies,
+  doesn't exert it);
+- massive (receives gravitational force from only its parent, and exerts it on
+  other non-hypermassive bodies); and
+- hypermassive (exerts gravitational force, but doesn't receive it, except from
+  its parent).
+
+This allows hypomassive entities to receive the most perturbed gravity, things
+like asteroids and small moons to have fairly stable experiences, and things
+that we want to behave very locked down experience the least gravitational
+simulation at all. This also helps us reduce our calculations per second in the
+most intensive part of the game.
+
 ## Roadmap
 
-*To be defined.*
+1. Get all the Natural Bodies simulated such that all the orbital functionality
+   has been settled. The simulation of orbiting bodies is going to be one of the
+   most taxing parts of the game, so this will help us define our bandwidth as
+   well as the number of entities we can continue to work with. If we are not
+   able to simulate the number of entities that we want to, we may need to do
+   something clever.
+2. Get outposts up and rocking, so we can begin the work on the resource
+   management part, and when it's time to get to ships we can actually build
+   them using the gameplay from this step.
+3. Vehicles enter the battlefield. Once we have both outposts and vehicles
+   supported, the vast majority of gameplay is ready to be developed.
+4. Drones, a small milestone but needs to stand on its own.
+5. UI development. We'll need to get this to actually look and feel like a game
+   at this step, even if asset quality is terrible.
+6. Mechanical refinement. Make sure that we have a strong understanding of what
+   game balance looks like, and what levers we have to pull. We should be able
+   to get a fully self-sustaining setup in our game such that we are able to
+   harvest enough resources to maintain our fleet which is sizable enough to do
+   more than maintain the status quo: a true surplus of all managed resources.
+7. Asset refinement. Now that we have the first chapter of the game unlocked
+   and refined, we should have enough of a proof of concept to be able to
+   actually devote time and money to quality assets.
+8. Narrative and Expansion Development. At this point we should know enough
+   about how the game plays to write a story around it and have a strong idea of
+   what the gameplay looks like from beginning to end, including any features
+   that may only be found outside of the Solar System.
+9. Expansion. This is the point when we should feel comfortable going into
+   Early Access. We have a playable demo, and a strong idea of how we're going
+   to expand it into the final product. At this point, there would be nothing
+   much left to do except finish the game. This would of course include more
+   asset, mechanic, narrative, and balance development.
+10. Test and Publish 1.0. At this point we should be comfortable charging the
+    price we are for our completed product.
+11. Then, because of course we will, we can continue to support and expand the
+    game with updates. If nothing else we should support it long enough to find
+    and fix any bugs or issues from the players, and if we're enjoying it still
+    we should continue to release content (so long as we fix more bugs than we
+    release, lowering our tech debt over time).
 
 ## Known Questions
 
