@@ -3557,6 +3557,8 @@
       
         
       
+        
+      
     
     
     
@@ -3614,6 +3616,42 @@
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/active-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
               
             
               
@@ -4362,10 +4400,10 @@ advertised by <code>sagan-lsp</code>. This roadmap lists work that remains after
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.</p>
 <h2 id="paused-compiler-handoff-checkpoint">Paused compiler handoff checkpoint</h2>
-<p>Extension work is paused against Sagan development version 1.8.0 at compiler
-commit <code>dc52099</code>. This is a stable development checkpoint, not the final
-compiler-to-extension handoff: it has not been pushed or released, and the
-extension must not enable capabilities that discovery still reports as false.</p>
+<p>Extension work remains paused at the current <code>dev</code> checkpoint while the
+compiler-side package and debugger contracts below are completed. The earlier
+1.8.0 checkpoint is historical, not the present handoff. The extension must
+not enable capabilities that discovery still reports as false.</p>
 <p>Most ordinary editor support is ready. The language server supplies compiler-
 backed diagnostics, formatting, hover, definition, references, completion,
 signature help, symbols, semantic tokens, rename, hierarchies, code actions,
