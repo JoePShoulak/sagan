@@ -1,5 +1,5 @@
 ---
-title: Classes and faces
+title: Classes, faces, composition, and inheritance
 status: work-in-progress
 publication_ready: false
 verified_in: null
@@ -7,7 +7,7 @@ verified_on: null
 verified_by: null
 ---
 
-# Classes and faces
+# Classes, faces, composition, and inheritance
 
 Sagan calls an interface a **face**. The two declarations have different jobs:
 
@@ -233,6 +233,6 @@ values.
   concrete class value.
 
 Continue to the
-[classes, faces, and composition reference](../reference/classes-interfaces-composition.md)
-for constructors, privacy, generic faces, default conflicts, ownership, weak
-fields, and the precise conformance rules.
+[classes, interfaces, composition, and inheritance reference](../reference/classes-interfaces-composition.md)
+for constructors, parent construction, overrides, privacy, generic faces,
+default conflicts, ownership, weak fields, and the precise conformance rules.

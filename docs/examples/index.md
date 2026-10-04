@@ -151,17 +151,22 @@ Expected output:
 --8<-- "docs/examples/executable/fibonacci.stdout"
 ```
 
-The classes-and-faces learning path uses four complete programs. Read them in
-this order:
+The classes, faces, and inheritance learning path uses six complete programs.
+Read them in this order:
 
 1. [Class state and methods](executable/class_fuel_tank.sagan) demonstrates
    construction, private storage, observation, and mutation without a face.
 2. [One face contract](executable/face_contract.sagan) demonstrates explicit
    class conformance and a function that accepts the face instead of the class.
-3. [Composed faces](executable/face_composition.sagan) demonstrates transitive
+3. [Face field promises](executable/face_field_promise.sagan) demonstrates
+   storage promised by a face and initialized by its adopting class.
+4. [Composed faces](executable/face_composition.sagan) demonstrates transitive
    requirements and a default method that dispatches to the class.
-4. [Shared face identity](executable/composition.sagan) demonstrates conversion
+5. [Shared face identity](executable/composition.sagan) demonstrates conversion
    to a face value and mutation observed through that shared view.
+6. [Class inheritance](executable/class_inheritance.sagan) demonstrates multiple
+   parents, parent construction, overriding, `super`, face adoption, and
+   parent-typed dynamic dispatch.
 
 The [Classes and faces tour](../tour/classes-and-interfaces.md) walks through
 the programs and explains how each class and face interacts. Every adjacent

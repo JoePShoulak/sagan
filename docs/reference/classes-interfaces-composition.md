@@ -1,5 +1,5 @@
 ---
-title: Classes, interfaces, and composition
+title: Classes, interfaces, composition, and inheritance
 status: work-in-progress
 publication_ready: false
 verified_in: null
@@ -7,7 +7,7 @@ verified_on: null
 verified_by: null
 ---
 
-# Classes, interfaces, and composition
+# Classes, interfaces, composition, and inheritance
 
 Sagan separates stored objects from behavioral contracts:
 
@@ -91,7 +91,7 @@ first and the clauses are separated by a comma:
 
 ```sagan
 class GunShip is Ship, Aircraft, has Weapons, Navigable {
-  -- members
+  // members
 }
 ```
 
@@ -108,7 +108,7 @@ face Reportable is Identified, Named {
 }
 
 class Probe has Reportable {
-  -- implementations
+  // implementations
 }
 ```
 
@@ -272,14 +272,25 @@ a live target is `Some(target)` and an expired target is `None`. See the
 [memory model](memory-model.md) for safe access, coalescing, closure capture,
 and deferred ownership features.
 
-## Current inheritance limits
+## Class inheritance
+
+Class inheritance and face composition solve different problems. A child class
+uses `is` to inherit concrete storage and implementation from one or more parent
+classes. A class uses `has` to adopt faces: checked contracts that can contribute
+field promises and default methods. A child can therefore inherit parent classes
+and adopt faces in the same declaration.
+
+An instance of a child class may be used through a parent-class reference.
+Calls through that reference dynamically dispatch to an exact override on the
+child. This is distinct from a face-typed reference, which exposes only the
+contract declared by that face.
 
 Parent classes are constructed before the child body. A child constructor can
 pass arguments to each parent in inheritance-list order:
 
 ```sagan
 new(name: String, altitude: Int) is Ship(name), Aircraft(altitude) {
-  -- initialize this class's own fields here
+  // initialize this class's own fields here
 }
 ```
 
