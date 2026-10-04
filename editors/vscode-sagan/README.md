@@ -18,6 +18,14 @@ overrides, and type-relationship checks such as `GunShip is Ship` and
 `GunShip has Weapons`. They also validate `super.Parent.method()` calls and
 trailing default parameters on functions, methods, constructors, and lambdas.
 
+Faces may now promise typed storage with `let .mass: Float64<kilogram>` and
+private helper methods with `fun .helper(): Int`. Adopting classes receive
+mutable face-declared fields unless they explicitly declare compatible
+storage; constructors still initialize fields without defaults. The grammar
+already colors these declarations, and diagnostics/navigation come from the
+matching compiler language server. The extension does not implement mixin
+semantics independently.
+
 The Sagan galaxy-pie logo is registered as the default `.sagan` language icon. VS Code uses it when the active file-icon theme permits language-provided icons and does not define its own `.sagan` icon.
 
 The extension also recognizes `sagan.toml` as a **Sagan Manifest** and provides

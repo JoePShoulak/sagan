@@ -162,6 +162,8 @@ auto main() -> int
       "  let phi = (1 + 5 ^ 0.5) / 2\n"
       "  let raised = phi ^ b\n"
       "  let rounded = Int.round(raised)\n"
+      "  let direction = <3.0, 4.0>\n"
+      "  let heading = direction.normalized()\n"
       "  a, b = b, a + b\n"
       "  return indices[0] + a + b + rounded\n"
       "}\n";
@@ -212,6 +214,17 @@ auto main() -> int
               round_signature.value->result_type == "Int64" &&
               !round_signature.value->documentation.empty(),
           "built-in Int.round signature help omitted compiler metadata");
+  const auto vector_completion = sugar_query.completions(
+      at(sugar_source, "direction.normalized") + std::string("direction.nor").size());
+  require(vector_completion.value &&
+              std::any_of(vector_completion.value->begin(), vector_completion.value->end(),
+                          [](const auto &entry)
+                          { return entry.label == "normalized" && !entry.documentation.empty(); }),
+          "Vector method completion omitted normalized metadata");
+  const auto vector_hover = sugar_query.hover(at(sugar_source, "direction.normalized") + 11);
+  require(vector_hover.value && vector_hover.value->symbol.origin == semantic::symbol_origin::builtin &&
+              !vector_hover.value->documentation.empty(),
+          "Vector method hover omitted compiler-owned documentation");
   require(sugar_query.symbol_at(at(sugar_source, "a, b =")).value.has_value(),
           "parallel reassignment targets were not indexed");
 

@@ -1,0 +1,8 @@
+face Massive {
+  let .mass: Float<kilogram>
+  fun setMass!(value: Float<kilogram>): Void { self.mass = value }
+}
+
+class Body has Massive {
+  const .mass: Float<kilogram> = 1.0 kilogram
+}

@@ -75,8 +75,8 @@ while step_index < 17280 {
 }
 
 let final_barycenter = current.earth_moon_barycenter()
-let solar_distance = length(final_barycenter - current.sun().position())
-let lunar_distance = length(current.moon().position() - current.earth().position())
+let solar_distance = (final_barycenter - current.sun().position()).length()
+let lunar_distance = (current.moon().position() - current.earth().position()).length()
 print("final_time_s ${current.time()}")
 print("sun_earth_moon_barycenter_distance ${solar_distance}")
 print("earth_moon_distance ${lunar_distance}")

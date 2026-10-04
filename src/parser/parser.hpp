@@ -32,7 +32,7 @@ namespace parser
     auto parse_documentation_comments() -> std::vector<documentation_comment>;
     auto parse_statement() -> statement_ref;
     auto parse_let_declaration(bool allow_private = false, bool weak_member = false) -> statement_ref;
-    auto parse_const_declaration(bool allow_private = false) -> statement_ref;
+    auto parse_const_declaration(bool allow_private = false, bool face_requirement = false) -> statement_ref;
     auto parse_function_declaration(bool body_optional = false, bool allow_private = false,
                                     bool allow_mutating = false) -> statement_ref;
     auto parse_test_declaration() -> statement_ref;

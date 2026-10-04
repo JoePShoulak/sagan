@@ -342,7 +342,8 @@ namespace parser
                                              std::move(initializer));
   }
 
-  auto syntax_parser::parse_const_declaration(const bool allow_private) -> statement_ref
+  auto syntax_parser::parse_const_declaration(const bool allow_private,
+                                               const bool face_requirement) -> statement_ref
   {
     const token &keyword = previous();
     const bool private_member = allow_private && match(tokens::DOT);
@@ -354,6 +355,13 @@ namespace parser
     if (match(tokens::COLON)) type_name = parse_type_annotation("a type name after ':'");
     if (allow_private && !type_name)
       throw parse_error("Constant class field '" + name.text + "' requires a type annotation", name.range);
+    if (face_requirement)
+    {
+      if (check(tokens::EQUAL))
+        throw parse_error("A face field promise cannot have an initializer", peek()->range);
+      return std::make_unique<const_declaration>(span{keyword.range.begin, previous().range.end},
+                                                  name.text, private_member, std::move(type_name), nullptr);
+    }
     if (!match(tokens::EQUAL))
       throw parse_error("Constant '" + name.text + "' requires an initializer", name.range);
     auto initializer = parse_expression();
@@ -606,7 +614,7 @@ namespace parser
       else if (match(tokens::KWD_FUN))
       {
         const bool is_interface = type == type_declaration::kind::interface_type;
-        auto member = parse_function_declaration(is_interface, !is_interface, true);
+        auto member = parse_function_declaration(is_interface, true, true);
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }
@@ -616,15 +624,21 @@ namespace parser
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }
-      else if (type == type_declaration::kind::class_type && match(tokens::KWD_LET))
+      else if (type != type_declaration::kind::enum_type && match(tokens::KWD_LET))
       {
         auto member = parse_let_declaration(true);
+        if (type == type_declaration::kind::interface_type)
+        {
+          const auto *field = dynamic_cast<const let_declaration *>(member.get());
+          if (!field || !field->type_name || field->initializer)
+            throw parse_error("A face field promise needs a type and cannot have an initializer", member->range);
+        }
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }
-      else if (type == type_declaration::kind::class_type && match(tokens::KWD_CONST))
+      else if (type != type_declaration::kind::enum_type && match(tokens::KWD_CONST))
       {
-        auto member = parse_const_declaration(true);
+        auto member = parse_const_declaration(true, type == type_declaration::kind::interface_type);
         member->documentation = std::move(documentation);
         members.push_back(std::move(member));
       }

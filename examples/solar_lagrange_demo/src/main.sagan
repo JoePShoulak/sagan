@@ -142,8 +142,8 @@ fun lagrange_target(snapshot: SolarLagrangeSnapshot,
                     index: Int64): Point2<Float64, meter> {
   let separation_vector = snapshot.moon().position() -
     snapshot.earth().position()
-  let separation = length(separation_vector)
-  let axis = normalized(separation_vector)
+  let separation = separation_vector.length()
+  let axis = separation_vector.normalized()
   let perpendicular = <-axis.y, axis.x>
   let body = snapshot.tertiary(index)
   return snapshot.earth_moon_barycenter() +
@@ -280,8 +280,8 @@ if open("Sagan: Solar-Perturbed Earth-Moon Lagrange Points", 1180, 720) {
                                 kilometers_per_pixel)
     let l5_target = local_point(lagrange_target(current, 4), current,
                                 kilometers_per_pixel)
-    let sun_direction = normalized(current.sun().position() -
-                                   current.earth_moon_barycenter())
+    let sun_direction = (current.sun().position() -
+                                   current.earth_moon_barycenter()).normalized()
     line(0.0, 0.0, sun_direction.x * 250.0, sun_direction.y * 250.0,
          3.0, 255, 182, 46)
     text(sun_direction.x * 270.0, sun_direction.y * 270.0,

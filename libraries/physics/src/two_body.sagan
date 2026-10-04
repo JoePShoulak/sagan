@@ -82,9 +82,9 @@ class TwoBodySolver {
     assert(first_mass > 0.0 kilogram, "two-body masses must be positive")
     assert(second_mass > 0.0 kilogram, "two-body masses must be positive")
     assert(step_duration > 0.0 second, "two-body step duration must be positive")
-    let first_speed_squared = squared_length(first_velocity)
-    let second_speed_squared = squared_length(second_velocity)
-    assert(squared_length(second_position - first_position) > 0.0 meter^2,
+    let first_speed_squared = first_velocity.squared_length()
+    let second_speed_squared = second_velocity.squared_length()
+    assert((second_position - first_position).squared_length() > 0.0 meter^2,
            "two-body positions must not overlap")
 
     self.first_identity = first_identity
@@ -102,9 +102,9 @@ class TwoBodySolver {
              second_position: Point2<Float64, meter>):
   Vector2<Float64, newton> {
     let displacement = second_position - first_position
-    let distance_squared = squared_length(displacement)
+    let distance_squared = displacement.squared_length()
     assert(distance_squared > 0.0 meter ^ 2, "two-body positions must not overlap")
-    let direction = normalized(displacement)
+    let direction = displacement.normalized()
     let magnitude = (6.67430e-11 (meter^3 / kilogram / second^2) *
       self.first_mass * self.second_mass /
       distance_squared) as newton
@@ -116,10 +116,10 @@ class TwoBodySolver {
                  second_position: Point2<Float64, meter>,
                  second_velocity: Vector2<Float64, meter / second>):
   Float64<joule> {
-    let first_kinetic = 0.5 * self.first_mass * squared_length(first_velocity)
-    let second_kinetic = 0.5 * self.second_mass * squared_length(second_velocity)
+    let first_kinetic = 0.5 * self.first_mass * first_velocity.squared_length()
+    let second_kinetic = 0.5 * self.second_mass * second_velocity.squared_length()
     let potential = -1.0 * GRAVITATIONAL_CONSTANT * self.first_mass * self.second_mass /
-    length(second_position - first_position)
+    (second_position - first_position).length()
     return (first_kinetic + second_kinetic + potential) as joule
   }
 

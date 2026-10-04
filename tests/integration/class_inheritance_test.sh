@@ -17,6 +17,10 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/class_inheritance.cpp -o b
 output=$(build/class_inheritance)
 test "$output" = "class inheritance passed"
 echo "$output"
+bin/sagan --emit-cpp tests/fixtures/runtime/face_member_promises.sagan build/face_member_promises.cpp
+g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror build/face_member_promises.cpp -o build/face_member_promises
+build/face_member_promises
+echo "Face member promises passed"
 bin/sagan --tokens tests/fixtures/syntax/super_keyword.sagan | grep -q KWD_SUPER
 
 for fixture in inheritance_conflict inheritance_cycle inheritance_constructor inheritance_private \
@@ -26,7 +30,9 @@ for fixture in inheritance_conflict inheritance_cycle inheritance_constructor in
   inheritance_virtual_nondefault default_argument_order default_argument_type \
   default_argument_capture default_argument_missing default_argument_untyped_lambda \
   super_nonparent super_private super_outside \
-  super_field_initializer; do
+  super_field_initializer face_field_missing face_field_type face_field_private \
+  face_field_readonly face_field_conflict face_field_external_private \
+  face_field_mutability face_field_uninitialized; do
   if bin/sagan --types "tests/fixtures/semantic/$fixture.sagan" >"build/$fixture.log" 2>&1; then
     echo "Expected $fixture to be rejected" >&2
     exit 1

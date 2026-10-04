@@ -453,6 +453,8 @@ auto main() -> int
       "  let phi = (1 + 5 ^ 0.5) / 2\n"
       "  let raised = phi ^ b\n"
       "  let rounded = Int.round(raised)\n"
+      "  let direction = <3.0, 4.0>\n"
+      "  let heading = direction.normalized()\n"
       "  a, b = b, a + b\n"
       "  return indices[0] + a + b + rounded\n"
       "}\n";
@@ -474,6 +476,14 @@ auto main() -> int
   require(round_completion.elements() && round_completion.elements()->size() == 1 &&
               round_completion.elements()->front().get("label")->string() == "round",
           "LSP did not offer Int.round completion");
+  const auto vector_completion = request(service, "textDocument/completion", at(sugar_uri, 8, 29));
+  require(vector_completion.elements() &&
+              std::any_of(vector_completion.elements()->begin(), vector_completion.elements()->end(),
+                          [](const auto &entry)
+                          {
+                            return entry.get("label") && entry.get("label")->string() == "normalized";
+                          }),
+          "LSP did not offer Vector.normalized completion");
   const auto round_hover = request(service, "textDocument/hover", at(sugar_uri, 6, 20));
   require(round_hover.get("contents") &&
               sagan::lsp::json::serialize(round_hover).find("Int64") != std::string::npos,
@@ -620,6 +630,36 @@ auto main() -> int
           "hierarchy item did not retain an identity-based follow-up position");
   notify(service, "textDocument/didClose",
          J::object{{"textDocument", J::object{{"uri", composition_uri}}}});
+  const std::string face_field_uri = "untitled:face-field-lsp";
+  const std::string face_field_valid =
+      "face Massive { let .mass: Float<kilogram>\n"
+      "  fun getMass(): Float<kilogram> => self.mass }\n"
+      "class Body has Massive { new() { self.mass = 1.0 kilogram } }\n"
+      "let body = Body()\nassert(body.getMass() == 1.0 kilogram)\n";
+  const auto face_field_opened = notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", face_field_uri}, {"version", 1},
+                                           {"text", face_field_valid}}}});
+  require(face_field_opened.size() == 1 &&
+              face_field_opened.front().get("params")->get("diagnostics")->elements()->empty(),
+          "LSP rejected a valid face field promise");
+  const auto face_field_definition = request(service, "textDocument/definition",
+                                             at(face_field_uri, 2, 39));
+  require(face_field_definition.elements() && face_field_definition.elements()->size() == 1 &&
+              face_field_definition.elements()->front().get("range")->get("start")
+                  ->get("line")->integer() == 0,
+          "LSP did not navigate synthesized face storage to its promise");
+  const std::string face_field_invalid =
+      "face Massive { let .mass: Float<kilogram>\n"
+      "  fun getMass(): Float<kilogram> => self.mass }\n"
+      "class Body has Massive { new() { } }\n";
+  const auto face_field_changed = notify(service, "textDocument/didChange",
+      J::object{{"textDocument", J::object{{"uri", face_field_uri}, {"version", 2}}},
+                {"contentChanges", J::array{J::object{{"text", face_field_invalid}}}}});
+  require(face_field_changed.size() == 1 &&
+              !face_field_changed.front().get("params")->get("diagnostics")->elements()->empty(),
+          "LSP missed a missing face field promise");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", face_field_uri}}}});
   const std::string incomplete_uri = "untitled:incomplete-lsp";
   notify(service, "textDocument/didOpen",
          J::object{{"textDocument", J::object{{"uri", incomplete_uri}, {"version", 1},

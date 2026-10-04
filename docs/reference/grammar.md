@@ -76,7 +76,9 @@ function_body := block | "=>" expression
 lambda := "fun" "(" parameters? ")" (":" type)? "=>" expression
 method_signature := "fun" identifier "(" parameters? ")" (":" type)?
 face_declaration := "face" identifier generic_parameters? composition? "{" face_member* "}"
-face_member := method_signature function_body?
+face_member := "let" "."? identifier ":" type
+             | "const" "."? constant_identifier ":" type
+             | "fun" "."? identifier "(" parameters? ")" (":" type)? function_body?
 class_declaration := "class" identifier generic_parameters?
                      (class_inheritance ("," class_faces)? | class_faces)?
                      "{" class_member* "}"

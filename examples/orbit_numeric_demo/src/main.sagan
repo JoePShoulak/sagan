@@ -44,7 +44,7 @@ let energy_tolerance =
   (0.0 joule - initial_energy) * 1.0e-8
 let angular_momentum_drift = current.angular_momentum() - initial_angular_momentum
 let angular_momentum_tolerance = initial_angular_momentum * 1.0e-12
-let barycenter_distance = length(current.barycenter() - (0.0, 0.0) meter)
+let barycenter_distance = (current.barycenter() - (0.0, 0.0) meter).length()
 
 print("energy_absolute_drift ${energy_drift}")
 print("energy_absolute_tolerance ${energy_tolerance}")

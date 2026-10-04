@@ -1,0 +1,8 @@
+face Labeled {
+  const .NAME: String
+  fun change!(): Void { self.NAME = "changed" }
+}
+
+class Body has Labeled {
+  const .NAME: String = "Earth"
+}

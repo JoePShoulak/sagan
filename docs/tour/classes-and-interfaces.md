@@ -13,10 +13,11 @@ Sagan calls an interface a **face**. The two declarations have different jobs:
 
 - a `class` creates a concrete kind of object, stores its data, and implements
   its behavior;
-- a `face` names a set of methods that an object promises to provide; and
+- a `face` names a set of methods and typed fields that an object promises to provide; and
 - `is` on a class lists parent classes; `has` explicitly adopts one or more faces.
 
-A face does not create an object, add fields, or supply hidden state. It lets a
+A face does not create an object by itself. Its typed field promises add
+storage to an adopting class, making faces state-providing mixins. It lets a
 function say, “I can work with any object that provides this behavior,” without
 depending on one particular class.
 
@@ -84,6 +85,31 @@ fulfilled `Named`.
 
 Merely writing a `name()` method is not enough. Sagan requires the class to
 declare conformance with `has Named`.
+
+## A face promising a class field
+
+A default method can read a class field through `self` when the face declares
+that field as a promise. The face does not store a second copy:
+
+```sagan
+--8<-- "docs/examples/executable/face_field_promise.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/face_field_promise.stdout"
+```
+
+```bash
+bin/sagan docs/examples/executable/face_field_promise.sagan
+```
+
+The dot in `let .mass` makes the added field private. `Planet` does not
+repeat the declaration, but its constructor must assign the field. Calls
+through a `Massive` value can use `getMass()`, but cannot access `.mass`
+directly. The promise remains in force even if `Planet` overrides
+`getMass()`.
 
 ## 3. A face composed from other faces
 

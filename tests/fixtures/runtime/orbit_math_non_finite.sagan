@@ -1,2 +1,2 @@
-let invalid = length(<inf, 0.0>)
+let invalid = <inf, 0.0>.length()
 print(invalid)

@@ -32,11 +32,21 @@ The following names are automatically available without an import:
 | Symbol | Implemented contract |
 | --- | --- |
 | `sqrt(value)` | Returns the square root of a finite, non-negative `Float32` or `Float64`. |
-| `squared_length(vector)` | Returns the sum of squared components and preserves squared physical units. |
-| `length(vector)` | Returns the Euclidean length of a finite floating-point vector in the component unit. |
 | `dot(left, right)` | Returns the dot product of equal-dimension, unit-compatible floating-point vectors. |
-| `normalized(vector)` | Returns a dimensionless unit vector; zero-length input is rejected. |
 | `display_coordinates(point, origin, scale)` | Returns dimensionless coordinates `(point - origin) / scale` after checking compatible physical units. |
+
+Floating-point Cartesian vectors provide these built-in methods without an
+import:
+
+| Method | Implemented contract |
+| --- | --- |
+| `vector.squared_length()` | Returns the sum of squared components, with squared physical units. |
+| `vector.length()` | Returns the Euclidean length in the component unit. |
+| `vector.normalized()` | Returns a new dimensionless unit vector; the original is unchanged. |
+| `vector.normalized!()` | Normalizes a mutable, already unitless vector in place and returns the normalized vector. |
+
+The former standalone `length(vector)`, `squared_length(vector)`, and
+`normalized(vector)` spellings are no longer part of Sagan.
 
 M0 accepts fixed-size Cartesian `Vector` and `Point` values whose components
 are `Float32` or `Float64`; measured components retain their native unit
@@ -47,7 +57,7 @@ a point because the result is an offset from the supplied display origin.
 All M0 inputs must be finite, and intermediate squared sums and dot products
 must remain finite. `sqrt` rejects negative input with
 `RuntimeError.math_domain`; non-finite input or output uses
-`RuntimeError.non_finite`; `normalized` rejects a zero vector with
+`RuntimeError.non_finite`; both normalization methods reject a zero vector with
 `RuntimeError.zero_length`; and a zero display scale uses the existing
 `RuntimeError.division_by_zero`. Floating results retain ordinary IEEE-754
 rounding and are not promised to be exact or bit-identical across toolchains.

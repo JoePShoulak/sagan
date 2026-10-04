@@ -206,6 +206,17 @@ the same `is Face` constraint syntax and are checked when constructed. A face
 method cannot introduce method-specific parameters because virtual generic
 methods are intentionally unsupported.
 
+Faces may declare typed `let` and `const` field promises without initializers.
+Adopting a mutable `let` promise adds one field to the class unless it already
+declares a compatible one. The constructor must initialize a synthesized field;
+face promises do not inherit default values. A read-only `const` promise needs
+an explicit class field with an initializer. A default can use `self.field`
+only when the face (or a composed face) promises that field. A leading dot
+makes the field private. Compatible promises from multiple faces share one
+storage slot. Faces may also declare private helper requirements with
+`fun .helper(...)`; private class methods can satisfy those. Promises remain
+in force if a class overrides a default that uses them.
+
 Duplicate declarations, unresolved names, incompatible overloads, invalid
 visibility access, and module export violations are compile-time errors. Generic
 types are invariant. Borrowing, variance, and virtual methods with their own

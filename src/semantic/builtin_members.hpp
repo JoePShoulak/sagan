@@ -36,4 +36,24 @@ namespace semantic
                             "NaN, infinity, and out-of-range results raise RuntimeError.invalid_conversion.", true};
     return {};
   }
+
+  inline auto vector_builtin_method(const std::string_view receiver_type,
+                                    const std::string_view member_name)
+    -> std::optional<builtin_member>
+  {
+    if (!receiver_type.starts_with("Vector")) return {};
+    if (member_name == "squared_length")
+      return builtin_member{"squared_length", "component unit squared",
+                            "Returns the sum of squared components with squared units.", true};
+    if (member_name == "length")
+      return builtin_member{"length", "component unit",
+                            "Returns the Euclidean length of a finite Vector.", true};
+    if (member_name == "normalized")
+      return builtin_member{"normalized", "unitless Vector",
+                            "Returns a new unitless Vector without changing the receiver.", true};
+    if (member_name == "normalized!")
+      return builtin_member{"normalized!", "unitless Vector",
+                            "Normalizes a mutable unitless Vector in place and returns it.", true};
+    return {};
+  }
 }

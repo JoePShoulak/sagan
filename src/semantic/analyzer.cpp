@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <limits>
+#include <map>
 #include <optional>
 #include <sstream>
 #include <string_view>
@@ -30,6 +31,50 @@ namespace semantic
       std::vector<std::size_t> active_type_scopes;
       std::unordered_map<std::string, std::size_t> type_scopes;
       std::unordered_map<std::string, std::vector<std::string>> class_bases;
+      std::unordered_map<std::string, const parser::type_declaration *> type_declarations;
+
+      auto face_storage(const std::string &name, std::unordered_set<std::string> &visited,
+                        std::map<std::string,
+                                 std::pair<const parser::let_declaration *, bool>> &fields) const -> void
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return;
+        const auto found = type_declarations.find(base);
+        if (found == type_declarations.end() ||
+            found->second->type_kind != parser::type_declaration::kind::interface_type) return;
+        for (const auto &parent : found->second->composed_interfaces)
+          face_storage(parent, visited, fields);
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
+          {
+            auto [slot, inserted] = fields.try_emplace(field->name, field, field->private_member);
+            if (!inserted) slot->second.second &= field->private_member;
+          }
+      }
+
+      auto class_storage(const std::string &name, const std::string &field_name,
+                         std::unordered_set<std::string> &visited) const -> bool
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return false;
+        const auto found = type_declarations.find(base);
+        if (found == type_declarations.end() ||
+            found->second->type_kind != parser::type_declaration::kind::class_type) return false;
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get());
+              field && field->name == field_name)
+            return true;
+        for (const auto &face : found->second->composed_interfaces)
+        {
+          std::unordered_set<std::string> face_visited;
+          std::map<std::string, std::pair<const parser::let_declaration *, bool>> fields;
+          face_storage(face, face_visited, fields);
+          if (fields.contains(field_name)) return true;
+        }
+        for (const auto &parent : found->second->base_classes)
+          if (class_storage(parent, field_name, visited)) return true;
+        return false;
+      }
 
       static auto documentation(const std::vector<parser::documentation_comment> &comments)
         -> std::vector<std::string>
@@ -568,6 +613,32 @@ namespace semantic
                   symbol_origin::generated);
         }
         for (const auto &member : value.members) predeclare(*member);
+        if (value.type_kind == parser::type_declaration::kind::class_type)
+        {
+          std::map<std::string, std::pair<const parser::let_declaration *, bool>> storage;
+          for (const auto &face : value.composed_interfaces)
+          {
+            std::unordered_set<std::string> visited;
+            face_storage(face, visited, storage);
+          }
+          for (const auto &[name, requirement] : storage)
+            if (!names[current_scope].contains(name))
+            {
+              bool inherited = false;
+              for (const auto &parent : value.base_classes)
+              {
+                std::unordered_set<std::string> visited;
+                inherited |= class_storage(parent, name, visited);
+              }
+              if (inherited) continue;
+              declare(name, dynamic_cast<const parser::const_declaration *>(requirement.first)
+                                ? symbol_kind::constant_field : symbol_kind::field,
+                      requirement.first->range,
+                      requirement.second ? symbol_visibility::private_access
+                                         : symbol_visibility::public_access,
+                      symbol_origin::generated, documentation(requirement.first->documentation));
+            }
+        }
         for (const auto &member : value.enum_members)
         {
           declare(member.name, symbol_kind::enum_case, member.range, symbol_visibility::public_access,
@@ -741,14 +812,8 @@ namespace semantic
         declare("sqrt", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Returns the non-negative square root of a finite Float.",
                                          "@param value A finite, non-negative Float."});
-        declare("squared_length", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin, {"Returns a Vector's squared displacement length."});
-        declare("length", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin, {"Returns a finite Float Vector's displacement length."});
         declare("dot", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Returns the dot product of equal-dimension Vectors."});
-        declare("normalized", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin, {"Returns the unitless direction of a nonzero finite Vector."});
         declare("display_coordinates", symbol_kind::function, parser::span{0, 0},
                 symbol_visibility::public_access, symbol_origin::builtin,
                 {"Converts a physical Point to dimensionless display coordinates using an origin and scale."});
@@ -772,6 +837,9 @@ namespace semantic
       auto run(const parser::program &tree) -> semantic_model
       {
         model.scopes.front().range = tree.range;
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
+            type_declarations.emplace(type->name, type);
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements) statement(*entry, true);
         return std::move(model);

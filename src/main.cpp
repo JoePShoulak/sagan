@@ -1332,7 +1332,10 @@ namespace
         "    EnumMember(running)\n"
         "    EnumMember(complete)\n");
     passed &= expect_syntax_error("top-level function signature", "fun incomplete(value: Float): Float\n");
-    passed &= expect_syntax_error("face field", "face Invalid {\n  let value: Float\n}\n");
+    passed &= expect_ast("face field promise", "face Valid {\n  let .value: Float\n}\n",
+                         "Program\n  Face(Valid)\n    Let(.value: Float)\n");
+    passed &= expect_syntax_error("face field promise initializer",
+                                  "face Invalid {\n  let .value: Float = 1.0\n}\n");
     passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
     passed &= expect_ast(
         "class constructor declaration",

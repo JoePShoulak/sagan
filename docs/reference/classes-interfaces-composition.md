@@ -27,7 +27,7 @@ compact rules reference.
 ## The basic model
 
 `face` and `class` are top-level declarations. A face contains required method
-signatures and optional default implementations. A class contains fields,
+signatures, optional default implementations, and explicit field promises. A class contains fields,
 constructors, and implemented methods. `self` refers to the receiving object.
 
 ```sagan
@@ -50,6 +50,38 @@ class Probe has Named {
 `Probe` explicitly promises to satisfy `Named`. Its `name()` method satisfies
 the requirement, and it receives the unambiguous `description()` default. That
 default dispatches `self.name()` to `Probe.name()`.
+
+A face default may also use a field or helper method supplied by the adopting
+class. Declare that dependency in the face: an undeclared `self.member` is not
+implicitly inferred from the default body.
+
+```sagan
+face Massive {
+  let .mass: Float64<kilogram>
+  fun getMass(): Float64<kilogram> => self.mass
+}
+
+class Planet has Massive {
+  new(mass: Float64<kilogram>) { self.mass = mass }
+}
+
+let earth = Planet(5.97e24 kilogram)
+assert(earth.getMass() > 0.0 kilogram)
+```
+
+The `let .mass` line is a typed storage promise. Adopting `Massive` adds
+one private `mass` field to `Planet`, so the class does not repeat its
+declaration. The constructor must still initialize it. A class may explicitly
+declare the same field with the same type when it needs a declaration-site
+initializer. Compatible promises from multiple faces share one field; differing
+required types are rejected. A private face field can be read by its defaults,
+but callers through the face cannot access it directly. Public face fields
+produce public storage. `const .NAME: String` promises read-only access and
+still needs an explicit class field with an initializer, because face fields
+do not have inherited initializers. `let` promises mutable access. A class
+override of `getMass()` does not remove the field promise. A face can
+similarly declare a private required helper such as `fun .compute(): Int`
+and call `self.compute()` from a default.
 
 ## Declaring composition
 
@@ -104,9 +136,16 @@ default. The compiler resolves each required signature as follows:
 4. If multiple composed faces provide competing defaults with the same
    signature, the class must write an explicit override.
 
-Private class methods cannot satisfy public face requirements. Parameter and
+Private class methods cannot satisfy public face requirements, but they can
+satisfy private face helper requirements. Parameter and
 return types are part of the required signature; an approximately compatible
 method is not an override.
+
+Field promises are checked by name, exact type, visibility, and mutability.
+Uninitialized or conflicting promises are compile-time errors. Composed faces
+may share a field promise only when its required type is the same; the class
+gets one suitable field. Face defaults access that field through the face
+contract, including calls made through face-typed values.
 
 A composing face may redeclare an inherited signature, with or without a new
 default. Cyclic face composition is rejected, so the transitive contract always

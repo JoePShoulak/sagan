@@ -41,6 +41,7 @@ namespace sagan::language_service
     {
       source::source_range selection;
       semantic::builtin_member member;
+      semantic::symbol_id id;
     };
 
     auto builtin_member_at(const source::document_snapshot &document,
@@ -55,10 +56,15 @@ namespace sagan::language_service
         if (type == index.types().end()) continue;
         auto builtin = semantic::integer_builtin_member(type->display, record.member);
         if (!builtin) builtin = semantic::integer_builtin_static_method(type->display, record.member);
+        if (!builtin) builtin = semantic::vector_builtin_method(type->display, record.member);
         if (!builtin) continue;
         if (const auto selection = name_range(document, tokens, record.use, builtin->name, true);
             selection && contains(selection->bytes, offset))
-          return builtin_member_use{*selection, *builtin};
+          return builtin_member_use{*selection, *builtin,
+              {type->display.starts_with("Vector")
+                   ? "sagan-core-member:Vector." + std::string(builtin->name)
+                   : builtin->callable ? "sagan-core-member:Int.round"
+                                              : "sagan-core-member:Int.times"}};
       }
       return {};
     }
@@ -267,10 +273,8 @@ namespace sagan::language_service
     {
       if (const auto builtin = builtin_member_at(document_, tokens_, index_, offset))
       {
-        const semantic::symbol_id id{builtin->member.callable ? "sagan-core-member:Int.round"
-                                                            : "sagan-core-member:Int.times"};
         return result<hover_information>(document_.version(), selected.state,
-            hover_information{{id, builtin->member.callable ? semantic::symbol_kind::method
+            hover_information{{builtin->id, builtin->member.callable ? semantic::symbol_kind::method
                                                            : semantic::symbol_kind::field,
                                semantic::symbol_origin::builtin,
                                builtin->selection, builtin->selection, std::string(builtin->member.name)},
@@ -381,9 +385,7 @@ namespace sagan::language_service
     }
     for (const auto &record : index_.member_resolutions())
       if (const auto builtin = builtin_member_at(document_, tokens_, index_, record.use.bytes.end - 1))
-        values.push_back(semantic_classification{{builtin->member.callable
-                                                      ? "sagan-core-member:Int.round"
-                                                      : "sagan-core-member:Int.times"},
+        values.push_back(semantic_classification{builtin->id,
                                                   builtin->member.callable ? semantic::symbol_kind::method
                                                                            : semantic::symbol_kind::field,
                                                   builtin->selection,
@@ -564,6 +566,7 @@ namespace sagan::language_service
           type_name = receiver.value->name;
         if (receiver.value && receiver.value->kind == semantic::symbol_kind::builtin_type)
           type_name = receiver.value->name;
+        const std::string receiver_type = type_name;
         type_name = type_name.substr(0, type_name.find_first_of("< (["));
         if (receiver.value && receiver.value->kind == semantic::symbol_kind::builtin_type)
           if (const auto builtin = semantic::integer_builtin_static_method(type_name, "round");
@@ -581,6 +584,24 @@ namespace sagan::language_service
                                            std::string(builtin->name), std::string(builtin->result_type),
                                            {std::string(builtin->documentation)}, "sagan/core",
                                            std::string(builtin->name), std::string(builtin->name), false, {}});
+        if (!receiver_type.empty() &&
+            (!receiver.value || receiver.value->kind != semantic::symbol_kind::builtin_type))
+          for (const std::string_view name : {"length", "squared_length", "normalized", "normalized!"})
+            if (const auto builtin = semantic::vector_builtin_method(receiver_type, name);
+                builtin && builtin->name.starts_with(prefix))
+            {
+              const auto open = receiver_type.find('<');
+              const bool measured = open != std::string::npos &&
+                                    receiver_type.find('<', open + 1) != std::string::npos;
+              if (measured && name == "normalized!") continue;
+              values.push_back(completion_item{std::string(builtin->name),
+                                               {"sagan-core-member:Vector." + std::string(builtin->name)},
+                                               semantic::symbol_kind::method, replacement,
+                                               std::string(builtin->name) + "(",
+                                               "() => " + std::string(builtin->result_type),
+                                               {std::string(builtin->documentation)}, "sagan/core",
+                                               std::string(builtin->name), std::string(builtin->name), false, {}});
+            }
         const auto inside_owner = [&]()
         {
           for (const auto &symbol : index_.symbols())

@@ -7,6 +7,7 @@
 #include <array>
 #include <cctype>
 #include <iomanip>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
@@ -310,13 +311,17 @@ namespace codegen
           const auto source_component = component(source_type);
           const auto target_component = component(target_type);
           if (!source_component || !target_component) return value;
+          if (source_type.substr(0, source_type.find('<')) !=
+              target_type.substr(0, target_type.find('<'))) return value;
           const auto source_unit = semantic::units::parse_measured_type(*source_component, unit_registry, range);
           const auto target_unit = semantic::units::parse_measured_type(*target_component, unit_registry, range);
-          if (!source_unit || !target_unit || source_unit->unit.name == target_unit->unit.name) return value;
-          const auto factor = semantic::units::divide(source_unit->unit.scale, target_unit->unit.scale);
-          const auto source_open = source_type.find('<');
-          const std::string converted_type = source_type.substr(0, source_open + 1) + *target_component + '>';
-          return "sagan_multiply<" + type_name(converted_type, range) + ">(" + value + ", " + ratio(factor) + ")";
+          if (source_type == target_type) return value;
+          const std::string factor = source_unit && target_unit &&
+              source_unit->unit.name != target_unit->unit.name
+                  ? ratio(semantic::units::divide(source_unit->unit.scale, target_unit->unit.scale))
+                  : "1.0";
+          return "sagan_convert_geometry<" + type_name(target_type, range) + ">(" + value + ", " +
+                 factor + ")";
         }
         if (source->unit.name == target->unit.name) return value;
         const bool affine = source->unit.kind == semantic::units::category::affine_point;
@@ -393,6 +398,29 @@ namespace codegen
         return fields != weak_fields.end() && fields->second.contains(value.member_name);
       }
 
+      auto face_field_owner(const std::string &face_name, const std::string &field_name,
+                            std::unordered_set<std::string> &visited) const
+          -> const parser::type_declaration *
+      {
+        const std::string base = face_name.substr(0, face_name.find('<'));
+        if (!visited.insert(base).second) return nullptr;
+        const auto found = face_types.find(base);
+        if (found == face_types.end()) return nullptr;
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get());
+              field && field->name == field_name)
+            return found->second;
+        for (const auto &parent : found->second->composed_interfaces)
+          if (const auto *owner = face_field_owner(parent, field_name, visited)) return owner;
+        return nullptr;
+      }
+
+      auto face_field_accessor(const parser::type_declaration &owner,
+                               const std::string &field_name) const -> std::string
+      {
+        return "sagan_face_field_" + identifier(owner.name) + "_" + identifier(field_name);
+      }
+
       auto raw_member(const parser::member_expression &value) -> std::string
       {
         const std::string target_type = expression_type(*value.target);
@@ -400,6 +428,13 @@ namespace codegen
         const auto *self = dynamic_cast<const parser::identifier_expression *>(value.target.get());
         const bool reference = (class_types.contains(target_base) || face_types.contains(target_base)) &&
                                !(self && self->name == "self");
+        if (face_types.contains(target_base))
+        {
+          std::unordered_set<std::string> visited;
+          if (const auto *owner = face_field_owner(target_type, value.member_name, visited))
+            return expression(*value.target) + (reference ? "->" : ".") +
+                   face_field_accessor(*owner, value.member_name) + "()";
+        }
         return expression(*value.target) + (reference ? "->" : ".") +
                generic_identifier(value.member_name, value.range);
       }
@@ -703,23 +738,28 @@ namespace codegen
                 return result + ")";
               }
           const auto *called_name = dynamic_cast<const parser::identifier_expression *>(call->callee.get());
+          if (const auto *vector_method = dynamic_cast<const parser::member_expression *>(call->callee.get());
+              vector_method && std::string_view{expression_type(*vector_method->target)}.starts_with("Vector"))
+          {
+            const std::string receiver = expression(*vector_method->target);
+            const std::string result = type_name(expression_type(value), value.range);
+            if (vector_method->member_name == "squared_length")
+              return "sagan_math_squared_length<" + result + ">(" + receiver + ")";
+            if (vector_method->member_name == "length")
+              return "sagan_math_length<" + result + ">(" + receiver + ")";
+            if (vector_method->member_name == "normalized")
+              return "sagan_math_normalized<" + result + ">(" + receiver + ")";
+            if (vector_method->member_name == "normalized!")
+              return "sagan_math_normalize_in_place<" + result + ">(" + receiver + ")";
+          }
           if (called_name && called_name->name == "print" && call->arguments.size() == 1)
             return "sagan_print(" + displayed_expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "sqrt")
             return "sagan_math_sqrt(" + expression(*call->arguments.front()) + ")";
-          if (called_name && called_name->name == "squared_length")
-            return "sagan_math_squared_length<" + type_name(expression_type(value), value.range) + ">(" +
-                   expression(*call->arguments.front()) + ")";
-          if (called_name && called_name->name == "length")
-            return "sagan_math_length<" + type_name(expression_type(value), value.range) + ">(" +
-                   expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "dot")
             return "sagan_math_dot<" + type_name(expression_type(value), value.range) + ">(" +
                    expression(*call->arguments[0]) + ", " +
                    converted_expression(*call->arguments[1], expression_type(*call->arguments[0])) + ")";
-          if (called_name && called_name->name == "normalized")
-            return "sagan_math_normalized<" + type_name(expression_type(value), value.range) + ">(" +
-                   expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "display_coordinates")
             return "sagan_math_display_coordinates<" + type_name(expression_type(value), value.range) + ">(" +
                    expression(*call->arguments[0]) + ", " +
@@ -858,9 +898,15 @@ namespace codegen
             const std::string temporary = "sagan_optional_" + std::to_string(temporary_index++);
             const std::string result_type = expression_type(value);
             const std::string element = result_type.substr(9, result_type.size() - 10);
+            const std::string optional_target = expression_type(*member->target);
+            const std::string receiver = optional_target.substr(9, optional_target.size() - 10);
+            std::string member_access = identifier(member->member_name);
+            std::unordered_set<std::string> visited;
+            if (const auto *owner = face_field_owner(receiver, member->member_name, visited))
+              member_access = face_field_accessor(*owner, member->member_name) + "()";
             return "([&]() { auto " + temporary + " = " + expression(*member->target) + "; return " +
                    temporary + " ? std::optional<" + type_name(element, value.range) + ">{(*" + temporary +
-                   ")->" + identifier(member->member_name) + "} : std::nullopt; }())";
+                   ")->" + member_access + "} : std::nullopt; }())";
           }
           if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
               target && enum_types.contains(target->name.substr(0, target->name.find('<'))))
@@ -1430,7 +1476,7 @@ namespace codegen
       }
 
       auto method(const parser::function_declaration &value, const std::string_view class_name = {},
-                  const bool virtual_method = false) -> void
+                  const bool virtual_method = false, const bool declaration_only = false) -> void
       {
         map_scope mapped(*this, value.range, false,
                          std::string(class_name) + "::" + identifier(value.name));
@@ -1499,6 +1545,14 @@ namespace codegen
         output << ' ';
         const bool previous_method = in_method;
         in_method = true;
+        if (declaration_only)
+        {
+          output << "= 0;\n";
+          in_method = previous_method;
+          active_class_name = previous_class_name;
+          active_type_parameters = previous_type_parameters;
+          return;
+        }
         if (!value.expression_body && !value.body)
         {
           if (virtual_method)
@@ -1587,6 +1641,48 @@ namespace codegen
         return result;
       }
 
+      auto face_fields(const std::string &name, std::unordered_set<std::string> &visited) const
+          -> std::vector<std::pair<const parser::type_declaration *, const parser::let_declaration *>>
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return {};
+        const auto found = face_types.find(base);
+        if (found == face_types.end()) return {};
+        std::vector<std::pair<const parser::type_declaration *, const parser::let_declaration *>> result;
+        for (const auto &parent : found->second->composed_interfaces)
+        {
+          auto inherited = face_fields(parent, visited);
+          result.insert(result.end(), inherited.begin(), inherited.end());
+        }
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
+            result.emplace_back(found->second, field);
+        return result;
+      }
+
+      auto class_has_field(const std::string &name, const std::string &field_name,
+                           std::unordered_set<std::string> &visited,
+                           const bool inherited = false) const -> bool
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return false;
+        const auto found = class_declarations.find(base);
+        if (found == class_declarations.end()) return false;
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get());
+              field && field->name == field_name)
+            return true;
+        if (inherited)
+          for (const auto &face : found->second->composed_interfaces)
+          {
+            std::unordered_set<std::string> face_visited;
+            if (face_field_owner(face, field_name, face_visited)) return true;
+          }
+        for (const auto &parent : found->second->base_classes)
+          if (class_has_field(parent, field_name, visited, true)) return true;
+        return false;
+      }
+
       auto object(const parser::type_declaration &value) -> void
       {
         if (value.type_kind != parser::type_declaration::kind::class_type)
@@ -1633,6 +1729,37 @@ namespace codegen
         output << "\n{\npublic:\n  virtual ~" << identifier(value.name) << "() = default;\n";
         ++depth;
         bool private_access = false;
+        struct mixin_field
+        {
+          std::string type;
+          bool private_only = true;
+        };
+        std::map<std::string, mixin_field> mixin_fields;
+        for (const auto &face_name : value.composed_interfaces)
+        {
+          std::unordered_set<std::string> visited;
+          const std::string concrete_face = concrete_user_type(face_name, value.range);
+          for (const auto &[owner, field] : face_fields(face_name, visited))
+          {
+            std::unordered_set<std::string> class_visited;
+            if (class_has_field(value.name, field->name, class_visited)) continue;
+            const std::string accessor = face_field_accessor(*owner, field->name);
+            auto [slot, inserted] = mixin_fields.try_emplace(field->name,
+                mixin_field{"std::remove_cv_t<std::remove_reference_t<decltype(std::declval<" +
+                    concrete_face + "&>()." + accessor + "())>>", true});
+            static_cast<void>(inserted);
+            slot->second.private_only &= field->private_member;
+          }
+        }
+        for (const auto &[name, field] : mixin_fields)
+        {
+          if (private_access != field.private_only)
+          {
+            private_access = field.private_only;
+            output << (private_access ? "private:\n" : "public:\n");
+          }
+          output << indentation() << field.type << ' ' << identifier(name) << "{};\n";
+        }
         std::unordered_set<std::string> emitted_methods;
         for (const auto &entry : value.members)
         {
@@ -1687,6 +1814,22 @@ namespace codegen
             if (emitted_methods.insert(method_signature(*default_method)).second) method(*default_method);
           }
         }
+        std::unordered_set<std::string> emitted_accessors;
+        for (const auto &face_name : value.composed_interfaces)
+        {
+          std::unordered_set<std::string> visited;
+          const std::string concrete_face = concrete_user_type(face_name, value.range);
+          for (const auto &[owner, field] : face_fields(face_name, visited))
+          {
+            const std::string accessor = face_field_accessor(*owner, field->name);
+            if (!emitted_accessors.insert(accessor).second) continue;
+            const bool constant = dynamic_cast<const parser::const_declaration *>(field) != nullptr;
+            output << indentation() << "auto " << accessor << "()";
+            if (constant) output << " const";
+            output << " -> decltype(std::declval<" << concrete_face << "&>()." << accessor
+                   << "()) override { return this->" << identifier(field->name) << "; }\n";
+          }
+        }
         --depth;
         output << "};\n\n";
         active_type_parameters = previous_type_parameters;
@@ -1726,9 +1869,19 @@ namespace codegen
         ++depth;
         for (const auto &entry : value.members)
         {
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
+          {
+            const bool constant = dynamic_cast<const parser::const_declaration *>(field) != nullptr;
+            output << indentation() << "virtual " << (constant ? "const " : "")
+                   << type(field->type_name, field->range) << "& "
+                   << face_field_accessor(value, field->name) << "()";
+            if (constant) output << " const";
+            output << " = 0;\n";
+            continue;
+          }
           const auto *face_method = dynamic_cast<const parser::function_declaration *>(entry.get());
           if (!face_method) fail("face member is not a method", entry->range);
-          method(*face_method, {}, true);
+          method(*face_method, {}, true, value.type_parameters.empty());
         }
         --depth;
         output << "};\n\n";
@@ -2124,6 +2277,13 @@ namespace codegen
                   "  }\n"
                   "  return result;\n"
                   "}\n\n"
+                  "template <typename Result, typename Vector>\n"
+                  "Result sagan_math_normalize_in_place(Vector &value)\n"
+                  "{\n"
+                  "  Result result = sagan_math_normalized<Result>(value);\n"
+                  "  value = result;\n"
+                  "  return result;\n"
+                  "}\n\n"
                   "template <typename Result, typename Point, typename Scale>\n"
                   "Result sagan_math_display_coordinates(const Point &point, const Point &origin, const Scale scale)\n"
                   "{\n"
@@ -2169,6 +2329,17 @@ namespace codegen
                   "  constexpr std::size_t size() const { return Size; }\n"
                   "  bool operator==(const sagan_spherical_point &) const = default;\n"
                   "};\n\n"
+                  "template <typename Result, typename Source>\n"
+                  "Result sagan_convert_geometry(const Source &source, const double factor)\n"
+                  "{\n"
+                  "  Result result{};\n"
+                  "  using Component = typename decltype(result.components)::value_type;\n"
+                  "  for (std::size_t index = 0; index < result.components.size(); ++index)\n"
+                  "    result.components[index] = factor == 1.0\n"
+                  "        ? static_cast<Component>(source.components[index])\n"
+                  "        : static_cast<Component>(source.components[index] * factor);\n"
+                  "  return result;\n"
+                  "}\n\n"
                   "template <typename Collection, typename Index>\n"
                   "decltype(auto) sagan_index(Collection &&collection, const Index index)\n"
                   "{\n"

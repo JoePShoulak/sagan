@@ -35,6 +35,12 @@ The current server:
   exclusively from reusable Sagan compiler libraries; and
 - produce deterministic answers for identical snapshots and configuration.
 
+Face-declared fields and private helper requirements are analyzed by the same
+compiler path as batch builds. Diagnostics for missing initialization,
+incompatible repeated promises, visibility, mutability, and member types are
+published through ordinary LSP diagnostics; the extension does not need a
+separate face-property schema or semantic implementation.
+
 ## Advertised capabilities
 
 The server advertises synchronization,

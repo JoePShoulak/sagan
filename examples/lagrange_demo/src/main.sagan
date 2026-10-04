@@ -112,8 +112,8 @@ fun create_solver(): RestrictedThreeBodySolver {
 fun lagrange_target(snapshot: RestrictedThreeBodySnapshot,
                     index: Int64): Point2<Float64, meter> {
   let separation_vector = snapshot.secondary().position() - snapshot.primary().position()
-  let separation = length(separation_vector)
-  let axis = normalized(separation_vector)
+  let separation = separation_vector.length()
+  let axis = separation_vector.normalized()
   let perpendicular = <-axis.y, axis.x>
   let body = snapshot.tertiary(index)
   return snapshot.primary_system().barycenter() +
