@@ -439,7 +439,7 @@ def local_scalar_values(binary, gdb):
         source = Path(folder) / "locals 🚀.sagan"
         source.write_text(
             "let local = 1\n"
-            "fun compute(value: Int): Int {\n"
+            "fun compute(value: Int, label: String): Int {\n"
             "  let local = value + 5\n"
             "  let rate = 2.5\n"
             "  let ready = true\n"
@@ -447,7 +447,7 @@ def local_scalar_values(binary, gdb):
             "  print(local)\n"
             "  return local\n"
             "}\n"
-            "print(compute(2))\n", encoding="utf-8")
+            "print(compute(2, \"ship 🚀\"))\n", encoding="utf-8")
         environment = os.environ.copy()
         environment["SAGAN_GDB"] = str(gdb)
         process = subprocess.Popen([str(binary)], stdin=subprocess.PIPE,
@@ -504,12 +504,16 @@ def local_scalar_values(binary, gdb):
             assert observed.get("local") == "7" and observed.get("value") == "2", observed
             assert observed.get("rate") == "2.5" and observed.get("ready") == "true", observed
             assert observed.get("message") == '"launch 🚀 \\\\360"', observed
+            assert observed.get("label") == '"ship 🚀"', observed
             send(9, "evaluate", {"frameId": frame_id, "expression": "local", "context": "hover"})
             local_value = expect(lambda item: item.get("request_seq") == 9)
             assert local_value["success"] and local_value["body"]["result"] == "7", local_value
             send(11, "evaluate", {"frameId": frame_id, "expression": "value", "context": "hover"})
             parameter_value = expect(lambda item: item.get("request_seq") == 11)
             assert parameter_value["success"] and parameter_value["body"]["result"] == "2", parameter_value
+            send(16, "evaluate", {"frameId": frame_id, "expression": "label", "context": "hover"})
+            label_value = expect(lambda item: item.get("request_seq") == 16)
+            assert label_value["success"] and label_value["body"]["result"] == '"ship 🚀"', label_value
             send(15, "evaluate", {"frameId": frame_id, "expression": "message", "context": "hover"})
             message_value = expect(lambda item: item.get("request_seq") == 15)
             assert message_value["success"] and message_value["body"]["result"] == '"launch 🚀 \\\\360"', message_value

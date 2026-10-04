@@ -64,7 +64,7 @@ experimental adapter now materializes initialized scalar bindings and
 `String` values (including locals and visible parameters) in DAP `variables`.
 Windows GDB starts with UTF-8 host/target character sets; its octal-escaped
 UTF-8 string bytes are decoded only when they form valid UTF-8. An executable
-probe covers an emoji-bearing local and preserves a literal backslash followed by octal-looking
+probe covers emoji-bearing local and parameter values and preserves a literal backslash followed by octal-looking
 digits rather than mistaking it for GDB's escaped UTF-8 bytes.
 DAP `evaluate` accepts an
 exact supported binding name after its declaration has completed in a matching
@@ -74,8 +74,8 @@ the proof is cleared on continue and every new stop. It reads the generated
 pointer field without a debuggee call and returns the Sagan type. A
 pre-initialization function-entry probe and arbitrary expressions are refused.
 Collections, nested values, optimized builds, and general expression
-evaluation remain unsupported. String display is verified for a local value,
-not yet for every string storage or lifetime context.
+evaluation remain unsupported. String display is verified for local and
+parameter values, not yet for every string storage or lifetime context.
 `debugEvaluate` and `debugVariables` remain false.
 
 The Windows prototype uses GDB 16.3's native DAP interpreter behind a
