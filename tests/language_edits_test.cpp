@@ -75,6 +75,25 @@ auto main() -> int
                                                  spacing_preview.documents.front().text);
   require(language_service::format_document(spacing_again).edits.documents.front().edits.empty(),
           "spacing formatter was not idempotent");
+  const source::document_snapshot private_members(
+      {{source::document_id{132}, source::document_uri{"untitled:private-members"}, {}}, 1,
+       "class Counter {\nlet .value:Int=0\nconst .LIMIT:Int=42\nfun .read():Int=>self.value\n}\n"});
+  const auto private_member_edits = language_service::format_document(private_members);
+  const auto private_member_preview = language_service::preview_edits(
+      private_member_edits.edits, {&private_members});
+  require(private_member_edits.state == language_service::edit_state::ready &&
+              private_member_preview.state == language_service::edit_state::ready &&
+              private_member_preview.documents.front().text ==
+                  "class Counter {\n"
+                  "  let .value: Int = 0\n"
+                  "  const .LIMIT: Int = 42\n"
+                  "  fun .read(): Int => self.value\n"
+                  "}\n",
+          "formatter removed the required space before private member names");
+  const source::document_snapshot private_members_again(
+      private_members.identity(), 2, private_member_preview.documents.front().text);
+  require(language_service::format_document(private_members_again).edits.documents.front().edits.empty(),
+          "private-member formatting was not idempotent");
   const auto spacing_range = language_service::format_range(
       spacing, {static_cast<source::byte_offset>(spacing.text().find("left:Int")),
                 static_cast<source::byte_offset>(spacing.text().find("left:Int") + 1)});
