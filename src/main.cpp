@@ -1542,7 +1542,7 @@ namespace
         "module semantic_demo\n"
         "import External from support as Imported\n"
         "face Capability {\n  fun inspect(value: Float): String\n}\n"
-        "class Worker is Capability {\n"
+        "class Worker has Capability {\n"
         "  let label: String = \"worker\"\n"
         "  fun inspect(value: Float): String => \"${self.label}: ${value}\"\n"
         "}\n"
@@ -1755,7 +1755,7 @@ namespace
     passed &= expect_type_model(
         "default class construction fields self and methods",
         "face Countable {\n  fun increment!(): Int\n  fun current(): Int\n}\n"
-        "class Counter is Countable {\n  let value: Int = 40\n"
+        "class Counter has Countable {\n  let value: Int = 40\n"
         "  fun increment!(): Int {\n    self.value += 1\n    return self.value\n  }\n"
         "  fun current(): Int => self.value\n}\n"
         "fun exercise(): Int {\n  let counter = Counter()\n"
@@ -2008,7 +2008,7 @@ namespace
                                 "Type 'Probe' has no member 'missing'");
     passed &= expect_type_error("class must satisfy composed face",
                                 "face Named {\n  fun name(): String\n}\n"
-                                "class Probe is Named {\n  let value: Int = 0\n}\n",
+                                "class Probe has Named {\n  let value: Int = 0\n}\n",
                                 "does not implement required method 'name'");
     passed &= expect_type_error("class method signature must satisfy face",
                                 "face Measured {\n  fun measure(value: Int): Int\n}\n"
@@ -2016,7 +2016,7 @@ namespace
                                 "  fun measure(value: Bool): Int => 0\n}\n",
                                 "has an incompatible signature for method 'measure'");
     passed &= expect_type_error("class composition requires a face",
-                                "class Probe is Missing {\n}\n",
+                                "class Probe has Missing {\n}\n",
                                 "Undefined type 'Missing'");
     passed &= expect_type_model(
         "private method access inside declaring class",
@@ -2030,7 +2030,7 @@ namespace
         "Private method 'secret' of class 'Vault' is not accessible here");
     passed &= expect_type_error(
         "private method cannot satisfy face",
-        "face Readable {\n  fun read(): Int\n}\nclass Vault is Readable {\n  fun .read(): Int => 42\n}\n",
+        "face Readable {\n  fun read(): Int\n}\nclass Vault has Readable {\n  fun .read(): Int => 42\n}\n",
         "cannot satisfy face 'Readable' with private method 'read'");
     passed &= expect_type_model(
         "private field access inside declaring class",
@@ -2065,7 +2065,7 @@ namespace
         "face typed values and transitive conformance",
         "face Readable {\n  fun current(): Int\n}\n"
         "face Countable is Readable {\n  fun increment!(): Int\n}\n"
-        "class Counter is Countable {\n  let .value: Int = 41\n"
+        "class Counter has Countable {\n  let .value: Int = 41\n"
         "  fun current(): Int => self.value\n"
         "  fun increment!(): Int {\n    self.value += 1\n    return self.value\n  }\n}\n"
         "fun read(value: Readable): Int => value.current()\n"
@@ -2081,26 +2081,26 @@ namespace
     passed &= expect_type_model(
         "face default method calls abstract requirement",
         "face Countable {\n  fun current(): Int\n  fun next(): Int => self.current() + 1\n}\n"
-        "class Counter is Countable {\n  fun current(): Int => 41\n}\n"
+        "class Counter has Countable {\n  fun current(): Int => 41\n}\n"
         "fun valid(): Int {\n  let counter = Counter()\n  return counter.next()\n}\n",
         {"counter: Counter", "Int64 @"});
     passed &= expect_type_model(
         "class method overrides face default",
         "face Named {\n  fun name(): String => \"default\"\n}\n"
-        "class Probe is Named {\n  fun name(): String => \"probe\"\n}\n"
+        "class Probe has Named {\n  fun name(): String => \"probe\"\n}\n"
         "fun valid(): String {\n  let probe = Probe()\n  return probe.name()\n}\n",
         {"probe: Probe", "String @"});
     passed &= expect_type_error(
         "conflicting face defaults require override",
         "face Left {\n  fun value(): Int => 1\n}\n"
         "face Right {\n  fun value(): Int => 2\n}\n"
-        "class Invalid is Left, Right {\n}\n",
+        "class Invalid has Left, Right {\n}\n",
         "inherits conflicting defaults for method 'value'; provide an explicit override");
     passed &= expect_type_model(
         "transitive face requirements and defaults",
         "face Readable {\n  fun current(): Int\n}\n"
         "face Countable is Readable {\n  fun next(): Int => self.current() + 1\n}\n"
-        "class Counter is Countable {\n  fun current(): Int => 41\n}\n"
+        "class Counter has Countable {\n  fun current(): Int => 41\n}\n"
         "fun valid(): Int {\n  let counter = Counter()\n  return counter.next()\n}\n",
         {"counter: Counter", "Int64 @"});
     passed &= expect_type_error(

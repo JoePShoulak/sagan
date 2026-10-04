@@ -1,0 +1,2 @@
+fun bad(value: Int = "wrong"): Int => value
+print(bad())

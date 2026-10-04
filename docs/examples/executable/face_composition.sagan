@@ -10,7 +10,7 @@ face Spacecraft is Named, Powered {
   fun status(): String => "${self.name()} power ${self.power()}"
 }
 
-class ExplorerShip is Spacecraft {
+class ExplorerShip has Spacecraft {
   let .ship_name: String
   let .power_level: Int
 

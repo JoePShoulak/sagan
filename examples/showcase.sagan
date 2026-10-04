@@ -15,7 +15,7 @@ enum LaunchStatus {
   launched
 }
 
-class LaunchCounter is Countable {
+class LaunchCounter has Countable {
   let .value: Int
 
   new(start: Int) {
@@ -30,6 +30,11 @@ class LaunchCounter is Countable {
   fun .read_value(): Int => self.value
 
   fun current(): Int => self.read_value()
+}
+
+class SurveyCounter is LaunchCounter {
+  new(start: Int) is LaunchCounter(start) {
+  }
 }
 
 fun finish_early(): Int {
@@ -82,6 +87,11 @@ fun main(): Int {
   let transformed_answer = launch_transform(40)
   let immediate_answer = (fun(value: Int): Int => value * 2)(21)
   let launch_counter = LaunchCounter(40)
+  let survey_counter = SurveyCounter(1)
+  let inherited_counter: LaunchCounter = survey_counter
+  assert(SurveyCounter is LaunchCounter)
+  assert(SurveyCounter has Countable)
+  assert(inherited_counter.current() == 1)
   let counted_launch = launch_counter.increment!()
   let next_launch = launch_counter.next()
   let countable: Countable = launch_counter

@@ -2,7 +2,7 @@ face Readable<T> {
   fun get(): T
 }
 
-class Box<T> is Readable<T> {
+class Box<T> has Readable<T> {
   let value: T
 
   new(value: T) {

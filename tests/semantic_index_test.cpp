@@ -32,7 +32,7 @@ auto main() -> int
       "face Readable {\n"
       "  fun read(): Int\n"
       "}\n"
-      "class Probe is Readable {\n"
+      "class Probe has Readable {\n"
       "  let serial = 7\n"
       "  fun .secret(): Int => 9\n"
       "  fun read(): Int => 1\n"

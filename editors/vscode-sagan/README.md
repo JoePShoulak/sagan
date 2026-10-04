@@ -4,9 +4,19 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for Sagan. Version 0.3.5 connects to the compiler's tested language server and enables every editor feature it advertises.
+VS Code language support for Sagan. Version 0.3.6 connects to the compiler's tested language server and enables every editor feature it advertises.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
+
+Class headers now distinguish parent classes after `is` from adopted faces
+after `has`, including multiple names in each clause, for example
+`class GunShip is Ship, Aircraft, has Weapons, Navigable { ... }`. Its
+constructor can forward arguments with `new(name: String) is Ship(name),
+Aircraft() { ... }`.
+The compiler and language server validate inheritance, face composition,
+overrides, and type-relationship checks such as `GunShip is Ship` and
+`GunShip has Weapons`. They also validate `super.Parent.method()` calls and
+trailing default parameters on functions, methods, constructors, and lambdas.
 
 The Sagan galaxy-pie logo is registered as the default `.sagan` language icon. VS Code uses it when the active file-icon theme permits language-provided icons and does not define its own `.sagan` icon.
 

@@ -1,0 +1,8 @@
+class Ship {
+}
+
+face Weapons {
+}
+
+class GunShip is Ship has Weapons {
+}

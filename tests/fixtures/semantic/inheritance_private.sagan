@@ -1,0 +1,7 @@
+class Ship {
+  let .secret: Int = 7
+}
+
+class GunShip is Ship {
+  fun inspect(): Int => self.secret
+}

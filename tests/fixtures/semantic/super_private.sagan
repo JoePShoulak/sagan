@@ -1,0 +1,3 @@
+class Base { fun .hidden(): Int => 1 }
+class Child is Base { fun expose(): Int => super.Base.hidden() }
+print(Child().expose())

@@ -69,18 +69,27 @@ assignment_statement := expression ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=
 expression_statement := expression
 coalesce_expression := logical_or_expression ("??" coalesce_expression)?
 function_declaration := "fun" identifier generic_parameters? "(" parameters? ")" (":" type)? function_body
+parameters := parameter ("," parameter)*
+parameter := identifier (":" type)? ("=" expression)?
 test_declaration := "test" nonempty_quoted_string block
 function_body := block | "=>" expression
 lambda := "fun" "(" parameters? ")" (":" type)? "=>" expression
 method_signature := "fun" identifier "(" parameters? ")" (":" type)?
 face_declaration := "face" identifier generic_parameters? composition? "{" face_member* "}"
 face_member := method_signature function_body?
-class_declaration := "class" identifier generic_parameters? composition? "{" class_member* "}"
+class_declaration := "class" identifier generic_parameters?
+                     (class_inheritance ("," class_faces)? | class_faces)?
+                     "{" class_member* "}"
 class_member := "weak"? "let" "."? identifier (":" type)? ("=" expression)?
               | "const" "."? constant_identifier ":" type "=" expression
               | constructor_declaration
               | "fun" "."? identifier generic_parameters? "(" parameters? ")" (":" type)? function_body
-constructor_declaration := "new" "(" typed_parameters? ")" block
+constructor_declaration := "new" "(" parameters? ")" parent_initializers? block
+parent_initializers := "is" parent_initializer ("," parent_initializer)*
+parent_initializer := identifier "(" arguments? ")"
+parent_method_call := "super" "." identifier "." identifier "(" arguments? ")"
+class_inheritance := "is" type_annotation ("," type_annotation)*
+class_faces := "has" type_annotation ("," type_annotation)*
 composition := ("is" | "has") type_annotation ("," type_annotation)*
 enum_declaration := "enum" identifier generic_parameters? "{" enum_members? "}"
 generic_parameters := "<" generic_parameter ("," generic_parameter)* ">"

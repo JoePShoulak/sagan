@@ -195,6 +195,20 @@ async function main() {
   assert(executableFibonacci.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
     "Executable root statements contain invalid scopes");
 
+  const inheritance = tokenize(grammar,
+    fs.readFileSync(path.join(repositoryRoot, "tests", "fixtures", "runtime", "class_inheritance.sagan"), "utf8"));
+  assertScoped(inheritance, "GunShip", "entity.name.type.sagan");
+  assertScoped(inheritance, "is", "keyword.operator.type.sagan");
+  assertScoped(inheritance, "has", "keyword.operator.type.sagan");
+  assertScoped(inheritance, "Ship", "entity.name.type.sagan");
+  assertScoped(inheritance, "Assault", "entity.name.type.sagan");
+  assertScoped(inheritance, "new", "keyword.declaration.constructor.sagan");
+  assertScoped(inheritance, "Vessel", "entity.name.type.sagan");
+  assertScoped(inheritance, "super", "variable.language.super.sagan");
+  assertScoped(inheritance, "friend", "string.quoted.double.sagan");
+  assert(inheritance.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
+    "Class inheritance example contains invalid scopes");
+
   const astExample = fs.readFileSync(path.join(repositoryRoot, "examples", "ast.sagan"), "utf8");
   const parserTokens = tokenize(grammar, astExample);
   assertScoped(parserTokens, "yield", "keyword.control.flow.sagan");

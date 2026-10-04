@@ -7,6 +7,8 @@
     { "include": "#strings" },
     { "include": "#enum-declaration" },
     { "include": "#parallel-let-declaration" },
+    { "include": "#super-parent" },
+    { "include": "#inheritance-types" },
     { "include": "#declarations" },
     { "include": "#numbers" },
     { "include": "#constants" },
@@ -296,6 +298,29 @@
         }
       ]
     },
+    "super-parent": {
+      "patterns": [
+        {
+          "match": "\\b(super)(\\.)([\\p{L}\\p{Nl}\\p{So}_][\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}_\\x{200D}\\x{FE0F}]*)",
+          "captures": {
+            "1": { "name": "variable.language.super.sagan" },
+            "2": { "name": "punctuation.accessor.dot.sagan" },
+            "3": { "name": "entity.name.type.sagan" }
+          }
+        }
+      ]
+    },
+    "inheritance-types": {
+      "patterns": [
+        {
+          "match": "\\b(is|has)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
+          "captures": {
+            "1": { "name": "keyword.operator.type.sagan" },
+            "3": { "name": "entity.name.type.sagan" }
+          }
+        }
+      ]
+    },
     "enum-declaration": {
       "name": "meta.declaration.enum.sagan",
       "begin": "\\b(enum)(\\s+)((?:_|[\\p{L}\\p{Nl}\\p{So}])(?:_|[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{So}\\p{Sk}\\x{200D}\\x{FE0F}])*)",
@@ -350,6 +375,7 @@
         { "name": "keyword.operator.logical.sagan", "match": "\\b(?:and|or|not)\\b" },
         { "name": "keyword.operator.type.sagan", "match": "\\b(?:is|has)\\b" },
         { "name": "variable.language.self.sagan", "match": "\\bself\\b" },
+        { "name": "variable.language.super.sagan", "match": "\\bsuper\\b" },
         { "name": "keyword.declaration.sagan", "match": "\\b(?:let|const|fun|test|new|class|face|enum|dimension|quantity|unit|affine|module)\\b" }
       ]
     },

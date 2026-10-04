@@ -1,0 +1,2 @@
+class Base { fun score(): Int => 1 }
+print(super.Base.score())

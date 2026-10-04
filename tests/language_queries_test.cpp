@@ -241,7 +241,7 @@ auto main() -> int
 
   const std::string composition =
       "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
-      "class Probe is Readable { fun read(): Int => 1 }\n"
+      "class Probe has Readable { fun read(): Int => 1 }\n"
       "fun main(): Int {\n  let probe = Probe()\n  return probe.read()\n}\n";
   const source::document_snapshot composed(
       source::document_identity{source::document_id{81}, source::document_uri{"untitled:composition"}, {}},
@@ -278,6 +278,59 @@ auto main() -> int
               std::any_of(inherited_completion.value->begin(), inherited_completion.value->end(),
                           [](const auto &item) { return item.label == "describe"; }),
           "member completion omitted a composed face default");
+
+  const std::string inheritance =
+      "face Named { fun name(): String }\n"
+      "class Ship has Named { fun name(): String => \"ship\" }\n"
+      "class Aircraft { fun altitude(): Int => 7 }\n"
+      "class GunShip is Ship, Aircraft { fun inherited(): String => self.name()\n"
+      "  fun label(): String => super.Ship.name() }\n"
+      "let gunship = GunShip()\n"
+      "let named: Named = gunship\n"
+      "print(gunship.altitude())\n";
+  const source::document_snapshot inherited_document(
+      source::document_identity{source::document_id{91}, source::document_uri{"untitled:inheritance"}, {}},
+      1, inheritance);
+  const auto inherited_index = language_service::index_document(inherited_document);
+  require(inherited_index.value && inherited_index.value->types,
+          "class inheritance fixture did not produce typed editor data");
+  const language_service::document_queries inherited_query(
+      inherited_document, inherited_index.value->index, nullptr,
+      &inherited_index.value->model, &*inherited_index.value->types);
+  const auto ship_hierarchy = inherited_query.type_hierarchy(at(inheritance, "class Ship") + 6);
+  require(ship_hierarchy.value && std::any_of(ship_hierarchy.value->subtypes.begin(),
+              ship_hierarchy.value->subtypes.end(), [](const auto &item) { return item.name == "GunShip"; }),
+          "class inheritance did not appear in type hierarchy");
+  const auto inherited_definition = inherited_query.definitions(at(inheritance, "self.name()") + 6);
+  require(inherited_definition.value && inherited_definition.value->size() == 1 &&
+              inherited_definition.value->front().bytes.begin == at(inheritance, "fun name(): String =>") + 4,
+          "inherited method did not navigate to its declaring class");
+  const auto super_definition = inherited_query.definitions(at(inheritance, "super.Ship.name()") + 11);
+  require(super_definition.value && super_definition.value->size() == 1 &&
+              super_definition.value->front().bytes.begin == at(inheritance, "fun name(): String =>") + 4,
+          "qualified parent call did not navigate to its implementation");
+  const auto parent_completion = inherited_query.completions(at(inheritance, "gunship.altitude()") + 10);
+  require(parent_completion.value && std::any_of(parent_completion.value->begin(),
+              parent_completion.value->end(), [](const auto &item) { return item.label == "altitude"; }),
+          "member completion omitted a second parent class");
+
+  const std::string forwarding =
+      "class Parent {\n  let value: Int\n  new(value: Int) { self.value = value }\n}\n"
+      "class Child is Parent {\n  new(value: Int) is Parent(value) { }\n}\n"
+      "let child = Child(7)\n";
+  const source::document_snapshot forwarding_document(
+      source::document_identity{source::document_id{92}, source::document_uri{"untitled:forwarding"}, {}},
+      1, forwarding);
+  const auto forwarding_index = language_service::index_document(forwarding_document);
+  require(forwarding_index.value && forwarding_index.value->types,
+          "constructor forwarding fixture did not produce typed editor data");
+  const language_service::document_queries forwarding_query(
+      forwarding_document, forwarding_index.value->index, nullptr,
+      &forwarding_index.value->model, &*forwarding_index.value->types);
+  const auto forwarded_parent = forwarding_query.definitions(at(forwarding, "is Parent(value)") + 4);
+  require(forwarded_parent.value && forwarded_parent.value->size() == 1 &&
+              forwarded_parent.value->front().bytes.begin == at(forwarding, "class Parent") + 6,
+          "constructor parent initializer did not navigate to its class");
 
   const std::string shadowing =
       "fun main(): Int {\n"

@@ -99,3 +99,8 @@ The language backlog includes coordinate-frame typing, spherical
 arithmetic/conversion, advanced unit categories, package installation and
 remote distribution, and contextual `self` capture. Each requires its own
 design and observable demo before being promoted into this active queue.
+Late-bound `self.member` dependencies in face defaults are a separate
+object-model increment. The current inheritance work does not implement them;
+the [implementation checkpoint](late-bound-face-defaults-checkpoint.md)
+records the type-checking, lowering, dispatch, diagnostic, and tooling work
+required before this can be advertised.

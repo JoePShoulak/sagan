@@ -323,6 +323,7 @@ namespace parser
         stream << ": " << *parameter.type_name;
       }
       stream << ")\n";
+      if (parameter.default_value) parameter.default_value->print(stream, indent + 4);
     }
     body->print(stream, indent + 2);
   }
@@ -628,8 +629,9 @@ namespace parser
     value->print(stream, indent + 2);
   }
 
-  function_parameter::function_parameter(std::string identifier, std::optional<std::string> annotation)
-      : name(std::move(identifier)), type_name(std::move(annotation))
+  function_parameter::function_parameter(std::string identifier, std::optional<std::string> annotation,
+                                         expression_ref fallback)
+      : name(std::move(identifier)), type_name(std::move(annotation)), default_value(std::move(fallback))
   {
   }
 
@@ -689,6 +691,13 @@ namespace parser
         stream << ": " << *parameter.type_name;
       }
       stream << ")\n";
+      if (parameter.default_value) parameter.default_value->print(stream, indent + 4);
+    }
+    for (const auto &parent : parent_initializers)
+    {
+      write_indent(stream, indent + 2);
+      stream << "ParentInitializer(" << parent.name << ")\n";
+      for (const auto &argument : parent.arguments) argument->print(stream, indent + 4);
     }
     if (body)
     {
@@ -711,13 +720,15 @@ namespace parser
                                      std::string identifier, std::vector<std::string> generic_parameters,
                                      std::vector<std::optional<std::string>> generic_constraints,
                                      std::optional<std::string> composition,
+                                     std::vector<std::string> superclasses,
                                      std::vector<std::string> interfaces,
                                      std::vector<statement_ref> declared_members,
                                      std::vector<enum_member> declared_enum_members)
       : statement(source_range), type_kind(declared_kind), name(std::move(identifier)),
         type_parameters(std::move(generic_parameters)),
         type_constraints(std::move(generic_constraints)),
-        composition_keyword(std::move(composition)), composed_interfaces(std::move(interfaces)),
+        composition_keyword(std::move(composition)), base_classes(std::move(superclasses)),
+        composed_interfaces(std::move(interfaces)),
         members(std::move(declared_members)), enum_members(std::move(declared_enum_members))
   {
   }
@@ -737,6 +748,11 @@ namespace parser
     write_indent(stream, indent);
     const char *kind_name = type_kind == kind::interface_type ? "Face" : type_kind == kind::class_type ? "Class" : "Enum";
     stream << kind_name << "(" << name;
+    if (!base_classes.empty())
+    {
+      stream << " is";
+      for (const auto &base : base_classes) stream << " " << base;
+    }
     if (composition_keyword)
     {
       stream << " " << *composition_keyword;

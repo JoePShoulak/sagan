@@ -1,0 +1,2 @@
+fun add(first: Int, second: Int = 2): Int => first + second
+print(add())

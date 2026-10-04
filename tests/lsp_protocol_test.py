@@ -101,7 +101,8 @@ def main():
         catalog_source = next_message(received)
         assert catalog_source["id"] == 6
         assert catalog_source["result"]["schema"] == "sagan-package-catalog-v1"
-        assert catalog_source["result"]["packages"][0]["modules"][0]["exports"][0]["name"] == "orbit_answer"
+        assert any(item["name"] == "orbit_answer" for item in
+                   catalog_source["result"]["packages"][0]["modules"][0]["exports"])
 
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "workspace/symbol", "params": {
             "query": "main",

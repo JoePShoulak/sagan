@@ -395,7 +395,9 @@ namespace parser
       {
         parameter_type = parse_type_annotation("a parameter type after ':'");
       }
-      parameters.emplace_back(parameter_name.text, std::move(parameter_type));
+      expression_ref fallback;
+      if (match(tokens::EQUAL)) fallback = parse_nested_expression();
+      parameters.emplace_back(parameter_name.text, std::move(parameter_type), std::move(fallback));
       if (!match(tokens::COMMA) || check(tokens::RPAREN))
       {
         break;
@@ -472,17 +474,38 @@ namespace parser
     {
       const token &parameter_name = expect(tokens::IDENTIFIER, "a constructor parameter name");
       expect(tokens::COLON, "':' after a constructor parameter name");
-      parameters.emplace_back(parameter_name.text,
-                              parse_type_annotation("a constructor parameter type after ':'"));
+      auto annotation = parse_type_annotation("a constructor parameter type after ':'");
+      expression_ref fallback;
+      if (match(tokens::EQUAL)) fallback = parse_nested_expression();
+      parameters.emplace_back(parameter_name.text, std::move(annotation), std::move(fallback));
       if (!match(tokens::COMMA) || check(tokens::RPAREN)) break;
     }
     expect(tokens::RPAREN, "')' after the constructor parameters");
+    std::vector<function_declaration::parent_initializer> parent_initializers;
+    if (match(tokens::KWD_IS))
+    {
+      do
+      {
+        const token &parent = expect(tokens::IDENTIFIER, "a parent class name after 'is'");
+        expect(tokens::LPAREN, "'(' after a parent class name");
+        std::vector<expression_ref> arguments;
+        if (!check(tokens::RPAREN))
+          while (true)
+          {
+            arguments.push_back(parse_nested_expression());
+            if (!match(tokens::COMMA) || check(tokens::RPAREN)) break;
+          }
+        const token &close = expect(tokens::RPAREN, "')' after parent constructor arguments");
+        parent_initializers.push_back({parent.text, {parent.range.begin, close.range.end},
+                                       std::move(arguments)});
+      } while (match(tokens::COMMA));
+    }
     auto body = parse_block();
-    return std::make_unique<function_declaration>(span{keyword.range.begin, body->range.end}, "new", false, true,
-                                                  std::vector<std::string>{},
-                                                  std::vector<std::optional<std::string>>{},
-                                                  std::move(parameters), std::optional<std::string>{"Void"},
-                                                  std::move(body), nullptr);
+    auto result = std::make_unique<function_declaration>(span{keyword.range.begin, body->range.end}, "new", false,
+        true, std::vector<std::string>{}, std::vector<std::optional<std::string>>{},
+        std::move(parameters), std::optional<std::string>{"Void"}, std::move(body), nullptr);
+    result->parent_initializers = std::move(parent_initializers);
+    return result;
   }
 
   auto syntax_parser::parse_type_declaration(const type_declaration::kind type) -> statement_ref
@@ -503,10 +526,29 @@ namespace parser
       expect(tokens::RANGLE, "'>' after generic type parameters");
     }
     std::optional<std::string> composition_keyword;
+    std::vector<std::string> base_classes;
     std::vector<std::string> interfaces;
-    if (match(tokens::KWD_IS) || match(tokens::KWD_HAS))
+    if (type == type_declaration::kind::class_type && match(tokens::KWD_IS))
+    {
+      base_classes.push_back(parse_type_annotation("a superclass after 'is'"));
+      while (match(tokens::COMMA))
+      {
+        if (match(tokens::KWD_HAS))
+        {
+          composition_keyword = "has";
+          break;
+        }
+        base_classes.push_back(parse_type_annotation("a superclass after ','"));
+      }
+    }
+    else if (match(tokens::KWD_IS) || match(tokens::KWD_HAS))
     {
       composition_keyword = previous().text;
+      if (type == type_declaration::kind::class_type && *composition_keyword != "has")
+        throw parse_error("Classes use 'is' for a superclass and 'has' for faces", previous().range);
+    }
+    if (composition_keyword)
+    {
       do
       {
         interfaces.push_back(parse_type_annotation("an interface name in the composition list"));
@@ -610,7 +652,8 @@ namespace parser
     return std::make_unique<type_declaration>(span{keyword.range.begin, close.range.end}, type, name.text,
                                               std::move(type_parameters),
                                               std::move(type_constraints),
-                                              std::move(composition_keyword), std::move(interfaces),
+                                              std::move(composition_keyword), std::move(base_classes),
+                                              std::move(interfaces),
                                               std::move(members), std::move(enum_members));
   }
 
@@ -1148,7 +1191,8 @@ namespace parser
     auto left = parse_additive();
     const bool has_comparison = match(tokens::LANGLE) || match(tokens::LESS_EQUAL) ||
                                 (vector_literal_depth == 0 && match(tokens::RANGLE)) ||
-                                match(tokens::GREATER_EQUAL) || match(tokens::KWD_IS);
+                                match(tokens::GREATER_EQUAL) || match(tokens::KWD_IS) ||
+                                match(tokens::KWD_HAS);
     if (!has_comparison)
     {
       return left;
@@ -1157,7 +1201,7 @@ namespace parser
     auto right = parse_additive();
     if (check(tokens::LANGLE) || check(tokens::LESS_EQUAL) ||
         (vector_literal_depth == 0 && check(tokens::RANGLE)) ||
-        check(tokens::GREATER_EQUAL) || check(tokens::KWD_IS))
+        check(tokens::GREATER_EQUAL) || check(tokens::KWD_IS) || check(tokens::KWD_HAS))
     {
       throw parse_error("Chained comparisons are not allowed; combine comparisons with 'and'", peek()->range);
     }
@@ -1376,7 +1420,7 @@ namespace parser
         return parse_vector(collection_expression::kind::spherical_vector, prefix_begin);
       return parse_parenthesized(collection_expression::kind::spherical_point, prefix_begin);
     }
-    if (match(tokens::IDENTIFIER) || match(tokens::KWD_SELF))
+    if (match(tokens::IDENTIFIER) || match(tokens::KWD_SELF) || match(tokens::KWD_SUPER))
     {
       const token &value = previous();
       std::string name = value.text;
@@ -1458,7 +1502,9 @@ namespace parser
       {
         type_name = parse_type_annotation("a lambda parameter type after ':'");
       }
-      parameters.emplace_back(name.text, std::move(type_name));
+      expression_ref fallback;
+      if (match(tokens::EQUAL)) fallback = parse_nested_expression();
+      parameters.emplace_back(name.text, std::move(type_name), std::move(fallback));
       if (!match(tokens::COMMA) || check(tokens::RPAREN))
       {
         break;

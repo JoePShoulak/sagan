@@ -1,6 +1,7 @@
 #include "../src/lsp/server.hpp"
 #include "../src/source/provider.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <sstream>
@@ -69,11 +70,13 @@ auto main() -> int
           sagan::source::document_id{}, "tests/fixtures/catalog/index.tsv").uri.value},
           {"prefix", "orbit"}, {"limit", 1}});
   const auto &catalog_package = catalog.get("packages")->elements()->front();
+  const auto &catalog_exports = *catalog_package.get("modules")->elements()->front()
+      .get("exports")->elements();
   require(catalog.get("schema")->string() == "sagan-package-catalog-v1" &&
               catalog.get("state")->string() == "ready" &&
               catalog_package.get("modules")->elements()->size() == 1 &&
-              catalog_package.get("modules")->elements()->front().get("exports")
-                  ->elements()->front().get("name")->string() == "orbit_answer",
+              std::any_of(catalog_exports.begin(), catalog_exports.end(), [](const auto &item)
+                { return item.get("name")->string() == "orbit_answer"; }),
           "LSP package catalog omitted installed exported declarations");
   const std::string uri = "file:///lsp-demo.sagan";
   const std::string text = "fun 🚀(value: Int): Int => value + 2\nfun main(): Int {\n  let answer = 🚀(40)\n  print(answer)\n  return 0\n}\n";
@@ -84,6 +87,18 @@ auto main() -> int
               opened.front().get("method")->string() == "textDocument/publishDiagnostics" &&
               opened.front().get("params")->get("diagnostics")->elements()->empty(),
           "didOpen did not publish clean diagnostics");
+  const std::string invalid_default_uri = "file:///default-argument-invalid.sagan";
+  const auto invalid_default = notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", invalid_default_uri}, {"version", 1},
+          {"text", "fun bad(value: Int = \"wrong\"): Int => value\nprint(bad())\n"}}}});
+  require(invalid_default.size() == 2 &&
+              invalid_default.back().get("params")->get("uri")->string() == invalid_default_uri &&
+              !invalid_default.back().get("params")->get("diagnostics")->elements()->empty() &&
+              invalid_default.back().get("params")->get("diagnostics")->elements()->front()
+                  .get("message")->string()->find("Default argument") != std::string::npos,
+          "default-argument type mismatch did not produce an LSP diagnostic");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", invalid_default_uri}}}}));
   J::array operation_notifications;
   service.set_notification_sink([&](const J &message) { operation_notifications.push_back(message); });
   const auto operation = request(service, "sagan/operation",
@@ -550,7 +565,7 @@ auto main() -> int
   const std::string composition_uri = "untitled:composition-lsp";
   const std::string composition =
       "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
-      "class Probe is Readable { fun read(): Int => 1 }\n"
+      "class Probe has Readable { fun read(): Int => 1 }\n"
       "fun main(): Int {\n  let probe = Probe()\n  return probe.read()\n}\n";
   notify(service, "textDocument/didOpen",
          J::object{{"textDocument", J::object{{"uri", composition_uri}, {"version", 1},

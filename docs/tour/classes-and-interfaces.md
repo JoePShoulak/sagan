@@ -14,8 +14,7 @@ Sagan calls an interface a **face**. The two declarations have different jobs:
 - a `class` creates a concrete kind of object, stores its data, and implements
   its behavior;
 - a `face` names a set of methods that an object promises to provide; and
-- `is` or `has` on a class explicitly declares that the class fulfills one or
-  more faces.
+- `is` on a class lists parent classes; `has` explicitly adopts one or more faces.
 
 A face does not create an object, add fields, or supply hidden state. It lets a
 function say, “I can work with any object that provides this behavior,” without
@@ -60,7 +59,7 @@ methods.
 ## 2. A class fulfilling one face
 
 `Named` declares one requirement: anything used as `Named` must provide
-`name(): String`. `Probe` explicitly adopts that contract with `is Named` and
+`name(): String`. `Probe` explicitly adopts that contract with `has Named` and
 implements the required method.
 
 ```sagan
@@ -79,12 +78,12 @@ bin/sagan docs/examples/executable/face_contract.sagan
 
 The important interaction happens at `report_name(probe)`. The function accepts
 `Named`, not `Probe`, so it can call only behavior promised by `Named`. Passing
-`probe` is valid because `Probe is Named` and supplies the exact required
+`probe` is valid because `Probe has Named` and supplies the exact required
 method. A different class could also be passed if it explicitly adopted and
 fulfilled `Named`.
 
 Merely writing a `name()` method is not enough. Sagan requires the class to
-declare conformance with `is Named` or `has Named`.
+declare conformance with `has Named`.
 
 ## 3. A face composed from other faces
 
@@ -114,7 +113,7 @@ Named ---------\
 Powered -------/
 ```
 
-Because `ExplorerShip is Spacecraft`, it must satisfy the requirements inherited
+Because `ExplorerShip has Spacecraft`, it must satisfy the requirements inherited
 from both `Named` and `Powered`. Its `name()` and `power()` methods do that.
 
 `Spacecraft.status()` is a **default method**: the face supplies its body. The
@@ -153,14 +152,41 @@ After `counter.increment!()` mutates the class object, calling
 `view.describe()` observes the new value. Both variables share one object and
 one identity.
 
-## `is` and `has`
+## Parent classes and faces
 
-`is` and `has` have identical language semantics. Either introduces a
-comma-separated list of faces on a class or another face. Replacing
-`ExplorerShip is Spacecraft` with `ExplorerShip has Spacecraft` in the complete
-composition example above would not change the program. The spelling can
-express how the declaration reads to the author, but it does not change
-storage, ownership, dispatch, or substitutability.
+For classes, `is` lists parent classes and `has` lists faces. Both lists can
+have multiple entries, with `is` before `has`: `class GunShip is Ship, Aircraft,
+has Weapons, Navigable { ... }`. A class can use either clause alone. Inherited
+fields and methods come from parent classes; face methods remain checked
+behavioral contracts. Faces themselves may compose other faces with `is` or
+`has`.
+
+Here is a complete example. `GunShip` inherits from both `Ship` and `Aircraft`,
+adopts two faces, passes its `callsign` into `Ship`'s constructor, and overrides
+`kind()`. The `Ship`-typed view calls that override on the original object.
+
+```sagan
+--8<-- "docs/examples/executable/class_inheritance.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/class_inheritance.stdout"
+```
+
+```bash
+bin/sagan docs/examples/executable/class_inheritance.sagan
+```
+
+`GunShip is Ship` checks a class relationship; `GunShip has Weapons` checks a
+face relationship. These are checks between declared type names, not runtime
+tests of individual objects.
+Inside an override, `super.Ship.kind()` invokes `Ship`'s implementation
+directly. The parent name keeps calls unambiguous when a class has multiple
+parents. Constructors can provide trailing defaults too, so callers may omit
+those arguments while `new(...) is Parent(...)` still forwards the resulting
+values.
 
 ## Rules to remember
 
@@ -172,8 +198,8 @@ storage, ownership, dispatch, or substitutability.
   default.
 - A class method overrides a face default with the same signature.
 - Competing defaults require the class to provide an explicit override.
-- Face composition is not class inheritance: no class fields, constructors, or
-  implementation state are inherited from another class.
+- Class inheritance includes parent fields and methods; face composition does
+  not add stored fields.
 - A face-typed variable refers to the same reference-counted object as the
   concrete class value.
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Version 0.3.6 updates class-inheritance and face-composition highlighting,
+  qualified `super.Parent.method()` calls, default-parameter examples,
+  parent-constructor forwarding examples, and grammar coverage. It has not
+  been published.
+
 ## 0.3.5
 
 - Validate powered leading units in measured type annotations such as

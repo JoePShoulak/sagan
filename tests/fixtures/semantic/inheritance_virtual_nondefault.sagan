@@ -1,0 +1,10 @@
+class Root {
+  let value: Int
+  new(value: Int) { self.value = value }
+}
+class Middle is Root {
+  new() is Root(7) { }
+}
+class Leaf is Middle {
+  new() is Middle() { }
+}

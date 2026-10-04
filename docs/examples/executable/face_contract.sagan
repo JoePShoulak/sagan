@@ -2,7 +2,7 @@ face Named {
   fun name(): String
 }
 
-class Probe is Named {
+class Probe has Named {
   let .probe_name: String
 
   new(probe_name: String) {

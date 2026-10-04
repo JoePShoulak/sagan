@@ -1,0 +1,5 @@
+class First { }
+class Second { }
+class Child is First, Second {
+  new() is Second(), First() { }
+}

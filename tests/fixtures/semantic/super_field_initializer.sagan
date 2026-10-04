@@ -1,0 +1,5 @@
+class Base { fun score(): Int => 1 }
+class Child is Base {
+  let score: Int = super.Base.score()
+}
+print(Child().score)
