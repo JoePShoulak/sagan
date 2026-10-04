@@ -497,10 +497,10 @@ namespace sagan::lsp
       if (imports.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       if (imports.applicable)
       {
-        if (!imports.error.empty()) throw std::invalid_argument(imports.error);
         const auto current = documents_->read(uri);
         if (!current || current.value->version() != document.version() ||
             current.value->text() != document.text()) throw request_cancelled{};
+        if (!imports.error.empty()) return J::array{};
         J::array entries;
         for (const auto &candidate : imports.candidates)
           entries.push_back(J::object{{"label", candidate.name}, {"kind", 9},
@@ -516,10 +516,10 @@ namespace sagan::lsp
       if (exports.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       if (exports.applicable)
       {
-        if (!exports.error.empty()) throw std::invalid_argument(exports.error);
         const auto current = documents_->read(uri);
         if (!current || current.value->version() != document.version() ||
             current.value->text() != document.text()) throw request_cancelled{};
+        if (!exports.error.empty()) return J::object{{"isIncomplete", false}, {"items", J::array{}}};
         J::array entries;
         for (const auto &candidate : exports.candidates)
         {

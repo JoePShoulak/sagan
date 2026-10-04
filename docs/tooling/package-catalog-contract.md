@@ -86,6 +86,8 @@ This path returns a standard LSP `CompletionList` with at most 256 items and
 The compiler resolves the locked dependency and reads an unsaved source overlay
 before disk source. Non-exported declarations are excluded. An unreadable or
 incomplete imported module reports an error rather than an invented API.
+For an unavailable module, standard LSP completion returns an empty list
+instead of a protocol error; structured import diagnostics remain available.
 This is a tested subset of package completion, not the full `packageCompletion`
 capability.
 Go-to-definition on a module path in an `import` statement resolves to the

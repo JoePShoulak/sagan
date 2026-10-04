@@ -167,6 +167,17 @@ def run():
                        "params": {"textDocument": {"uri": uri}, "position": {
                            "line": len(lines), "character": len("import missing_")}}})
         assert answer(15) == [], "Unavailable package import produced a broken navigation target"
+        unavailable_export = source + "import missing from missing_package.main\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": uri, "version": 10},
+            "contentChanges": [{"text": unavailable_export}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 16, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": len(lines), "character": len("import miss")}}})
+        unavailable_items = answer(16)
+        assert unavailable_items == {"isIncomplete": False, "items": []}, (
+            "Unavailable package exports produced a completion protocol error")
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})
