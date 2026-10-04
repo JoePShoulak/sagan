@@ -197,8 +197,10 @@ namespace sagan::dap
       std::map<std::string, std::vector<requested_breakpoint>> requested_by_file_;
       std::map<std::int64_t, pending_breakpoints> pending_breakpoints_;
       std::map<std::int64_t, std::string> forwarded_;
+      std::map<std::int64_t, std::string> evaluated_types_;
       std::map<std::int64_t, std::int64_t> stack_threads_;
       std::map<std::int64_t, source_location> last_location_;
+      std::map<std::int64_t, source_location> frame_locations_;
       std::optional<step_state> stepping_;
       std::int64_t stopped_thread_{};
       std::vector<J> queued_;
@@ -761,6 +763,28 @@ namespace sagan::dap
         stepping_.reset();
       }
       auto output = forwarded_command == "stackTrace" ? map_stack_trace(message) : message;
+      if (forwarded_command == "evaluate")
+      {
+        std::string sagan_type;
+        {
+          std::scoped_lock lock(state_mutex_);
+          if (const auto it = evaluated_types_.find(native_seq); it != evaluated_types_.end())
+          { sagan_type = it->second; evaluated_types_.erase(it); }
+        }
+        if (!field(message, "success").boolean().value_or(false))
+        {
+          response(native_seq, "evaluate", false, {}, "Sagan variable is unavailable in this stack frame");
+          return;
+        }
+        auto body = object_copy(field(message, "body"));
+        body.insert_or_assign("type", sagan_type);
+        body.insert_or_assign("variablesReference", 0);
+        body.erase("memoryReference");
+        body.erase("namedVariables");
+        auto evaluated = object_copy(message);
+        evaluated.insert_or_assign("body", body);
+        output = evaluated;
+      }
       if (forwarded_command == "stackTrace" && stack_thread)
       {
         const auto *frames = field(field(output, "body"), "stackFrames").elements();
@@ -768,6 +792,12 @@ namespace sagan::dap
         {
           const auto &frame = frames->front();
           std::scoped_lock lock(state_mutex_);
+          frame_locations_.clear();
+          for (const auto &item : *frames)
+            frame_locations_.insert_or_assign(integer_field(item, "id"),
+                source_location{string_field(field(item, "source"), "path"),
+                                integer_field(item, "line"), string_field(item, "name"),
+                                frames->size()});
           last_location_.insert_or_assign(stack_thread,
               source_location{string_field(field(frame, "source"), "path"),
                               integer_field(frame, "line"), string_field(frame, "name"),
@@ -895,6 +925,7 @@ namespace sagan::dap
             bool stepping = false;
             {
               std::scoped_lock lock(state_mutex_);
+              frame_locations_.clear();
               stopped_thread_ = thread_id;
               if (stop_on_entry_pending_ &&
                   (reason == "step" || reason == "entry" || reason == "breakpoint"))
@@ -928,6 +959,7 @@ namespace sagan::dap
           if (name == "continued")
           {
             std::scoped_lock lock(state_mutex_);
+            frame_locations_.clear();
             if (stepping_) continue;
           }
           if (name == "module") continue; // Native DLLs are not Sagan modules.
@@ -1028,7 +1060,77 @@ namespace sagan::dap
       {
         if (command == "setBreakpoints") set_breakpoints(request);
         else if (command == "attach") response(seq, command, false, {}, "Attach is not supported");
-        else if (command == "evaluate") response(seq, command, false, {}, "Sagan expression evaluation is not supported");
+        else if (command == "evaluate")
+        {
+          const auto &arguments = field(request, "arguments");
+          const auto expression = string_field(arguments, "expression");
+          std::shared_ptr<language_service::native_operation_result> build;
+          {
+            std::scoped_lock lock(state_mutex_);
+            build = build_;
+          }
+          const language_service::debug_variable *known = nullptr;
+          if (build && build->debug)
+            for (const auto &candidate : build->debug->variables)
+              // Locals and boxed parameters still lack a proven initialization
+              // point in every control-flow path. Do not inspect their storage.
+              if (candidate.name == expression && candidate.scope_id == 0 &&
+                  (candidate.type == "Bool" || candidate.type.starts_with("Int") ||
+                   candidate.type.starts_with("UInt") ||
+                   candidate.type.starts_with("Float")))
+              { known = &candidate; break; }
+          if (!known || !field(arguments, "frameId").integer())
+          {
+            response(seq, command, false, {},
+                     "Only scalar Sagan variable lookup in a stack frame is supported");
+            return true;
+          }
+          std::optional<source_location> frame_location;
+          {
+            std::scoped_lock lock(state_mutex_);
+            if (const auto it = frame_locations_.find(integer_field(arguments, "frameId"));
+                it != frame_locations_.end()) frame_location = it->second;
+          }
+          if (!frame_location || !known->source_path ||
+              path_from_utf8(frame_location->path).lexically_normal() !=
+                  known->source_path->lexically_normal())
+          {
+            response(seq, command, false, {}, "Request a matching Sagan stack frame first");
+            return true;
+          }
+          const auto source_document = source_.read_path(*known->source_path);
+          const auto declared_end = source_document ?
+              source_document.value->to_utf16(known->declaration.bytes.end) : std::nullopt;
+          if (!declared_end || frame_location->line <= static_cast<std::int64_t>(declared_end->line + 1))
+          {
+            response(seq, command, false, {}, "Sagan variable has not completed initialization");
+            return true;
+          }
+          auto native = object_copy(request);
+          auto native_arguments = object_copy(arguments);
+          std::string native_expression = known->generated_name;
+          if (known->representation == language_service::debug_value_representation::shared_value)
+          {
+            const auto native_type = known->type == "Bool" ? "bool" :
+                known->type.starts_with("Float") ? "double" :
+                known->type.starts_with("UInt") ? "unsigned long long" : "long long";
+            native_expression = "static_cast<" + std::string(native_type) + ">(*(" +
+                                known->generated_name + "._M_ptr))";
+          }
+          native_arguments.insert_or_assign("expression", native_expression);
+          native.insert_or_assign("arguments", native_arguments);
+          {
+            std::scoped_lock lock(state_mutex_);
+            evaluated_types_.insert_or_assign(seq, known->type);
+          }
+          try { forward(native); }
+          catch (...)
+          {
+            std::scoped_lock lock(state_mutex_);
+            evaluated_types_.erase(seq);
+            throw;
+          }
+        }
         else if (command == "configurationDone" || command == "threads" ||
                  command == "stackTrace" || command == "scopes" || command == "variables" ||
                  command == "continue" || command == "pause" || command == "next" ||

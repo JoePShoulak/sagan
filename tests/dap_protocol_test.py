@@ -411,6 +411,8 @@ def source_step_in_out(binary, gdb):
             inside[0]["line"] == 1 and inside[0]["name"] == "answer", inside
         send(14, "evaluate", {"frameId": inside[0]["id"], "expression": "value"})
         assert not expect(lambda item: item.get("request_seq") == 14)["success"]
+        send(15, "evaluate", {"frameId": inside[0]["id"], "expression": "offset"})
+        assert not expect(lambda item: item.get("request_seq") == 15)["success"]
         send(8, "stepOut", {"threadId": thread_id})
         assert expect(lambda item: item.get("request_seq") == 8)["success"]
         stepped_out = expect(lambda item: item.get("event") == "stopped")
@@ -544,7 +546,12 @@ def run():
             assert "offset" in names, names
             send(18, "evaluate", {"frameId": stepped["body"]["stackFrames"][0]["id"],
                                    "expression": "offset", "context": "hover"})
-            assert not expect(lambda item: item.get("request_seq") == 18)["success"]
+            evaluated = expect(lambda item: item.get("request_seq") == 18)
+            assert evaluated["success"] and evaluated["body"]["result"] == "2", evaluated
+            assert evaluated["body"]["type"] == "Int64", evaluated
+            send(19, "evaluate", {"frameId": stepped["body"]["stackFrames"][0]["id"],
+                                   "expression": "offset + 1", "context": "hover"})
+            assert not expect(lambda item: item.get("request_seq") == 19)["success"]
             send(11, "setBreakpoints", {"source": {"path": str(source)}, "breakpoints": []})
             cleared = expect(lambda item: item.get("request_seq") == 11)
             assert cleared["success"] and cleared["body"]["breakpoints"] == [], cleared

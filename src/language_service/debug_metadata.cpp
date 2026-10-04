@@ -119,7 +119,8 @@ namespace sagan::language_service
         if (provider && !path) continue;
         result.variables.push_back({symbol.id, symbol.name,
                                     codegen::generated_identifier(symbol.name), type,
-                                    symbol.scope_id, range_for(id_for(path), lifetime), path,
+                                    symbol.scope_id, range_for(id_for(path), symbol.declaration),
+                                    range_for(id_for(path), lifetime), path,
                                     representation, false});
       }
     for (const auto &resolution : model.resolutions)

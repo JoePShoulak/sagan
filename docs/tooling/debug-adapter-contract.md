@@ -46,7 +46,8 @@ representations are not yet reliably usable as Sagan values. Source-level steppi
 has Windows top-level-to-function-and-back and imported-module probes, but
 still needs method, lambda, and failure-path coverage. Runtime exception
 translation needs focused tests; attach and
-arbitrary expression evaluation are absent. Installer execution and the
+arbitrary expression evaluation is absent. A guarded scalar lookup probe is
+available but does not constitute general debugging support. Installer execution and the
 debugger dependency/license review remain release gates. All live debugger capability
 flags remain false.
 
@@ -58,11 +59,14 @@ overflow and assertion failure. This reports a failure after it occurs; it
 does not pause on exceptions, so `debugExceptions` remains false.
 
 A direct C++ `std::shared_ptr` dereference through GDB's DAP `evaluate` was
-rejected because it invokes an overloaded operator in the debuggee. Reading
-the generated pointer field is call-free, but a function-entry probe returned
-the wrong value before Sagan's boxed parameter was initialized. The adapter
-must not expose this shortcut as Sagan evaluation without reliable initialization
-and lifetime checks. Variable values and evaluation remain unsupported.
+rejected because it invokes an overloaded operator in the debuggee. The
+experimental adapter now accepts only the exact name of a top-level scalar
+binding after its declaration has completed, in a matching source-mapped
+stack frame. It reads the generated pointer field without a debuggee call and
+returns the Sagan type; a pre-initialization function-entry probe and arbitrary
+expressions are refused. Parameters, locals, strings, collections, nested
+values, optimized builds, and general expression evaluation remain unsupported.
+`debugEvaluate` and `debugVariables` remain false.
 
 The Windows prototype uses GDB 16.3's native DAP interpreter behind a
 Sagan-owned service. The service, not the editor, builds the selected source
