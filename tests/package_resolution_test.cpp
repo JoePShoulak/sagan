@@ -2,6 +2,7 @@
 #include "../src/modules/resolver.hpp"
 #include "../src/language_service/package_catalog.hpp"
 #include "../src/language_service/queries.hpp"
+#include "../src/language_service/refactor.hpp"
 #include "../src/language_service/language_service.hpp"
 #include "../src/semantic/type_checker.hpp"
 #include "../src/semantic/workspace_index.hpp"
@@ -122,6 +123,15 @@ auto main() -> int
                                    item.additional_import_edits.front().replacement_utf8 ==
                                        "import orbit_answer from orbit_tools.main\r\n"; }),
           "Package auto-import did not preserve the document's CRLF line endings");
+  const auto proven_import = sagan::language_service::add_missing_import(
+      crlf, workspace, [&]() -> semantic::symbol_id
+      {
+        for (const auto &item : *crlf_imports.value)
+          if (item.label == "orbit_answer" && !item.additional_import_edits.empty()) return item.id;
+        return {};
+      }());
+  require(proven_import.state == sagan::language_service::edit_state::ready,
+          "Package auto-import candidate was not accepted by the safe-edit planner");
   const std::string collision_text = "module scratch\n"
       "fun other(): Int {\n  let orbit_answer = 1\n  return orbit_answer\n}\n"
       "fun main(): Int {\n  return 0\n}\n";

@@ -1,4 +1,5 @@
 #include "queries.hpp"
+#include "refactor.hpp"
 #include "../parser/lex.hpp"
 #include "../parser/tokens.hpp"
 #include "../parser/unicode.hpp"
@@ -707,33 +708,18 @@ namespace sagan::language_service
     if (workspace_ && tree_ && strict_syntax_)
     {
       std::string current_module;
-      std::optional<source::byte_offset> import_offset;
-      std::string line_ending;
       if (!tree_->statements.empty())
       {
         if (const auto *module = dynamic_cast<const parser::module_declaration *>(
                 tree_->statements.front().get()))
-        {
           current_module = module->name;
-          const auto text = document_.text();
-          const auto header_end = static_cast<std::size_t>(module->range.end);
-          const auto newline = text.find_first_of("\r\n", header_end);
-          if (header_end <= text.size() && newline != std::string_view::npos &&
-              std::all_of(text.begin() + static_cast<std::ptrdiff_t>(header_end),
-                          text.begin() + static_cast<std::ptrdiff_t>(newline),
-                          [](const char byte) { return byte == ' ' || byte == '\t'; }))
-          {
-            line_ending = text[newline] == '\r' && newline + 1 < text.size() &&
-                          text[newline + 1] == '\n' ? "\r\n" :
-                          text[newline] == '\r' ? "\r" : "\n";
-            import_offset = static_cast<source::byte_offset>(newline + line_ending.size());
-          }
-        }
       }
-      if (import_offset)
+      if (!current_module.empty())
       {
+        std::size_t auto_import_count = 0;
         for (const auto &exported : workspace_->exported_symbols())
         {
+          if (auto_import_count >= 128) break;
           if (exported.module == current_module || exported.targets.empty() ||
               !exported.public_name.starts_with(prefix) || seen.contains(exported.public_name)) continue;
           if (std::any_of(index_.symbols().begin(), index_.symbols().end(), [&](const auto &symbol)
@@ -759,13 +745,18 @@ namespace sagan::language_service
               if (!signature.empty()) detail = signature;
               break;
             }
-          source::text_edit edit{{document_.identity().id, {*import_offset, *import_offset}},
-                                 "import " + exported.public_name + " from " + exported.module + line_ending};
+          const auto plan = add_missing_import(document_, *workspace_, target->id);
+          if (plan.state != edit_state::ready || plan.edits.documents.size() != 1 ||
+              plan.edits.documents.front().uri != document_.identity().uri ||
+              plan.edits.documents.front().expected_version != document_.version() ||
+              plan.edits.documents.front().edits.size() != 1) continue;
+          const auto &edit = plan.edits.documents.front().edits.front();
           values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
                                            exported.public_name, std::move(detail),
                                            target->documentation, exported.module, exported.public_name,
                                            exported.public_name + ":" + exported.module, false,
-                                           {std::move(edit)}});
+                                           {edit}});
+          ++auto_import_count;
         }
       }
     }

@@ -178,6 +178,22 @@ def run():
         unavailable_items = answer(16)
         assert unavailable_items == {"isIncomplete": False, "items": []}, (
             "Unavailable package exports produced a completion protocol error")
+        scratch_uri = server_file_uri(project / "src" / "scratch.sagan")
+        scratch = "module scratch\nimport orbit_tools.main as package_tools\nfun probe(): Int { return 0 }\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": scratch_uri, "languageId": "sagan", "version": 1,
+                             "text": scratch},
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 17, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": scratch_uri}, "position": {
+                           "line": 2, "character": len("fun probe(): Int { ")}}})
+        auto_imports = answer(17)
+        rocket = next((item for item in auto_imports if item["label"] == "🚀"), None)
+        assert rocket and rocket["additionalTextEdits"] == [{
+            "range": {"start": {"line": 1, "character": 0},
+                      "end": {"line": 1, "character": 0}},
+            "newText": "import 🚀 from orbit_tools.main\n",
+        }], auto_imports
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

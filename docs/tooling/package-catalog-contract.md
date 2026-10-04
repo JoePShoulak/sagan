@@ -66,7 +66,10 @@ exported-name suggestions carry those signatures and a compiler-produced
 import edit. That edit is offered only for strictly parsed documents with a
 safe module-header insertion line, preserves the document's line ending, and
 avoids names already declared anywhere in the document. Recovered syntax or
-an unproven module-header insertion line does not receive an edit. These are
+an unproven module-header insertion line does not receive an edit. Edits are
+produced through the same versioned, previewed `add_missing_import` planner
+used by code actions; a candidate is omitted when that planner cannot prove
+the import resolves uniquely after insertion. These are
 tested slices, not a claim that every contextual completion or import-edit
 case is safe yet. When different modules export the same unqualified name,
 completion keeps separate, deterministically ordered candidates with explicit
