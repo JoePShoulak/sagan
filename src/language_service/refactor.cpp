@@ -39,6 +39,24 @@ namespace sagan::language_service
                                   token.range.end == begin + name.size() && token.source_text == name;
                          });
     }
+
+    auto related_scope(const semantic::semantic_model &model, const std::size_t left,
+                       const std::size_t right) -> bool
+    {
+      const auto ancestor_or_same = [&](const std::size_t ancestor, std::size_t current) -> bool
+      {
+        while (true)
+        {
+          if (current == ancestor) return true;
+          const auto found = std::find_if(model.scopes.begin(), model.scopes.end(),
+                                          [&](const auto &scope) { return scope.id == current; });
+          if (found == model.scopes.end() ||
+              found->parent == std::numeric_limits<std::size_t>::max()) return false;
+          current = found->parent;
+        }
+      };
+      return ancestor_or_same(left, right) || ancestor_or_same(right, left);
+    }
   }
 
   auto rename_local(const source::document_snapshot &document, const semantic::semantic_index &index,
@@ -77,16 +95,16 @@ namespace sagan::language_service
         !name_is_identifier(new_name) ||
         !semantic::rename_preserves_binding_convention(symbol->kind, new_name))
       return {edit_state::invalid, "Proposed name is not a valid binding identifier", {}};
-    for (const auto &candidate : index.symbols())
-      if (candidate.name == new_name)
-        return {edit_state::conflict, "Proposed name already exists in the semantic scope set", {}};
     const auto syntax = syntax::analyze(document, {.recover = false});
     if (!syntax.value || !syntax.value->strict_ast)
       return {edit_state::unsupported, "Rename requires a complete source document", {}};
-    for (const auto &token : syntax.value->tokens)
-      if ((token.kind == tokens::IDENTIFIER || token.kind == tokens::METHOD_IDENTIFIER) &&
-          unicode::normalize_nfc(token.source_text) == new_name)
-        return {edit_state::conflict, "Proposed name already occurs in source", {}};
+    const auto original = index_document(document);
+    if (!original.value || original.state != diagnostics::result_state::complete)
+      return {edit_state::unsupported, "Rename requires complete semantic analysis", {}};
+    for (const auto &candidate : index.symbols())
+      if (candidate.id != symbol->id && candidate.name == new_name &&
+          related_scope(original.value->model, candidate.scope_id, symbol->scope_id))
+        return {edit_state::conflict, "Proposed name already exists in the semantic scope set", {}};
     const auto occurrences = index.references_to(symbol->id, true);
     if (occurrences.empty()) return {edit_state::unsupported, "No complete reference set", {}};
     const auto definitions = queries.definitions(position);
@@ -139,18 +157,28 @@ namespace sagan::language_service
     const auto checked = index_document(changed);
     if (!checked.value || checked.state != diagnostics::result_state::complete)
       return {edit_state::unsupported, "Renamed source did not pass strict semantic analysis", {}};
-    const semantic::indexed_symbol *renamed = nullptr;
-    for (const auto &candidate : checked.value->index.symbols())
-      if (candidate.origin == semantic::symbol_origin::source && candidate.name == new_name &&
-          candidate.kind == symbol->kind && candidate.owner_type == symbol->owner_type)
-      {
-        if (renamed) return {edit_state::unsupported, "Renamed declaration is ambiguous", {}};
-        renamed = &candidate;
-      }
-    if (!renamed || checked.value->index.references_to(renamed->id, true).size() != occurrences.size())
-      return {edit_state::unsupported, "Reference set changed after rename", {}};
     const document_queries changed_queries(changed, checked.value->index);
+    const semantic::indexed_symbol *renamed = nullptr;
     std::int64_t delta = 0;
+    for (const auto &replacement : edits.documents.front().edits)
+    {
+      if (declaration_token_begin && replacement.range.bytes.begin == *declaration_token_begin)
+      {
+        const auto mapped = static_cast<source::byte_offset>(
+            static_cast<std::int64_t>(replacement.range.bytes.begin) + delta);
+        const auto rebound = changed_queries.symbol_at(mapped);
+        if (rebound.value) renamed = checked.value->index.find(rebound.value->id);
+        break;
+      }
+      delta += static_cast<std::int64_t>(new_name.size()) -
+               static_cast<std::int64_t>(replacement.range.bytes.end - replacement.range.bytes.begin);
+    }
+    if (!renamed || renamed->origin != semantic::symbol_origin::source ||
+        renamed->name != new_name || renamed->kind != symbol->kind ||
+        renamed->owner_type != symbol->owner_type ||
+        checked.value->index.references_to(renamed->id, true).size() != occurrences.size())
+      return {edit_state::unsupported, "Reference set changed after rename", {}};
+    delta = 0;
     for (const auto &replacement : edits.documents.front().edits)
     {
       const auto mapped = static_cast<source::byte_offset>(

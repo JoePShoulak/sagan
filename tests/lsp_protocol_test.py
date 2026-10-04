@@ -321,8 +321,49 @@ def main():
         assert len(member_changes) == 2
         assert sum(len(change["edits"]) for change in member_changes) == 3
 
+        independent_uri = "untitled:independent-f2-scopes"
+        independent_source = (
+            "fun first(): Int { let value = 1\n return value }\n"
+            "fun second(): Int { let other = 2\n return other }\n"
+        )
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": independent_uri, "languageId": "sagan", "version": 1,
+                             "text": independent_source},
+        }})
+        independent_diagnostics = next_message(received)
+        while (independent_diagnostics.get("method") != "textDocument/publishDiagnostics" or
+               independent_diagnostics["params"]["uri"] != independent_uri):
+            independent_diagnostics = next_message(received)
+        assert independent_diagnostics["method"] == "textDocument/publishDiagnostics"
+        assert independent_diagnostics["params"]["diagnostics"] == [], independent_diagnostics
+        send(process, {"jsonrpc": "2.0", "id": 8, "method": "textDocument/prepareRename", "params": {
+            "textDocument": {"uri": independent_uri},
+            "position": {"line": 2, "character": 24},
+        }})
+        prepared_independent = next_message(received)
+        while prepared_independent.get("id") != 8:
+            prepared_independent = next_message(received)
+        assert prepared_independent["id"] == 8
+        assert prepared_independent["result"]["placeholder"] == "other"
+        send(process, {"jsonrpc": "2.0", "id": 9, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": independent_uri},
+            "position": {"line": 2, "character": 24}, "newName": "value",
+        }})
+        renamed_independent = next_message(received)
+        while renamed_independent.get("id") != 9:
+            renamed_independent = next_message(received)
+        assert renamed_independent["id"] == 9
+        assert len(renamed_independent["result"]["documentChanges"]) == 1
+        assert len(renamed_independent["result"]["documentChanges"][0]["edits"]) == 2
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didClose", "params": {
+            "textDocument": {"uri": independent_uri},
+        }})
+
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "shutdown", "params": {}})
-        assert next_message(received)["id"] == 4
+        shutdown = next_message(received)
+        while shutdown.get("id") != 4:
+            shutdown = next_message(received)
+        assert shutdown["id"] == 4
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})
         process.stdin.close()
         assert process.wait(timeout=10) == 0

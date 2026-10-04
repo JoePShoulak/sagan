@@ -402,6 +402,21 @@ auto main() -> int
               conflicting_rename.front().get("error")->get("message")->string() ==
                   "Proposed name already exists in the semantic scope set",
           "F2 collision refusal did not preserve the compiler-owned explanation");
+  const std::string independent_uri = "untitled:independent-f2-scopes";
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", independent_uri}, {"version", 1},
+          {"text", "fun first(): Int { let value = 1\n return value }\n"
+                   "fun second(): Int { let other = 2\n return other }\n"}}}}));
+  const auto independent_f2 = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", independent_uri}}},
+                {"position", J::object{{"line", 2}, {"character", 24}}},
+                {"newName", "value"}});
+  require(independent_f2.get("documentChanges") &&
+              independent_f2.get("documentChanges")->elements()->size() == 1 &&
+              independent_f2.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 rejected an independent-scope name through the LSP transport");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", independent_uri}}}}));
   const auto actions = request(service, "textDocument/codeAction",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"context", J::object{{"diagnostics", J::array{}}}},

@@ -317,6 +317,31 @@ auto main() -> int
   require(language_service::rename_local(document, indexed.value->index, 4, "launch").state ==
               language_service::edit_state::ready,
           "rename rejected an ordinary function named main");
+  const source::document_snapshot independent_scopes(
+      {{source::document_id{113}, source::document_uri{"untitled:independent-scopes"}, {}}, 1,
+       "fun first(): Int { let value = 1\n return value }\n"
+       "fun second(): Int { let other = 2\n return other }\n"});
+  const auto independent_index = language_service::index_document(independent_scopes);
+  require(independent_index.value.has_value(), "independent-scope rename fixture did not index");
+  const auto other_use = static_cast<source::byte_offset>(
+      independent_scopes.text().find("return other") + 7);
+  const auto independent_rename = language_service::rename_local(
+      independent_scopes, independent_index.value->index, other_use, "value");
+  require(independent_rename.state == language_service::edit_state::ready,
+          "rename rejected a name used only in an independent scope");
+  const source::document_snapshot nested_scopes(
+      {{source::document_id{114}, source::document_uri{"untitled:nested-scopes"}, {}}, 1,
+       "fun main(): Int {\n"
+       "let other = 1\n"
+       "if true { let value = 2\n print(value) }\n"
+       "return other\n"
+       "}\n"});
+  const auto nested_index = language_service::index_document(nested_scopes);
+  require(nested_index.value.has_value(), "nested-scope rename fixture did not index");
+  const auto nested_use = static_cast<source::byte_offset>(nested_scopes.text().find("return other") + 7);
+  require(language_service::rename_local(nested_scopes, nested_index.value->index,
+                                         nested_use, "value").state == language_service::edit_state::conflict,
+          "rename accepted a name that could capture a nested binding");
   const source::document_snapshot function_document(
       {{source::document_id{107}, source::document_uri{"untitled:function-rename"}, {}}, 1,
        "fun double(value: Int): Int => value + value\n"

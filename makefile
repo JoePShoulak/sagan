@@ -246,8 +246,8 @@ test: $(TARGET) $(LANGUAGE_SERVER) $(DEBUG_ADAPTER) $(SOURCE_DIAGNOSTICS_TEST) $
 	$(NATIVE_OPERATIONS_TEST)
 	$(NATIVE_BRIDGE_TEST)
 	$(LSP_TEST)
-	bash scripts/lsp_protocol_test.sh
-	bash scripts/lsp_reliability_test.sh
+	SAGAN_LSP_BINARY="$(LANGUAGE_SERVER)" bash scripts/lsp_protocol_test.sh
+	SAGAN_LSP_BINARY="$(LANGUAGE_SERVER)" bash scripts/lsp_reliability_test.sh
 	$(CONSTANTS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
