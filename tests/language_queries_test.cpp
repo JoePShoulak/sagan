@@ -1,4 +1,5 @@
 #include "../src/language_service/queries.hpp"
+#include "../src/language_service/refactor.hpp"
 #include "../src/source/provider.hpp"
 #include "../src/modules/resolver.hpp"
 
@@ -566,6 +567,37 @@ auto main() -> int
                                        "import course from guidance\n";
                           }),
           "exported workspace completion did not provide a missing-import edit");
+  const auto overload_graph = modules::resolve(
+      "tests/fixtures/modules/completion_overload/main.sagan", disk);
+  const auto overload_workspace = semantic::build_workspace_index(overload_graph, disk);
+  const source::document_snapshot overload_document(
+      source::document_identity{source::document_id{88}, source::document_uri{"untitled:overload"}, {}},
+      1, unimported);
+  const auto overload_index = language_service::index_document(overload_document);
+  require(overload_index.value.has_value(), "overload auto-import fixture did not index");
+  const language_service::document_queries overload_query(
+      overload_document, overload_index.value->index, &overload_workspace,
+      &overload_index.value->model);
+  const auto overload_items = overload_query.completions(at(unimported, "return 0"));
+  require(overload_items.value &&
+              std::any_of(overload_items.value->begin(), overload_items.value->end(),
+                          [](const auto &item)
+                          {
+                            return item.label == "answer" &&
+                                   item.additional_import_edits.size() == 1 &&
+                                   item.additional_import_edits.front().replacement_utf8 ==
+                                       "import answer from support\n";
+                          }),
+          "overloaded export was omitted from safe auto-import completion");
+  const auto overloaded = std::find_if(overload_items.value->begin(), overload_items.value->end(),
+                                      [](const auto &item)
+                                      { return item.label == "answer" &&
+                                               !item.additional_import_edits.empty(); });
+  require(overloaded != overload_items.value->end() &&
+              language_service::add_missing_import(overload_document, overload_workspace,
+                                                    overloaded->id).state ==
+                  language_service::edit_state::ready,
+          "overloaded completion was not accepted by the safe import planner");
   const auto collision_graph = modules::resolve(
       "tests/fixtures/modules/completion_collision/main.sagan", disk);
   const auto collision_workspace = semantic::build_workspace_index(collision_graph, disk);
