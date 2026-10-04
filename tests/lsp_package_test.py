@@ -158,6 +158,15 @@ def run():
         emoji_target = answer(14)
         assert emoji_target and emoji_target[0]["uri"] == server_file_uri(installed)
         assert emoji_target[0]["range"]["start"]["line"] == 1
+        unavailable_import = source + "import missing_package.main\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": uri, "version": 9},
+            "contentChanges": [{"text": unavailable_import}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 15, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": len(lines), "character": len("import missing_")}}})
+        assert answer(15) == [], "Unavailable package import produced a broken navigation target"
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

@@ -213,6 +213,16 @@ auto main() -> int
               local_target.source_uri.value.find("/consumer-alias/src/orbit_tools.sagan") !=
                   std::string::npos,
           "Unqualified import navigation did not prefer the workspace module");
+  const std::string unavailable_import = "module main\nimport missing_package.main\n";
+  const sagan::source::document_snapshot unavailable_document(entry.value->identity(), 11,
+                                                                unavailable_import);
+  const auto unavailable_target = sagan::language_service::query_import_module_target(
+      unavailable_document,
+      static_cast<sagan::source::byte_offset>(unavailable_import.find("missing_package.main") + 2),
+      source, {}, options);
+  require(unavailable_target.applicable && !unavailable_target.error.empty() &&
+              unavailable_target.source_uri.value.empty(),
+          "Unavailable module navigation invented a filesystem target");
   sagan::diagnostics::cancellation_source cancelled_navigation;
   cancelled_navigation.cancel();
   const auto cancelled_target = sagan::language_service::query_import_module_target(

@@ -95,7 +95,10 @@ module for an unqualified name. Go-to-definition and hover on the exported
 name in a selective import also resolve through the locked module's explicit
 exports, even when the importing document is otherwise incomplete. Hover uses
 the compiler's exported signature and documentation; a missing export has no
-invented target. These queries honor the installed source overlay and reject
+invented target. When an import names an unavailable module, standard LSP
+definition returns an empty array rather than a broken filesystem URI or a
+protocol error; the compiler's structured import diagnostic still explains the
+failure. These queries honor the installed source overlay and reject
 cancelled or stale document versions. This does not yet cover every package alias,
 member, and source-unavailable navigation context, so `packageNavigation`
 remains false.

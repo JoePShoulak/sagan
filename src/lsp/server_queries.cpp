@@ -481,10 +481,10 @@ namespace sagan::lsp
       if (target.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       if (target.applicable)
       {
-        if (!target.error.empty()) throw std::invalid_argument(target.error);
         const auto current = documents_->read(uri);
         if (!current || current.value->version() != document.version() ||
             current.value->text() != document.text()) throw request_cancelled{};
+        if (!target.error.empty() || target.source_uri.value.empty()) return J::array{};
         return J::array{J::object{{"uri", target.source_uri.value},
                                   {"range", J::object{{"start", lsp_position(target.start)},
                                                        {"end", lsp_position(target.end)}}}}};
