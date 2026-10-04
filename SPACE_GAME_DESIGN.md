@@ -104,37 +104,129 @@ the drone may share many systems with ships.
 
 ### Mechanics
 
-- Resources
-  - Extraction
-  - Refinement
-  - Transportation
-  - Consumption
-- Orbital decay: satellites will eventually fail
-- Ships
-  - Creation
-  - Customization
-- Mechanical systems
-  - Degradation
-  - Repair
-- Life support
-  - Food
-  - Water
-  - Oxygen
-  - Sleep
-  - Comfort
-- Population
-  - Management
-  - Housing
-  - Life support
-  - Transportation
-- Terraforming
-- Exploration
-- Research
-  - Technology tree
-- Combat (unresolved)
-  - Enemy aliens (unresolved)
-  - Enemy factions (unresolved)
-- Fleet management
+#### Resources
+
+*To be defined.*
+
+##### Extraction
+
+*To be defined.*
+
+##### Refinement
+
+*To be defined.*
+
+##### Transportation
+
+*To be defined.*
+
+##### Consumption
+
+*To be defined.*
+
+#### Orbital Decay
+
+*To be defined.*
+
+#### Ships
+
+*To be defined.*
+
+##### Creation
+
+*To be defined.*
+
+##### Customization
+
+*To be defined.*
+
+#### Mechanical Systems
+
+*To be defined.*
+
+##### Degradation
+
+*To be defined.*
+
+##### Repair
+
+*To be defined.*
+
+#### Life Support
+
+*To be defined.*
+
+##### Food
+
+*To be defined.*
+
+##### Water
+
+*To be defined.*
+
+##### Oxygen
+
+*To be defined.*
+
+##### Sleep
+
+*To be defined.*
+
+##### Comfort
+
+*To be defined.*
+
+#### Population
+
+*To be defined.*
+
+##### Management
+
+*To be defined.*
+
+##### Housing
+
+*To be defined.*
+
+##### Life Support
+
+*To be defined.*
+
+##### Transportation
+
+*To be defined.*
+
+#### Terraforming
+
+*To be defined.*
+
+#### Exploration
+
+*To be defined.*
+
+#### Research
+
+*To be defined.*
+
+##### Technology Tree
+
+*To be defined.*
+
+#### Combat (Unresolved)
+
+*To be defined.*
+
+##### Enemy Aliens (Unresolved)
+
+*To be defined.*
+
+##### Enemy Factions (Unresolved)
+
+*To be defined.*
+
+#### Fleet Management
+
+*To be defined.*
 
 ## Physics
 
