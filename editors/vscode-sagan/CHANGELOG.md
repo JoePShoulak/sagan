@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Connect `sagan.toml` documents to the language server so compiler-owned
+  diagnostics, completion, hover, symbols, navigation, and formatting reach
+  VS Code, with live Extension Development Host coverage.
 - Version 0.3.6 updates class-inheritance and face-composition highlighting,
   qualified `super.Parent.method()` calls, default-parameter examples,
   parent-constructor forwarding examples, and grammar coverage. It has not

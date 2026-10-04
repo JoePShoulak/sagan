@@ -1,0 +1,8 @@
+[package]
+name = "extension-integration"
+version = "0.1.0"
+source = "."
+entry = "entry"
+
+[application]
+mode = "console"

@@ -68,10 +68,12 @@ async function run() {
     "vscode.executeDocumentSymbolProvider", document.uri);
   assert(symbols && symbols.length > 0, "document symbol provider returned no symbols");
 
-  const workspaceSymbols = await vscode.commands.executeCommand(
-    "vscode.executeWorkspaceSymbolProvider", "main");
-  assert(workspaceSymbols && workspaceSymbols.some((symbol) => symbol.name === "main"),
-    "workspace symbol provider did not return main");
+  const workspaceSymbols = await waitFor(
+    () => vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", "🚀")
+      .then((items) => items && items.some((symbol) => symbol.name === "🚀") ? items : undefined),
+    "Sagan workspace symbols");
+  assert(workspaceSymbols && workspaceSymbols.some((symbol) => symbol.name === "🚀"),
+    "workspace symbol provider did not return the declared function");
 
   const foldingRanges = await vscode.commands.executeCommand(
     "vscode.executeFoldingRangeProvider", document.uri);
@@ -257,6 +259,70 @@ async function run() {
   }
   assert(collisionRefused,
     "exported-name rename did not surface the compiler-owned collision explanation");
+
+  const manifest = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(
+    vscode.workspace.workspaceFolders[0].uri, "manifest_project", "sagan.toml"));
+  assert.equal(manifest.languageId, "sagan-manifest");
+  await vscode.window.showTextDocument(manifest);
+
+  const manifestHover = await waitFor(
+    () => vscode.commands.executeCommand(
+      "vscode.executeHoverProvider", manifest.uri, new vscode.Position(7, 1))
+      .then((items) => items && items.length ? items : undefined),
+    "Sagan manifest hover results");
+  assert(manifestHover.length > 0, "manifest hover provider returned no results");
+
+  const manifestSymbols = await vscode.commands.executeCommand(
+    "vscode.executeDocumentSymbolProvider", manifest.uri);
+  assert(manifestSymbols && manifestSymbols.some((symbol) => symbol.name === "package") &&
+         manifestSymbols.some((symbol) => symbol.name === "application"),
+    "manifest symbols omitted a declared section");
+
+  const entryDefinitions = await vscode.commands.executeCommand(
+    "vscode.executeDefinitionProvider", manifest.uri, new vscode.Position(4, 10));
+  assert(entryDefinitions && entryDefinitions.some((location) => location.uri.fsPath.endsWith("entry.sagan")),
+    "manifest entry navigation did not resolve entry.sagan");
+
+  const manifestOriginal = manifest.getText();
+  const incompleteManifest = "[package]\nna";
+  const incompleteEdit = new vscode.WorkspaceEdit();
+  incompleteEdit.replace(manifest.uri,
+    new vscode.Range(manifest.positionAt(0), manifest.positionAt(manifestOriginal.length)), incompleteManifest);
+  assert(await vscode.workspace.applyEdit(incompleteEdit), "could not create the manifest completion fixture");
+  const manifestCompletions = await waitFor(
+    () => vscode.commands.executeCommand(
+      "vscode.executeCompletionItemProvider", manifest.uri, new vscode.Position(1, 2))
+      .then((items) => items && items.items.some((item) => item.label === "name") ? items : undefined),
+    "Sagan manifest completion results");
+  assert(manifestCompletions.items.some((item) => item.label === "name"),
+    "manifest completion omitted the package name key");
+
+  const invalidManifest = manifestOriginal.replace("[application]", "mystery = \"value\"\n[application]");
+  const invalidManifestEdit = new vscode.WorkspaceEdit();
+  invalidManifestEdit.replace(manifest.uri,
+    new vscode.Range(manifest.positionAt(0), manifest.positionAt(manifest.getText().length)), invalidManifest);
+  assert(await vscode.workspace.applyEdit(invalidManifestEdit), "could not create the manifest diagnostic fixture");
+  await waitFor(() => vscode.languages.getDiagnostics(manifest.uri)
+    .some((diagnostic) => diagnostic.message.includes("mystery")) || undefined,
+  "a published manifest diagnostic");
+
+  const restoreManifest = new vscode.WorkspaceEdit();
+  restoreManifest.replace(manifest.uri,
+    new vscode.Range(manifest.positionAt(0), manifest.positionAt(manifest.getText().length)), manifestOriginal);
+  assert(await vscode.workspace.applyEdit(restoreManifest), "could not repair the manifest fixture");
+  await waitFor(() => vscode.languages.getDiagnostics(manifest.uri).length === 0 || undefined,
+    "manifest diagnostic clearing");
+
+  const manifestFormattingFixture = manifestOriginal.replace("name =", "name    =");
+  const formattingEdit = new vscode.WorkspaceEdit();
+  formattingEdit.replace(manifest.uri,
+    new vscode.Range(manifest.positionAt(0), manifest.positionAt(manifest.getText().length)),
+    manifestFormattingFixture);
+  assert(await vscode.workspace.applyEdit(formattingEdit), "could not create the manifest formatting fixture");
+  const manifestFormatting = await vscode.commands.executeCommand(
+    "vscode.executeFormatDocumentProvider", manifest.uri, { tabSize: 2, insertSpaces: true });
+  assert(Array.isArray(manifestFormatting) && manifestFormatting.length > 0,
+    "manifest formatting did not normalize key spacing");
   console.log("Sagan Extension Development Host integration test passed.");
 }
 

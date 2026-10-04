@@ -9,14 +9,14 @@ verified_by: null
 
 # VS Code extension roadmap
 
-Version 0.3.5 is a usable language client for the capabilities currently
+Version 0.3.6 is a usable language client for the capabilities currently
 advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 
-## Paused compiler handoff checkpoint
+## Current compiler handoff checkpoint
 
-Extension work remains paused at the current `dev` checkpoint while the
+Extension work can consume standard LSP improvements as they land while the
 compiler-side package and debugger contracts below are completed. The earlier
 1.8.0 checkpoint is historical, not the present handoff. The extension must
 not enable capabilities that discovery still reports as false.
@@ -111,19 +111,14 @@ for continued local extension development:
 
 ## Compiler- or protocol-blocked goals
 
-- Complete the compiler-owned `sagan.toml` document service. Unsaved-buffer
-  validation and versioned diagnostics now use the build parser; section,
-  package/application key, and application-mode value completion have
-  compiler-owned replacement edits. Recognized sections and keys have hover
-  explanations, and document symbols show the section/key hierarchy.
-  Entry-path and locked-dependency navigation and direct installed-package
-  requirement completion, including the inline-table alias form, are
-  available. Complete, valid manifests now have conservative whole-document
-  formatting; safe quick fixes remain. The extension must not reproduce
-  manifest parsing or validation in TypeScript. Finish an explicit manifest
-  document selector/capability and tests for required, duplicate, and unknown
-  keys and sections, dependency aliases and requirements, paths, entry
-  modules, application modes, lockfile state, and installed-package targets.
+- The compiler-owned `sagan.toml` service is connected through the extension's
+  manifest document selector. Live-host coverage exercises diagnostics,
+  completion, hover, symbols, entry navigation, and valid whole-document
+  formatting. The compiler also owns locked-dependency navigation and
+  installed-package requirement completion. Manifest range/on-type formatting
+  and safe quick fixes remain unavailable; extend tests as those capabilities
+  become supported. The extension must not reproduce manifest parsing or
+  validation in TypeScript.
 - Finish package completion in every relevant import, export, qualified-name,
   type, expression, and receiver context. Add compiler-owned safe auto-import
   edits, alias and collision handling, navigation when installed source is

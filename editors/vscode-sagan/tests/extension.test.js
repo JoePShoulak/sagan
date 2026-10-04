@@ -72,7 +72,9 @@ async function main() {
   assert.equal(client.started, true);
   assert.deepEqual(client.clientOptions.documentSelector, [
     { scheme: "file", language: "sagan" },
-    { scheme: "untitled", language: "sagan" }
+    { scheme: "untitled", language: "sagan" },
+    { scheme: "file", language: "sagan-manifest" },
+    { scheme: "untitled", language: "sagan-manifest" }
   ]);
   assert(commands.has("sagan.showToolingStatus"));
   assert(commands.has("sagan.restartLanguageServer"));

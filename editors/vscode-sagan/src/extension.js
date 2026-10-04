@@ -79,7 +79,9 @@ async function startLanguageServer(output) {
   const clientOptions = {
     documentSelector: [
       { scheme: "file", language: "sagan" },
-      { scheme: "untitled", language: "sagan" }
+      { scheme: "untitled", language: "sagan" },
+      { scheme: "file", language: "sagan-manifest" },
+      { scheme: "untitled", language: "sagan-manifest" }
     ],
     synchronize: { configurationSection: "sagan" },
     outputChannel: output,
