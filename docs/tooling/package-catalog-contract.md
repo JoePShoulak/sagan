@@ -128,8 +128,15 @@ Go-to-definition on a `[dependencies]` alias or its quoted inline-table
 project's lockfile and compiler compatibility rules. This uses the active
 unsaved manifest text through the same offline resolver; unavailable,
 incompatible, or unresolved dependencies produce no fictitious location.
-The lockfile itself is read from disk in this slice, and dependency-value
-completion is still unfinished.
+The lockfile itself is read from disk in this slice. In an incomplete
+`[dependencies]` key, standard LSP completion now uses the same configured
+installed index and compiler-compatibility rules to suggest importable aliases.
+For a package name containing a hyphen, the edit inserts an underscore alias
+and the explicit `{ package, version }` form. The suggestion uses the newest
+compatible installed version and never claims an available-only package is
+locally usable. Accepting a new dependency still requires updating the
+project lockfile; dependency-value completion and automatic lockfile edits
+remain unfinished.
 
 The thin LSP request is `sagan/packages/catalog`:
 

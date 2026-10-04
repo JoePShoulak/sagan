@@ -27,7 +27,8 @@ namespace sagan::language_service
   };
   auto complete_manifest_document(const source::document_snapshot &document,
                                   source::byte_offset offset,
-                                  diagnostics::cancellation_token cancellation = {})
+                                  diagnostics::cancellation_token cancellation = {},
+                                  const modules::package_resolution_options &options = {})
     -> diagnostics::analysis_result<std::vector<manifest_completion_candidate>>;
 
   struct manifest_hover_information

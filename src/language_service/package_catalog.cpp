@@ -9,9 +9,11 @@
 #include "../syntax/syntax.hpp"
 #include "../parser/tokens.hpp"
 #include "../parser/unicode.hpp"
+#include "../version.hpp"
 
 #include <algorithm>
 #include <cctype>
+#include <map>
 #include <set>
 #include <stdexcept>
 
@@ -72,7 +74,8 @@ namespace sagan::language_service
 
   auto complete_manifest_document(const source::document_snapshot &document,
                                   const source::byte_offset offset,
-                                  const diagnostics::cancellation_token cancellation)
+                                  const diagnostics::cancellation_token cancellation,
+                                  const modules::package_resolution_options &options)
     -> diagnostics::analysis_result<std::vector<manifest_completion_candidate>>
   {
     const auto version = document.version();
@@ -199,6 +202,38 @@ namespace sagan::language_service
         if (!seen_keys.contains(std::string(keys[index])))
           add(keys[index], typed, static_cast<source::byte_offset>(start),
               std::string(keys[index]) + (keys[index] == "mode" ? " = \"console\"" : " = \"\""));
+    }
+    else if (section == "dependencies" && !typed.empty())
+    {
+      const auto index_path = options.index_path.empty() ? modules::default_package_index_path() :
+                              options.index_path;
+      std::string compiler_version = options.compiler_version.empty() ? SAGAN_VERSION :
+                                     options.compiler_version;
+      if (const auto suffix = compiler_version.find_first_of("+-"); suffix != std::string::npos)
+        compiler_version.erase(suffix);
+      const auto index = modules::query_package_index(index_path, compiler_version);
+      if (index.state == modules::package_index_state::ready)
+      {
+        std::map<std::string, std::string> latest;
+        for (const auto &package : index.packages)
+        {
+          if (cancellation.is_cancelled())
+            return {diagnostics::result_state::cancelled, {}, {}, version};
+          if (package.install_state != modules::package_install_state::installed ||
+              !package.compiler_compatible) continue;
+          latest.insert_or_assign(package.name, package.version);
+        }
+        for (const auto &[name, package_version] : latest)
+        {
+          if (values.size() == 256) break;
+          auto alias = name;
+          std::replace(alias.begin(), alias.end(), '-', '_');
+          if (seen_keys.contains(alias)) continue;
+          const auto declaration = alias == name ? alias + " = \"^" + package_version + "\"" :
+              alias + " = { package = \"" + name + "\", version = \"^" + package_version + "\" }";
+          add(alias, typed, static_cast<source::byte_offset>(start), declaration);
+        }
+      }
     }
     else if (section.empty() && typed.empty())
       for (const auto name : modules::manifest_sections)

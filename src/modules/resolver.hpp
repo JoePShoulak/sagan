@@ -67,6 +67,9 @@ namespace modules
     std::filesystem::path lock_path;
   };
 
+  // Use the same installed index selection for compiler and editor queries.
+  auto default_package_index_path() -> std::filesystem::path;
+
   auto application_mode_name(application_mode mode) -> std::string_view;
 
   struct export_symbol

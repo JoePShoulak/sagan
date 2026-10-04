@@ -306,6 +306,17 @@ def run():
         assert manifest_outline[0]["children"][0]["selectionRange"] == {
             "start": {"line": 1, "character": 0}, "end": {"line": 1, "character": 4}}, (
                 manifest_outline)
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 5},
+            "contentChanges": [{"text": "[dependencies]\norbit_"}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 24, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 6}}})
+        dependency_candidates = answer(24)
+        assert any(item["label"] == "orbit_tools" and item["textEdit"]["newText"] ==
+                   'orbit_tools = { package = "orbit-tools", version = "^0.1.0" }'
+                   for item in dependency_candidates), dependency_candidates
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

@@ -158,6 +158,31 @@ auto main() -> int
               manifest_keys.value->front().label == "name" &&
               manifest_keys.value->front().edit.replacement_utf8 == "name = \"\"",
           "Incomplete manifest did not receive compiler-owned key completion");
+  const std::string dependency_prefix = "[dependencies]\norbit_";
+  const sagan::source::document_snapshot dependency_manifest(
+      manifest_document.value->identity(), 13, dependency_prefix);
+  const auto dependency_items = sagan::language_service::complete_manifest_document(
+      dependency_manifest, static_cast<sagan::source::byte_offset>(dependency_prefix.size()),
+      {}, manifest_options);
+  require(dependency_items.value && dependency_items.value->size() == 1 &&
+              dependency_items.value->front().label == "orbit_tools" &&
+              dependency_items.value->front().edit.replacement_utf8 ==
+                  "orbit_tools = { package = \"orbit-tools\", version = \"^0.1.0\" }",
+          "Installed package completion did not preserve an importable alias");
+  const modules::package_resolution_options multiple_versions{
+      "tests/fixtures/catalog/resolution-index.tsv", "2.1.0", {}};
+  const auto newest_dependency = sagan::language_service::complete_manifest_document(
+      dependency_manifest, static_cast<sagan::source::byte_offset>(dependency_prefix.size()),
+      {}, multiple_versions);
+  require(newest_dependency.value && newest_dependency.value->size() == 1 &&
+              newest_dependency.value->front().edit.replacement_utf8.find("^0.1.1") != std::string::npos,
+          "Dependency completion did not prefer the newest compatible installed version");
+  const modules::package_resolution_options unavailable_index{"build/no-such-index.tsv", "2.1.0", {}};
+  const auto unavailable_dependencies = sagan::language_service::complete_manifest_document(
+      dependency_manifest, static_cast<sagan::source::byte_offset>(dependency_prefix.size()),
+      {}, unavailable_index);
+  require(unavailable_dependencies.value && unavailable_dependencies.value->empty(),
+          "Dependency completion invented a package without an installed index");
   require(sagan::language_service::complete_manifest_document(
               unfinished_manifest, static_cast<sagan::source::byte_offset>(unfinished_manifest_text.size()),
               cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,

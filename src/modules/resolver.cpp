@@ -63,10 +63,7 @@ namespace modules
     {
       std::map<std::string, package_manifest> installed;
       if (manifest.dependencies.empty()) return installed;
-      auto index_path = options.index_path;
-      if (index_path.empty())
-        if (const auto *configured = std::getenv("SAGAN_PACKAGE_INDEX")) index_path = configured;
-      if (index_path.empty()) index_path = installed_package_index();
+      auto index_path = options.index_path.empty() ? default_package_index_path() : options.index_path;
       if (index_path.empty())
         throw std::runtime_error("Package dependencies require an installed libraries/index.tsv, "
                                  "SAGAN_PACKAGE_INDEX, or an explicit local index");
@@ -766,6 +763,12 @@ namespace modules
       }
       return parser::program(std::move(combined));
     }
+  }
+
+  auto default_package_index_path() -> std::filesystem::path
+  {
+    if (const auto *configured = std::getenv("SAGAN_PACKAGE_INDEX")) return configured;
+    return installed_package_index();
   }
 
   auto application_mode_name(const application_mode mode) -> std::string_view
