@@ -21,6 +21,7 @@ output_dir="$repo_root/build/release"
 manifest="$output_dir/sagan-$version-release-manifest.json"
 sbom="$output_dir/sagan-$version-sbom.spdx.json"
 gcc="$repo_root/build/windows-stage/toolchain/ucrt64/bin/g++.exe"
+gdb="$repo_root/build/windows-stage/toolchain/ucrt64/bin/gdb.exe"
 extension_version="$(npm --prefix "$repo_root/editors/vscode-sagan" pkg get version | tr -d '"[:space:]')"
 extension="$output_dir/sagan-language-$extension_version.vsix"
 
@@ -28,6 +29,7 @@ for artifact in "$installer" "$installer.sha256" "$archive" "$archive.sha256" "$
   [[ -f "$artifact" ]] || { echo "Missing release artifact: $artifact" >&2; exit 1; }
 done
 [[ -x "$gcc" ]] || { echo "Missing staged GCC compiler: $gcc" >&2; exit 1; }
+[[ -x "$gdb" ]] || { echo "Missing staged GDB debugger: $gdb" >&2; exit 1; }
 
 installer_hash="$(sha256sum "$installer" | cut -d' ' -f1)"
 archive_hash="$(sha256sum "$archive" | cut -d' ' -f1)"
@@ -36,6 +38,7 @@ installer_size="$(wc -c < "$installer" | tr -d ' ')"
 archive_size="$(wc -c < "$archive" | tr -d ' ')"
 extension_size="$(wc -c < "$extension" | tr -d ' ')"
 gcc_version="$("$gcc" -dumpfullversion)"
+gdb_version="$("$gdb" --version | head -n 1 | awk '{print $NF}')"
 created="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 
 mkdir -p "$output_dir"
@@ -69,6 +72,8 @@ printf '%s\n' \
   "    {\"name\": \"Sagan\", \"SPDXID\": \"SPDXRef-Package-Sagan\", \"versionInfo\": \"$version\", \"downloadLocation\": \"NOASSERTION\", \"filesAnalyzed\": false, \"licenseConcluded\": \"GPL-3.0-only\", \"licenseDeclared\": \"GPL-3.0-only\", \"copyrightText\": \"NOASSERTION\"}," \
   "    {\"name\": \"Sagan Language for VS Code\", \"SPDXID\": \"SPDXRef-Package-Sagan-VSCode\", \"versionInfo\": \"$extension_version\", \"downloadLocation\": \"NOASSERTION\", \"filesAnalyzed\": false, \"licenseConcluded\": \"GPL-3.0-only\", \"licenseDeclared\": \"GPL-3.0-only\", \"copyrightText\": \"NOASSERTION\"}," \
   "    {\"name\": \"GCC UCRT64 toolchain\", \"SPDXID\": \"SPDXRef-Package-GCC\", \"versionInfo\": \"$gcc_version\", \"downloadLocation\": \"NOASSERTION\", \"filesAnalyzed\": false, \"licenseConcluded\": \"NOASSERTION\", \"licenseDeclared\": \"GPL-3.0-or-later WITH GCC-exception-3.1\", \"copyrightText\": \"NOASSERTION\"}," \
+  "    {\"name\": \"GNU GDB\", \"SPDXID\": \"SPDXRef-Package-GDB\", \"versionInfo\": \"$gdb_version\", \"downloadLocation\": \"NOASSERTION\", \"filesAnalyzed\": false, \"licenseConcluded\": \"NOASSERTION\", \"licenseDeclared\": \"GPL-3.0-or-later\", \"copyrightText\": \"Copyright Free Software Foundation, Inc.\"}," \
+  '    {"name": "Python runtime", "SPDXID": "SPDXRef-Package-Python", "versionInfo": "3.12", "downloadLocation": "NOASSERTION", "filesAnalyzed": false, "licenseConcluded": "NOASSERTION", "licenseDeclared": "PSF-2.0", "copyrightText": "NOASSERTION"},' \
   '    {"name": "uni-algo", "SPDXID": "SPDXRef-Package-UniAlgo", "versionInfo": "NOASSERTION", "downloadLocation": "NOASSERTION", "filesAnalyzed": false, "licenseConcluded": "MIT", "licenseDeclared": "MIT", "copyrightText": "NOASSERTION"},' \
   '    {"name": "Unicode Character Database", "SPDXID": "SPDXRef-Package-Unicode", "versionInfo": "17.0.0", "downloadLocation": "NOASSERTION", "filesAnalyzed": false, "licenseConcluded": "Unicode-3.0", "licenseDeclared": "Unicode-3.0", "copyrightText": "Copyright Unicode, Inc."}' \
   '  ],' \
@@ -76,6 +81,8 @@ printf '%s\n' \
   '    {"spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Package-Sagan"},' \
   '    {"spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Package-Sagan-VSCode"},' \
   '    {"spdxElementId": "SPDXRef-Package-Sagan", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-GCC"},' \
+  '    {"spdxElementId": "SPDXRef-Package-Sagan", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-GDB"},' \
+  '    {"spdxElementId": "SPDXRef-Package-GDB", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-Python"},' \
   '    {"spdxElementId": "SPDXRef-Package-Sagan", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-UniAlgo"},' \
   '    {"spdxElementId": "SPDXRef-Package-Sagan", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-Unicode"}' \
   '  ]' \

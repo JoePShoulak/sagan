@@ -43,7 +43,7 @@ below are deliberate limits, not work for the extension to invent locally.
 | Call hierarchy | Resolved callable/call-site index | **LSP available for resolved calls** |
 | Check/build/run tasks | Structured cancellable operations | **Versioned document/project operations and `sagan/operation` transport are available; the extension provides commands and generated document/project tasks with cancellation and output** |
 | Test Explorer | Authoritative Sagan test discovery and execution model | **The extension provides document/project discovery and selected or all execution through granular compiler capabilities; Run results include duration, output, and pass/fail/error/skipped state** |
-| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level stop-on-entry and step-over/in/out probes; reliable values, exceptions, release packaging, and capability advertisement remain blocked** |
+| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level stop-on-entry and step-over/in/out probes. A staged Windows portable ZIP passed an isolated-PATH DAP run; reliable values, exception stops, installer validation, dependency/license review, and capability advertisement remain blocked.** |
 | Lexical TextMate coloring | Existing extension grammar | **Already available, outside this task** |
 
 The experimental adapter also emits Sagan-mapped runtime failure output using

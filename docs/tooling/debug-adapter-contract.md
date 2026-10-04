@@ -10,8 +10,11 @@ verified_by: null
 # Debug adapter contract
 
 The repository now builds an **experimental** `bin/sagan-dap.exe` on Windows
-(`bin/sagan-dap` on Linux) with `make bin/sagan-dap`. It is not included in release artifacts and is not
-yet advertised by compiler capability discovery. Editor clients must not
+(`bin/sagan-dap` on Linux) with `make bin/sagan-dap`. Windows installer and
+portable staging now include the adapter, GDB 16.3, and its relocated Python
+runtime; the extracted portable payload passed the DAP protocol suite with
+only Windows system directories on `PATH`. This is not yet advertised by
+compiler capability discovery. Editor clients must not
 offer a supported Sagan debug configuration on its presence alone.
 The compiler's `sagan.language-service/1` discovery includes the
 `debugAdapterExecutable` sibling filename; it is a location contract, not a
@@ -43,8 +46,8 @@ representations are not yet reliably usable as Sagan values. Source-level steppi
 has Windows top-level-to-function-and-back and imported-module probes, but
 still needs method, lambda, and failure-path coverage. Runtime exception
 translation needs focused tests; attach and
-arbitrary expression evaluation are absent, and GDB
-plus its Python/runtime closure is not packaged. All live debugger capability
+arbitrary expression evaluation are absent. Installer execution and the
+debugger dependency/license review remain release gates. All live debugger capability
 flags remain false.
 
 The adapter recognizes generated programs' structured runtime error and
@@ -102,15 +105,15 @@ with separate protocol pipes and a kill-on-close Job Object. A bounded probe
 exchanges `initialize` with GDB 16.3 and checks that stopping the wrapper
 reaps the child. The executable protocol probe also covers a launch and
 debuggee lifecycle on Windows and Linux; further cases listed below remain unverified. The probe skips
-when GDB is absent; release packaging must make GDB present and test it in
-an isolated runtime environment before debugger discovery can become true.
+when GDB is absent. The Windows portable artifact now supplies GDB, Python,
+and supporting DLLs and passes this probe with an isolated `PATH`.
 
 ## Gates before discovery becomes true
 
 Before advertising `debugAdapter` or `debugLaunch`, the repository still needs
 source-level stepping across all valid constructs, usable Sagan scopes and values,
-runtime-failure mapping, full cancellation/cleanup tests, Windows release
-packaging of GDB and its runtime, and broader end-to-end protocol tests.
+exception-stop behavior, full cancellation/cleanup tests, installer validation,
+debugger dependency/license review, and broader end-to-end protocol tests.
 Breakpoint, stepping, variable,
 evaluation, exception, and attach capabilities must be advertised separately
 and only after their respective tests pass. Release packaging must be checked

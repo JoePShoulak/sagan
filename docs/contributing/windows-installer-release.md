@@ -24,7 +24,10 @@ A candidate is implementation-ready only when all of these checks pass:
   absent from `PATH`;
 - direct CLI compilation, generated-program execution, and windowed launch work;
 - the installer and portable ZIP contain both first-party packages, the native
-  render bridge, and the manifest-backed two-body example;
+  render bridge, the manifest-backed two-body example, `sagan-dap.exe`, and
+  its relocatable GDB/Python runtime;
+- the portable ZIP runs the DAP launch, breakpoint, step, failure, and cleanup
+  protocol suite with compiler-runtime directories absent from `PATH`;
 - that packaged example runs outside an MSYS2-modified `PATH`, while a headless
   physics project has no rendering linkage;
 - installing the same or a newer version in place succeeds;
