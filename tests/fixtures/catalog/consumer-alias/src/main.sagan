@@ -2,6 +2,8 @@ module main
 import orbit_tools as local_tools
 import orbit_answer from orbit_tools.main
 import orbit_tools.main as package_tools
+import OrbitProbe from orbit_tools.main
+fun sample_probe(probe: OrbitProbe): Int => probe.sample(41)
 print(orbit_answer())
 print(local_tools.local_answer())
 print(package_tools.orbit_answer())

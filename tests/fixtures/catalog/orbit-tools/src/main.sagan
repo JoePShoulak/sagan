@@ -7,3 +7,9 @@ export orbit_answer
 /// Advance by one.
 fun 🚀(value: Int): Int => value + 1
 export 🚀
+
+/// A package-owned probe for editor member queries.
+class OrbitProbe {
+  fun sample(value: Int): Int => value + 1
+}
+export OrbitProbe

@@ -245,6 +245,15 @@ namespace sagan::language_service
       for (const auto &type : index_.types())
         if (type.id == best->type)
           return result<std::string>(document_.version(), diagnostics::result_state::complete, type.display);
+    if (workspace_)
+    {
+      for (const auto &module : workspace_->modules())
+        if (module.index.document().id == document_.identity().id &&
+            module.index.version() == document_.version())
+          if (const auto *binding = module.index.symbol_at(offset))
+            if (const auto type = workspace_->declared_type(binding->id))
+              return result<std::string>(document_.version(), diagnostics::result_state::complete, *type);
+    }
     return result<std::string>(document_.version(), diagnostics::result_state::complete);
   }
 
@@ -592,9 +601,13 @@ namespace sagan::language_service
                  symbol.kind == semantic::symbol_kind::enum_case) &&
                 (symbol.visibility == semantic::symbol_visibility::public_access || same_type) &&
                 provided.insert(symbol.name).second)
+            {
+              const auto signature = semantic::callable_signature(index, symbol.id);
               values.push_back(completion_item{symbol.name, symbol.id, symbol.kind, replacement,
-                                               symbol.name, std::string(semantic::name(symbol.kind)),
+                                               symbol.name, signature.empty() ?
+                                                   std::string(semantic::name(symbol.kind)) : signature,
                                                symbol.documentation, module, symbol.name, symbol.name, false, {}});
+            }
         };
         if (!type_name.empty())
         {

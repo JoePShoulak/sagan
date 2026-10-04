@@ -187,6 +187,16 @@ auto main() -> int
                                    item.source_module == "orbit_tools.main" &&
                                    !item.documentation.empty(); }),
           "Standard package namespace completion omitted signature or documentation");
+  const auto probe_member = entry_text.find("probe.sample(41)");
+  require(probe_member != std::string::npos, "Package-owned member fixture is missing");
+  const auto probe_members = package_query.completions(
+      static_cast<sagan::source::byte_offset>(probe_member + std::string("probe.").size()));
+  require(probe_members.value &&
+              std::any_of(probe_members.value->begin(), probe_members.value->end(),
+                          [](const auto &item)
+                          { return item.label == "sample" && item.detail == "(value: Int): Int" &&
+                                   item.source_module == "orbit_tools.main"; }),
+          "Package-owned method completion omitted its callable signature or source module");
   const std::string unimported_text = "module scratch\nfun main(): Int {\n  return 0\n}\n";
   const sagan::source::document_snapshot unimported(entry.value->identity(), 12, unimported_text);
   const auto unimported_index = sagan::language_service::index_document(unimported);

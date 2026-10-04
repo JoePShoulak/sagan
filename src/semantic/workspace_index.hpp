@@ -5,6 +5,7 @@
 #include "../source/provider.hpp"
 
 #include <string>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -50,16 +51,19 @@ namespace semantic
     std::unordered_map<std::string, std::vector<symbol_id>> exports_;
     std::vector<exported_symbol> exported_symbols_;
     std::vector<external_reference> external_references_;
+    std::unordered_map<std::string, std::string> binding_types_;
 
   public:
     workspace_semantic_index(std::vector<indexed_module> modules, std::vector<import_link> imports,
                              std::unordered_map<std::string, std::vector<symbol_id>> exports,
                              std::vector<exported_symbol> exported_symbols,
-                             std::vector<external_reference> external_references);
+                             std::vector<external_reference> external_references,
+                             std::unordered_map<std::string, std::string> binding_types);
 
     auto modules() const -> const std::vector<indexed_module> &;
     auto imports() const -> const std::vector<import_link> &;
     auto external_references() const -> const std::vector<external_reference> &;
+    auto declared_type(const symbol_id &binding) const -> std::optional<std::string>;
     auto find(const symbol_id &id) const -> const indexed_symbol *;
     auto definitions(const symbol_id &id) const -> std::vector<sagan::source::source_range>;
     auto references_to(const symbol_id &id, bool include_declaration = false) const

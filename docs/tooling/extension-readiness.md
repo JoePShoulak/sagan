@@ -68,6 +68,9 @@ The remaining compiler-side milestones, in dependency order, are:
    missing-source documentation targets, and multi-root collision behavior
    still need implementation and focused tests. No unfinished package
    capability is advertised.
+   Imported package-owned value members now have a focused library and LSP
+   completion regression, including callable signatures; that is one tested
+   slice, not the complete package-completion capability.
 4. Finish the experimental Windows DAP executable using GDB native DAP,
    source maps, and debug metadata. It already has a live launch/breakpoint/
    stack and step-over/in/out probes; verify all source contexts, Sagan scopes

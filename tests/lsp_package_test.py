@@ -69,6 +69,26 @@ def run():
                        }}})
         completion = answer(4)
         assert any(item["label"] == "orbit_answer" for item in completion), completion
+        probe_line = next(i for i, line in enumerate(lines) if "probe.sample(41)" in line)
+        type_line = next(i for i, line in enumerate(lines) if "probe: OrbitProbe" in line)
+        send(process, {"jsonrpc": "2.0", "id": 16, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": type_line, "character": lines[type_line].index("OrbitProbe") + 2,
+                       }}})
+        assert answer(16), "Imported class did not resolve in LSP"
+        send(process, {"jsonrpc": "2.0", "id": 17, "method": "textDocument/typeDefinition",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": probe_line, "character": lines[probe_line].index("probe.sample") + 2,
+                       }}})
+        assert answer(17), "Imported receiver type did not resolve in LSP"
+        send(process, {"jsonrpc": "2.0", "id": 15, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": probe_line,
+                           "character": lines[probe_line].index("probe.sample") + len("probe.") + 2,
+                       }}})
+        probe_completion = answer(15)
+        assert any(item["label"] == "sample" and item["detail"] == "(value: Int): Int"
+                   for item in probe_completion), probe_completion
         partial = source + "import orbit_t"
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 2},

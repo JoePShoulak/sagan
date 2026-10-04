@@ -62,6 +62,11 @@ Standard LSP completion, hover, and definition use compiler-owned workspace
 symbols for *already imported* installed package declarations. Namespace
 completion uses public export names (including aliases) and semantic-index
 callable signatures rather than private implementation names. Unqualified
+member completion on a value whose declared type comes from an imported
+package also uses the workspace's resolved type binding. Public methods carry
+their compiler-indexed signatures and owning module; this is tested through
+both library queries and standard LSP completion. The workspace snapshot must
+match the open document version before its type binding is used. Unqualified
 exported-name suggestions carry those signatures and a compiler-produced
 import edit. That edit is offered only for strictly parsed documents with a
 safe module-header insertion line, preserves the document's line ending, and
