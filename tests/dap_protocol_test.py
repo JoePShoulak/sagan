@@ -110,6 +110,72 @@ def cancelled_build(binary, gdb):
                 process.wait(timeout=10)
 
 
+def source_stop_on_entry(binary, gdb):
+    with tempfile.TemporaryDirectory(prefix="sagan entry ") as folder:
+        source = Path(folder) / "entry 🚀.sagan"
+        original = Path("tests/fixtures/runtime/root_script.sagan").read_bytes()
+        source.write_bytes(original.replace(b"\n", b"\r\n") + b'print("after entry")\r\n')
+        environment = os.environ.copy()
+        environment["SAGAN_GDB"] = str(gdb)
+        process = subprocess.Popen([str(binary)], stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   env=environment)
+        messages = queue.Queue()
+        threading.Thread(target=reader, args=(process.stdout, messages), daemon=True).start()
+        pending = []
+
+        def send(seq, command, arguments=None):
+            process.stdin.write(frame({"seq": seq, "type": "request", "command": command,
+                                       "arguments": arguments or {}}))
+            process.stdin.flush()
+
+        def expect(predicate):
+            for index, item in enumerate(pending):
+                if predicate(item):
+                    return pending.pop(index)
+            while True:
+                item = messages.get(timeout=60)
+                if isinstance(item, BaseException):
+                    raise item
+                if predicate(item):
+                    return item
+                pending.append(item)
+
+        try:
+            send(1, "initialize", {"adapterID": "sagan"})
+            assert expect(lambda item: item.get("request_seq") == 1)["success"]
+            expect(lambda item: item.get("event") == "initialized")
+            send(2, "launch", {"program": str(source), "stopOnEntry": True})
+            send(7, "setBreakpoints", {"source": {"path": str(source)},
+                                       "breakpoints": [{"line": 5, "column": 1}]})
+            send(3, "configurationDone")
+            assert expect(lambda item: item.get("request_seq") == 2)["success"]
+            assert expect(lambda item: item.get("request_seq") == 7)["success"]
+            assert expect(lambda item: item.get("request_seq") == 3)["success"]
+            stopped = expect(lambda item: item.get("event") == "stopped")
+            assert stopped["body"]["reason"] == "entry", stopped
+            thread_id = stopped["body"]["threadId"]
+            send(4, "stackTrace", {"threadId": thread_id})
+            stack = expect(lambda item: item.get("request_seq") == 4)
+            assert stack["success"] and stack["body"]["stackFrames"], stack
+            top = stack["body"]["stackFrames"][0]
+            assert top["source"]["path"] == str(source) and top["line"] == 4, top
+            send(5, "continue", {"threadId": thread_id})
+            assert expect(lambda item: item.get("request_seq") == 5)["success"]
+            breakpoint = expect(lambda item: item.get("event") == "stopped")
+            assert breakpoint["body"]["reason"] == "breakpoint", breakpoint
+            send(8, "continue", {"threadId": breakpoint["body"]["threadId"]})
+            assert expect(lambda item: item.get("request_seq") == 8)["success"]
+            expect(lambda item: item.get("event") == "terminated")
+            send(6, "disconnect")
+            assert expect(lambda item: item.get("request_seq") == 6)["success"]
+            process.wait(timeout=10)
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=10)
+
+
 def package_launch(binary, gdb):
     environment = os.environ.copy()
     environment["SAGAN_GDB"] = str(gdb)
@@ -331,6 +397,7 @@ def run():
         print("GDB unavailable; executable launch probe skipped")
         return
     cancelled_build(binary, gdb)
+    source_stop_on_entry(binary, gdb)
     package_launch(binary, gdb)
     imported_module_breakpoint(binary, gdb)
     source_step_in_out(binary, gdb)
@@ -377,8 +444,6 @@ def run():
             expect(lambda item: item.get("event") == "initialized")
             send(20, "launch", {"program": str(source), "profile": "optimized"})
             assert not expect(lambda item: item.get("request_seq") == 20)["success"]
-            send(21, "launch", {"program": str(source), "stopOnEntry": True})
-            assert not expect(lambda item: item.get("request_seq") == 21)["success"]
             send(2, "launch", {"program": str(source), "stopOnEntry": False})
             send(3, "setBreakpoints", {"source": {"path": str(source)},
                                        "breakpoints": [{"line": 4, "column": 1}]})

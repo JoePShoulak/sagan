@@ -20,8 +20,11 @@ claim that the debugger capability is enabled.
 The adapter speaks framed DAP on binary stdio and uses `launch` arguments
 `{"program":"<absolute .sagan path>"}` or
 `{"packageRoot":"<absolute package directory>"}`. Optional `profile` must be
-`debug` (default); `cwd` and string-array `args` are accepted. `optimized`,
-`env`, and `stopOnEntry` currently return explicit errors. Launch uses the
+`debug` (default); `cwd` and string-array `args` are accepted. `optimized`
+and `env` currently return explicit errors. `stopOnEntry: true` is supported
+for a debug build with an executable top-level Sagan statement. The adapter
+sets a temporary source-mapped entry breakpoint and removes it before normal
+execution resumes, preserving user breakpoints. Launch uses the
 compiler's native build operation before passing a
 native executable to the bundled GDB DAP backend. `SAGAN_GDB` is a local test
 override; production Windows lookup first expects
@@ -29,7 +32,8 @@ override; production Windows lookup first expects
 `<installation>/bin/sagan-dap.exe`. The initial Windows integration probe covers a Unicode
 source path and a manifest-backed package launch, pending-to-verified
 breakpoints in entry and imported modules, a Sagan-mapped stack frame and
-source-level `next`, `stepIn`, and `stepOut` on a function-call fixture, top-level
+source-level `next`, `stepIn`, and `stepOut` on a function-call fixture, a
+source-mapped `stopOnEntry` followed by a user breakpoint, top-level
 binding visibility in a paused scope, output, process termination, malformed
 framing, and removal of that session's
 temporary native-build artifacts.

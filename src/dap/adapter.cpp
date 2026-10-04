@@ -167,6 +167,7 @@ namespace sagan::dap
       std::size_t stack_depth{};
       std::size_t attempts{};
       J stopped_event;
+      bool stop_on_entry{};
     };
 
     struct source_location
@@ -206,6 +207,8 @@ namespace sagan::dap
       std::atomic<std::int64_t> next_seq_{1000000};
       std::optional<std::int64_t> launch_seq_;
       bool launch_pending_{};
+      bool stop_on_entry_pending_{};
+      std::optional<std::pair<std::size_t, std::size_t>> entry_breakpoint_;
 
       auto send(const J &message) -> void
       {
@@ -284,6 +287,7 @@ namespace sagan::dap
 
       auto launch(const J &request) -> void;
       auto set_breakpoints(const J &request) -> void;
+      auto clear_entry_breakpoint() -> void;
       auto flush_queued() -> void;
       auto read_gdb() -> void;
       auto handle_gdb_response(const J &message) -> void;
@@ -320,8 +324,6 @@ namespace sagan::dap
       if (!string_field(arguments, "profile").empty() &&
           string_field(arguments, "profile") != "debug")
       { response(seq, "launch", false, {}, "Unknown Sagan debug profile"); return; }
-      if (field(arguments, "stopOnEntry").boolean().value_or(false))
-      { response(seq, "launch", false, {}, "Sagan source-level stopOnEntry is not supported yet"); return; }
       if (field(arguments, "env").fields())
       { response(seq, "launch", false, {}, "Debug environment overrides are not supported yet"); return; }
       if (const auto *args = field(arguments, "args").elements())
@@ -335,6 +337,7 @@ namespace sagan::dap
         std::scoped_lock lock(state_mutex_);
         launch_pending_ = true;
         launch_seq_ = seq;
+        stop_on_entry_pending_ = field(arguments, "stopOnEntry").boolean().value_or(false);
       }
       build_thread_ = std::thread([this, path, arguments, seq]
       {
@@ -354,20 +357,58 @@ namespace sagan::dap
                 : result->standard_error.empty() ? "Sagan debug build failed" : result->standard_error;
             throw std::runtime_error(message);
           }
+          std::optional<std::pair<std::size_t, std::size_t>> entry_breakpoint;
+          if (field(arguments, "stopOnEntry").boolean().value_or(false))
+          {
+            if (!result->debug || !result->generated)
+              throw std::runtime_error("Sagan entry breakpoint metadata is unavailable");
+            const language_service::debug_breakpoint *first = nullptr;
+            for (const auto &candidate : result->debug->breakpoints)
+              if (candidate.generated_function == "main" &&
+                  candidate.generated_begin < result->generated->text.size() &&
+                  (!first || candidate.generated_begin < first->generated_begin))
+                first = &candidate;
+            if (!first)
+              throw std::runtime_error("This Sagan program has no executable entry statement");
+            const auto prefix = std::string_view(result->generated->text).substr(0, first->generated_begin);
+            const auto line = 1 + static_cast<std::size_t>(std::count(prefix.begin(), prefix.end(), '\n'));
+            const auto newline = prefix.rfind('\n');
+            const auto column = first->generated_begin -
+                (newline == std::string_view::npos ? 0 : newline + 1) + 1;
+            entry_breakpoint = std::pair{line, column};
+          }
           {
             std::scoped_lock lock(state_mutex_);
             build_ = result;
             launch_pending_ = false;
+            entry_breakpoint_ = entry_breakpoint;
           }
           J::object native_args{{"program", path_utf8(plan->executable)},
                                 {"cwd", string_field(arguments, "cwd").empty()
                                     ? path_utf8(plan->working_directory)
                                     : string_field(arguments, "cwd")},
-                                {"stopOnEntry", field(arguments, "stopOnEntry").boolean().value_or(false)}};
+                                {"stopOnEntry", false}};
           if (const auto *args = field(arguments, "args").elements())
             native_args.emplace("args", *args);
           forward(J::object{{"seq", seq}, {"type", "request"},
                             {"command", "launch"}, {"arguments", native_args}});
+          if (entry_breakpoint)
+          {
+            const auto native_seq = next_seq_++;
+            {
+              std::scoped_lock lock(state_mutex_);
+              forwarded_.insert_or_assign(native_seq, "internalEntryBreakpoint");
+            }
+            J::array points;
+            points.emplace_back(J::object{
+                {"line", static_cast<std::int64_t>(entry_breakpoint->first)},
+                {"column", static_cast<std::int64_t>(entry_breakpoint->second)}});
+            J::object native_params{
+                {"source", J::object{{"path", path_utf8(*result->generated_source)}}},
+                {"breakpoints", points}};
+            gdb_send(J::object{{"seq", native_seq}, {"type", "request"},
+                               {"command", "setBreakpoints"}, {"arguments", native_params}});
+          }
           flush_queued();
         }
         catch (const std::exception &error)
@@ -392,6 +433,7 @@ namespace sagan::dap
           std::scoped_lock lock(state_mutex_);
           launch_pending_ = false;
           launch_seq_.reset();
+          if (!build_) stop_on_entry_pending_ = false;
         }
       });
     }
@@ -425,10 +467,15 @@ namespace sagan::dap
                                std::max<std::int64_t>(1, integer_field(item, "column"))});
         }
       const auto canonical = path_utf8(std::filesystem::absolute(path_from_utf8(source_path)).lexically_normal());
-      requested_by_file_.insert_or_assign(canonical, requested);
+      std::map<std::string, std::vector<requested_breakpoint>> all_requests;
+      {
+        std::scoped_lock lock(state_mutex_);
+        requested_by_file_.insert_or_assign(canonical, requested);
+        all_requests = requested_by_file_;
+      }
       J::array native_breakpoints;
       pending_breakpoints pending{seq, canonical, requested, {}, {}};
-      for (const auto &[file, points] : requested_by_file_)
+      for (const auto &[file, points] : all_requests)
       {
         const auto loaded = source_.read_path(path_from_utf8(file));
         for (std::size_t index = 0; index < points.size(); ++index)
@@ -447,6 +494,13 @@ namespace sagan::dap
           }
           else if (file == canonical) pending.generated_indices.push_back({});
         }
+      }
+      {
+        std::scoped_lock lock(state_mutex_);
+        if (entry_breakpoint_ && stop_on_entry_pending_)
+          native_breakpoints.emplace_back(J::object{
+              {"line", static_cast<std::int64_t>(entry_breakpoint_->first)},
+              {"column", static_cast<std::int64_t>(entry_breakpoint_->second)}});
       }
       const auto native_seq = next_seq_++;
       {
@@ -467,6 +521,47 @@ namespace sagan::dap
         queued.swap(queued_);
       }
       for (const auto &request : queued) handle(request);
+    }
+
+    auto session::clear_entry_breakpoint() -> void
+    {
+      std::shared_ptr<language_service::native_operation_result> build;
+      std::map<std::string, std::vector<requested_breakpoint>> requests;
+      {
+        std::scoped_lock lock(state_mutex_);
+        if (!entry_breakpoint_) return;
+        entry_breakpoint_.reset();
+        build = build_;
+        requests = requested_by_file_;
+      }
+      if (!build || !build->debug || !build->generated || !build->generated_source) return;
+      J::array native_breakpoints;
+      for (const auto &[file, points] : requests)
+      {
+        const auto loaded = source_.read_path(path_from_utf8(file));
+        if (!loaded) continue;
+        for (const auto &point : points)
+        {
+          if (point.line <= 0 || point.column <= 0) continue;
+          const auto mapped = map_breakpoint(*build->debug, *build->generated, *loaded.value,
+              {static_cast<std::uint32_t>(point.line - 1),
+               static_cast<std::uint32_t>(point.column - 1)});
+          if (mapped.resolved)
+            native_breakpoints.emplace_back(J::object{
+                {"line", static_cast<std::int64_t>(mapped.resolved->generated_line)},
+                {"column", static_cast<std::int64_t>(mapped.resolved->generated_column)}});
+        }
+      }
+      const auto native_seq = next_seq_++;
+      {
+        std::scoped_lock lock(state_mutex_);
+        forwarded_.insert_or_assign(native_seq, "internalEntryCleanup");
+      }
+      gdb_send(J::object{{"seq", native_seq}, {"type", "request"},
+                         {"command", "setBreakpoints"},
+                         {"arguments", J::object{
+                             {"source", J::object{{"path", path_utf8(*build->generated_source)}}},
+                             {"breakpoints", native_breakpoints}}}});
     }
 
     auto session::map_generated_location(const J &native) -> std::optional<J::object>
@@ -550,8 +645,16 @@ namespace sagan::dap
           std::scoped_lock lock(state_mutex_);
           stepping_.reset();
         }
+        if (current->stop_on_entry) clear_entry_breakpoint();
         auto output = object_copy(current->stopped_event);
-        if (!complete)
+        if (complete && current->stop_on_entry)
+        {
+          auto body = object_copy(field(current->stopped_event, "body"));
+          body.insert_or_assign("reason", "entry");
+          body.insert_or_assign("description", "Paused at the first executable Sagan statement");
+          output.insert_or_assign("body", body);
+        }
+        else if (!complete)
         {
           auto body = object_copy(field(current->stopped_event, "body"));
           body.insert_or_assign("reason", "pause");
@@ -592,6 +695,8 @@ namespace sagan::dap
         { stack_thread = it->second; stack_threads_.erase(it); }
       }
       if (forwarded_command == "internalInitialize") return;
+      if (forwarded_command == "internalEntryBreakpoint") return;
+      if (forwarded_command == "internalEntryCleanup") return;
       if (forwarded_command == "internalStepNext")
       {
         if (!field(message, "success").boolean().value_or(false))
@@ -743,12 +848,21 @@ namespace sagan::dap
             {
               std::scoped_lock lock(state_mutex_);
               stopped_thread_ = thread_id;
-              if (stepping_ && stepping_->thread_id == thread_id && reason == "step")
+              if (stop_on_entry_pending_ &&
+                  (reason == "step" || reason == "entry" || reason == "breakpoint"))
+              {
+                stop_on_entry_pending_ = false;
+                stepping_ = step_state{thread_id, {}, 0, {}, "next", 0, 0, message, true};
+                stepping = true;
+              }
+              else if (stepping_ && stepping_->thread_id == thread_id && reason == "step")
               {
                 stepping_->stopped_event = message;
                 stepping = true;
               }
               else if (reason != "step") stepping_.reset();
+              if (reason != "step" && reason != "entry" && reason != "breakpoint")
+                stop_on_entry_pending_ = false;
             }
             if (stepping)
             {

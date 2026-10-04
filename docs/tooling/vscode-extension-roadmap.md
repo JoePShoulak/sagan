@@ -130,7 +130,8 @@ for continued local extension development:
   contract. Keep `packageCompletion`, `packageNavigation`, and
   `packageAutoImport` false until their individual end-to-end gates pass.
 - Finish the experimental Debug Adapter Protocol implementation. `sagan-dap`
-  can launch programs and exercise breakpoints, mapped stacks, and source-level
+  can launch programs and exercise breakpoints, mapped stacks, source-mapped
+  stop-on-entry, and source-level
   stepping, but it still needs reliable Sagan values, runtime-failure and
   exception mapping, broader source-context and cleanup coverage, Linux
   execution validation, and release packaging of GDB and its runtime verified
