@@ -89,7 +89,8 @@ completion keeps separate, deterministically ordered candidates with explicit
 module as a namespace does not suppress its unqualified auto-import candidate.
 An exported overload set is one importable public name: completion provides
 one candidate and the safe planner accepts any overload identity in that set
-only when the public export and resulting imported binding are unique.
+only when the public export and resulting imported binding are unique. Its
+completion detail lists the distinct callable signatures in that set.
 An incomplete `import` or `from` module path also receives
 compiler-owned module suggestions
 from the local source tree and locked installed dependencies, even if the

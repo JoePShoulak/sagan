@@ -775,8 +775,23 @@ namespace sagan::language_service
           for (const auto &module : workspace_->modules())
             if (module.name == exported.module)
             {
-              const auto signature = semantic::callable_signature(module.index, target->id);
-              if (!signature.empty()) detail = signature;
+              std::vector<std::string> signatures;
+              for (const auto &overload : exported.targets)
+              {
+                const auto signature = semantic::callable_signature(module.index, overload);
+                if (!signature.empty() &&
+                    std::find(signatures.begin(), signatures.end(), signature) == signatures.end())
+                  signatures.push_back(signature);
+              }
+              if (!signatures.empty())
+              {
+                detail.clear();
+                for (const auto &signature : signatures)
+                {
+                  if (!detail.empty()) detail += " | ";
+                  detail += signature;
+                }
+              }
               break;
             }
           const auto plan = add_missing_import(document_, *workspace_, target->id);

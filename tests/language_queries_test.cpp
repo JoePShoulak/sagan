@@ -584,6 +584,8 @@ auto main() -> int
                           [](const auto &item)
                           {
                             return item.label == "answer" &&
+                                   item.detail.find("Int") != std::string::npos &&
+                                   item.detail.find("String") != std::string::npos &&
                                    item.additional_import_edits.size() == 1 &&
                                    item.additional_import_edits.front().replacement_utf8 ==
                                        "import answer from support\n";
