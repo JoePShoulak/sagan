@@ -400,11 +400,15 @@ def source_step_in_out(binary, gdb):
         unsupported = expect(lambda item: item.get("request_seq") == 11)
         assert not unsupported["success"] and "Conditional" in unsupported["message"], unsupported
         send(5, "stackTrace", {"threadId": thread_id})
-        assert expect(lambda item: item.get("request_seq") == 5)["body"]["stackFrames"][0]["line"] == 4
+        before_step = expect(lambda item: item.get("request_seq") == 5)
+        assert before_step["body"]["stackFrames"][0]["line"] == 4
         send(6, "stepIn", {"threadId": thread_id})
         assert expect(lambda item: item.get("request_seq") == 6)["success"]
         stepped_in = expect(lambda item: item.get("event") == "stopped")
         assert stepped_in["body"]["reason"] == "step", stepped_in
+        send(16, "evaluate", {"frameId": before_step["body"]["stackFrames"][0]["id"],
+                               "expression": "offset"})
+        assert not expect(lambda item: item.get("request_seq") == 16)["success"]
         send(7, "stackTrace", {"threadId": thread_id})
         inside = expect(lambda item: item.get("request_seq") == 7)["body"]["stackFrames"]
         assert inside and inside[0]["source"]["path"] == str(source) and \
@@ -537,13 +541,16 @@ def run():
             send(16, "scopes", {"frameId": stepped["body"]["stackFrames"][0]["id"]})
             stepped_scopes = expect(lambda item: item.get("request_seq") == 16)
             assert stepped_scopes["success"], stepped_scopes
-            names = []
+            observed = {}
             for scope in stepped_scopes["body"]["scopes"]:
                 send(17, "variables", {"variablesReference": scope["variablesReference"]})
                 values = expect(lambda item: item.get("request_seq") == 17)
                 assert values["success"], values
-                names.extend(value["name"] for value in values["body"]["variables"])
-            assert "offset" in names, names
+                assert all("evaluateName" not in value and "memoryReference" not in value
+                           for value in values["body"]["variables"]), values
+                observed.update({value["name"]: value["value"]
+                                 for value in values["body"]["variables"]})
+            assert observed.get("offset") == "2", observed
             send(18, "evaluate", {"frameId": stepped["body"]["stackFrames"][0]["id"],
                                    "expression": "offset", "context": "hover"})
             evaluated = expect(lambda item: item.get("request_seq") == 18)

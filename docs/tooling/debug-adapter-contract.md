@@ -60,12 +60,13 @@ does not pause on exceptions, so `debugExceptions` remains false.
 
 A direct C++ `std::shared_ptr` dereference through GDB's DAP `evaluate` was
 rejected because it invokes an overloaded operator in the debuggee. The
-experimental adapter now accepts only the exact name of a top-level scalar
-binding after its declaration has completed, in a matching source-mapped
-stack frame. It reads the generated pointer field without a debuggee call and
-returns the Sagan type; a pre-initialization function-entry probe and arbitrary
-expressions are refused. Parameters, locals, strings, collections, nested
-values, optimized builds, and general expression evaluation remain unsupported.
+experimental adapter now materializes initialized top-level scalar bindings
+in DAP `variables` and accepts their exact names in DAP `evaluate`, only in a
+matching source-mapped stack frame after each declaration has completed. It
+reads the generated pointer field without a debuggee call and returns the
+Sagan type; a pre-initialization function-entry probe and arbitrary expressions
+are refused. Parameters, locals, strings, collections, nested values,
+optimized builds, and general expression evaluation remain unsupported.
 `debugEvaluate` and `debugVariables` remain false.
 
 The Windows prototype uses GDB 16.3's native DAP interpreter behind a
