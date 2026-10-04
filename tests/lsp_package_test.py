@@ -246,6 +246,12 @@ def run():
                     publication["params"].get("version") == 2):
                 break
         assert publication["params"]["diagnostics"] == [], publication
+        entry_line = next(i for i, line in enumerate(manifest_text.splitlines())
+                          if line == 'entry = "main"')
+        send(process, {"jsonrpc": "2.0", "id": 22, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": entry_line, "character": len('entry = "ma')}}})
+        assert answer(22)[0]["uri"] == uri, "Manifest entry did not navigate to the open source"
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": manifest_uri, "version": 3},
             "contentChanges": [{"text": "[package]\nna"}],

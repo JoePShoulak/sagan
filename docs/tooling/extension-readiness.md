@@ -71,6 +71,9 @@ The remaining compiler-side milestones, in dependency order, are:
    Imported package-owned value members now have a focused library and LSP
    completion regression, including callable signatures; that is one tested
    slice, not the complete package-completion capability.
+   `sagan.toml` entry-module values now navigate to existing local source
+   modules from the active manifest snapshot. Dependency-value navigation and
+   safe manifest edits remain open.
 4. Finish the experimental Windows DAP executable using GDB native DAP,
    source maps, and debug metadata. It already has a live launch/breakpoint/
    stack and step-over/in/out probes; verify all source contexts, Sagan scopes

@@ -57,6 +57,34 @@ auto main() -> int
   require(manifest_check.state == sagan::diagnostics::result_state::complete &&
               manifest_check.value && manifest_check.value->dependencies.size() == 1,
           "In-memory manifest analysis disagreed with disk resolution");
+  const auto entry_offset = manifest_document.value->text().find("entry = \"main\"");
+  require(entry_offset != std::string_view::npos, "Manifest fixture has no entry key");
+  const auto entry_target = sagan::language_service::query_manifest_entry_target(
+      *manifest_document.value, static_cast<sagan::source::byte_offset>(entry_offset + 10), source);
+  require(entry_target.value && entry_target.value->uri ==
+              sagan::source::identity_from_path({}, "tests/fixtures/catalog/consumer-alias/src/main.sagan").uri,
+          "Manifest entry value did not navigate to its source module");
+  const auto no_key_target = sagan::language_service::query_manifest_entry_target(
+      *manifest_document.value, static_cast<sagan::source::byte_offset>(entry_offset + 2), source);
+  require(!no_key_target.value, "Manifest key was mistaken for its module value");
+  auto changed_entry = std::string(manifest_document.value->text());
+  changed_entry.replace(entry_offset, std::string_view{"entry = \"main\""}.size(),
+                        "entry = \"orbit_tools\"");
+  const sagan::source::document_snapshot changed_manifest(manifest_document.value->identity(), 21,
+                                                            changed_entry);
+  const auto changed_target = sagan::language_service::query_manifest_entry_target(
+      changed_manifest, static_cast<sagan::source::byte_offset>(changed_entry.find("orbit_tools") + 2), source);
+  require(changed_target.value && changed_target.value->uri ==
+              sagan::source::identity_from_path({}, "tests/fixtures/catalog/consumer-alias/src/orbit_tools.sagan").uri,
+          "Unsaved manifest entry edit did not navigate using the overlay");
+  auto crlf_entry = std::string(manifest_document.value->text());
+  for (std::size_t newline = 0; (newline = crlf_entry.find('\n', newline)) != std::string::npos; newline += 2)
+    crlf_entry.replace(newline, 1, "\r\n");
+  const sagan::source::document_snapshot crlf_manifest(manifest_document.value->identity(), 22, crlf_entry);
+  const auto crlf_target = sagan::language_service::query_manifest_entry_target(
+      crlf_manifest, static_cast<sagan::source::byte_offset>(crlf_entry.find("entry = \"main\"") + 10), source);
+  require(crlf_target.value && crlf_target.value->uri == entry_target.value->uri,
+          "CRLF manifest entry navigation lost its target");
   auto invalid_manifest_text = std::string(manifest_document.value->text());
   const auto invalid_line = invalid_manifest_text.find("[dependencies]");
   require(invalid_line != std::string::npos, "Manifest fixture has no dependency section");
@@ -80,6 +108,10 @@ auto main() -> int
           "Duplicate CRLF manifest key lost its source location");
   sagan::diagnostics::cancellation_source cancelled_manifest;
   cancelled_manifest.cancel();
+  require(sagan::language_service::query_manifest_entry_target(
+              *manifest_document.value, static_cast<sagan::source::byte_offset>(entry_offset + 10),
+              source, cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
+          "Cancelled manifest navigation exposed a target");
   require(sagan::language_service::analyze_manifest_document(*manifest_document.value,
               cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
           "Cancelled manifest analysis did not stop");

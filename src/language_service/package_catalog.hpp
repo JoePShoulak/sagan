@@ -51,6 +51,19 @@ namespace sagan::language_service
                                  diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<std::vector<manifest_document_symbol>>;
 
+  struct manifest_entry_target
+  {
+    source::source_range selection;
+    source::document_uri uri;
+    source::utf16_position start;
+    source::utf16_position end;
+  };
+  auto query_manifest_entry_target(const source::document_snapshot &document,
+                                   source::byte_offset offset,
+                                   const source::source_provider &provider,
+                                   diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<manifest_entry_target>;
+
   struct catalog_export
   {
     std::string symbol_id;

@@ -113,6 +113,13 @@ cancelled or stale document versions. This does not yet cover every package alia
 member, and source-unavailable navigation context, so `packageNavigation`
 remains false.
 
+For `sagan.toml`, go-to-definition on the quoted `[package] entry` value now
+opens the corresponding local source module. The compiler parses the active
+manifest buffer, so an unsaved entry change is honored; invalid manifests and
+missing source files yield no guessed target. This is a manifest-document
+navigation slice, not navigation for dependency values or available-only
+packages.
+
 The thin LSP request is `sagan/packages/catalog`:
 
 ```json

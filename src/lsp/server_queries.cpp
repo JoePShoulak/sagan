@@ -423,6 +423,20 @@ namespace sagan::lsp
     if (document.identity().canonical_path &&
         document.identity().canonical_path->filename() == "sagan.toml")
     {
+      if (method == "textDocument/definition")
+      {
+        const auto result = query_manifest_entry_target(document,
+            offset(document, field(params, "position")), *documents_, cancellation);
+        if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
+          throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        if (!result.value) return J::array{};
+        return J::array{J::object{{"uri", result.value->uri.value},
+                                  {"range", J::object{{"start", lsp_position(result.value->start)},
+                                                       {"end", lsp_position(result.value->end)}}}}};
+      }
       if (method == "textDocument/documentSymbol")
       {
         const auto result = manifest_document_symbols(document, cancellation);
