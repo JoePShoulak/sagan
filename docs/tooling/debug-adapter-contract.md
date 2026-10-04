@@ -75,7 +75,10 @@ pointer field without a debuggee call and returns the Sagan type. A
 pre-initialization function-entry probe and arbitrary expressions are refused.
 Collections, nested values, optimized builds, and general expression
 evaluation remain unsupported. String display is verified for local and
-parameter values, not yet for every string storage or lifetime context.
+parameter values with system GDB, not yet for every string storage or lifetime
+context. The extracted 4.9.2 Windows portable ZIP currently fails the same
+String-value probe with bundled GDB returning empty strings; the bundled
+runtime must pass before `debugVariables` or `debugEvaluate` can be advertised.
 `debugEvaluate` and `debugVariables` remain false.
 
 The Windows prototype uses GDB 16.3's native DAP interpreter behind a
