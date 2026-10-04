@@ -130,7 +130,10 @@ build, and run LSP requests use the separate versioned `sagan/operation`
 contract. Cross-file rename is available only for compiler-proven identity
 groups; ambiguous identities are deliberately refused. Local F2 checks lexical
 scope ancestry, so a name used only in a different function is permitted while
-same-scope and nested collisions remain blocked. Direct `bin/lsp-test` execution
+same-scope and nested collisions remain blocked. Unexported classes, faces,
+and enums can be renamed within one document when their constructor, type, and
+conformance references rebind to the same declaration; exported types still
+require workspace proof. Direct `bin/lsp-test` execution
 includes a native run request and therefore needs the native C++ toolchain on
 `PATH`; the repository test target supplies that environment.
 

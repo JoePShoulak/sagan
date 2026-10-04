@@ -359,6 +359,29 @@ def main():
             "textDocument": {"uri": independent_uri},
         }})
 
+        local_type_uri = "untitled:local-type-f2"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": local_type_uri, "languageId": "sagan", "version": 1,
+                             "text": "class Probe { new() {} }\nlet probe = Probe()\nprint(probe)\n"},
+        }})
+        opened_type = next_message(received)
+        while (opened_type.get("method") != "textDocument/publishDiagnostics" or
+               opened_type["params"]["uri"] != local_type_uri):
+            opened_type = next_message(received)
+        assert opened_type["params"]["diagnostics"] == []
+        send(process, {"jsonrpc": "2.0", "id": 10, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": local_type_uri},
+            "position": {"line": 1, "character": 13}, "newName": "Sensor",
+        }})
+        renamed_type = next_message(received)
+        while renamed_type.get("id") != 10:
+            renamed_type = next_message(received)
+        assert len(renamed_type["result"]["documentChanges"]) == 1
+        assert len(renamed_type["result"]["documentChanges"][0]["edits"]) == 2
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didClose", "params": {
+            "textDocument": {"uri": local_type_uri},
+        }})
+
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "shutdown", "params": {}})
         shutdown = next_message(received)
         while shutdown.get("id") != 4:

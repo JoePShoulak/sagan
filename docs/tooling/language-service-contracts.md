@@ -231,8 +231,10 @@ provably safe, it returns `unsupported` with a reason. Document, range, and
 on-type formatting retain exact document versions and preserve LF or CRLF.
 A lone CR is invalid Sagan source and is refused without changes.
 `rename_local` rechecks and rebinds proposed source by symbol identity; it
-supports proven local bindings, private members, and one-document,
-non-exported, non-overloaded function names. A name used in an independent
+supports proven local bindings, unexported classes/faces/enums, private members,
+and one-document, non-exported, non-overloaded function names. Type renames
+include constructor, annotation, conformance, and qualified references when
+the semantic index proves their identity. A name used in an independent
 lexical scope does not block a local rename; a same-scope or ancestor/descendant
 collision does. `rename_workspace` handles compiler-proven public exports and
 members across resolved modules, preserving independent import aliases and

@@ -417,6 +417,25 @@ auto main() -> int
           "F2 rejected an independent-scope name through the LSP transport");
   static_cast<void>(notify(service, "textDocument/didClose",
       J::object{{"textDocument", J::object{{"uri", independent_uri}}}}));
+  const std::string local_type_uri = "untitled:local-type-f2";
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", local_type_uri}, {"version", 1},
+          {"text", "class Probe { new() {} }\nlet probe = Probe()\nprint(probe)\n"}}}}));
+  const auto prepared_local_type = request(service, "textDocument/prepareRename",
+      at(local_type_uri, 1, 13));
+  require(prepared_local_type.get("placeholder") &&
+              prepared_local_type.get("placeholder")->string() == "Probe",
+          "F2 preparation rejected an unexported constructor reference");
+  const auto renamed_type = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", local_type_uri}}},
+                {"position", J::object{{"line", 1}, {"character", 13}}},
+                {"newName", "Sensor"}});
+  require(renamed_type.get("documentChanges") &&
+              renamed_type.get("documentChanges")->elements()->size() == 1 &&
+              renamed_type.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 did not rename an unexported class from its constructor reference");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", local_type_uri}}}}));
   const auto actions = request(service, "textDocument/codeAction",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"context", J::object{{"diagnostics", J::array{}}}},

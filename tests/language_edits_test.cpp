@@ -373,6 +373,57 @@ auto main() -> int
   require(parameter_rename.state == language_service::edit_state::ready &&
               parameter_rename.edits.documents.front().edits.size() == 3,
           "parameter rename failed from the declaration position");
+  const source::document_snapshot lambda_document(
+      {{source::document_id{115}, source::document_uri{"untitled:lambda-rename"}, {}}, 1,
+       "fun main(): Int {\n"
+       "let double = fun(value: Int): Int => value + value\n"
+       "return double(21)\n"
+       "}\n"});
+  const auto indexed_lambda = language_service::index_document(lambda_document);
+  require(indexed_lambda.value.has_value(), "lambda-parameter rename fixture did not index");
+  const auto lambda_use = static_cast<source::byte_offset>(
+      lambda_document.text().find("=> value") + 3);
+  const auto lambda_rename = language_service::rename_local(
+      lambda_document, indexed_lambda.value->index, lambda_use, "input");
+  require(lambda_rename.state == language_service::edit_state::ready &&
+              lambda_rename.edits.documents.front().edits.size() == 3,
+          "lambda-parameter rename did not cover its declaration and uses");
+  const source::document_snapshot local_type_document(
+      {{source::document_id{116}, source::document_uri{"untitled:local-type-rename"}, {}}, 1,
+       "class Probe { new() {} }\n"
+       "let probe = Probe()\n"
+       "print(probe)\n"});
+  const auto indexed_local_type = language_service::index_document(local_type_document);
+  require(indexed_local_type.value.has_value(), "local-type rename fixture did not index");
+  const auto type_name_use = static_cast<source::byte_offset>(
+      local_type_document.text().find("Probe()"));
+  const auto local_type_rename = language_service::rename_local(
+      local_type_document, indexed_local_type.value->index, type_name_use, "Sensor");
+  if (local_type_rename.state != language_service::edit_state::ready ||
+      local_type_rename.edits.documents.empty() ||
+      local_type_rename.edits.documents.front().edits.size() != 2)
+    throw std::runtime_error("F2 did not rename an unexported class and constructor call together: " +
+                             local_type_rename.reason);
+  const source::document_snapshot face_enum_document(
+      {{source::document_id{117}, source::document_uri{"untitled:face-enum-rename"}, {}}, 1,
+       "face Named { fun name(): String }\n"
+       "class Probe has Named { fun name(): String => \"probe\" }\n"
+       "enum Signal { nominal }\n"
+       "let status = Signal.nominal\n"});
+  const auto indexed_face_enum = language_service::index_document(face_enum_document);
+  require(indexed_face_enum.value.has_value(), "face/enum rename fixture did not index");
+  const auto face_rename = language_service::rename_local(
+      face_enum_document, indexed_face_enum.value->index,
+      static_cast<source::byte_offset>(face_enum_document.text().find("has Named") + 4), "Identified");
+  require(face_rename.state == language_service::edit_state::ready &&
+              face_rename.edits.documents.front().edits.size() == 2,
+          "F2 did not rename an unexported face and conformance reference together");
+  const auto enum_rename = language_service::rename_local(
+      face_enum_document, indexed_face_enum.value->index,
+      static_cast<source::byte_offset>(face_enum_document.text().find("Signal.nominal")), "Beacon");
+  require(enum_rename.state == language_service::edit_state::ready &&
+              enum_rename.edits.documents.front().edits.size() == 2,
+          "F2 did not rename an unexported enum and qualified reference together");
   const source::document_snapshot loop_document(
       {{source::document_id{109}, source::document_uri{"untitled:loop-rename"}, {}}, 1,
        "fun main(): Int {\n"
@@ -662,6 +713,25 @@ auto main() -> int
                        entry.text.find("sensor.measure()") != std::string::npos;
               }),
           "F2 did not rename a public method through annotated and inferred imported receivers");
+  const auto class_rename = language_service::rename_workspace(
+      *vehicle_document.value, vehicle_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(vehicle_document.value->text().find("Probe")), "Sensor");
+  const auto class_reference_rename = language_service::rename_workspace(
+      *member_main_document.value, member_main_module->index, member_workspace, disk,
+      static_cast<source::byte_offset>(member_main_document.value->text().find("Probe()")), "Sensor");
+  const auto class_preview = language_service::preview_edits(class_rename.edits,
+                                                              member_document_views);
+  require(class_rename.state == language_service::edit_state::ready &&
+              class_reference_rename.state == language_service::edit_state::ready &&
+              class_reference_rename.edits.documents.size() == class_rename.edits.documents.size() &&
+              class_preview.state == language_service::edit_state::ready &&
+              std::any_of(class_preview.documents.begin(), class_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("class Sensor") != std::string::npos &&
+                       entry.text.find("export Sensor") != std::string::npos; }) &&
+              std::any_of(class_preview.documents.begin(), class_preview.documents.end(), [](const auto &entry)
+              { return entry.text.find("import Sensor from vehicle") != std::string::npos &&
+                       entry.text.find("Sensor()") != std::string::npos; }),
+          "F2 did not rename an exported class and constructor references together");
   const auto field_rename = language_service::rename_workspace(
       *vehicle_document.value, vehicle_module->index, member_workspace, disk,
       static_cast<source::byte_offset>(vehicle_document.value->text().find("reading")), "value");
