@@ -106,6 +106,7 @@ class LagrangeBodyState {
   let .reference_x_value: Float64
   let .reference_y_value: Float64
   let .escaped_value: Bool
+  let .stopped_value: Bool
 
   new(seed: LagrangeBodySeed) {
     self.identity_value = seed.identity()
@@ -114,6 +115,12 @@ class LagrangeBodyState {
     self.reference_x_value = seed.reference_x()
     self.reference_y_value = seed.reference_y()
     self.escaped_value = false
+    self.stopped_value = false
+  }
+
+  fun stop!(): Void {
+    assert(self.escaped_value, "only an escaped tertiary may be stopped")
+    self.stopped_value = true
   }
 
   fun .acceleration(position: Point2<Float64, meter>,
@@ -141,6 +148,7 @@ class LagrangeBodyState {
   fun advance!(old_primary: BodySnapshot, old_secondary: BodySnapshot,
                new_primary: BodySnapshot, new_secondary: BodySnapshot,
                step_duration: Float64<second>): Void {
+    if self.stopped_value { return }
     let old_acceleration = self.acceleration(self.position_value,
                                              old_primary, old_secondary)
     let half_step_squared = 0.5 * step_duration * step_duration
@@ -244,6 +252,32 @@ class RestrictedThreeBodySolver {
 
   fun snapshot(): RestrictedThreeBodySnapshot =>
     self.snapshot_for(self.primary_solver.snapshot())
+
+  /// Permanently stop integrating one escaped tertiary body.
+  fun stop_tertiary!(index: Int64): Void {
+    if index == 0 {
+      self.first.stop!()
+      return
+    }
+    if index == 1 {
+      self.second.stop!()
+      return
+    }
+    if index == 2 {
+      self.third.stop!()
+      return
+    }
+    if index == 3 {
+      self.fourth.stop!()
+      return
+    }
+    if index == 4 {
+      self.fifth.stop!()
+      return
+    }
+    assert(index == 5, "tertiary index must be between 0 and 5")
+    self.sixth.stop!()
+  }
 
   fun step!(): RestrictedThreeBodySnapshot {
     let old_primary_system = self.primary_solver.snapshot()

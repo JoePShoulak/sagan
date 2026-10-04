@@ -133,3 +133,13 @@ while escape_step < 10 {
 assert(escape_snapshot.tertiary(0).escaped(),
        "outbound positive-energy tertiary should be detected as escaped")
 print("escape_detection ${stability_result(escape_snapshot.tertiary(0))}")
+let stopped_position = escape_snapshot.tertiary(0).position()
+escape_solver.stop_tertiary!(0)
+let stopped_step = 0
+while stopped_step < 10 {
+  escape_snapshot = escape_solver.step!()
+  stopped_step++
+}
+assert(escape_snapshot.tertiary(0).position() == stopped_position,
+       "stopped escaped tertiary must no longer be integrated")
+print("stopped_escape_position ${escape_snapshot.tertiary(0).position()}")
