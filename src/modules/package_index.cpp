@@ -140,7 +140,7 @@ namespace modules
     return result;
   }
 
-  auto resolve_indexed_dependencies(const std::filesystem::path &project_manifest,
+  auto resolve_indexed_dependencies(const package_manifest &project_manifest,
                                     const std::filesystem::path &index_path,
                                     const std::string_view compiler_version,
                                     const std::filesystem::path &lock_path)
@@ -181,7 +181,6 @@ namespace modules
     std::set<std::string> visiting;
     try
     {
-      const auto root = load_package(project_manifest);
       std::function<void(const std::string &, const std::string &)> select;
       select = [&](const std::string &name, const std::string &requirement)
       {
@@ -229,7 +228,7 @@ namespace modules
         visiting.erase(name);
         selected.emplace(name, *candidate);
       };
-      for (const auto &dependency : root.dependencies)
+      for (const auto &dependency : project_manifest.dependencies)
         select(dependency.name, dependency.requirement);
       if (locked && pinned.size() != selected.size())
       { result.state = dependency_state::invalid_lock; throw std::runtime_error("Lockfile has unused package rows"); }
@@ -249,5 +248,22 @@ namespace modules
       result.lock_text += name + '\t' + package.version + '\n';
     }
     return result;
+  }
+
+  auto resolve_indexed_dependencies(const std::filesystem::path &project_manifest,
+                                    const std::filesystem::path &index_path,
+                                    const std::string_view compiler_version,
+                                    const std::filesystem::path &lock_path)
+    -> dependency_resolution
+  {
+    try
+    {
+      return resolve_indexed_dependencies(load_package(project_manifest), index_path,
+                                          compiler_version, lock_path);
+    }
+    catch (const std::exception &error)
+    {
+      return {dependency_state::invalid_index, error.what(), {}, {}};
+    }
   }
 }

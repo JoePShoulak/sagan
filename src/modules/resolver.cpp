@@ -73,7 +73,7 @@ namespace modules
       const auto version = options.compiler_version.empty() ? compiler_numeric_version() : options.compiler_version;
       const auto lock = options.lock_path.empty() ? manifest.package_root / "sagan.lock" : options.lock_path;
       const auto selected = resolve_indexed_dependencies(
-          manifest.manifest_path, index_path, version, lock);
+          manifest, index_path, version, lock);
       if (selected.state != dependency_state::ready)
         throw std::runtime_error("Could not resolve package dependencies using '" +
                                  index_path.string() + "': " + selected.message);
@@ -844,6 +844,17 @@ namespace modules
     if (manifest_path.filename() != "sagan.toml")
       throw std::runtime_error("Package path must name sagan.toml");
     return manifest_from_text(manifest_path, text);
+  }
+
+  auto installed_package_for_dependency(const package_manifest &project,
+                                        const std::string_view package_name,
+                                        const package_resolution_options &options)
+    -> std::optional<package_manifest>
+  {
+    const auto installed = installed_dependencies(project, options);
+    const auto found = installed.find(std::string(package_name));
+    if (found == installed.end()) return {};
+    return found->second;
   }
 
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>

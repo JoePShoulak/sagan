@@ -252,6 +252,14 @@ def run():
                        "params": {"textDocument": {"uri": manifest_uri},
                                   "position": {"line": entry_line, "character": len('entry = "ma')}}})
         assert answer(22)[0]["uri"] == uri, "Manifest entry did not navigate to the open source"
+        dependency_line = next(i for i, line in enumerate(manifest_text.splitlines())
+                               if line.startswith("orbit_tools ="))
+        send(process, {"jsonrpc": "2.0", "id": 23, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": dependency_line, "character": 2}}})
+        dependency_definition = answer(23)
+        assert dependency_definition and dependency_definition[0]["uri"] == server_file_uri(
+            installed.parent.parent / "sagan.toml"), dependency_definition
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": manifest_uri, "version": 3},
             "contentChanges": [{"text": "[package]\nna"}],

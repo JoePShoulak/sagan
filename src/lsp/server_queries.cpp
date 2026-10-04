@@ -425,8 +425,11 @@ namespace sagan::lsp
     {
       if (method == "textDocument/definition")
       {
-        const auto result = query_manifest_entry_target(document,
+        auto result = query_manifest_entry_target(document,
             offset(document, field(params, "position")), *documents_, cancellation);
+        if (!result.value && result.state != diagnostics::result_state::cancelled)
+          result = query_manifest_dependency_target(document,
+              offset(document, field(params, "position")), *documents_, cancellation);
         if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
           throw request_cancelled{};
         const auto current = documents_->read(uri);

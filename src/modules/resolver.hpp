@@ -113,6 +113,10 @@ namespace modules
   // Validate an editor overlay with the same parser used for on-disk packages.
   auto parse_package_manifest(const std::filesystem::path &manifest_path,
                               std::string_view text) -> package_manifest;
+  auto installed_package_for_dependency(const package_manifest &project,
+                                        std::string_view package_name,
+                                        const package_resolution_options &options = {})
+    -> std::optional<package_manifest>;
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>;
   struct importable_module_source
   {

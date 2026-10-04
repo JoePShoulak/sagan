@@ -433,6 +433,106 @@ namespace sagan::language_service
     return {diagnostics::result_state::complete, {}, {}, version};
   }
 
+  auto query_manifest_dependency_target(const source::document_snapshot &document,
+                                        const source::byte_offset offset,
+                                        const source::source_provider &provider,
+                                        const diagnostics::cancellation_token cancellation,
+                                        const modules::package_resolution_options &options)
+    -> diagnostics::analysis_result<manifest_entry_target>
+  {
+    const auto version = document.version();
+    if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+    if (!document.identity().canonical_path ||
+        document.identity().canonical_path->filename() != "sagan.toml" ||
+        !document.to_utf16(offset))
+      return {diagnostics::result_state::incomplete, {}, {}, version};
+    const auto manifest = analyze_manifest_document(document, cancellation);
+    if (manifest.state == diagnostics::result_state::cancelled)
+      return {diagnostics::result_state::cancelled, {}, {}, version};
+    if (!manifest.value) return {diagnostics::result_state::complete, {}, {}, version};
+    const auto text = document.text();
+    std::string_view section;
+    std::size_t line_begin = 0;
+    while (line_begin < text.size())
+    {
+      if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+      const auto ending = text.find_first_of("\r\n", line_begin);
+      const auto line_end = ending == std::string_view::npos ? text.size() : ending;
+      const auto line = text.substr(line_begin, line_end - line_begin);
+      const auto first = line.find_first_not_of(" \t");
+      if (first != std::string_view::npos && line[first] != '#')
+      {
+        if (line[first] == '[')
+        {
+          const auto close = line.find(']', first + 1);
+          section = close == std::string_view::npos ? std::string_view{} :
+                    line.substr(first + 1, close - first - 1);
+        }
+        else if (section == "dependencies")
+        {
+          const auto equals = line.find('=', first);
+          if (equals != std::string_view::npos)
+          {
+            auto key_end = equals;
+            while (key_end > first && (line[key_end - 1] == ' ' || line[key_end - 1] == '\t')) --key_end;
+            const auto alias = line.substr(first, key_end - first);
+            const auto dependency = std::find_if(manifest.value->dependencies.begin(),
+                manifest.value->dependencies.end(), [&](const auto &item) { return item.alias == alias; });
+            if (dependency != manifest.value->dependencies.end())
+            {
+              std::size_t selected_begin = line_begin + first;
+              std::size_t selected_end = line_begin + key_end;
+              bool selected = selected_begin <= offset && offset < selected_end;
+              const auto package_key = line.find("package", equals + 1);
+              if (!selected && package_key != std::string_view::npos)
+              {
+                const auto name_equals = line.find('=', package_key + 7);
+                const auto open = name_equals == std::string_view::npos ? name_equals :
+                                  line.find('"', name_equals + 1);
+                const auto close = open == std::string_view::npos ? open : line.find('"', open + 1);
+                if (close != std::string_view::npos &&
+                    line.substr(open + 1, close - open - 1) == dependency->name)
+                {
+                  selected_begin = line_begin + open + 1;
+                  selected_end = line_begin + close;
+                  selected = selected_begin <= offset && offset < selected_end;
+                }
+              }
+              if (selected)
+              {
+                try
+                {
+                  const auto installed = modules::installed_package_for_dependency(
+                      *manifest.value, dependency->name, options);
+                  if (cancellation.is_cancelled())
+                    return {diagnostics::result_state::cancelled, {}, {}, version};
+                  if (!installed) return {diagnostics::result_state::complete, {}, {}, version};
+                  const auto target = provider.read_path(installed->manifest_path);
+                  if (!target) return {diagnostics::result_state::complete, {}, {}, version};
+                  return {diagnostics::result_state::complete,
+                          manifest_entry_target{{document.identity().id,
+                                                 {static_cast<source::byte_offset>(selected_begin),
+                                                  static_cast<source::byte_offset>(selected_end)}},
+                                                target.value->identity().uri, {0, 0}, {0, 0}}, {}, version};
+                }
+                catch (const std::exception &)
+                {
+                  if (cancellation.is_cancelled())
+                    return {diagnostics::result_state::cancelled, {}, {}, version};
+                  return {diagnostics::result_state::complete, {}, {}, version};
+                }
+              }
+            }
+          }
+        }
+      }
+      if (ending == std::string_view::npos) break;
+      line_begin = ending + (text[ending] == '\r' && ending + 1 < text.size() &&
+                             text[ending + 1] == '\n' ? 2 : 1);
+    }
+    return {diagnostics::result_state::complete, {}, {}, version};
+  }
+
   auto query_import_modules(const source::document_snapshot &document,
                             const source::byte_offset offset,
                             const diagnostics::cancellation_token cancellation,

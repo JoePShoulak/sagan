@@ -85,6 +85,33 @@ auto main() -> int
       crlf_manifest, static_cast<sagan::source::byte_offset>(crlf_entry.find("entry = \"main\"") + 10), source);
   require(crlf_target.value && crlf_target.value->uri == entry_target.value->uri,
           "CRLF manifest entry navigation lost its target");
+  const auto dependency_alias = manifest_document.value->text().find("orbit_tools =");
+  const auto dependency_name = manifest_document.value->text().find("orbit-tools");
+  require(dependency_alias != std::string_view::npos && dependency_name != std::string_view::npos,
+          "Manifest fixture has no aliased dependency");
+  const modules::package_resolution_options manifest_options{
+      "tests/fixtures/catalog/current-index.tsv", "2.1.0",
+      "tests/fixtures/catalog/consumer-alias/sagan.lock"};
+  const auto dependency_target = sagan::language_service::query_manifest_dependency_target(
+      *manifest_document.value, static_cast<sagan::source::byte_offset>(dependency_alias + 2),
+      source, {}, manifest_options);
+  const auto package_name_target = sagan::language_service::query_manifest_dependency_target(
+      *manifest_document.value, static_cast<sagan::source::byte_offset>(dependency_name + 2),
+      source, {}, manifest_options);
+  const auto installed_manifest_uri = sagan::source::identity_from_path(
+      {}, "tests/fixtures/catalog/orbit-tools/sagan.toml").uri;
+  require(dependency_target.value && dependency_target.value->uri == installed_manifest_uri &&
+              package_name_target.value && package_name_target.value->uri == installed_manifest_uri,
+          "Locked dependency alias and package name did not navigate to installed manifest");
+  auto renamed_dependency = std::string(manifest_document.value->text());
+  renamed_dependency.replace(dependency_alias, std::string_view{"orbit_tools"}.size(), "orbit_library");
+  const sagan::source::document_snapshot renamed_manifest(manifest_document.value->identity(), 23,
+                                                            renamed_dependency);
+  const auto renamed_target = sagan::language_service::query_manifest_dependency_target(
+      renamed_manifest, static_cast<sagan::source::byte_offset>(dependency_alias + 2),
+      source, {}, manifest_options);
+  require(renamed_target.value && renamed_target.value->uri == installed_manifest_uri,
+          "Unsaved dependency alias edit did not retain locked package navigation");
   auto invalid_manifest_text = std::string(manifest_document.value->text());
   const auto invalid_line = invalid_manifest_text.find("[dependencies]");
   require(invalid_line != std::string::npos, "Manifest fixture has no dependency section");
@@ -112,6 +139,11 @@ auto main() -> int
               *manifest_document.value, static_cast<sagan::source::byte_offset>(entry_offset + 10),
               source, cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
           "Cancelled manifest navigation exposed a target");
+  require(sagan::language_service::query_manifest_dependency_target(
+              *manifest_document.value, static_cast<sagan::source::byte_offset>(dependency_alias + 2),
+              source, cancelled_manifest.token(), manifest_options).state ==
+              sagan::diagnostics::result_state::cancelled,
+          "Cancelled dependency navigation exposed a target");
   require(sagan::language_service::analyze_manifest_document(*manifest_document.value,
               cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
           "Cancelled manifest analysis did not stop");

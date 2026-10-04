@@ -63,6 +63,12 @@ namespace sagan::language_service
                                    const source::source_provider &provider,
                                    diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<manifest_entry_target>;
+  auto query_manifest_dependency_target(const source::document_snapshot &document,
+                                        source::byte_offset offset,
+                                        const source::source_provider &provider,
+                                        diagnostics::cancellation_token cancellation = {},
+                                        const modules::package_resolution_options &options = {})
+    -> diagnostics::analysis_result<manifest_entry_target>;
 
   struct catalog_export
   {

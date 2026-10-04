@@ -117,8 +117,15 @@ For `sagan.toml`, go-to-definition on the quoted `[package] entry` value now
 opens the corresponding local source module. The compiler parses the active
 manifest buffer, so an unsaved entry change is honored; invalid manifests and
 missing source files yield no guessed target. This is a manifest-document
-navigation slice, not navigation for dependency values or available-only
-packages.
+navigation slice, not navigation for available-only packages.
+
+Go-to-definition on a `[dependencies]` alias or its quoted inline-table
+`package` name also opens the exact installed package manifest selected by the
+project's lockfile and compiler compatibility rules. This uses the active
+unsaved manifest text through the same offline resolver; unavailable,
+incompatible, or unresolved dependencies produce no fictitious location.
+The lockfile itself is read from disk in this slice, and dependency-value
+completion is still unfinished.
 
 The thin LSP request is `sagan/packages/catalog`:
 
