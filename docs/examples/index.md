@@ -151,11 +151,59 @@ Expected output:
 --8<-- "docs/examples/executable/fibonacci.stdout"
 ```
 
-The [composition example](executable/composition.sagan) demonstrates a face
-requirement, a face default that calls that requirement through `self`, explicit
-class conformance, a mutating method, conversion to a face value, and shared
-reference identity. Its adjacent `.stdout` file is checked with the rest of the
-documentation examples.
+The classes-and-faces learning path uses four complete programs. Read them in
+this order:
+
+1. [Class state and methods](executable/class_fuel_tank.sagan) demonstrates
+   construction, private storage, observation, and mutation without a face.
+2. [One face contract](executable/face_contract.sagan) demonstrates explicit
+   class conformance and a function that accepts the face instead of the class.
+3. [Composed faces](executable/face_composition.sagan) demonstrates transitive
+   requirements and a default method that dispatches to the class.
+4. [Shared face identity](executable/composition.sagan) demonstrates conversion
+   to a face value and mutation observed through that shared view.
+
+The [Classes and faces tour](../tour/classes-and-interfaces.md) walks through
+the programs and explains how each class and face interacts. Every adjacent
+`.stdout` file is checked with the rest of the executable documentation.
+
+### Class state and methods
+
+```sagan
+--8<-- "docs/examples/executable/class_fuel_tank.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/class_fuel_tank.stdout"
+```
+
+### One face contract
+
+```sagan
+--8<-- "docs/examples/executable/face_contract.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/face_contract.stdout"
+```
+
+### Composed faces
+
+```sagan
+--8<-- "docs/examples/executable/face_composition.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/face_composition.stdout"
+```
+
+### Shared face identity
 
 ```sagan
 --8<-- "docs/examples/executable/composition.sagan"

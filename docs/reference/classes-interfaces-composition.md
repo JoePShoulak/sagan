@@ -19,6 +19,10 @@ This is the primary reuse and polymorphism model. There is no class inheritance,
 superclass state, superclass constructor, or implicit conformance based only on
 matching method names.
 
+For a guided introduction using only complete, runnable programs, begin with
+the [Classes and faces tour](../tour/classes-and-interfaces.md). This page is the
+compact rules reference.
+
 ## The basic model
 
 `face` and `class` are top-level declarations. A face contains required method
@@ -158,8 +162,9 @@ implementation. Mutating the object through one reference is visible through
 the other. Face conversion does not copy, slice, or wrap the object as an
 independent value.
 
-The runnable [composition example](../examples/executable/composition.sagan)
-demonstrates default dispatch and shared identity, and its expected output is
+The runnable [classes-and-faces examples](../examples/index.md#executable-documentation-examples)
+separate class storage, basic conformance, transitive composition, default
+dispatch, and shared identity into focused programs. Their expected output is
 checked during every documentation build.
 
 ## Generic classes and faces

@@ -1,5 +1,5 @@
 ---
-title: Classes and interfaces
+title: Classes and faces
 status: work-in-progress
 publication_ready: false
 verified_in: null
@@ -7,92 +7,177 @@ verified_on: null
 verified_by: null
 ---
 
-# Classes and interfaces
-Sagan favors small, composable interfaces over inheritance hierarchies. An
-interface describes behavior without choosing how it is stored. Sagan calls an
-interface a `face`; `class` introduces stored objects. `is` and `has` are
-interchangeable words for declaring that a class or face provides other faces.
+# Classes and faces
 
-The important idea is dependency direction: code asks for the smallest face it
-needs, while a class can assemble several faces into one concrete object. This
-makes behavior reusable without forcing unrelated objects into one family tree.
-It also makes dependencies and test substitutes easier to see: a function that
-accepts `Renderable` does not need to know whether the value is a spacecraft,
-plot, or future simulation view.
+Sagan calls an interface a **face**. The two declarations have different jobs:
 
-```sagan
-face Renderable {
-  fun render()
-}
+- a `class` creates a concrete kind of object, stores its data, and implements
+  its behavior;
+- a `face` names a set of methods that an object promises to provide; and
+- `is` or `has` on a class explicitly declares that the class fulfills one or
+  more faces.
 
-face Spacecraft is Renderable, Movable {
-  fun trajectory(): Vector
-}
+A face does not create an object, add fields, or supply hidden state. It lets a
+function say, “I can work with any object that provides this behavior,” without
+depending on one particular class.
 
-class ExplorerShip has Spacecraft {
-  let .name: String
+The examples below are complete programs. Every referenced type and method is
+declared in the example, every program produces useful output, and every output
+is checked during the documentation build.
 
-  new(name: String) {
-    self.name = name
-  }
+Build the compiler once from the repository root before running them:
 
-  fun render() {
-    self.renderer.draw(self)
-  }
-
-  fun .calculate_internal_state(): Vector {
-    return self.position + self.velocity
-  }
-}
-
-enum GuidanceStatus {
-  waiting
-  ready
-  failed
-}
+```bash
+make all
 ```
 
-A `face` contains method signatures or
-block-bodied default methods. A `class` contains `let` fields and block-bodied
-methods. `is` and `has` introduce interchangeable comma-separated composition
-lists on faces and classes. `self` parses as the current-object expression, and
-a leading dot marks a private class method in the AST. Simple enums contain
-identifier members separated by newlines or commas. Their nominal values use
-`EnumName.member` and can be compared, matched, interpolated, and printed.
+## 1. A class without a face
 
-The initial native class subset checks typed fields and methods, supports field
-defaults, typed `new(...)` constructors and checked `ClassName(...)` construction,
-types `self`, and executes
-field reads, mutation, and method calls. Methods may use a trailing `!` naming
-convention to identify a mutating alternative. Leading-dot methods are private
-to their declaring class and may be called by its other methods; outside calls
-are rejected. Constructor overload selection uses the same lossless argument
-compatibility rules as function calls, and every non-defaulted field must be
-assigned on every constructor path. Constructors cannot return. Payload-bearing
-enums and explicit signed `Int64` enum values construct and execute. Faces
-participate in semantic checking: a class using either `is` or `has` must satisfy
-every required method with an exact class implementation or default. This is
-structural conformance attached to an explicit
-declaration, not superclass inheritance. Unambiguous default methods are
-composed into the class and may call other face requirements through `self`.
-An exact class method overrides a default; competing defaults require an
-explicit override. Faces may compose other faces transitively; requirements and
-defaults flow through the chain, and cycles are rejected. Face-typed values and
-dynamic dispatch execute through shared reference-counted objects. A class may
-convert only to a face named by its declared transitive composition; matching
-method shapes without declared conformance are insufficient. Leading-dot fields
-and methods are accessible only from within their declaring class.
+Start with a class by itself. `FuelTank` owns a private `fuel` field. Its
+constructor initializes that field, `remaining()` reads it, and `burn!()`
+changes it.
 
-Weak class fields use `weak let`, start empty, accept a strong class or face
-value, and return `Optional<T>` when read. Use them to break ownership cycles;
-expired targets read as `None`.
+```sagan
+--8<-- "docs/examples/executable/class_fuel_tank.sagan"
+```
 
-All-strong reference cycles are not collected automatically; use `weak let` for
-the back edge of an ownership relationship. Borrowing and implementation
-inheritance are outside the 1.0 language.
+Expected output:
 
-Continue to the full
-[classes, interfaces, and composition reference](../reference/classes-interfaces-composition.md)
-for constructors, privacy, defaults and conflicts, transitive and generic
-composition, face-valued dispatch, ownership, tooling support, and the
-compatibility implications of changing a face.
+```text
+--8<-- "docs/examples/executable/class_fuel_tank.stdout"
+```
+
+Run it from the repository root:
+
+```bash
+bin/sagan docs/examples/executable/class_fuel_tank.sagan
+```
+
+This program needs no face because no code needs to accept multiple kinds of
+fuel-holding object. The class alone provides storage, construction, and
+methods.
+
+## 2. A class fulfilling one face
+
+`Named` declares one requirement: anything used as `Named` must provide
+`name(): String`. `Probe` explicitly adopts that contract with `is Named` and
+implements the required method.
+
+```sagan
+--8<-- "docs/examples/executable/face_contract.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/face_contract.stdout"
+```
+
+```bash
+bin/sagan docs/examples/executable/face_contract.sagan
+```
+
+The important interaction happens at `report_name(probe)`. The function accepts
+`Named`, not `Probe`, so it can call only behavior promised by `Named`. Passing
+`probe` is valid because `Probe is Named` and supplies the exact required
+method. A different class could also be passed if it explicitly adopted and
+fulfilled `Named`.
+
+Merely writing a `name()` method is not enough. Sagan requires the class to
+declare conformance with `is Named` or `has Named`.
+
+## 3. A face composed from other faces
+
+Faces can build larger contracts from smaller ones. This example declares
+every name it uses: `Named` requires a name, `Powered` requires a power level,
+and `Spacecraft` composes both faces.
+
+```sagan
+--8<-- "docs/examples/executable/face_composition.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/face_composition.stdout"
+```
+
+```bash
+bin/sagan docs/examples/executable/face_composition.sagan
+```
+
+The relationship is:
+
+```text
+Named ---------\
+                > Spacecraft <----- ExplorerShip
+Powered -------/
+```
+
+Because `ExplorerShip is Spacecraft`, it must satisfy the requirements inherited
+from both `Named` and `Powered`. Its `name()` and `power()` methods do that.
+
+`Spacecraft.status()` is a **default method**: the face supplies its body. The
+default can call `self.name()` and `self.power()` because those methods are
+requirements of the composed contract. At runtime, those calls dispatch to the
+methods implemented by `ExplorerShip`.
+
+`report_status()` depends only on `Spacecraft`. It does not need to know how an
+`ExplorerShip` stores its name or power level.
+
+## 4. A face view shares the class object
+
+A class value can be assigned to a face-typed variable when the class explicitly
+fulfills that face. The two variables refer to the same object; converting to a
+face does not copy the object.
+
+```sagan
+--8<-- "docs/examples/executable/composition.sagan"
+```
+
+Expected output:
+
+```text
+--8<-- "docs/examples/executable/composition.stdout"
+```
+
+```bash
+bin/sagan docs/examples/executable/composition.sagan
+```
+
+Here, `counter` has the concrete type `MissionCounter`, while `view` has the
+face type `Counter`. `view.describe()` uses the face's default method, which
+dispatches `self.value()` to `MissionCounter.value()`.
+
+After `counter.increment!()` mutates the class object, calling
+`view.describe()` observes the new value. Both variables share one object and
+one identity.
+
+## `is` and `has`
+
+`is` and `has` have identical language semantics. Either introduces a
+comma-separated list of faces on a class or another face. Replacing
+`ExplorerShip is Spacecraft` with `ExplorerShip has Spacecraft` in the complete
+composition example above would not change the program. The spelling can
+express how the declaration reads to the author, but it does not change
+storage, ownership, dispatch, or substitutability.
+
+## Rules to remember
+
+- Faces declare methods, not stored fields.
+- A method without a body is a requirement.
+- A method with a body is a default implementation.
+- A class must explicitly name every face it adopts, directly or transitively.
+- The class must implement every requirement not supplied by an unambiguous
+  default.
+- A class method overrides a face default with the same signature.
+- Competing defaults require the class to provide an explicit override.
+- Face composition is not class inheritance: no class fields, constructors, or
+  implementation state are inherited from another class.
+- A face-typed variable refers to the same reference-counted object as the
+  concrete class value.
+
+Continue to the
+[classes, faces, and composition reference](../reference/classes-interfaces-composition.md)
+for constructors, privacy, generic faces, default conflicts, ownership, weak
+fields, and the precise conformance rules.
