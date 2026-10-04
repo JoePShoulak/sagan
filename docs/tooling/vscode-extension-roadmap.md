@@ -112,9 +112,10 @@ for continued local extension development:
 ## Compiler- or protocol-blocked goals
 
 - Complete the compiler-owned `sagan.toml` document service. Unsaved-buffer
-  validation and versioned diagnostics now use the build parser; section and
-  package/application key completion have compiler-owned replacement edits.
-  Hover, navigation, document symbols, formatting, safe quick fixes, and
+  validation and versioned diagnostics now use the build parser; section,
+  package/application key, and application-mode value completion have
+  compiler-owned replacement edits. Recognized sections and keys have hover
+  explanations. Navigation, document symbols, formatting, safe quick fixes, and
   contextual dependency values remain. The extension must not reproduce
   manifest parsing or validation in TypeScript. Finish an explicit manifest
   document selector/capability and tests for required, duplicate, and unknown

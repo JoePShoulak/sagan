@@ -104,6 +104,35 @@ auto main() -> int
               section_items.value->front().edit.range.bytes == sagan::source::byte_range{1, 4} &&
               section_items.value->front().edit.replacement_utf8 == "package]",
           "Manifest section completion duplicated an existing closing bracket");
+  const std::string mode_text = "[application]\nmode = \"wi\"";
+  const sagan::source::document_snapshot mode_manifest(manifest_document.value->identity(), 11, mode_text);
+  const auto mode_start = mode_text.find("\"wi\"");
+  const auto mode_items = sagan::language_service::complete_manifest_document(
+      mode_manifest, static_cast<sagan::source::byte_offset>(mode_start + 3));
+  require(mode_items.value && mode_items.value->size() == 1 &&
+              mode_items.value->front().label == "windowed" &&
+              mode_items.value->front().edit.range.bytes ==
+                  sagan::source::byte_range{static_cast<sagan::source::byte_offset>(mode_start),
+                                            static_cast<sagan::source::byte_offset>(mode_start + 4)} &&
+              mode_items.value->front().edit.replacement_utf8 == "\"windowed\"",
+          "Application mode completion did not safely replace the quoted value");
+  const std::string commented_mode_text = "[application]\nmode = \"wi\" # note";
+  const sagan::source::document_snapshot commented_mode(manifest_document.value->identity(), 12,
+                                                          commented_mode_text);
+  const auto commented_items = sagan::language_service::complete_manifest_document(
+      commented_mode, static_cast<sagan::source::byte_offset>(commented_mode_text.find("\"wi\"") + 3));
+  require(commented_items.value && commented_items.value->empty(),
+          "Manifest completion must not replace an adjacent comment");
+  const auto mode_hover = sagan::language_service::hover_manifest_document(
+      mode_manifest, static_cast<sagan::source::byte_offset>(mode_text.find("mode") + 2));
+  require(mode_hover.value && mode_hover.value->markdown.find("console") != std::string::npos &&
+              mode_hover.value->selection.bytes == sagan::source::byte_range{14, 18},
+          "Manifest mode hover lost its compiler-owned documentation or key range");
+  const auto section_hover = sagan::language_service::hover_manifest_document(section_manifest, 2);
+  require(!section_hover.value, "Incomplete manifest section should not claim hover documentation");
+  require(sagan::language_service::hover_manifest_document(mode_manifest, 15,
+              cancelled_manifest.token()).state == sagan::diagnostics::result_state::cancelled,
+          "Cancelled manifest hover did not stop");
   const modules::package_resolution_options options{index, "2.1.0", {}};
   const auto graph = modules::resolve_package(
       "tests/fixtures/catalog/consumer-alias", source, {}, options);

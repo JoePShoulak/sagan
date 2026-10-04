@@ -30,6 +30,16 @@ namespace sagan::language_service
                                   diagnostics::cancellation_token cancellation = {})
     -> diagnostics::analysis_result<std::vector<manifest_completion_candidate>>;
 
+  struct manifest_hover_information
+  {
+    source::source_range selection;
+    std::string markdown;
+  };
+  auto hover_manifest_document(const source::document_snapshot &document,
+                               source::byte_offset offset,
+                               diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<manifest_hover_information>;
+
   struct catalog_export
   {
     std::string symbol_id;

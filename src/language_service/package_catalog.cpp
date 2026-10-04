@@ -115,11 +115,58 @@ namespace sagan::language_service
     const auto first = line.find_first_not_of(" \t");
     const auto start = line_begin + (first == std::string_view::npos ? line.size() : first);
     const auto typed = text.substr(start, offset - start);
+    const auto line_end = text.find_first_of("\r\n", offset);
+    const auto line_limit = line_end == std::string_view::npos ? text.size() : line_end;
+    if (section == "application")
+    {
+      const auto full_line = text.substr(line_begin, line_limit - line_begin);
+      const auto equals = full_line.find('=');
+      if (equals != std::string_view::npos && line_begin + equals < offset)
+      {
+        auto key = full_line.substr(0, equals);
+        const auto key_begin = key.find_first_not_of(" \t");
+        if (key_begin != std::string_view::npos) key.remove_prefix(key_begin);
+        while (!key.empty() && (key.back() == ' ' || key.back() == '\t')) key.remove_suffix(1);
+        if (key == "mode")
+        {
+          if (full_line.find('#') != std::string_view::npos)
+            return {diagnostics::result_state::complete, std::vector<manifest_completion_candidate>{}, {}, version};
+          auto value_begin = line_begin + equals + 1;
+          while (value_begin < line_limit && (text[value_begin] == ' ' || text[value_begin] == '\t'))
+            ++value_begin;
+          auto value_end = line_limit;
+          while (value_end > value_begin && (text[value_end - 1] == ' ' || text[value_end - 1] == '\t'))
+            --value_end;
+          const auto quoted = value_begin < value_end && text[value_begin] == '"';
+          if (quoted)
+          {
+            ++value_begin;
+            if (value_end > value_begin && text[value_end - 1] == '"') --value_end;
+            const auto first_closing_quote = text.find('"', value_begin);
+            if (first_closing_quote != std::string_view::npos && first_closing_quote < value_end)
+              return {diagnostics::result_state::complete, std::vector<manifest_completion_candidate>{}, {}, version};
+          }
+          if (value_begin <= offset && offset <= value_end)
+          {
+            const auto prefix = text.substr(value_begin, offset - value_begin);
+            std::vector<manifest_completion_candidate> choices;
+            for (const auto mode : modules::manifest_application_modes)
+              if (mode.starts_with(prefix))
+                choices.push_back({std::string(mode),
+                    {{document.identity().id, {static_cast<source::byte_offset>(value_begin - (quoted ? 1 : 0)),
+                                               static_cast<source::byte_offset>(value_end +
+                                                   (quoted && value_end < line_limit ? 1 : 0))}},
+                     "\"" + std::string(mode) + "\""}});
+            if (cancellation.is_cancelled())
+              return {diagnostics::result_state::cancelled, {}, {}, version};
+            return {diagnostics::result_state::complete, std::move(choices), {}, version};
+          }
+        }
+      }
+    }
     if (typed.find_first_of("=#\"'") != std::string_view::npos ||
         (typed.find_first_of(" \t") != std::string_view::npos && !typed.empty()))
       return {diagnostics::result_state::complete, std::vector<manifest_completion_candidate>{}, {}, version};
-    const auto line_end = text.find_first_of("\r\n", offset);
-    const auto line_limit = line_end == std::string_view::npos ? text.size() : line_end;
     auto replace_end = offset;
     while (replace_end < line_limit &&
            (std::isalnum(static_cast<unsigned char>(text[replace_end])) != 0 ||
@@ -159,6 +206,85 @@ namespace sagan::language_service
           add(name, {}, static_cast<source::byte_offset>(start), "[" + std::string(name) + "]");
     if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
     return {diagnostics::result_state::complete, std::move(values), {}, version};
+  }
+
+  auto hover_manifest_document(const source::document_snapshot &document,
+                               const source::byte_offset offset,
+                               const diagnostics::cancellation_token cancellation)
+    -> diagnostics::analysis_result<manifest_hover_information>
+  {
+    const auto version = document.version();
+    if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+    if (!document.identity().canonical_path ||
+        document.identity().canonical_path->filename() != "sagan.toml" ||
+        !document.to_utf16(offset))
+      return {diagnostics::result_state::incomplete, {}, {}, version};
+    const auto text = document.text();
+    const auto preceding = offset == 0 ? std::string_view::npos : text.find_last_of("\r\n", offset - 1);
+    const auto line_begin = preceding == std::string_view::npos ? 0 : preceding + 1;
+    const auto ending = text.find_first_of("\r\n", offset);
+    const auto line_end = ending == std::string_view::npos ? text.size() : ending;
+    const auto line = text.substr(line_begin, line_end - line_begin);
+    const auto first = line.find_first_not_of(" \t");
+    if (first == std::string_view::npos || line[first] == '#')
+      return {diagnostics::result_state::complete, {}, {}, version};
+    std::string_view section;
+    std::size_t scan = 0;
+    while (scan < line_begin)
+    {
+      if (cancellation.is_cancelled()) return {diagnostics::result_state::cancelled, {}, {}, version};
+      const auto end = text.find_first_of("\r\n", scan);
+      if (end == std::string_view::npos || end >= line_begin) break;
+      auto prior = text.substr(scan, end - scan);
+      const auto prior_first = prior.find_first_not_of(" \t");
+      if (prior_first != std::string_view::npos)
+      {
+        prior.remove_prefix(prior_first);
+        while (!prior.empty() && (prior.back() == ' ' || prior.back() == '\t')) prior.remove_suffix(1);
+        if (prior.starts_with('[') && prior.ends_with(']')) section = prior.substr(1, prior.size() - 2);
+      }
+      scan = end + (text[end] == '\r' && end + 1 < text.size() && text[end + 1] == '\n' ? 2 : 1);
+    }
+    const auto selected = [&](const std::size_t begin, const std::size_t end,
+                              const std::string_view explanation)
+      -> diagnostics::analysis_result<manifest_hover_information>
+    {
+      if (offset < begin || offset >= end || explanation.empty())
+        return {diagnostics::result_state::complete, {}, {}, version};
+      return {diagnostics::result_state::complete,
+              manifest_hover_information{{document.identity().id,
+                                          {static_cast<source::byte_offset>(begin),
+                                           static_cast<source::byte_offset>(end)}},
+                                         std::string(explanation)}, {}, version};
+    };
+    if (line[first] == '[')
+    {
+      const auto closing = line.find(']', first + 1);
+      if (closing == std::string_view::npos) return {diagnostics::result_state::complete, {}, {}, version};
+      const auto name = line.substr(first + 1, closing - first - 1);
+      const auto description = name == "package" ? "Package identity, version, source directory, and entry module." :
+          name == "application" ? "How a Sagan project launches as a console or windowed application." :
+          name == "dependencies" ? "External packages selected by name or import alias and pinned by sagan.lock." : "";
+      return selected(line_begin + first, line_begin + closing + 1, description);
+    }
+    const auto equals = line.find('=', first);
+    if (equals == std::string_view::npos) return {diagnostics::result_state::complete, {}, {}, version};
+    auto key_end = equals;
+    while (key_end > first && (line[key_end - 1] == ' ' || line[key_end - 1] == '\t')) --key_end;
+    const auto key = line.substr(first, key_end - first);
+    std::string_view description;
+    if (section == "package")
+    {
+      if (key == "name") description = "The package's import-safe published name.";
+      else if (key == "version") description = "The package version in MAJOR.MINOR.PATCH form.";
+      else if (key == "source") description = "Source directory inside this package root.";
+      else if (key == "entry") description = "Qualified module used as this project's entry point.";
+    }
+    else if (section == "application" && key == "mode")
+      description = "Launch mode: `console` (default) or `windowed`.";
+    else if (section == "dependencies" && !key.empty())
+      description = "Dependency name or import alias. Use a version string or a `{ package, version }` table; sagan.lock pins the selected version.";
+    return selected(line_begin + first, line_begin + key_end, description);
   }
 
   auto query_import_modules(const source::document_snapshot &document,

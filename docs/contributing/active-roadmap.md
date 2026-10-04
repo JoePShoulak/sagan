@@ -41,7 +41,8 @@ only when its own library, protocol, and integration tests pass:
    child-process cleanup, and packaged debugger dependencies. Keep attach and
    optimized-local evaluation false unless separately proven.
 3. Complete compiler-owned `sagan.toml` document tooling beyond its initial
-   overlay diagnostics and section/key completion, and remaining analysis
+   overlay diagnostics, section/key and application-mode completion, and
+   section/key hover; finish remaining analysis
    cancellation checkpoints, as described in the
    [extension roadmap](../tooling/vscode-extension-roadmap.md).
 

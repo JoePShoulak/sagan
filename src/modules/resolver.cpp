@@ -253,8 +253,8 @@ namespace modules
       if (application_values.contains("mode"))
       {
         const std::string &configured = application_values.at("mode");
-        if (configured == "windowed") mode = application_mode::windowed;
-        else if (configured != "console")
+        if (configured == manifest_application_modes[1]) mode = application_mode::windowed;
+        else if (configured != manifest_application_modes[0])
           throw std::runtime_error("Application mode must be 'console' or 'windowed'");
       }
       const auto package_root = absolute_manifest.parent_path();

@@ -240,6 +240,27 @@ def run():
                                    "end": {"line": 1, "character": 2}},
                          "newText": 'name = ""'},
         }], manifest_candidates
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 4},
+            "contentChanges": [{"text": '[application]\nmode = "wi"'}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 19, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 10}}})
+        mode_candidates = answer(19)
+        assert mode_candidates == [{
+            "label": "windowed", "kind": 14,
+            "textEdit": {"range": {"start": {"line": 1, "character": 7},
+                                   "end": {"line": 1, "character": 11}},
+                         "newText": '"windowed"'},
+        }], mode_candidates
+        send(process, {"jsonrpc": "2.0", "id": 20, "method": "textDocument/hover",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 2}}})
+        mode_hover = answer(20)
+        assert "windowed" in mode_hover["contents"]["value"], mode_hover
+        assert mode_hover["range"] == {"start": {"line": 1, "character": 0},
+                                        "end": {"line": 1, "character": 4}}, mode_hover
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

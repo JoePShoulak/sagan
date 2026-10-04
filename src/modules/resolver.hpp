@@ -7,7 +7,6 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -23,6 +22,8 @@ namespace modules
   inline constexpr std::array<std::string_view, 4> manifest_package_keys{
       "name", "version", "source", "entry"};
   inline constexpr std::array<std::string_view, 1> manifest_application_keys{"mode"};
+  inline constexpr std::array<std::string_view, 2> manifest_application_modes{
+      "console", "windowed"};
 
   class manifest_error : public std::runtime_error
   {

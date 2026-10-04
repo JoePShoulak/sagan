@@ -423,6 +423,20 @@ namespace sagan::lsp
     if (document.identity().canonical_path &&
         document.identity().canonical_path->filename() == "sagan.toml")
     {
+      if (method == "textDocument/hover")
+      {
+        const auto result = hover_manifest_document(document,
+            offset(document, field(params, "position")), cancellation);
+        if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
+          throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        if (!result.value) return nullptr;
+        return J::object{{"contents", J::object{{"kind", "markdown"},
+                                                {"value", result.value->markdown}}},
+                         {"range", lsp_range(document, result.value->selection.bytes)}};
+      }
       if (method == "textDocument/completion")
       {
         const auto result = complete_manifest_document(document,
