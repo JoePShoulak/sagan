@@ -3453,7 +3453,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3514,7 +3514,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3540,7 +3540,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4505,8 +4505,8 @@
 
 
 <div class="admonition warning">
-<p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
+<p class="admonition-title">Experimental documentation — Needs review</p>
+<p>This page completed the primary audit but requires Zach's review. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="active-development-roadmap">Active development roadmap</h1>
 <p>This is the ordered work queue after the 2.0 release. A milestone is complete
@@ -4561,14 +4561,17 @@ language, VS Code extension, physics, rendering, holistic documentation,
 integrated workspace, and the application currently named Space Game. The
 workspace and documentation aggregators must preserve one-command development
 and one official documentation site across those boundaries.</p>
-<p>Every extracted repository must satisfy the maintainer-handoff gate and include
-a root <code>CODEX_START.md</code>: a ready-to-paste prompt for a new Codex chat that
+<p>Every extracted repository must satisfy the maintainer-handoff gate and begin
+with a root <code>CODEX_START.md</code>: a one-time prompt for a new Codex chat that
 teaches the agent both that repository and the Sagan ecosystem before work
 begins. Prompts must name the canonical files to read, dependency boundaries,
 workflow and validation commands, current compatibility metadata, and rules
 for preserving unrelated changes. A clean-chat onboarding drill must verify
 that each prompt produces an accurate repo map and safe first-step plan without
-depending on hidden conversation history.</p>
+depending on hidden conversation history.
+After that first chat reads the prompt, it deletes the tracked file through a
+reviewed PR into <code>dev</code>. <code>AGENTS.md</code>, <code>TECHNOLOGY.md</code>, <code>MAINTAINERS.md</code>, and the
+versioned maps retain the lasting onboarding and workflow knowledge.</p>
 <p>Every prompt must preserve the owner's teaching-first preference: explain what
 to code, why, and how before offering to implement it. Planning, diagnosis, and
 design discussion are not implementation authorization. Before the owner
@@ -4589,6 +4592,11 @@ versioning, issues, maintainer guidance, and new-chat onboarding; a clean
 workspace can build the locked ecosystem and Space Game; all component docs
 publish into the official Sagan site; and the owner can operate the result
 without undocumented cross-repository knowledge.</p>
+<p><strong>Post-publication status (2026-10-05):</strong> all seven public repositories exist.
+The <a href="https://github.com/Sagan-Shoulak/sagan/issues/6">cross-repository tracking issue</a>
+records remaining independent CI, workspace-lock activation, documentation
+aggregation, installed-artifact tests, clean-chat/owner drills, and reviewed
+cutover. Publication of a repository is not completion of these gates.</p>
 <h2 id="4-finish-compiler-owned-extension-contracts">4. Finish compiler-owned extension contracts</h2>
 <p>Complete these as separately testable increments; advertise each capability
 only when its own library, protocol, and integration tests pass:</p>

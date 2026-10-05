@@ -3453,7 +3453,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3505,7 +3505,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -5091,6 +5091,13 @@ actual organization permissions, component documentation aggregation, and
 owner drills are verified <em>there</em> before the repository is called independent.
 The monorepo copy and live documentation remain in service until a later
 reviewed cutover. Hosted CI cannot be a pre-creation condition.</p>
+<p>As of October 5, 2026, the intact <code>sagan</code> repository and all six split
+repositories are public in <code>Sagan-Shoulak</code>. Initial publication is complete,
+but the split repositories are not yet independently operational. CI,
+documentation aggregation, package consumption, and source retirement remain
+separate gates. The
+<a href="https://github.com/Sagan-Shoulak/sagan/blob/dev/repository-segmentation/audits/initial-split-publication-2026-10-05.md">publication audit</a>
+records the exact refs and deferred checks.</p>
 <h2 id="target-organization-and-repositories">Target organization and repositories</h2>
 <p>Move the intact existing language repository into <code>Sagan-Shoulak</code> first, after
 the transfer gate passes and before creating any split repository. This puts
@@ -5254,10 +5261,12 @@ machine-readable manifests, locks, or maintainer procedures. Architecture or
 integration changes are incomplete until the relevant <code>TECHNOLOGY.md</code> is
 updated and returned to human documentation review.</p>
 <h2 id="mandatory-new-chat-onboarding-prompt">Mandatory new-chat onboarding prompt</h2>
-<p>Every repository must contain <code>CODEX_START.md</code> at its root. This is a
-ready-to-paste prompt for starting a new Codex chat in that repository. It is
-an onboarding aid, not a replacement for <code>AGENTS.md</code>, <code>TECHNOLOGY.md</code>,
-<code>MAINTAINERS.md</code>, or canonical design documentation.</p>
+<p>Each repository begins with a root <code>CODEX_START.md</code>, a one-time ready-to-paste
+bootstrap prompt. After its first chat reads it and completes read-only
+orientation, that chat deletes the tracked file on a short-lived branch and
+opens a reviewed PR into <code>dev</code>. It must not be recreated. Future chats use
+the durable <code>AGENTS.md</code>, <code>TECHNOLOGY.md</code>, <code>MAINTAINERS.md</code>, repository maps,
+and canonical design documents; deletion must not remove essential knowledge.</p>
 <p>The prompt must instruct a new chat to begin read-only and read, in order:</p>
 <ol>
 <li>repository <code>AGENTS.md</code> and applicable nested instructions;</li>
@@ -5287,8 +5296,8 @@ an onboarding aid, not a replacement for <code>AGENTS.md</code>, <code>TECHNOLOG
 </ul>
 <p>The prompt must tell the chat not to edit, commit, push, publish, transfer,
 release, deploy, or resolve an unsettled design question during familiarization
-unless the user explicitly asks. It must require Bash-facing commands and
-preservation of unrelated changes.</p>
+except for the expressly authorized tracked-prompt removal after orientation.
+It must require Bash-facing commands and preservation of unrelated changes.</p>
 <p>After familiarization, every newly authorized Codex request that changes a
 repository must use its own short-lived branch created from current <code>dev</code>. The
 chat must test only what it changed first, diagnose and refine its work until
@@ -5307,7 +5316,14 @@ workflow as a mandatory shared clause and point to the exact commands and
 impact matrix in <code>MAINTAINERS.md</code>. Repository-specific prompts may add stricter
 requirements but may not omit or weaken this clause. The complete repository
 suite is reserved for promotion from <code>dev</code> to <code>main</code> and release preparation;
-promotion is contingent on that complete suite passing.</p>
+promotion is contingent on that complete suite passing. The workflow must
+remain in <code>AGENTS.md</code> and <code>MAINTAINERS.md</code> after the prompt is deleted.</p>
+<p>Substantive work should use a GitHub issue (reusing an existing one when it
+fits) and a linked PR into <code>dev</code>. The organization Project tracks cross-repo
+milestones; a missing Project permission is recorded in the issue rather than
+blocking safe local validation. PRs include focused test evidence, dependency
+pins, and cross-repository integration impact. These rules must survive in
+durable guidance after one-time prompt deletion.</p>
 <p>Every prompt must also state the owner's teaching-first preference. By default,
 the chat should teach the owner what to write and why through explanations,
 small decision packets, examples, pseudocode, implementation checklists,
@@ -5660,17 +5676,18 @@ indirection.</p>
 <ul>
 <li>all seven repositories exist under the intended organization;</li>
 <li>each has independent history, <code>dev</code>/<code>main</code>, protection, CI, versioning,
-  issues, releases where applicable, <code>TECHNOLOGY.md</code>, <code>MAINTAINERS.md</code>, and
-  <code>CODEX_START.md</code>;</li>
+  issues, releases where applicable, <code>AGENTS.md</code>, <code>TECHNOLOGY.md</code>, and
+  <code>MAINTAINERS.md</code>; the one-time <code>CODEX_START.md</code> has been tested and removed
+  through a reviewed onboarding PR;</li>
 <li>each technology overview accurately explains the repository's moving parts
   and its conceptual place in the locked ecosystem without depending on chat
   history;</li>
 <li>all maintainer and clean-chat onboarding drills pass;</li>
-<li>every repository prompt and maintainer guide enforce and demonstrate the
+<li>every repository's durable guidance enforces and demonstrates the
   request-branch, focused-test, merge-to-<code>dev</code>, repeat-relevant-tests cycle and
   the full-suite-before-<code>main</code> rule, including when executable documentation
   examples are and are not required;</li>
-<li>every repository prompt can identify the other specialized chats, route
+<li>every repository's durable guidance can identify the other specialized chats, route
   cross-repository work, and produce a context-complete handoff prompt;</li>
 <li><code>sagan-workspace</code> recreates a known-good ecosystem from exact commits;</li>
 <li>every component's canonical docs appear in one official Sagan site;</li>

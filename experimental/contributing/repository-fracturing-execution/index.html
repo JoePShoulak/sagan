@@ -3453,7 +3453,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3505,7 +3505,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4517,8 +4517,9 @@ the extension never owns language semantics.</p>
 <li><code>MAINTAINERS.md</code> for exact Bash commands, branching, testing, releasing,
   deployment, diagnosis, recovery, manifests, locks, CI, and an impact-based
   test-selection matrix;</li>
-<li><code>CODEX_START.md</code> for read-only onboarding, teaching-first behavior, ecosystem
-  chat routing, and repository-specific canonical sources;</li>
+<li>a one-time <code>CODEX_START.md</code> for initial read-only onboarding, then durable
+  <code>AGENTS.md</code>, <code>TECHNOLOGY.md</code>, and <code>MAINTAINERS.md</code> for teaching-first behavior,
+  ecosystem chat routing, and repository-specific canonical sources;</li>
 <li>machine-readable manifests, compatibility declarations, and exact locks; and</li>
 <li>independently runnable focused tests, complete tests, documentation checks,
   CI, and release procedures.</li>
@@ -4547,9 +4548,9 @@ a human audits it again.</p>
 <li>Leave <code>main</code> untouched until reviewed publication promotion from <code>dev</code>.
    Promotion and release require the complete repository suite to pass.</li>
 </ol>
-<p>Every repository's <code>CODEX_START.md</code> must repeat this impact-based test rule and
-route the chat to the authoritative matrix and exact Bash commands in
-<code>MAINTAINERS.md</code>. Repository-specific prompts may strengthen this shared
+<p>Every repository's one-time <code>CODEX_START.md</code> must repeat this impact-based test
+rule, then its durable <code>AGENTS.md</code> and <code>MAINTAINERS.md</code> retain it after prompt
+deletion. Repository-specific prompts may strengthen this shared
 branch-test-refine-merge-verify clause, but none may omit or weaken it.</p>
 <h2 id="start-gate">Start gate</h2>
 <p>Do not move code until all of the following are true:</p>

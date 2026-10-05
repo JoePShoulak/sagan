@@ -3453,7 +3453,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3505,7 +3505,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4830,13 +4830,13 @@ more manifests, compatibility boundaries, workflows, credentials, artifacts,
 and failure modes. The split may proceed only as quickly as those mechanisms
 can be explained and reproduced by a human maintainer.</p>
 <h2 id="required-artifact-in-every-repository">Required artifact in every repository</h2>
-<p>Every Sagan organization repository must contain <code>MAINTAINERS.md</code> and
-<code>CODEX_START.md</code> at its root. <code>MAINTAINERS.md</code> is the guaranteed human
-operations entry point. <code>CODEX_START.md</code> is the ready-to-paste prompt for a new
-Codex chat required by the
-<a href="../repository-fracturing-roadmap/">multi-repository fracture roadmap</a>. Either
-may link to detailed material under <code>docs/maintaining/</code>, but neither may
-require its reader to guess which canonical document to read next.</p>
+<p>Every Sagan organization repository must retain <code>AGENTS.md</code>, <code>TECHNOLOGY.md</code>,
+and <code>MAINTAINERS.md</code> at its root. <code>MAINTAINERS.md</code> is the guaranteed human
+operations entry point. <code>CODEX_START.md</code> is a one-time tracked prompt for the
+first specialized chat, then is deleted through a reviewed PR as required by
+the <a href="../repository-fracturing-roadmap/">multi-repository fracture roadmap</a>.
+Durable guides may link to detail under <code>docs/maintaining/</code>, but must never
+require hidden chat history or a deleted prompt to find canonical context.</p>
 <p>The root document must begin with:</p>
 <ol>
 <li>what the repository owns;</li>
@@ -5045,9 +5045,9 @@ historical bundles, and rollback.</p>
 minimum it must verify:</p>
 <ul>
 <li><code>MAINTAINERS.md</code> exists and links to all mandatory detailed sections;</li>
-<li><code>CODEX_START.md</code> exists, links only to valid onboarding sources, and covers
-  both repository-local and whole-ecosystem orientation, including the owner's
-  teaching-first and explicit-implementation policy;</li>
+<li>durable <code>AGENTS.md</code>, <code>TECHNOLOGY.md</code>, and <code>MAINTAINERS.md</code> survive deletion
+  of the one-time <code>CODEX_START.md</code> and cover repository-local and ecosystem
+  orientation, teaching-first behavior, and explicit-implementation policy;</li>
 <li>referenced files, commands, workflows, scripts, and documentation pages
   exist;</li>
 <li>the repository's current manifests and workflow filenames are enumerated;</li>
@@ -5093,8 +5093,9 @@ An unclear or undocumented step fails the drill and creates a roadmap item.</p>
 <p>This milestone is complete only when:</p>
 <ul>
 <li>every repository has its root <code>MAINTAINERS.md</code> and required detail;</li>
-<li>every repository has a tested root <code>CODEX_START.md</code> that successfully
-  orients a clean chat without hidden conversation history;</li>
+<li>every repository's one-time root <code>CODEX_START.md</code> has oriented a clean chat
+  without hidden context, then been deleted through a reviewed PR while its
+  durable onboarding guides remain usable;</li>
 <li>the organization landing page points unambiguously to the workspace and
   maintainer entry points;</li>
 <li>the official holistic documentation explains the ecosystem at a user and
