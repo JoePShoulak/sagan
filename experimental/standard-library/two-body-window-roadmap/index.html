@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1385,7 +1385,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3537,6 +3537,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3611,6 +3615,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4525,8 +4601,11 @@ proposed <code>make orbit-math-demo</code> runs a small Sagan source file showin
 operations and expected numeric results, including one rejected unit mismatch.
 Document rounding/precision limits and each actual public symbol.</p>
 <p><strong>Status: implemented at <code>779c281</code> and locally verified on 2026-10-01.</strong>
-The automatically available M0 surface is <code>sqrt</code>, <code>squared_length</code>, <code>length</code>,
-<code>dot</code>, <code>normalized</code>, and <code>display_coordinates</code>. The checked
+The automatically available M0 surface now has <code>sqrt</code>, <code>dot</code>, and
+<code>display_coordinates</code> as functions, plus <code>vector.length()</code>,
+<code>vector.squared_length()</code>, <code>vector.normalized()</code>, and unitless-only
+<code>vector.normalized!()</code> as core Vector methods. The former standalone vector
+forms were removed in development version 4.0.0. The checked
 <code>make orbit-math-demo</code> source preserves measured point/vector distinctions,
 produces the expected 3-4-5 results, and uses an explicit physical display
 scale. Focused tests reject a mismatched time scale, zero-length normalization,

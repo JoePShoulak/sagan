@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1383,7 +1383,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3426,6 +3426,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3500,6 +3504,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4213,17 +4289,21 @@ their nominal enum type; equality and <code>match</code> require matching enum t
 unknown members are rejected. Class metadata supplies typed field and method access,
 checked overload selection for <code>new(...)</code> constructors, default construction
 when every field has a default, and <code>self</code> typing. Leading-dot private
-methods are callable only while checking another method of their declaring
-class, and private methods cannot satisfy public face requirements. Leading-dot
-fields use the same declaring-class access boundary. Unknown
+members follow their declaring class's access boundary;
+<code>super.Parent.method(...)</code> resolves that parent's implementation without
+dynamic redispatch. Trailing default parameters lower the required arity for
+functions, methods, constructors, and inferred lambda bindings. Each default
+is checked against its declared type and must currently be self-contained.
+Private methods cannot satisfy public face requirements. Unknown
 class members and unmatched constructor calls are rejected. Every field without
 a declaration-site default must be assigned on every constructor path.
 Face annotations accept a class value only when that class declares transitive
 <code>is</code> or <code>has</code> conformance; calls through the face use its checked method set.
 Function types and escaping shared-reference closure captures are implemented.
-Contextual <code>self</code> capture remains deferred and is rejected explicitly. A class declaring <code>is</code> or <code>has</code> a face must satisfy
+Contextual <code>self</code> capture remains deferred and is rejected explicitly. A class declaring <code>has</code> a face must satisfy
 every required method with an exact class implementation or face default.
-Both composition words have identical meaning and do not create inheritance.
+On classes, <code>is</code> names parent classes while <code>has</code> names faces; a class may
+name multiple of each. On faces, <code>is</code> and <code>has</code> both compose other faces.
 An unambiguous face default satisfies its own requirement and becomes a class
 method. A class method with the exact signature overrides it. Multiple composed
 defaults with the same signature require an explicit class override. Within a

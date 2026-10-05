@@ -1,0 +1,23 @@
+class FuelTank {
+  let .fuel: Int
+
+  new(starting_fuel: Int) {
+    self.fuel = starting_fuel
+  }
+
+  fun remaining(): Int => self.fuel
+
+  fun burn!(amount: Int): Void {
+    self.fuel -= amount
+  }
+}
+
+fun main(): Int {
+  let tank = FuelTank(12)
+  print("starting fuel: ${tank.remaining()}")
+  tank.burn!(5)
+  print("remaining fuel: ${tank.remaining()}")
+  return 0
+}
+
+exit(main())

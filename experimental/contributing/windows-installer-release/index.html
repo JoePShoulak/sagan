@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1383,7 +1383,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3416,6 +3416,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3490,6 +3494,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4298,7 +4374,10 @@ distribution remain future work.</p>
   absent from <code>PATH</code>;</li>
 <li>direct CLI compilation, generated-program execution, and windowed launch work;</li>
 <li>the installer and portable ZIP contain both first-party packages, the native
-  render bridge, and the manifest-backed two-body example;</li>
+  render bridge, the manifest-backed two-body example, <code>sagan-dap.exe</code>, and
+  its relocatable GDB/Python runtime;</li>
+<li>the portable ZIP runs the DAP launch, breakpoint, step, failure, and cleanup
+  protocol suite with compiler-runtime directories absent from <code>PATH</code>;</li>
 <li>that packaged example runs outside an MSYS2-modified <code>PATH</code>, while a headless
   physics project has no rendering linkage;</li>
 <li>installing the same or a newer version in place succeeds;</li>
@@ -4315,7 +4394,11 @@ distribution remain future work.</p>
 <p>The Windows Installer workflow performs the same package build and smoke test.
 An unsigned artifact is normally a development artifact. The experimental
 <code>v0.88.0-rc.1</code> preview and initial 1.0.0 release are the two narrowly
-disclosed exceptions.</p>
+disclosed historical exceptions. The exact <code>v4.9.5</code> candidate has a separate
+one-time, owner-approved unsigned-installer exception. Its release notes must
+warn about the unknown publisher. The owner separately deferred clean-machine
+acceptance for this exact version; the isolated CI installer smoke test remains
+required.</p>
 <h2 id="public-release-signing-gate">Public-release signing gate</h2>
 <p>Other public releases require trusted
 Authenticode signatures on the installer, embedded uninstaller, and Sagan

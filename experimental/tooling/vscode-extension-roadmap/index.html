@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1383,7 +1383,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3030,10 +3030,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#paused-compiler-handoff-checkpoint" class="md-nav__link">
+  <a href="#current-compiler-handoff-checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Paused compiler handoff checkpoint
+        Current compiler handoff checkpoint
       
     </span>
   </a>
@@ -3559,6 +3559,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3633,6 +3637,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4286,10 +4362,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#paused-compiler-handoff-checkpoint" class="md-nav__link">
+  <a href="#current-compiler-handoff-checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Paused compiler handoff checkpoint
+        Current compiler handoff checkpoint
       
     </span>
   </a>
@@ -4395,12 +4471,12 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="vs-code-extension-roadmap">VS Code extension roadmap</h1>
-<p>Version 0.3.5 is a usable language client for the capabilities currently
+<p>Version 0.3.6 is a usable language client for the capabilities currently
 advertised by <code>sagan-lsp</code>. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.</p>
-<h2 id="paused-compiler-handoff-checkpoint">Paused compiler handoff checkpoint</h2>
-<p>Extension work remains paused at the current <code>dev</code> checkpoint while the
+<h2 id="current-compiler-handoff-checkpoint">Current compiler handoff checkpoint</h2>
+<p>Extension work can consume standard LSP improvements as they land while the
 compiler-side package and debugger contracts below are completed. The earlier
 1.8.0 checkpoint is historical, not the present handoff. The extension must
 not enable capabilities that discovery still reports as false.</p>
@@ -4487,14 +4563,14 @@ for continued local extension development:</p>
 </ul>
 <h2 id="compiler-or-protocol-blocked-goals">Compiler- or protocol-blocked goals</h2>
 <ul>
-<li>Add a compiler-owned <code>sagan.toml</code> document service with precise diagnostics,
-  completion, hover, navigation, document symbols, formatting, and safe quick
-  fixes. The extension already recognizes and highlights the current manifest
-  schema, but must not reproduce manifest parsing or validation in TypeScript.
-  The server needs an explicit manifest document selector/capability, UTF-16
-  ranges, overlays, cancellation, and tests for required, duplicate, and
-  unknown keys and sections, dependency aliases and requirements, paths, entry
-  modules, application modes, lockfile state, and installed-package targets.</li>
+<li>The compiler-owned <code>sagan.toml</code> service is connected through the extension's
+  manifest document selector. Live-host coverage exercises diagnostics,
+  completion, hover, symbols, entry navigation, and valid whole-document
+  formatting. The compiler also owns locked-dependency navigation and
+  installed-package requirement completion. Manifest range/on-type formatting
+  and safe quick fixes remain unavailable; extend tests as those capabilities
+  become supported. The extension must not reproduce manifest parsing or
+  validation in TypeScript.</li>
 <li>Finish package completion in every relevant import, export, qualified-name,
   type, expression, and receiver context. Add compiler-owned safe auto-import
   edits, alias and collision handling, navigation when installed source is
@@ -4504,11 +4580,14 @@ for continued local extension development:</p>
   contract. Keep <code>packageCompletion</code>, <code>packageNavigation</code>, and
   <code>packageAutoImport</code> false until their individual end-to-end gates pass.</li>
 <li>Finish the experimental Debug Adapter Protocol implementation. <code>sagan-dap</code>
-  can launch programs and exercise breakpoints, mapped stacks, and source-level
-  stepping, but it still needs reliable Sagan values, runtime-failure and
-  exception mapping, broader source-context and cleanup coverage, Linux
-  execution validation, and release packaging of GDB and its runtime verified
-  outside an MSYS2 environment. The extension must not register a supported
+  can launch programs and exercise breakpoints, mapped stacks, source-mapped
+  stop-on-entry, and source-level
+  stepping. Windows portable packaging now contains GDB, its Python runtime,
+  and the adapter, and an extracted ZIP passed the DAP suite outside MSYS2.
+  Initialized scalar locals and parameters have a guarded value probe, while
+  collections, strings, nested values, exception stops, broader source-context
+  and cleanup coverage, Linux distribution validation, and isolated installer
+  smoke validation remain. The extension must not register a supported
   Sagan debug type while all granular debugger capability flags remain false.</li>
 </ul>
 <h2 id="resume-sequence">Resume sequence</h2>

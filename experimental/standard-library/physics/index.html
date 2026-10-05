@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1385,7 +1385,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3537,6 +3537,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3611,6 +3615,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4477,6 +4553,11 @@ isolated restricted-three-body demo, not a claim about escape from an external
 body's Hill sphere. Presentations should display <code>escaped</code> instead of the
 stability-error number after the flag becomes true; the numeric error remains
 available for diagnostics.</p>
+<p><code>stop_tertiary!(index)</code> is an explicit, idempotent performance boundary for a
+tertiary whose <code>escaped()</code> flag is already true. Stopping freezes that
+tertiary's position and velocity while the massive system and other tertiaries
+continue stepping. The solver rejects attempts to stop a body before escape;
+it does not import rendering state or choose a viewport cutoff itself.</p>
 <p>Run the checked fixture with:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>lagrange-numeric-demo
 </span></code></pre></div>

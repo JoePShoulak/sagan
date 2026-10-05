@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1385,7 +1385,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3537,6 +3537,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3611,6 +3615,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4399,6 +4475,8 @@ frame for native paint events.</p>
 <ul>
 <li><code>set_view(center_x, center_y, pixels_per_unit)</code> for a centered orthographic
   world-to-screen transform;</li>
+<li><code>is_visible(x, y, radius)</code> for a deterministic test of whether the same
+  world-space circle would intersect the current drawable client viewport;</li>
 <li><code>circle(x, y, radius, red, green, blue)</code> for filled world-space circles;</li>
 <li><code>line(start_x, start_y, end_x, end_y, width, red, green, blue)</code> for
   world-space line segments;</li>
@@ -4423,10 +4501,25 @@ portable backend must establish an equivalent font-loading contract.</p>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>make<span class="w"> </span>shape-text-demo
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>make<span class="w"> </span>two-body-demo
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>make<span class="w"> </span>lagrange-demo
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>make<span class="w"> </span>solar-lagrange-demo
 </span></code></pre></div>
+<p>Each of the three simulation demo targets rebuilds its executable and then
+launches it. The executable remains in its demo build directory after the
+window closes. Building and running can also be requested independently:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>two-body-demo-build
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>make<span class="w"> </span>two-body-demo-run
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>make<span class="w"> </span>lagrange-demo-build
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>make<span class="w"> </span>lagrange-demo-run
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>make<span class="w"> </span>solar-lagrange-demo-build
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>make<span class="w"> </span>solar-lagrange-demo-run
+</span></code></pre></div>
+<p>The stable outputs are <code>build/two-body-demo/two-body-demo.exe</code>,
+<code>build/lagrange-demo/lagrange-demo.exe</code>, and
+<code>build/solar-lagrange-demo/solar-lagrange-demo.exe</code>. A run-only target reports
+the missing executable and exits instead of rebuilding it implicitly.</p>
 <p>For the animated project, <code>make two-body-demo</code> now invokes the normal compiler
 path. You can run that same manifest-backed project directly:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sagan<span class="w"> </span>--run-package<span class="w"> </span>examples/two_body_demo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sagan<span class="w"> </span>--run-package<span class="w"> </span>examples/two_body_demo
 </span></code></pre></div>
 <p>Its <code>sagan.toml</code> declares <code>[application] mode = "windowed"</code>. On Windows, with
 Sagan's file association installed, double-click
@@ -4444,7 +4537,9 @@ presentation with two bodies, axes, line segments, world labels, and a screen
 legend. <code>make shape-text-demo-test</code> captures and validates the same frame as a
 960 by 540 top-down BMP. <code>make two-body-demo</code> consumes immutable snapshots from
 <code>sagan-physics</code> 0.3.0 and animates the real two-body solution. Space pauses,
-Up/Down change playback speed, and Escape or the close button exits cleanly.
+Up/Down change playback speed up to 40 simulated days per real second, and
+Escape or the close button exits cleanly. Forty days per second is the highest
+rate these demos currently sustain without visible lag.
 The demo caps a single real-time frame contribution at 0.25 seconds to avoid a
 large simulation catch-up after a debugger stop or window stall.</p>
 <p><img alt="R1 shapes and text demo" src="../../assets/images/render-r1-shape-text.bmp" /></p>
@@ -4463,8 +4558,21 @@ no simulation time advances until playback resumes.</p>
 massive primaries, L1 through L5, and an off-point control as eight distinctly
 colored bodies. Every body has an eight-sample matching-color trail recorded
 at six-hour simulation intervals, and each tracer has a matching numeric
-rotating-frame error.
-The demo opens paused at five simulated days per real second. Space toggles
+rotating-frame error.</p>
+<p>When a tertiary's five-pixel marker no longer intersects the actual client
+viewport, its error readout appends a single Unicode arrow. <code>←</code> means its
+barycenter-relative distance is decreasing; <code>→</code> means that distance is
+increasing. The demos use <code>is_visible</code> after applying the active view, so a
+partially visible marker remains on-screen and receives no arrow. The indicator
+uses relative radial motion, so the solar demo does not confuse the Earth-Moon
+group's heliocentric motion with a tertiary moving toward or away from the
+local view.</p>
+<p>An escaped tertiary is also checked against the widest 20,000-kilometer-per-
+pixel view. Once its marker no longer intersects even that viewport, the demo
+calls the physics solver's explicit stop operation and that tertiary is no
+longer integrated. Escape detection itself remains a physics decision; the
+renderer only supplies the deterministic presentation boundary.</p>
+<p>The demo opens paused at five simulated days per real second. Space toggles
 playback, Up/Down change the rate up to 40 simulated days per real second, and
 the mouse wheel changes the orthographic
 scale from 250 through 20,000 kilometers per pixel. The overlay shows elapsed
@@ -4498,7 +4606,7 @@ At that point the model reports approximately 39,844 km of L4 error and
 48,369 km of L5 error. These values demonstrate the difference from the ideal
 circular restricted-three-body model; the planar circular setup is not an
 ephemeris-accuracy claim. Run the check with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>solar-lagrange-demo-test
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>solar-lagrange-demo-test
 </span></code></pre></div>
 <p>Version 0.5.1 supports Windows only and links the system <code>user32</code> and <code>gdi32</code>
 libraries. The compiler locates the private native bridge from the resolved,
@@ -4508,10 +4616,9 @@ its GCC/C++
 runtime support, so the resulting executable does not require MSYS2 runtime
 directories on <code>PATH</code>. It has no SDL or GPU dependency yet.
 Text uses Windows' Segoe UI system font; no separate font file is bundled.
-The catalog declares compiler compatibility <code>^2.0.0</code>. A shallow development
-checkout whose unavailable version baseline makes the compiler identify itself
-as <code>0.0.0+gunknown</code> receives a demo-local compatibility index only; released
-package metadata retains the declared 2.x range.</p>
+The installed first-party catalog declares compiler compatibility <code>^4.0.0</code> for
+the current development language. This range is catalog metadata; the renderer
+retains its independent package version, 0.5.1.</p>
 <h2 id="relationship-to-math-and-physics">Relationship to math and physics</h2>
 <p>Rendering will use the automatically available math foundation. It should be
 able to visualize data produced by physics, but physics remains a separate,

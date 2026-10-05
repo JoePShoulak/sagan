@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1383,7 +1383,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3493,6 +3493,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3567,6 +3571,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4264,8 +4340,12 @@
 </div>
 <h1 id="debug-adapter-contract">Debug adapter contract</h1>
 <p>The repository now builds an <strong>experimental</strong> <code>bin/sagan-dap.exe</code> on Windows
-(<code>bin/sagan-dap</code> on Linux) with <code>make bin/sagan-dap</code>. It is not included in release artifacts and is not
-yet advertised by compiler capability discovery. Editor clients must not
+(<code>bin/sagan-dap</code> on Linux) with <code>make bin/sagan-dap</code>. Windows installer and
+portable staging now include the adapter, GDB 16.3, its relocated Python
+runtime, the prefix-local <code>etc/gdbinit</code>, and version-matched libstdc++ Python
+pretty-printers. The extracted portable payload passed the DAP protocol suite with
+only Windows system directories on <code>PATH</code>. This is not yet advertised by
+compiler capability discovery. Editor clients must not
 offer a supported Sagan debug configuration on its presence alone.
 The compiler's <code>sagan.language-service/1</code> discovery includes the
 <code>debugAdapterExecutable</code> sibling filename; it is a location contract, not a
@@ -4273,8 +4353,11 @@ claim that the debugger capability is enabled.</p>
 <p>The adapter speaks framed DAP on binary stdio and uses <code>launch</code> arguments
 <code>{"program":"&lt;absolute .sagan path&gt;"}</code> or
 <code>{"packageRoot":"&lt;absolute package directory&gt;"}</code>. Optional <code>profile</code> must be
-<code>debug</code> (default); <code>cwd</code> and string-array <code>args</code> are accepted. <code>optimized</code>,
-<code>env</code>, and <code>stopOnEntry</code> currently return explicit errors. Launch uses the
+<code>debug</code> (default); <code>cwd</code> and string-array <code>args</code> are accepted. <code>optimized</code>
+and <code>env</code> currently return explicit errors. <code>stopOnEntry: true</code> is supported
+for a debug build with an executable top-level Sagan statement. The adapter
+sets a temporary source-mapped entry breakpoint and removes it before normal
+execution resumes, preserving user breakpoints. Launch uses the
 compiler's native build operation before passing a
 native executable to the bundled GDB DAP backend. <code>SAGAN_GDB</code> is a local test
 override; production Windows lookup first expects
@@ -4282,7 +4365,8 @@ override; production Windows lookup first expects
 <code>&lt;installation&gt;/bin/sagan-dap.exe</code>. The initial Windows integration probe covers a Unicode
 source path and a manifest-backed package launch, pending-to-verified
 breakpoints in entry and imported modules, a Sagan-mapped stack frame and
-source-level <code>next</code>, <code>stepIn</code>, and <code>stepOut</code> on a function-call fixture, top-level
+source-level <code>next</code>, <code>stepIn</code>, and <code>stepOut</code> on a function-call fixture, a
+source-mapped <code>stopOnEntry</code> followed by a user breakpoint, top-level
 binding visibility in a paused scope, output, process termination, malformed
 framing, and removal of that session's
 temporary native-build artifacts.</p>
@@ -4291,15 +4375,40 @@ representations are not yet reliably usable as Sagan values. Source-level steppi
 has Windows top-level-to-function-and-back and imported-module probes, but
 still needs method, lambda, and failure-path coverage. Runtime exception
 translation needs focused tests; attach and
-arbitrary expression evaluation are absent, and GDB
-plus its Python/runtime closure is not packaged. All live debugger capability
+arbitrary expression evaluation is absent. A guarded scalar lookup probe is
+available but does not constitute general debugging support. Installer execution and the
+debugger dependency/license review remain release gates. All live debugger capability
 flags remain false.</p>
+<p>The adapter recognizes generated programs' structured runtime error and
+traceback records, then emits one DAP <code>output</code> event with the Sagan diagnostic
+code, message, traceback notes, and mapped source/line/column. The CLI and
+DAP share the same runtime-diagnostic parser. Executable probes cover integer
+overflow and assertion failure. This reports a failure after it occurs; it
+does not pause on exceptions, so <code>debugExceptions</code> remains false.</p>
 <p>A direct C++ <code>std::shared_ptr</code> dereference through GDB's DAP <code>evaluate</code> was
-rejected because it invokes an overloaded operator in the debuggee. Reading
-the generated pointer field is call-free, but a function-entry probe returned
-the wrong value before Sagan's boxed parameter was initialized. The adapter
-must not expose this shortcut as Sagan evaluation without reliable initialization
-and lifetime checks. Variable values and evaluation remain unsupported.</p>
+rejected because it invokes an overloaded operator in the debuggee. The
+experimental adapter now materializes initialized scalar bindings and
+<code>String</code> values (including locals and visible parameters) in DAP <code>variables</code>.
+Windows GDB starts with UTF-8 host/target character sets; its octal-escaped
+UTF-8 string bytes are decoded only when they form valid UTF-8. An executable
+probe covers emoji-bearing local and parameter values and preserves a literal backslash followed by octal-looking
+digits rather than mistaking it for GDB's escaped UTF-8 bytes.
+DAP <code>evaluate</code> accepts an
+exact supported binding name after its declaration has completed in a matching
+source-mapped stack frame. Parameter lookup additionally requires that a prior
+<code>variables</code> response proved the binding visible in that exact stopped frame;
+the proof is cleared on continue and every new stop. It reads the generated
+pointer field without a debuggee call and returns the Sagan type. A
+pre-initialization function-entry probe and arbitrary expressions are refused.
+Collections, nested values, optimized builds, and general expression
+evaluation remain unsupported. String display is verified for local and
+parameter values with system and bundled GDB, not yet for every string storage
+or lifetime context. A prior portable build returned empty strings because it
+omitted libstdc++'s printer startup and Python package; the isolated-PATH
+portable gate now checks their presence and runs the String-value probe.
+Broader value support is still required before <code>debugVariables</code> or
+<code>debugEvaluate</code> can be advertised.
+<code>debugEvaluate</code> and <code>debugVariables</code> remain false.</p>
 <p>The Windows prototype uses GDB 16.3's native DAP interpreter behind a
 Sagan-owned service. The service, not the editor, builds the selected source
 or package, retains its generated-code map, resolves Sagan breakpoints, maps
@@ -4336,13 +4445,13 @@ with separate protocol pipes and a kill-on-close Job Object. A bounded probe
 exchanges <code>initialize</code> with GDB 16.3 and checks that stopping the wrapper
 reaps the child. The executable protocol probe also covers a launch and
 debuggee lifecycle on Windows and Linux; further cases listed below remain unverified. The probe skips
-when GDB is absent; release packaging must make GDB present and test it in
-an isolated runtime environment before debugger discovery can become true.</p>
+when GDB is absent. The Windows portable artifact now supplies GDB, Python,
+and supporting DLLs and passes this probe with an isolated <code>PATH</code>.</p>
 <h2 id="gates-before-discovery-becomes-true">Gates before discovery becomes true</h2>
 <p>Before advertising <code>debugAdapter</code> or <code>debugLaunch</code>, the repository still needs
 source-level stepping across all valid constructs, usable Sagan scopes and values,
-runtime-failure mapping, full cancellation/cleanup tests, Windows release
-packaging of GDB and its runtime, and broader end-to-end protocol tests.
+exception-stop behavior, full cancellation/cleanup tests, installer validation,
+debugger dependency/license review, and broader end-to-end protocol tests.
 Breakpoint, stepping, variable,
 evaluation, exception, and attach capabilities must be advertised separately
 and only after their respective tests pass. Release packaging must be checked

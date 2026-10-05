@@ -825,7 +825,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1495,7 +1495,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3524,6 +3524,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3598,6 +3602,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4357,7 +4433,7 @@ release asset or build it from source.</p>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>npm<span class="w"> </span>run<span class="w"> </span>package
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>code<span class="w"> </span>--install-extension<span class="w"> </span>sagan-language-*.vsix
 </span></code></pre></div>
-<p>The repository's extension version is currently 0.3.5. Its version is
+<p>The repository's extension version is currently 0.3.6. Its version is
 independent of the compiler version.</p>
 <h2 id="verify-the-installation">Verify the installation</h2>
 <ol>
@@ -4391,6 +4467,11 @@ Debugging is not available through the extension yet: the compiler's
 experimental adapter has not passed its release and capability gates.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ul>
+<li>If code has changed locally but diagnostics still describe old syntax, rebuild
+  <code>bin/sagan</code> and <code>bin/sagan-lsp</code> from the checkout. Then run <strong>Sagan: Restart
+  Language Server</strong> or <strong>Developer: Reload Window</strong>. Reinstalling the VSIX
+  alone does not replace the native server. On Windows, close VS Code before
+  rebuilding if its running <code>sagan-lsp.exe</code> prevents replacement.</li>
 <li>Open <strong>View: Output</strong>, choose <strong>Sagan</strong>, and look for the resolved server path
   or the first startup error. <strong>Sagan: Restart Language Server</strong> retries startup.</li>
 <li>If discovery fails, configure absolute paths for <code>sagan.compiler.path</code> and

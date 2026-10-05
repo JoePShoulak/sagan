@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1383,7 +1383,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3424,6 +3424,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3498,6 +3502,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4164,7 +4240,7 @@
 <p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="editor-support">Editor support</h1>
-<p>The version 0.3.5 VS Code extension in <code>editors/vscode-sagan/</code> associates
+<p>The version 0.3.6 VS Code extension in <code>editors/vscode-sagan/</code> associates
 <code>.sagan</code> files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations (including explicit <code>const</code> and visibly invalid
 <code>let ALL_CAPS</code> names), keywords, types, literals, operators, punctuation,
@@ -4196,6 +4272,11 @@ position queries, and LSP transport are available. Track the <a href="../extensi
 and <a href="../language-server-capabilities/">language-server capability contract</a>.
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.</p>
+<p>After changing compiler syntax or semantics in a repository checkout, rebuild
+both <code>sagan</code> and <code>sagan-lsp</code>, then run <strong>Sagan: Restart Language Server</strong> (or
+reload the VS Code window). Reinstalling the VSIX alone does not update the
+native server. Check <strong>Sagan: Show Tooling Status</strong> to confirm which compiler
+and server paths the editor is using.</p>
 <p>The <a href="../vscode-extension-roadmap/">VS Code extension roadmap</a> records remaining
 release validation, distribution, and compiler-blocked integrations.</p>
 

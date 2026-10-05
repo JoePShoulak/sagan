@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1383,7 +1383,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3581,6 +3581,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3655,6 +3659,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4630,8 +4706,16 @@ provably safe, it returns <code>unsupported</code> with a reason. Document, rang
 on-type formatting retain exact document versions and preserve LF or CRLF.
 A lone CR is invalid Sagan source and is refused without changes.
 <code>rename_local</code> rechecks and rebinds proposed source by symbol identity; it
-supports proven local bindings and one-document, non-exported, non-overloaded
-function names. Exported and workspace-wide rename are refused.
+supports proven local bindings, unexported classes/faces/enums and their enum cases, private members,
+and one-document, non-exported, non-overloaded function names. Type renames
+include constructor, annotation, conformance, and qualified references when
+the semantic index proves their identity. A name used in an independent
+lexical scope does not block a local rename; a same-scope or ancestor/descendant
+collision does. <code>rename_workspace</code> handles compiler-proven public exports and
+members across resolved modules, preserving independent import aliases and
+returning one versioned, atomic workspace edit. It refuses edits to modules
+identified as installed dependency source. Unresolved or ambiguous
+identities, incomplete source, and uneditable package targets are refused.
 <code>organize_imports</code> handles only an uninterrupted, comment-free top-level
 import block. <code>add_missing_import</code> uses an exact public workspace symbol ID,
 then validates the new binding. <code>plan_diagnostic_fix</code> accepts only a

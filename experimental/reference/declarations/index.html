@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1395,7 +1395,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3424,6 +3424,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3498,6 +3502,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4226,6 +4302,19 @@ unavailable.</p>
 and enums. Functions may use a block body or a short expression body:</p>
 <div class="language-sagan highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">double</span><span class="p">(</span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="n">Int</span><span class="p">):</span><span class="w"> </span><span class="n">Int</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span>
 </span></code></pre></div>
+<p>Trailing parameters may provide defaults in functions, methods, constructors,
+and lambdas. A caller may omit those arguments, and the defaults are evaluated
+for that call:</p>
+<div class="language-sagan highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">:</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"friend"</span><span class="p">):</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">name</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">let</span><span class="w"> </span><span class="n">double</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">fun</span><span class="p">(</span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="n">factor</span><span class="p">:</span><span class="w"> </span><span class="n">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">):</span><span class="w"> </span><span class="n">Int</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">factor</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">greet</span><span class="p">())</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">double</span><span class="p">(</span><span class="mi">21</span><span class="p">))</span>
+</span></code></pre></div>
+<p>Required parameters must come first. A default requires an explicit parameter
+type and currently must be a self-contained value (literals and expressions
+made from them); it cannot capture another parameter, a local variable, or
+<code>self</code>. Calls through a separately declared function type do not inherit
+defaults from the original function or lambda.</p>
 <p>Faces accept required method signatures and methods with default bodies.
 Classes accept fields, constructors, and methods. Enum members may be plain
 names or may carry typed payloads. A plain enum value is written with its type,
@@ -4236,12 +4325,16 @@ have default initializers. A class may declare overloaded <code>new(...)</code> 
 <code>const</code> fields require an explicit type and a declaration-site initializer.
 Constructor-only initialization of const fields is deferred; a const field
 cannot be assigned again, even in <code>new</code>.
-calling <code>ClassName(arguments...)</code> selects exactly one compatible constructor.
+Calling <code>ClassName(arguments...)</code> selects exactly one compatible constructor.
 Every field without a declaration-site default must be assigned on every
 constructor path. With no declared constructor, <code>ClassName()</code> is available only
 when every field has a default. <code>new</code> has no source-level return type and cannot
 use <code>return</code>, while
 <code>init</code> remains an ordinary identifier for possible separate lifecycle APIs.
+For inherited classes, <code>new(...) is Parent(args), OtherParent(args)</code> forwards
+arguments to direct parent constructors in the same order as the class's <code>is</code>
+list. Unlisted parents must be default-constructible. Parent initializer
+arguments cannot refer to <code>self</code> before construction is complete.
 <code>self</code> resolves to the current instance. Fields can be read or mutated,
 and block- or expression-bodied methods execute. A trailing <code>!</code> is allowed only
 on methods and conventionally identifies a mutating alternative; it does not by
@@ -4261,8 +4354,9 @@ strong class fields, including class references nested in optionals or generic
 type annotations. At least one edge must use <code>weak let</code>. A face-typed field must also
 be weak because its concrete class target is selected dynamically and cannot be
 proven acyclic. The diagnostic reports the strong field path that forms a cycle.</p>
-<p><code>is</code> and <code>has</code> are interchangeable and do
-not denote inheritance. A class composing a face must satisfy each required
+<p>On classes, <code>is</code> introduces one or more parent classes and <code>has</code> introduces
+one or more adopted faces. The <code>is</code> clause comes first, followed by <code>, has</code>
+when both are present. A class composing a face must satisfy each required
 method with an exact class implementation or unambiguous default. Missing or
 incompatible methods are compile-time errors.</p>
 <p>An unambiguous face default is composed into the class, an exact
@@ -4273,7 +4367,7 @@ Face composition is transitive: inherited requirements and defaults flow into
 the composing face and ultimately into its classes. Cycles are rejected.
 Face names may be used as value, parameter, and return annotations. A class
 value converts to a face only when its declaration explicitly conforms through
-<code>is</code> or <code>has</code>, including transitive face composition. Calls through the face
+<code>has</code>, including transitive face composition. Calls through the face
 dispatch to the concrete class while retaining shared reference identity.</p>
 <p>Enum cases may carry one or more typed payload values, such as
 <code>Success(Int)</code> or <code>Position(Float, Float)</code>. Payload cases act as constructors in
@@ -4306,7 +4400,7 @@ generic class specialization from constructor arguments, so <code>Box(42)</code>
 the corresponding <code>Box&lt;Int8&gt;</code> under normal literal inference. An expected
 annotation may supply otherwise uninferable parameters. Fields and methods
 substitute the specialization consistently. Composition accepts specialized
-faces, as in <code>class Box&lt;T&gt; is Readable&lt;T&gt;</code>, and conversions preserve invariant
+faces, as in <code>class Box&lt;T&gt; has Readable&lt;T&gt;</code>, and conversions preserve invariant
 type arguments. A generic face may provide ordinary default methods that use
 its type parameters and dispatch through <code>self</code>. Class methods may introduce
 their own inferred parameters, such as <code>fun echo&lt;U&gt;(value: U): U</code>, and callers
@@ -4315,6 +4409,16 @@ explicit specialization with <code>Box&lt;Int8&gt;(42)</code>. Generic class par
 the same <code>is Face</code> constraint syntax and are checked when constructed. A face
 method cannot introduce method-specific parameters because virtual generic
 methods are intentionally unsupported.</p>
+<p>Faces may declare typed <code>let</code> and <code>const</code> field promises without initializers.
+Adopting a mutable <code>let</code> promise adds one field to the class unless it already
+declares a compatible one. The constructor must initialize a synthesized field;
+face promises do not inherit default values. A read-only <code>const</code> promise needs
+an explicit class field with an initializer. A default can use <code>self.field</code>
+only when the face (or a composed face) promises that field. A leading dot
+makes the field private. Compatible promises from multiple faces share one
+storage slot. Faces may also declare private helper requirements with
+<code>fun .helper(...)</code>; private class methods can satisfy those. Promises remain
+in force if a class overrides a default that uses them.</p>
 <p>Duplicate declarations, unresolved names, incompatible overloads, invalid
 visibility access, and module export violations are compile-time errors. Generic
 types are invariant. Borrowing, variance, and virtual methods with their own

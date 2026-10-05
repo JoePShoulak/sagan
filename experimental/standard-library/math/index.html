@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1385,7 +1385,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3515,6 +3515,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3589,6 +3593,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4337,20 +4413,8 @@ does not carry an independent package version.</p>
 <td>Returns the square root of a finite, non-negative <code>Float32</code> or <code>Float64</code>.</td>
 </tr>
 <tr>
-<td><code>squared_length(vector)</code></td>
-<td>Returns the sum of squared components and preserves squared physical units.</td>
-</tr>
-<tr>
-<td><code>length(vector)</code></td>
-<td>Returns the Euclidean length of a finite floating-point vector in the component unit.</td>
-</tr>
-<tr>
 <td><code>dot(left, right)</code></td>
 <td>Returns the dot product of equal-dimension, unit-compatible floating-point vectors.</td>
-</tr>
-<tr>
-<td><code>normalized(vector)</code></td>
-<td>Returns a dimensionless unit vector; zero-length input is rejected.</td>
 </tr>
 <tr>
 <td><code>display_coordinates(point, origin, scale)</code></td>
@@ -4358,6 +4422,36 @@ does not carry an independent package version.</p>
 </tr>
 </tbody>
 </table>
+<p>Floating-point Cartesian vectors provide these built-in methods without an
+import:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Implemented contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vector.squared_length()</code></td>
+<td>Returns the sum of squared components, with squared physical units.</td>
+</tr>
+<tr>
+<td><code>vector.length()</code></td>
+<td>Returns the Euclidean length in the component unit.</td>
+</tr>
+<tr>
+<td><code>vector.normalized()</code></td>
+<td>Returns a new dimensionless unit vector; the original is unchanged.</td>
+</tr>
+<tr>
+<td><code>vector.normalized!()</code></td>
+<td>Normalizes a mutable, already unitless vector in place and returns the normalized vector.</td>
+</tr>
+</tbody>
+</table>
+<p>The former standalone <code>length(vector)</code>, <code>squared_length(vector)</code>, and
+<code>normalized(vector)</code> spellings are no longer part of Sagan.</p>
 <p>M0 accepts fixed-size Cartesian <code>Vector</code> and <code>Point</code> values whose components
 are <code>Float32</code> or <code>Float64</code>; measured components retain their native unit
 metadata. <code>display_coordinates</code> requires measured points and an explicit
@@ -4366,7 +4460,7 @@ a point because the result is an offset from the supplied display origin.</p>
 <p>All M0 inputs must be finite, and intermediate squared sums and dot products
 must remain finite. <code>sqrt</code> rejects negative input with
 <code>RuntimeError.math_domain</code>; non-finite input or output uses
-<code>RuntimeError.non_finite</code>; <code>normalized</code> rejects a zero vector with
+<code>RuntimeError.non_finite</code>; both normalization methods reject a zero vector with
 <code>RuntimeError.zero_length</code>; and a zero display scale uses the existing
 <code>RuntimeError.division_by_zero</code>. Floating results retain ordinary IEEE-754
 rounding and are not promised to be exact or bit-identical across toolchains.</p>

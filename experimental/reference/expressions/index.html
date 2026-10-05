@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1484,7 +1484,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3513,6 +3513,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3587,6 +3591,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4354,7 +4430,14 @@ Function types use <code>(Parameter, ...) =&gt; Result</code>; <code>() =&gt; In
 parameterless function returning <code>Int</code>. Typed lambdas can be stored, passed,
 returned, called immediately, or called through variables and parameters.
 Their arguments and results use the same lossless-conversion rules as named
-functions.</p>
+functions.
+When a lambda has trailing default parameters, a direct call or call through
+an inferred binding may omit them. The compiler supplies those defaults at
+each call site before invoking the stored function. A separately annotated
+plain function type does not carry a default-argument promise.</p>
+<p>Inside a class method, <code>super.Parent.method(arguments)</code> calls the named direct
+parent implementation without dispatching back to an override. It is a method
+call, not a general-purpose parent object or field-access expression.</p>
 <p>Closures capture surrounding local variables and parameters by shared
 reference. Captured storage remains alive while any closure refers to it, so an
 escaping closure cannot retain a dangling stack reference. Copies of one
@@ -4484,7 +4567,7 @@ greater-than comparison explicit inside a vector, as in
 <li>prefix <code>++</code>, <code>--</code>, <code>!</code>, <code>not</code>, <code>...</code>, unary <code>+</code>, and unary <code>-</code>;</li>
 <li><code>*</code>, <code>/</code>, <code>%</code>;</li>
 <li><code>+</code>, <code>-</code>;</li>
-<li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>is</code>;</li>
+<li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>is</code>, <code>has</code>;</li>
 <li><code>==</code>, <code>!=</code>;</li>
 <li><code>and</code>;</li>
 <li><code>or</code>;</li>
@@ -4493,6 +4576,13 @@ greater-than comparison explicit inside a vector, as in
 </ol>
 <p>Exponentiation binds more tightly than unary minus. Chained comparisons are a
 syntax error and must be written as separate comparisons joined with <code>and</code>.</p>
+<p><code>is</code> and <code>has</code> in expressions inspect declared type relationships. For
+example, <code>GunShip is Ship</code>, <code>GunShip has Weapons</code>, and
+<code>Assault has Weapons</code> return <code>Bool</code>. Both operands must be declared class or
+face names, with class/class operands for <code>is</code> and a face on the right of
+<code>has</code>. These are not runtime object-instance tests.
+Generic type-relationship expressions require a future specialization syntax;
+the current form accepts non-generic declared names only.</p>
 <p>Postfix forms chain from left to right. For example,
 <code>fleet[index]?.navigator.course(origin).magnitude()</code> first indexes <code>fleet</code>,
 safely accesses <code>navigator</code>, accesses and calls <code>course</code>, then accesses and

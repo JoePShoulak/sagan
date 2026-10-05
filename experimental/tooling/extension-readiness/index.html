@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1383,7 +1383,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3426,6 +3426,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3500,6 +3504,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4223,6 +4299,11 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 <td><strong>LSP available for compiler-known candidates; installed imports and unfinished module-path imports work, but full external-package completion/auto-import is blocked</strong></td>
 </tr>
 <tr>
+<td><code>sagan.toml</code> editing</td>
+<td>Compiler-owned manifest parser over versioned overlays</td>
+<td><strong>Unsaved-buffer diagnostics, section/key, application-mode, and installed-dependency-key completion, section/key hover and outline, entry/dependency navigation, and conservative document/range formatting available; on-type formatting and safe fixes remain blocked</strong></td>
+</tr>
+<tr>
 <td>Semantic highlighting</td>
 <td>Stable classification vocabulary and ranges</td>
 <td><strong>Full-document LSP semantic tokens available</strong></td>
@@ -4260,7 +4341,7 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 <tr>
 <td>Rename</td>
 <td>Versioned identity-based safe workspace edits</td>
-<td><strong>LSP available for proven local, private-member, exported-symbol, and imported public-member identities; ambiguous identities are refused</strong></td>
+<td><strong>LSP available for proven local, unexported class/face/enum and enum-case, private-member, exported-symbol, and imported public-member identities; ambiguous identities are refused</strong></td>
 </tr>
 <tr>
 <td>Quick fixes/code actions</td>
@@ -4295,7 +4376,7 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 <tr>
 <td>Debugger</td>
 <td>Source maps/runtime metadata, then a separate DAP implementation</td>
-<td><strong>Experimental <code>sagan-dap</code> launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level step-over/in/out probes including imported modules; reliable values, exceptions, release packaging, and capability advertisement remain blocked</strong></td>
+<td><strong>Experimental <code>sagan-dap</code> launches on Windows and an isolated Linux test host, maps breakpoints/stacks, displays proven scalar and UTF-8 String locals/parameters, and has source-level stop-on-entry and step-over/in/out probes. The extracted Windows portable ZIP now passes its checksum, isolated CLI, bundled-GDB DAP, String-value, and windowed-orbit checks after packaging libstdc++'s pretty-printers. Collections/nested values, exception stops, installer validation, dependency/license review, and capability advertisement remain blocked.</strong></td>
 </tr>
 <tr>
 <td>Lexical TextMate coloring</td>
@@ -4304,12 +4385,16 @@ below are deliberate limits, not work for the extension to invent locally.</p>
 </tr>
 </tbody>
 </table>
+<p>The experimental adapter also emits Sagan-mapped runtime failure output using
+the CLI's structured diagnostic parser. It does not yet pause on exceptions
+or advertise debugger support.</p>
 <p>The remaining compiler-side milestones, in dependency order, are:</p>
 <ol>
-<li>Finish operation stress tests and cancellation checkpoints inside strict
-   parsing, type analysis, code generation, and module linking. The current
-   transport can cancel queued/active requests and child processes, but those
-   compiler loops still have some phase-boundary-only checkpoints.</li>
+<li>Finish operation stress tests and cancellation checkpoints inside type
+   analysis, code generation, and module linking. Strict parsing now checks
+   cancellation as it consumes tokens; the transport can cancel queued/active
+   requests and child processes, but the remaining compiler loops still have
+   some phase-boundary-only checkpoints.</li>
 <li><strong>Project test-runner and VS Code client implemented:</strong> imported tests execute from
    linked programs, package-root runs retain package identity, and overlays,
    selection, cancellation, stale runs, and LSP framing have focused tests.
@@ -4324,7 +4409,16 @@ below are deliberate limits, not work for the extension to invent locally.</p>
    Export/member completion in every context, safe import edits,
    missing-source documentation targets, and multi-root collision behavior
    still need implementation and focused tests. No unfinished package
-   capability is advertised.</li>
+   capability is advertised.
+   Imported package-owned value members now have a focused library and LSP
+   completion regression, including callable signatures; that is one tested
+   slice, not the complete package-completion capability.
+   Proven auto-import edits now accept exported overload sets and list their
+   distinct signatures; this still does not cover every completion context.
+   <code>sagan.toml</code> entry-module values now navigate to existing local source
+   modules from the active manifest snapshot. Locked dependency aliases and
+   inline-table package names navigate to installed manifests. Dependency
+   value completion and safe manifest edits remain open.</li>
 <li>Finish the experimental Windows DAP executable using GDB native DAP,
    source maps, and debug metadata. It already has a live launch/breakpoint/
    stack and step-over/in/out probes; verify all source contexts, Sagan scopes

@@ -713,7 +713,7 @@
   <span class="md-ellipsis">
     
   
-    Classes and interfaces
+    Classes, faces, composition, and inheritance
   
 
     
@@ -1395,7 +1395,7 @@
   <span class="md-ellipsis">
     
   
-    Classes, interfaces, and composition
+    Classes, interfaces, composition, and inheritance
   
 
     
@@ -3424,6 +3424,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3498,6 +3502,78 @@
     
   
     Active development roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/repository-fracturing-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-repository fracture roadmap
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/maintainer-handoff-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintainer handoff and project survivability
   
 
     
@@ -4239,7 +4315,15 @@ measured component type. Dimensions, named quantity identity, concrete scale,
 and affine point/difference category participate in compatibility. Compatible
 values convert at declarations, assignments, arguments, and returns; callable
 signatures can therefore require a specific unit. Unit metadata is compile-time
-only, and the C++ backend stores ordinary native numeric and geometry values.</p>
+only, and the C++ backend stores ordinary native numeric and geometry values.
+Integer-component geometry literals can widen to a compatible floating-point
+geometry parameter; the native representation converts every component.</p>
+<p>Floating-point Cartesian vectors have core <code>length()</code>, <code>squared_length()</code>,
+<code>normalized()</code>, and <code>normalized!()</code> methods. The first two preserve the
+appropriate component units; <code>normalized()</code> returns a new unitless vector.
+Because mutation cannot change a variable's unit type, <code>normalized!()</code> accepts
+only a mutable unitless vector and returns the normalized vector after updating
+it. These are methods, not standalone functions.</p>
 <p>Generic parameters are invariant: <code>Box&lt;Child&gt;</code> is not automatically a
 <code>Box&lt;Parent&gt;</code>. Variance, borrowing, user-defined implicit conversions, and a
 general compile-time evaluation of <code>const</code> expressions remain deferred.
