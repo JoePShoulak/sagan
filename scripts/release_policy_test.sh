@@ -38,6 +38,8 @@ grep -Fq 'unsigned-experimental-4.9.5-exception' "$repo_root/scripts/release_met
 grep -Fq 'Clean-machine evidence: PENDING' "$workflow"
 grep -Fq 'Clean-machine evidence: DEFERRED by one-time owner exception' "$workflow"
 grep -Fq '            mingw-w64-ucrt-x86_64-nodejs' "$workflow"
+grep -Fq '            mingw-w64-ucrt-x86_64-gdb' "$workflow"
+grep -Fq '            mingw-w64-ucrt-x86_64-gdb' "$repo_root/.github/workflows/windows-installer.yml"
 grep -Fq 'authenticode-required-for-public-release' "$repo_root/scripts/release_metadata.sh"
 grep -Fq 'bash scripts/coverage_threshold.sh' "$workflow"
 grep -Fq 'sagan-${{ github.ref_name }}-release-assets' "$workflow"
