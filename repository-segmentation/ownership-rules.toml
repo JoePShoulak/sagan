@@ -223,7 +223,7 @@ repository = "sagan-workspace"
 
 [[rules]]
 pattern = "scripts/editor_tooling_demo.sh"
-repository = "sagan-vscode"
+repository = "sagan"
 
 [[rules]]
 pattern = "scripts/vscode/**"

@@ -37,6 +37,7 @@ packaging/	sagan	proposed	Language and toolchain packaging; component-native pac
 .github/workflows/integration.yml	sagan-workspace	needs-split	Component-focused checks stay local; ecosystem integration moves to workspace.
 .github/workflows/release*.yml	sagan	needs-split	Each product gains independent release workflows; ecosystem promotion belongs to workspace.
 scripts/	sagan	needs-split	Move component-specific scripts with owners and integration coordination to workspace.
+scripts/editor_tooling_demo.sh	sagan	approved	Compiler-owned structured diagnostics demo; no VS Code extension dependency.
 makefile	sagan	needs-split	Language targets remain; package, editor, docs, and integration targets become repository-local commands.
 README.md	sagan	needs-rewrite	Replace monorepo ownership claims after successful extractions.
 SECURITY.md	sagan	needs-split	Retain language reporting policy and specialize a copy for every public repository.

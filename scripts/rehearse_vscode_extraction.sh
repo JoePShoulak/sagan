@@ -21,6 +21,13 @@ git clone --no-local "$source_repo" "$extracted_repo"
   npm ci
   npm test
   npm run test:bundle
+  if [[ -n "${SAGAN_COMPILER_PATH:-}" ]]; then
+    "$SAGAN_COMPILER_PATH" --diagnostics-json examples/demo.sagan
+  fi
+  if [[ -n "${SAGAN_COMPILER_PATH:-}" && -n "${SAGAN_LSP_PATH:-}" ]]; then
+    SAGAN_COMPILER_PATH="$SAGAN_COMPILER_PATH" \
+      SAGAN_LSP_PATH="$SAGAN_LSP_PATH" npm run test:integration
+  fi
   printf 'Extracted commit: %s\n' "$(git rev-parse HEAD)"
   printf 'Extracted commits: %s\n' "$(git rev-list --count HEAD)"
   printf 'Extracted files: %s\n' "$(git ls-tree -r --name-only HEAD | wc -l)"

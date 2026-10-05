@@ -1,0 +1,49 @@
+schema_version = 1
+repository = "sagan-vscode"
+subtree_source = "editors/vscode-sagan/"
+subtree_destination = ""
+
+[[shared_files]]
+source = ".github/workflows/vscode-extension.yml"
+destination = ".github/workflows/vscode-extension.yml"
+rewrite = "Replace monorepo compiler build with pinned installed compiler and language server; run extension checks from repository root."
+
+[[shared_files]]
+source = "docs/getting-started/editor-support.md"
+destination = "docs/getting-started/editor-support.md"
+rewrite = "Update clone paths, release links, and cross-repository documentation links; keep publication blocked until human review."
+
+[[shared_files]]
+source = "docs/tooling/editor-support.md"
+destination = "docs/tooling/editor-support.md"
+rewrite = "Update monorepo paths and cross-repository links; keep publication blocked until human review."
+
+[[shared_files]]
+source = "docs/tooling/extension-readiness.md"
+destination = "docs/tooling/extension-readiness.md"
+rewrite = "Separate extension obligations from compiler and debugger obligations; keep publication blocked until human review."
+
+[[shared_files]]
+source = "docs/tooling/vscode-extension-roadmap.md"
+destination = "docs/tooling/vscode-extension-roadmap.md"
+rewrite = "Update repository paths and external compiler dependencies; keep publication blocked until human review."
+
+[[shared_files]]
+source = "scripts/vscode/build_release.sh"
+destination = "scripts/vscode/build_release.sh"
+rewrite = "Change the extension root to repository root and remove monorepo-relative package output paths."
+
+[[shared_files]]
+source = "scripts/vscode/install_release_test.js"
+destination = "scripts/vscode/install_release_test.js"
+rewrite = "Resolve test-electron from repository-root node_modules and use a repository-local smoke directory."
+
+[[shared_files]]
+source = "scripts/vscode/test_release.sh"
+destination = "scripts/vscode/test_release.sh"
+rewrite = "Use pinned installed compiler and language server artifacts; update repository-relative script and build paths."
+
+[[shared_files]]
+source = "scripts/vscode/verify_release.js"
+destination = "scripts/vscode/verify_release.js"
+rewrite = "Keep its standalone VSIX checks and update invocation paths."

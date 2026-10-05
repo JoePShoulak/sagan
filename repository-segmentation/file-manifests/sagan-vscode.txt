@@ -55,7 +55,6 @@ editors/vscode-sagan/tests/manifest-grammar.test.js
 editors/vscode-sagan/tests/operations.test.js
 editors/vscode-sagan/tests/run-tests.js
 editors/vscode-sagan/tests/testing.test.js
-scripts/editor_tooling_demo.sh
 scripts/vscode/build_release.sh
 scripts/vscode/install_release_test.js
 scripts/vscode/test_release.sh

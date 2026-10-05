@@ -226,6 +226,36 @@ def check_primary_transfer() -> None:
         fail("every primary transfer integration requires a verification rule")
 
 
+def check_vscode_relocation() -> None:
+    data = read_toml(SEGMENTATION / "vscode-relocation.toml")
+    if data.get("schema_version") != 1 or data.get("repository") != "sagan-vscode":
+        fail("vscode-relocation.toml has an invalid version or repository")
+    prefix = "editors/vscode-sagan/"
+    if data.get("subtree_source") != prefix or data.get("subtree_destination") != "":
+        fail("vscode-relocation.toml has an invalid subtree mapping")
+
+    manifest_path = SEGMENTATION / "file-manifests" / "sagan-vscode.txt"
+    manifest = set(manifest_path.read_text(encoding="utf-8").splitlines())
+    shared_sources = {path for path in manifest if not path.startswith(prefix)}
+    mappings = data.get("shared_files", [])
+    sources = [entry.get("source") for entry in mappings]
+    if len(sources) != len(set(sources)) or set(sources) != shared_sources:
+        fail("vscode-relocation.toml must map every owned file outside the extension subtree exactly once")
+
+    destinations = [entry.get("destination") for entry in mappings]
+    if len(destinations) != len(set(destinations)):
+        fail("vscode-relocation.toml has duplicate destination paths")
+    relocated_subtree = {path.removeprefix(prefix) for path in manifest if path.startswith(prefix)}
+    if set(destinations) & relocated_subtree:
+        fail("vscode-relocation.toml destination collides with the relocated extension subtree")
+    for entry in mappings:
+        destination = entry.get("destination")
+        if not isinstance(destination, str) or destination.startswith("/") or ".." in Path(destination).parts:
+            fail(f"vscode-relocation.toml has an unsafe destination: {destination}")
+        if not entry.get("rewrite"):
+            fail(f"vscode-relocation.toml omits rewrite instructions for {entry.get('source')}")
+
+
 def check_schemas_and_templates() -> None:
     schema_directory = SEGMENTATION / "schemas"
     schemas = sorted(schema_directory.glob("*.schema.json"))
@@ -236,6 +266,7 @@ def check_schemas_and_templates() -> None:
         "extraction-plan.schema.json",
         "primary-transfer.schema.json",
         "readiness.schema.json",
+        "vscode-relocation.schema.json",
         "workspace-lock.schema.json",
         "workspace-manifest.schema.json",
     }
@@ -274,6 +305,7 @@ def main() -> int:
         check_inventory()
         check_components_and_readiness()
         check_primary_transfer()
+        check_vscode_relocation()
         check_schemas_and_templates()
         check_root_contract()
         check_file_manifests()

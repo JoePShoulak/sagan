@@ -5,8 +5,8 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { runTests } = require("@vscode/test-electron");
 
-function verifyPackagedDemo(repositoryRoot, compilerPath) {
-  const demoPath = path.join(repositoryRoot, "editors", "vscode-sagan", "examples", "demo.sagan");
+function verifyPackagedDemo(extensionDevelopmentPath, compilerPath) {
+  const demoPath = path.join(extensionDevelopmentPath, "examples", "demo.sagan");
   const result = spawnSync(compilerPath, ["--diagnostics-json", demoPath], {
     encoding: "utf8"
   });
@@ -34,7 +34,7 @@ async function main() {
     throw new Error(`Build the compiler first or set SAGAN_COMPILER_PATH: ${compilerPath}`);
   }
 
-  verifyPackagedDemo(repositoryRoot, compilerPath);
+  verifyPackagedDemo(extensionDevelopmentPath, compilerPath);
 
   await runTests({
     extensionDevelopmentPath,

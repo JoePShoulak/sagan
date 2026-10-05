@@ -35,11 +35,13 @@ repository-segmentation/schemas/documentation-export.schema.json
 repository-segmentation/schemas/extraction-plan.schema.json
 repository-segmentation/schemas/primary-transfer.schema.json
 repository-segmentation/schemas/readiness.schema.json
+repository-segmentation/schemas/vscode-relocation.schema.json
 repository-segmentation/schemas/workspace-lock.schema.json
 repository-segmentation/schemas/workspace-manifest.schema.json
 repository-segmentation/templates/CODEX_START.md
 repository-segmentation/templates/MAINTAINERS.md
 repository-segmentation/templates/TECHNOLOGY.md
+repository-segmentation/vscode-relocation.toml
 repository-segmentation/workspace.toml
 scripts/lagrange_demo.sh
 scripts/repository_segmentation_check.py

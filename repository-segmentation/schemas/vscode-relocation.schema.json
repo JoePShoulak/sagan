@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sagan.shoulak.org/schemas/vscode-relocation-v1.json",
+  "title": "Sagan VS Code extraction relocation plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repository", "subtree_source", "subtree_destination", "shared_files"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "repository": { "const": "sagan-vscode" },
+    "subtree_source": { "const": "editors/vscode-sagan/" },
+    "subtree_destination": { "const": "" },
+    "shared_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "destination", "rewrite"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "destination": { "type": "string", "minLength": 1 },
+          "rewrite": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

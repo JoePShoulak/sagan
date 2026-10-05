@@ -21,12 +21,22 @@ The extension grammar tests initially depended on Sagan compiler-repository
 fixtures. Those cases now use extension-owned fixtures, allowing the extracted
 repository to test itself.
 
+The integration runner now resolves its packaged demo relative to the
+extension root. A separate local rehearsal with explicit `SAGAN_COMPILER_PATH`
+and `SAGAN_LSP_PATH` is still needed to prove the live Extension Development
+Host works after extraction. The rehearsal script checks the extracted demo
+when `SAGAN_COMPILER_PATH` is set and starts the live host when both variables
+are set. A direct monorepo live-host attempt on October 5 exited with code 1
+after the host started, without a test assertion in its output; the live gate
+remains open.
+
 ## Remaining gates
 
 This rehearsal intentionally covered only the extension subtree. The exact
 `sagan-vscode` ownership manifest also assigns selected root workflows,
-documentation, and release scripts. Their destination paths and import method
-must be approved and rehearsed before the real extraction.
+documentation, and release scripts. Their destination paths and required
+rewrites are recorded in `../vscode-relocation.toml`; importing and testing
+them together still remains before the real extraction.
 
 `git filter-repo` remains unavailable, so this rehearsal used the slower
 `git filter-branch` fallback. Production history extraction remains blocked on

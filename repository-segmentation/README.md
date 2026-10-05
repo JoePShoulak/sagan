@@ -21,6 +21,9 @@ extraction. The canonical policy remains the
 - `primary-transfer.toml` inventories the intact repository's transfer surface;
   `primary-repository-transfer.md` is the transfer, verification, and recovery
   runbook. The primary transfer must pass before any split repository exists.
+- `vscode-relocation.toml` assigns destination paths and rewrites for every
+  extension-owned file outside `editors/vscode-sagan/`; the validator checks it
+  against the exact ownership manifest.
 - `schemas/` defines the initial component, workspace-lock, documentation-
   export, and chat-map contracts. `templates/` provides the shared root files
   that each repository must specialize and test.

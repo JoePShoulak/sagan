@@ -132,6 +132,7 @@ scripts/cli_test.sh
 scripts/coverage.sh
 scripts/coverage_threshold.sh
 scripts/dap_protocol_test.sh
+scripts/editor_tooling_demo.sh
 scripts/generate_unicode_tables.py
 scripts/geometry_demo.sh
 scripts/lsp_protocol_test.sh

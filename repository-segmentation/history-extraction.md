@@ -53,6 +53,10 @@ The final filter command must also retain deliberately shared root history such
 as security, licensing, maintainer, technology, and onboarding files when the
 approved extraction manifest requires them. Generate those files before the
 destination's first reviewed commit rather than silently losing the contract.
+For the VS Code repository, `vscode-relocation.toml` lists each owned file
+outside the extension subtree and its destination path. Those files need an
+additional history-preserving import and the listed rewrites before parity can
+be claimed.
 
 ## Verification before any push
 
