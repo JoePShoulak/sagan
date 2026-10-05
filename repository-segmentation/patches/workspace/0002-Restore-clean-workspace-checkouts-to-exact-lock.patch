@@ -1,0 +1,254 @@
+From b0e395b102377b5f49ceeb1054985a63a6e36004 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 02:57:46 -0500
+Subject: [PATCH] Restore clean workspace checkouts to exact lock
+
+---
+ MAINTAINERS.md          | 20 +++++++++++++++---
+ README.md               |  3 +++
+ TECHNOLOGY.md           |  6 ++++--
+ scripts/restore-lock.sh | 12 +++++++++++
+ scripts/workspace.py    | 46 ++++++++++++++++++++++++++++++++++++++++-
+ tests/workspace_test.py | 44 +++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 125 insertions(+), 6 deletions(-)
+ create mode 100644 scripts/restore-lock.sh
+
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index 6e00ea4..ff1b083 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -22,8 +22,9 @@ Use Git Bash, Git, and Python 3.11 or newer. From the workspace repository root:
+ ```bash
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
++bash scripts/restore-lock.sh
+ python -m unittest discover -s tests -p workspace_test.py -v
+-bash -n scripts/bootstrap.sh scripts/status.sh
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh
+ ```
+ 
+ `bootstrap.sh` and `status.sh` accept `--root`, `--manifest`, and `--lock` for
+@@ -33,6 +34,18 @@ its locked commit. A missing, dirty, wrong-origin, or wrong-commit checkout
+ returns nonzero. No command here pushes, tags, changes a remote, or deletes a
+ checkout.
+ 
++`restore-lock.sh` accepts the same options. It clones a missing checkout;
++otherwise it requires the exact manifest origin and a clean working tree,
++fetches a missing locked commit without tags, and detaches HEAD at that
++commit. It does not reset or discard tracked/untracked work. Git is instructed
++not to overwrite ignored files; a collision fails and leaves HEAD unchanged.
++It may change files in a clean child checkout, so inspect status and the lock
++before invoking it. It does not change remote settings or push.
++When more than one repository is active, restoration is sequential rather
++than atomic: if a later checkout fails, earlier clean checkouts may already
++be at their pins. Run `bash scripts/status.sh` and inspect the failure before
++retrying; do not assume an all-or-nothing rollback.
++
+ The root manifest is `workspace.toml`; the tested
+ source lock is `workspace.lock`; child repositories live under gitignored
+ `checkouts/`. Change `state` to `active` only alongside an exact, reviewed
+@@ -69,7 +82,8 @@ suite is not authorization to publish.
+   manifest. Correct the intended owner deliberately; do not auto-retarget.
+ - `HEAD differs`: inspect `git -C checkouts/<name> log -1 --oneline` and the
+   lock. Preserve any work; choose whether to update the lock after integration
+-  verification or explicitly checkout the pinned commit in that child.
++  verification or run `bash scripts/restore-lock.sh` to select the pinned
++  commit in a clean child.
+ - `clone` or `checkout` failed: inspect the reported partial directory and
+   network/credentials. Do not overwrite it automatically. If it contains
+   useful state, back it up before a manual recovery.
+@@ -82,6 +96,6 @@ recreated from the remotes if those remotes and commit objects remain available,
+ but their unpushed user work cannot be recreated by this script.
+ 
+ The eventual maintainer guide must add exact package-index/editor generation,
+-workspace build/test/update/lock/restore syntax, clean-machine drills,
++workspace build/test/update/lock-refresh syntax, clean-machine drills,
+ platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
+ without their values. Those capabilities are not implemented in this candidate.
+diff --git a/README.md b/README.md
+index 0760f44..fd3bb14 100644
+--- a/README.md
++++ b/README.md
+@@ -14,6 +14,7 @@ From Git Bash, with Python 3.11+ and Git installed:
+ ```bash
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
++bash scripts/restore-lock.sh
+ python -m unittest discover -s tests -p workspace_test.py -v
+ ```
+ 
+@@ -21,6 +22,8 @@ Bootstrap clones into gitignored `checkouts/` and detaches each active
+ checkout at its pinned commit. It never deletes an existing checkout or
+ overwrites a dirty, wrong-origin, or wrong-commit checkout. Status is
+ read-only and returns nonzero until all active checkouts match the lock.
++Restore-lock fetches and detaches a clean, correctly owned checkout at the
++pin; it refuses dirty work and ignored-file collisions.
+ 
+ Read [MAINTAINERS.md](MAINTAINERS.md) for the exact operating and recovery
+ workflow, [TECHNOLOGY.md](TECHNOLOGY.md) for the conceptual model, and
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 1ee46ab..1204ff3 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -27,7 +27,9 @@ Bootstrap clones a missing active repository and detaches at the lock SHA;
+ status compares its origin, working-tree cleanliness, and HEAD. The strict
+ origin check prevents a coincidentally matching commit from silently standing
+ in for a different owner. An existing checkout is treated as user work and is
+-never auto-reset or auto-deleted. A clone or checkout failure leaves any
++never auto-reset or auto-deleted. Restore-lock explicitly moves only clean,
++correct-origin checkouts to the pin and refuses to overwrite ignored files.
++A clone or checkout failure leaves any
+ partial directory for inspection. The Bash entry points are thin wrappers so
+ Windows, Linux, and macOS share the same rules.
+ 
+@@ -36,7 +38,7 @@ extension, docs, physics, rendering, and game checkouts. Those repositories
+ must not import source code from this workspace to build their own products.
+ The current candidate has only exact checkout bootstrap/status; package-index
+ generation, editor workspace generation, lock refresh, build, focused tests,
+-full integration tests, and lock restoration remain later milestones in
++and full integration tests remain later milestones in
+ [the roadmap](docs/contributing/repository-fracturing-roadmap.md).
+ 
+ The lock is about source compatibility. Release manifests and Sagan package
+diff --git a/scripts/restore-lock.sh b/scripts/restore-lock.sh
+new file mode 100644
+index 0000000..f23454e
+--- /dev/null
++++ b/scripts/restore-lock.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py restore-lock "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/workspace.py b/scripts/workspace.py
+index e0dc482..86ab407 100644
+--- a/scripts/workspace.py
++++ b/scripts/workspace.py
+@@ -154,9 +154,51 @@ def status(checkout_dir: Path, entries: list[dict]) -> int:
+     return result
+ 
+ 
++def restore_lock(checkout_dir: Path, entries: list[dict]) -> int:
++    for entry in entries:
++        target = checkout_dir / entry["checkout"]
++        if not target.exists() and not target.is_symlink():
++            if bootstrap(checkout_dir, [entry]):
++                return 1
++            continue
++        if target.is_symlink() or not target.is_dir():
++            print(f"{entry['id']}: unsafe or non-directory checkout")
++            return 1
++        try:
++            inside = git("-C", str(target), "rev-parse", "--show-toplevel")
++            if Path(inside).resolve() != target.resolve():
++                print(f"{entry['id']}: directory is inside another Git checkout")
++                return 1
++            origin = git("-C", str(target), "remote", "get-url", "origin")
++            if origin != entry["url"]:
++                print(f"{entry['id']}: origin URL differs from the workspace manifest")
++                return 1
++            if git("-C", str(target), "status", "--porcelain", "--untracked-files=all"):
++                print(f"{entry['id']}: dirty checkout; preserve your work before restoring")
++                return 1
++            head = git("-C", str(target), "rev-parse", "HEAD")
++            if head == entry["commit"]:
++                print(f"{entry['id']}: already at locked commit {head[:12]}")
++                continue
++            try:
++                git("-C", str(target), "cat-file", "-e", f"{entry['commit']}^{{commit}}")
++            except RuntimeError:
++                print(f"{entry['id']}: fetching locked commit {entry['commit'][:12]}", flush=True)
++                git("-C", str(target), "fetch", "--no-tags", "origin", entry["commit"])
++            git("-C", str(target), "checkout", "--detach", "--no-overwrite-ignore", entry["commit"])
++        except RuntimeError as error:
++            print(f"{entry['id']}: {error}", file=sys.stderr)
++            return 1
++        good, message = inspect(target, entry)
++        print(f"{entry['id']}: {message}")
++        if not good:
++            return 1
++    return 0
++
++
+ def main() -> int:
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("command", choices=("bootstrap", "status"))
++    parser.add_argument("command", choices=("bootstrap", "status", "restore-lock"))
+     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+     parser.add_argument("--manifest", type=Path)
+     parser.add_argument("--lock", type=Path)
+@@ -168,6 +210,8 @@ def main() -> int:
+         checkout_dir, entries = load_contract(root, manifest_path, lock_path)
+         if arguments.command == "bootstrap":
+             return bootstrap(checkout_dir, entries)
++        if arguments.command == "restore-lock":
++            return restore_lock(checkout_dir, entries)
+         return status(checkout_dir, entries)
+     except (OSError, RuntimeError, ValueError, tomllib.TOMLDecodeError) as error:
+         print(f"Workspace {arguments.command} failed: {error}", file=sys.stderr)
+diff --git a/tests/workspace_test.py b/tests/workspace_test.py
+index 0ad2491..98b7c4e 100644
+--- a/tests/workspace_test.py
++++ b/tests/workspace_test.py
+@@ -107,6 +107,50 @@ class WorkspaceTest(unittest.TestCase):
+         run("remote", "set-url", "origin", "https://example.invalid/other.git", cwd=target)
+         self.assertEqual(1, workspace.status(checkouts, entries))
+         self.assertEqual(1, workspace.bootstrap(checkouts, entries))
++        self.assertEqual(1, workspace.restore_lock(checkouts, entries))
++        self.assertEqual(self.commit, run("rev-parse", "HEAD", cwd=target))
++
++    def test_restore_fetches_new_lock_without_discarding_work(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        (self.source / "example.txt").write_text("second revision\n", encoding="utf-8")
++        run("add", "example.txt", cwd=self.source)
++        run("-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test",
++            "-c", "user.email=test@example.invalid", "commit", "-m", "Second fixture",
++            cwd=self.source)
++        second = run("rev-parse", "HEAD", cwd=self.source)
++        self.write_contract(commit=second)
++        checkouts, entries = self.load()
++        target = checkouts / "sagan"
++        self.assertEqual(1, workspace.status(checkouts, entries))
++        self.assertEqual(0, workspace.restore_lock(checkouts, entries))
++        self.assertEqual(second, run("rev-parse", "HEAD", cwd=target))
++        self.assertEqual(0, workspace.restore_lock(checkouts, entries))
++
++    def test_restore_refuses_dirty_checkout(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        (target / "my-work.txt").write_text("keep me\n", encoding="utf-8")
++        self.assertEqual(1, workspace.restore_lock(checkouts, entries))
++        self.assertEqual("keep me\n", (target / "my-work.txt").read_text(encoding="utf-8"))
++
++    def test_restore_refuses_to_overwrite_ignored_file(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        (self.source / "collision.txt").write_text("tracked new version\n", encoding="utf-8")
++        run("add", "collision.txt", cwd=self.source)
++        run("-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test",
++            "-c", "user.email=test@example.invalid", "commit", "-m", "New file",
++            cwd=self.source)
++        second = run("rev-parse", "HEAD", cwd=self.source)
++        self.write_contract(commit=second)
++        checkouts, entries = self.load()
++        (target / ".git" / "info" / "exclude").write_text("collision.txt\n", encoding="utf-8")
++        (target / "collision.txt").write_text("precious ignored data\n", encoding="utf-8")
++        self.assertEqual(1, workspace.restore_lock(checkouts, entries))
++        self.assertEqual("precious ignored data\n", (target / "collision.txt").read_text(encoding="utf-8"))
+         self.assertEqual(self.commit, run("rev-parse", "HEAD", cwd=target))
+ 
+     def test_lock_must_match_active_manifest(self) -> None:
+-- 
+2.51.0.windows.2
+

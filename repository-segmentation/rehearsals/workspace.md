@@ -46,8 +46,18 @@ repository into an ignored child checkout at the pinned commit, and
 matched candidate tree `793efd2316744e0ed7a935084437cf76344fe2db`,
 passed `git fsck --full`, and reran all seven tests.
 
+A second patch adds a conservative `restore-lock` command. It moves only
+clean, correct-origin children to the exact pin, fetching a missing commit
+without tags and refusing ignored-file collisions. Three more offline tests
+passed for fetching a changed lock, dirty-checkout refusal, and ignored-file
+preservation; wrong-origin refusal was also asserted. The candidate's real
+primary checkout was already at its pin and `bash scripts/restore-lock.sh`
+reported that without changing it. A fresh normal clone replayed both patches
+with `git am`, matched tree `7139252cc1351188be94ef0d0548ad0b1bc39d6f`,
+passed `git fsck --full`, and reran all ten offline tests.
+
 This is **partial functionality**, not destination readiness. The candidate
 still contains monorepo-only audit scripts and archived manifest paths;
-update/build/test/lock/restore, multi-root editor generation, package-index
+update/build/test/lock-refresh, multi-root editor generation, package-index
 generation, cross-repository demos, independent CI, Linux/macOS checks, and
 the owner clean-machine drill remain. No split remote was created or pushed.
