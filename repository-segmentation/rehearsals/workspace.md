@@ -99,3 +99,13 @@ in both candidate and fresh replay; both trees equal
 `25f0262c137d590f4df728b32f78859949407b5c`, and `git fsck --full`
 passed. Bash syntax passed. This does not establish hosted CI or the still
 missing update/build/test/lock-refresh commands.
+
+A sixth patch adds fetch-only `update` and preview-first `lock` commands.
+An exact-source fetch in the real local workspace left HEAD and lock pinned
+at `4132c8c`; lock preview reported no change. Fixture tests exercised a
+new remote tip, preview without mutation, explicit atomic write, and refusal
+of dirty or extended-field locks. Twenty-one offline tests passed in both
+candidate and fresh replay, tree equality was
+`b961e28053df3cb578ca69dbab42d469a47a7be3`, `git fsck --full`
+passed, and Bash syntax passed. Build/test orchestration and independent
+hosted CI remain unverified.

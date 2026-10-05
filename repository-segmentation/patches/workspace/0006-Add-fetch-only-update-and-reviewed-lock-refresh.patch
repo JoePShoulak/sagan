@@ -1,0 +1,393 @@
+From e282a560de068483d472eb89ca298b02ece8b49f Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 12:42:45 -0500
+Subject: [PATCH] Add fetch-only update and reviewed lock refresh
+
+---
+ .github/workflows/workspace-checks.yml |   2 +-
+ MAINTAINERS.md                         |  33 +++++++-
+ README.md                              |   5 ++
+ TECHNOLOGY.md                          |  11 ++-
+ scripts/lock.sh                        |  12 +++
+ scripts/update.sh                      |  12 +++
+ scripts/workspace.py                   | 106 ++++++++++++++++++++++++-
+ tests/workspace_test.py                |  55 +++++++++++++
+ 8 files changed, 229 insertions(+), 7 deletions(-)
+ create mode 100644 scripts/lock.sh
+ create mode 100644 scripts/update.sh
+
+diff --git a/.github/workflows/workspace-checks.yml b/.github/workflows/workspace-checks.yml
+index 8c37d90..b093c4b 100644
+--- a/.github/workflows/workspace-checks.yml
++++ b/.github/workflows/workspace-checks.yml
+@@ -23,6 +23,6 @@ jobs:
+           python-version: '3.11'
+       - name: Check Bash syntax
+         shell: bash
+-        run: bash -n scripts/bootstrap.sh scripts/status.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++        run: bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+       - name: Test offline workspace contracts
+         run: python -m unittest discover -s tests -p '*_test.py' -v
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index 241a3c4..fa8fca0 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -22,10 +22,12 @@ Use Git Bash, Git, and Python 3.11 or newer. From the workspace repository root:
+ ```bash
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
++bash scripts/update.sh
++bash scripts/lock.sh
+ bash scripts/editor-workspace.sh
+ bash scripts/restore-lock.sh
+ python -m unittest discover -s tests -p '*_test.py' -v
+-bash -n scripts/bootstrap.sh scripts/status.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+ ```
+ 
+ `bootstrap.sh` and `status.sh` accept `--root`, `--manifest`, and `--lock` for
+@@ -35,6 +37,24 @@ its locked commit. A missing, dirty, wrong-origin, or wrong-commit checkout
+ returns nonzero. No command here pushes, tags, changes a remote, or deletes a
+ checkout.
+ 
++`update.sh` requires every active checkout to match the lock first. It fetches
++only the manifest's `default_branch` from each exact origin with `--no-tags`,
++reports the fetched tip, and leaves HEAD and `workspace.lock` unchanged. It
++requires network; with several active repositories, fetches are sequential,
++not atomic. Inspect any partial success before retrying.
++
++`lock.sh` previews a proposed lock from clean children at their fetched
++`origin/dev` tips. It refuses a dirty or wrong-origin child, a tip that is not
++descended from the old lock, and a lock with extra release/artifact fields
++that this first generator cannot preserve. The preview changes no file.
++After running the focused build, tests, and integration checks at every
++candidate revision, use `bash scripts/lock.sh --write` to atomically replace
++`workspace.lock`; inspect and commit its diff with the test evidence. The
++command does not run those checks for you. It only works after you have
++deliberately selected each reviewed remote tip in the corresponding clean
++child checkout. If a child should remain at its old pin, do not advance the
++lock merely because a newer remote tip exists.
++
+ `editor-workspace.sh` requires every active checkout to pass the same exact
+ origin, clean-tree, and locked-HEAD checks as `status.sh`. It writes ignored
+ `build/sagan.code-workspace` with the coordinator and active child folders,
+@@ -95,6 +115,13 @@ suite is not authorization to publish.
+   lock. Preserve any work; choose whether to update the lock after integration
+   verification or run `bash scripts/restore-lock.sh` to select the pinned
+   commit in a clean child.
++- `update` failed after an earlier child fetched: the earlier child remains
++  at its locked HEAD. Run `bash scripts/status.sh`, inspect the failed
++  remote/network, and retry after resolution; do not infer an atomic fetch.
++- `lock` refused a candidate: inspect origin, status, fetched `origin/dev`,
++  and ancestry against the old pin. Do not force-push or rewrite the lock to
++  hide a divergent candidate. Preserve a copy of any reviewed prior lock
++  before a deliberate version migration.
+ - `clone` or `checkout` failed: inspect the reported partial directory and
+   network/credentials. Do not overwrite it automatically. If it contains
+   useful state, back it up before a manual recovery.
+@@ -152,11 +179,11 @@ Focused verification for a catalog change is:
+ 
+ ```bash
+ python -m unittest discover -s tests -p '*_test.py' -v
+-bash -n scripts/bootstrap.sh scripts/status.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+ ```
+ 
+ The eventual maintainer guide must add exact
+-workspace build/test/update/lock-refresh syntax, clean-machine drills,
++workspace build/test syntax, clean-machine drills,
+ platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
+ without their values. Those capabilities are not implemented in this candidate.
+ The draft `.github/workflows/workspace-checks.yml` runs the offline contract
+diff --git a/README.md b/README.md
+index 68b0fd7..f18a745 100644
+--- a/README.md
++++ b/README.md
+@@ -14,6 +14,8 @@ From Git Bash, with Python 3.11+ and Git installed:
+ ```bash
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
++bash scripts/update.sh
++bash scripts/lock.sh
+ bash scripts/editor-workspace.sh
+ bash scripts/restore-lock.sh
+ python -m unittest discover -s tests -p '*_test.py' -v
+@@ -25,6 +27,9 @@ overwrites a dirty, wrong-origin, or wrong-commit checkout. Status is
+ read-only and returns nonzero until all active checkouts match the lock.
+ Restore-lock fetches and detaches a clean, correctly owned checkout at the
+ pin; it refuses dirty work and ignored-file collisions.
++Update fetches the current `dev` tip without moving any checkout or lock.
++Lock previews clean, fast-forward `origin/dev` tips and changes the lock only
++with `bash scripts/lock.sh --write` after focused compatibility checks.
+ Editor-workspace generates ignored `build/sagan.code-workspace` from only
+ active, clean, exact-lock checkouts. It does not include planned repositories
+ or overwrite a differing editor file without explicit `--force`.
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 51657d6..9fdecab 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -32,6 +32,13 @@ correct-origin checkouts to the pin and refuses to overwrite ignored files.
+ A clone or checkout failure leaves any
+ partial directory for inspection. The Bash entry points are thin wrappers so
+ Windows, Linux, and macOS share the same rules.
++Update fetches the manifest's normal branch without moving a child HEAD or
++rewriting `workspace.lock`. Lock refresh accepts only a clean checkout at
++the fetched remote branch tip that descends from the current pin. It previews
++by default; an explicit write atomically records the reviewed SHA. A child
++must be built and tested at its candidate revision before that write. The
++current minimal lock format has no extra release/artifact fields; lock
++refresh refuses to discard such fields if they appear later.
+ The editor generator reads the same validated active set and checks each
+ checkout before writing a VS Code multi-root file under ignored `build/`.
+ Its folder paths are relative to the generated file, so the workspace root
+@@ -52,8 +59,8 @@ workspace lock or a package release.
+ 
+ An offline contract workflow is drafted for GitHub-hosted Linux, Windows,
+ and macOS runners, but it cannot be confirmed as passing in an independent
+-destination until that destination exists. Lock refresh, build
+-orchestration, hosted cross-repository CI, and full
++destination until that destination exists. Build orchestration, hosted
++cross-repository CI, and full
+ integration tests remain later milestones in
+ [the roadmap](docs/contributing/repository-fracturing-roadmap.md).
+ 
+diff --git a/scripts/lock.sh b/scripts/lock.sh
+new file mode 100644
+index 0000000..56bab5d
+--- /dev/null
++++ b/scripts/lock.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py lock "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/update.sh b/scripts/update.sh
+new file mode 100644
+index 0000000..a45bd34
+--- /dev/null
++++ b/scripts/update.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py update "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/workspace.py b/scripts/workspace.py
+index 55966e5..4561519 100644
+--- a/scripts/workspace.py
++++ b/scripts/workspace.py
+@@ -157,6 +157,99 @@ def status(checkout_dir: Path, entries: list[dict]) -> int:
+     return result
+ 
+ 
++def update(checkout_dir: Path, entries: list[dict], branch: str) -> int:
++    """Fetch the normal branch without moving any locked checkout or lock."""
++    if not SLUG.fullmatch(branch):
++        raise ValueError("default branch must be a safe single name")
++    if status(checkout_dir, entries):
++        raise ValueError("all active checkouts must match the lock before update")
++    for entry in entries:
++        target = checkout_dir / entry["checkout"]
++        git("-C", str(target), "fetch", "--no-tags", "origin", branch)
++        remote_head = git("-C", str(target), "rev-parse", "FETCH_HEAD")
++        good, message = inspect(target, entry)
++        if not good:
++            raise ValueError(f"{entry['id']}: {message} after fetch")
++        print(f"{entry['id']}: fetched {branch} at {remote_head[:12]}; checkout and lock unchanged")
++    return 0
++
++
++def candidate_head(target: Path, entry: dict, branch: str) -> str:
++    """Return a clean checkout HEAD only when it is the reviewed remote branch tip."""
++    if not target.is_dir() or target.is_symlink():
++        raise ValueError(f"{entry['id']}: checkout is missing or unsafe")
++    top = Path(git("-C", str(target), "rev-parse", "--show-toplevel")).resolve()
++    if top != target.resolve():
++        raise ValueError(f"{entry['id']}: directory is inside another Git checkout")
++    if git("-C", str(target), "remote", "get-url", "origin") != entry["url"]:
++        raise ValueError(f"{entry['id']}: origin differs from manifest")
++    if git("-C", str(target), "status", "--porcelain", "--untracked-files=all"):
++        raise ValueError(f"{entry['id']}: dirty checkout cannot refresh lock")
++    head = git("-C", str(target), "rev-parse", "HEAD")
++    remote_head = git("-C", str(target), "rev-parse", "--verify", f"refs/remotes/origin/{branch}")
++    if head != remote_head:
++        raise ValueError(f"{entry['id']}: HEAD is not the fetched origin/{branch} tip")
++    try:
++        git("-C", str(target), "merge-base", "--is-ancestor", entry["commit"], head)
++    except RuntimeError as error:
++        raise ValueError(f"{entry['id']}: remote tip is not descended from current lock") from error
++    return head
++
++
++def refresh_lock(checkout_dir: Path, entries: list[dict], branch: str,
++                 lock_path: Path, write: bool) -> bool:
++    """Preview or atomically record clean, fast-forward remote tips."""
++    if not SLUG.fullmatch(branch):
++        raise ValueError("default branch must be a safe single name")
++    if lock_path.is_symlink() or not lock_path.is_file():
++        raise ValueError("workspace lock path is missing or unsafe")
++    if not entries:
++        raise ValueError("cannot refresh a workspace lock with no active repositories")
++    lock_data = load_toml(lock_path)
++    if set(lock_data) != {"schema_version", "repositories"}:
++        raise ValueError("lock has extended top-level fields; refresh them deliberately")
++    locked = lock_data["repositories"]
++    if any(set(entry) != {"id", "url", "commit"} for entry in locked):
++        raise ValueError("lock has extended fields; refresh them deliberately before rewriting")
++    proposed = [(entry, candidate_head(checkout_dir / entry["checkout"], entry, branch))
++                for entry in entries]
++    lines = ["schema_version = 1", ""]
++    for entry, head in proposed:
++        lines.extend([
++            "[[repositories]]",
++            f"id = {json.dumps(entry['id'])}",
++            f"url = {json.dumps(entry['url'])}",
++            f"commit = {json.dumps(head)}",
++            "",
++        ])
++    rendered = "\n".join(lines)
++    current = lock_path.read_text(encoding="utf-8")
++    changed = current != rendered
++    for entry, head in proposed:
++        print(f"{entry['id']}: {entry['commit'][:12]} -> {head[:12]}")
++    if not changed:
++        print("workspace.lock already matches the reviewed remote tips")
++        return False
++    if not write:
++        print("Preview only; rerun with --write after focused integration checks")
++        return True
++
++    temporary: Path | None = None
++    try:
++        with tempfile.NamedTemporaryFile(
++            mode="w", encoding="utf-8", newline="\n", prefix=".workspace-lock-",
++            suffix=".tmp", dir=lock_path.parent, delete=False,
++        ) as stream:
++            stream.write(rendered)
++            temporary = Path(stream.name)
++        os.replace(temporary, lock_path)
++    finally:
++        if temporary is not None and temporary.exists():
++            temporary.unlink()
++    print("workspace.lock updated; commit it with the focused test evidence")
++    return True
++
++
+ def editor_workspace(root: Path, checkout_dir: Path, entries: list[dict], force: bool) -> Path:
+     """Generate a VS Code multi-root file from only clean, locked checkouts."""
+     for entry in entries:
+@@ -246,11 +339,12 @@ def restore_lock(checkout_dir: Path, entries: list[dict]) -> int:
+ 
+ def main() -> int:
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("command", choices=("bootstrap", "status", "restore-lock", "editor-workspace"))
++    parser.add_argument("command", choices=("bootstrap", "status", "update", "lock", "restore-lock", "editor-workspace"))
+     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+     parser.add_argument("--manifest", type=Path)
+     parser.add_argument("--lock", type=Path)
+     parser.add_argument("--force", action="store_true")
++    parser.add_argument("--write", action="store_true")
+     arguments = parser.parse_args()
+     root = arguments.root.resolve()
+     manifest_path = arguments.manifest or root / "workspace.toml"
+@@ -259,6 +353,16 @@ def main() -> int:
+         checkout_dir, entries = load_contract(root, manifest_path, lock_path)
+         if arguments.force and arguments.command != "editor-workspace":
+             raise ValueError("--force is only valid for editor-workspace")
++        if arguments.write and arguments.command != "lock":
++            raise ValueError("--write is only valid for lock")
++        if arguments.command in ("update", "lock"):
++            branch = load_toml(manifest_path).get("default_branch")
++            if not isinstance(branch, str) or not SLUG.fullmatch(branch):
++                raise ValueError("workspace manifest requires a safe default_branch")
++            if arguments.command == "update":
++                return update(checkout_dir, entries, branch)
++            refresh_lock(checkout_dir, entries, branch, lock_path, arguments.write)
++            return 0
+         if arguments.command == "bootstrap":
+             return bootstrap(checkout_dir, entries)
+         if arguments.command == "restore-lock":
+diff --git a/tests/workspace_test.py b/tests/workspace_test.py
+index 08463cf..cea5994 100644
+--- a/tests/workspace_test.py
++++ b/tests/workspace_test.py
+@@ -128,6 +128,61 @@ class WorkspaceTest(unittest.TestCase):
+             json.loads(output.read_text(encoding="utf-8")),
+         )
+ 
++    def test_update_fetches_without_moving_checkout_or_lock(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        before = self.lock.read_text(encoding="utf-8")
++        (self.source / "example.txt").write_text("second revision\n", encoding="utf-8")
++        run("add", "example.txt", cwd=self.source)
++        run("-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test",
++            "-c", "user.email=test@example.invalid", "commit", "-m", "Second fixture",
++            cwd=self.source)
++        second = run("rev-parse", "HEAD", cwd=self.source)
++
++        self.assertEqual(0, workspace.update(checkouts, entries, "dev"))
++        self.assertEqual(second, run("rev-parse", "refs/remotes/origin/dev", cwd=target))
++        self.assertEqual(self.commit, run("rev-parse", "HEAD", cwd=target))
++        self.assertEqual(before, self.lock.read_text(encoding="utf-8"))
++
++    def test_lock_previews_then_records_reviewed_remote_tip(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        (self.source / "example.txt").write_text("second revision\n", encoding="utf-8")
++        run("add", "example.txt", cwd=self.source)
++        run("-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test",
++            "-c", "user.email=test@example.invalid", "commit", "-m", "Second fixture",
++            cwd=self.source)
++        second = run("rev-parse", "HEAD", cwd=self.source)
++        self.assertEqual(0, workspace.update(checkouts, entries, "dev"))
++        with self.assertRaisesRegex(ValueError, "not the fetched origin/dev tip"):
++            workspace.refresh_lock(checkouts, entries, "dev", self.lock, False)
++
++        run("checkout", "--detach", second, cwd=target)
++        before = self.lock.read_text(encoding="utf-8")
++        self.assertTrue(workspace.refresh_lock(checkouts, entries, "dev", self.lock, False))
++        self.assertEqual(before, self.lock.read_text(encoding="utf-8"))
++        self.assertTrue(workspace.refresh_lock(checkouts, entries, "dev", self.lock, True))
++        self.assertIn(second, self.lock.read_text(encoding="utf-8"))
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.status(checkouts, entries))
++        self.assertFalse(workspace.refresh_lock(checkouts, entries, "dev", self.lock, False))
++
++    def test_lock_refuses_dirty_or_extended_fields(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        (target / "personal.txt").write_text("do not discard\n", encoding="utf-8")
++        with self.assertRaisesRegex(ValueError, "dirty checkout"):
++            workspace.refresh_lock(checkouts, entries, "dev", self.lock, True)
++        self.assertIn(self.commit, self.lock.read_text(encoding="utf-8"))
++        (target / "personal.txt").unlink()
++        with self.lock.open("a", encoding="utf-8") as stream:
++            stream.write('version = "4.9.5"\n')
++        with self.assertRaisesRegex(ValueError, "extended fields"):
++            workspace.refresh_lock(checkouts, entries, "dev", self.lock, True)
++
+     def test_dirty_and_wrong_commit_are_not_overwritten(self) -> None:
+         checkouts, entries = self.load()
+         self.assertEqual(0, workspace.bootstrap(checkouts, entries))
+-- 
+2.51.0.windows.2
+
