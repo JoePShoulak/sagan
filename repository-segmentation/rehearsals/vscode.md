@@ -22,13 +22,9 @@ fixtures. Those cases now use extension-owned fixtures, allowing the extracted
 repository to test itself.
 
 The integration runner now resolves its packaged demo relative to the
-extension root. A separate local rehearsal with explicit `SAGAN_COMPILER_PATH`
-and `SAGAN_LSP_PATH` is still needed to prove the live Extension Development
-Host works after extraction. The rehearsal script checks the extracted demo
-when `SAGAN_COMPILER_PATH` is set and starts the live host when both variables
-are set. A direct monorepo live-host attempt on October 5 exited with code 1
-after the host started, without a test assertion in its output; the live gate
-remains open.
+extension root. An initial direct monorepo live-host attempt exited with code
+1 after launch without a test assertion. A later attempt with normal filesystem
+access passed in the monorepo on October 5.
 
 The updated subtree extraction passed again on October 5 from source commit
 `871927a44fd0fc873a186200c478077d07bd3250` (extracted commit
@@ -36,6 +32,16 @@ The updated subtree extraction passed again on October 5 from source commit
 commits and 52 files. `git fsck --full`, `npm ci`, `npm test`, and
 `npm run test:bundle` passed. The supplied `bin/sagan.exe` reported a complete
 diagnostic-free result for `examples/demo.sagan` inside the extracted tree.
+
+A fresh temporary extraction from source commit `8cafb34` retained the same
+43-commit extension history at extracted commit
+`2676765c64731551d52672970a885e78809a9f02`. `npm ci`, `npm test`, and
+`npm run test:bundle` passed. The extracted demo was diagnostic-free with the
+current Sagan compiler, and `npm run test:integration` passed against explicit
+absolute compiler and language-server paths. The first attempt to run the
+rehearsal wrapper stopped because a relative Windows tool path was supplied;
+the corrected absolute paths passed in the same extracted clone. No remote
+repository was changed.
 
 ## Remaining gates
 

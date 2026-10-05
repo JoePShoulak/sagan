@@ -86,6 +86,8 @@ rollback drill all pass.
 ## Recorded local rehearsal
 
 The October 5, 2026 VS Code rehearsal passed from source commit `33d258e`.
-Details and remaining gaps are recorded in `rehearsals/vscode.md`. This proves
-the extension subtree can stand alone; it does not approve repository creation,
-shared-file relocation, pushing, or deletion from the monorepo.
+The extracted subtree also passed its compiler-demo check and live Extension
+Development Host test on that date. Details and remaining gaps are recorded in
+`rehearsals/vscode.md`. This proves the extension subtree can stand alone; it
+does not approve repository creation, shared-file relocation, pushing, or
+deletion from the monorepo.

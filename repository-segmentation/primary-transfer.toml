@@ -74,6 +74,10 @@ path = "scripts/primary_release_backup.sh"
 purpose = "pre-transfer release source; retire or update after cutover"
 
 [[legacy_references]]
+path = "scripts/primary_release_backup_test.sh"
+purpose = "pre-transfer release-backup mock; retire or update after cutover"
+
+[[legacy_references]]
 path = "scripts/rehearse_primary_backup.sh"
 purpose = "pre-transfer mirror source; retire or update after cutover"
 

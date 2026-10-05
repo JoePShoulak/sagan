@@ -22,6 +22,8 @@ extraction. The canonical policy remains the
   `primary-repository-transfer.md` is the transfer, verification, and recovery
   runbook. `audits/` records dated read-only GitHub settings snapshots. The
   primary transfer must pass before any split repository exists.
+- `merge-readiness.md` separates this preparation branch's merge checks from
+  the later transfer and per-repository extraction gates.
 - `vscode-relocation.toml` assigns destination paths and rewrites for every
   extension-owned file outside `editors/vscode-sagan/`; the validator checks it
   against the exact ownership manifest.
@@ -68,6 +70,7 @@ bash scripts/repository_segmentation_check.sh
 bash scripts/primary_repository_transfer_audit.sh
 bash scripts/rehearse_primary_backup.sh
 bash scripts/primary_release_backup.sh inventory
+bash scripts/primary_release_backup_test.sh
 ```
 
 Run executable documentation examples only when examples or their supporting

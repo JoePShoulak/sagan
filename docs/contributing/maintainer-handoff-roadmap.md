@@ -102,15 +102,18 @@ through PowerShell into Bash.
 ### Daily Git workflow
 
 - The exact remote names and their purpose.
-- The project's normal rule that ongoing development occurs directly on
-  `dev`, without automatically creating a branch per feature.
-- The exceptional cases that justify a temporary branch.
+- The project's normal rule that each authorized Codex change begins on a
+  short-lived `codex/<request>` branch from current `dev`.
+- The focused-test gate before merging a request branch into `dev`, followed
+  by the relevant integration tests on `dev`; reserve the full suite for
+  `main` promotion and releases.
 - How to inspect status and concurrent changes before editing.
 - How to stage only intended paths.
 - Conventional Commit syntax, including examples for patch, minor, major,
   documentation-only, test-only, and maintenance changes.
 - When a commit changes a component version and when it does not.
-- Exact commands for committing and pushing `dev`.
+- Exact commands for committing the request branch, merging it into `dev`,
+  rerunning relevant tests, and pushing `dev`.
 - The rule that `main` is reserved for reviewed publication promotion.
 - Exact pull-request and merge procedure for promoting `dev` to `main`.
 - How branch protection, required checks, linear history, tags, and release
@@ -287,8 +290,9 @@ Using only checked-in documentation, the owner must be able to:
 3. explain the dependency and documentation-publication paths;
 4. build each relevant component;
 5. run focused and complete tests;
-6. make a small representative change on `dev`;
-7. stage, commit, push, and interpret the resulting CI;
+6. make a small representative change on a request branch from `dev`;
+7. run its focused tests, stage and commit only that change, merge it into
+   `dev`, rerun the relevant tests, push, and interpret the resulting CI;
 8. diagnose at least one deliberately introduced failure;
 9. restore the known-good state without destructive shortcuts;
 10. prepare a promotion to `main` without publishing it accidentally;

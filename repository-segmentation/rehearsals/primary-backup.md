@@ -23,4 +23,7 @@ The read-only release inventory mode of
 It found five releases with 33 assets totaling 565,009,480 bytes and validated
 that the current asset names, sizes, and publisher SHA-256 digests are present
 and safe for the backup script. The asset download and checksum comparison
-remain untested until a durable backup destination is selected.
+remain untested against the real releases until a durable backup destination
+is selected. `bash scripts/primary_release_backup_test.sh` passed with a mock
+GitHub release: it exercised inventory, download, checksum verification,
+rejection of a corrupted asset, and refusal to write into a nonempty target.

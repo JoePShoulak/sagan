@@ -15,10 +15,11 @@ github_cli_authentication = "valid-2026-10-05"
 destination_repository_access = "org-admin-confirmed-target-not-found-2026-10-05"
 vscode_local_extraction_rehearsal = "passed-2026-10-05"
 vscode_shared_file_import = "not-rehearsed"
-vscode_live_host_rehearsal = "unverified-after-host-exit"
+vscode_live_host_rehearsal = "passed-in-monorepo-and-extracted-subtree-2026-10-05"
 primary_repository_transfer = "required-before-split-repository-creation"
 primary_remote_backup_rehearsal = "passed-2026-10-05"
 primary_release_inventory = "metadata-validated-2026-10-05; assets-not-downloaded"
+primary_release_backup_test = "mock-download-and-corruption-rejection-passed-2026-10-05"
 
 [[decisions]]
 id = "repository-names"
@@ -53,12 +54,12 @@ evidence = "A read-only source-settings snapshot is in audits/github-transfer-20
 [[decisions]]
 id = "primary-repository-transfer"
 status = "required"
-evidence = "primary-transfer.toml and primary-repository-transfer.md define the audited transfer surface and runbook. Authentication, governance decisions, backup, execution, verification, owner recovery, and rollback still remain before any split repository may be created."
+evidence = "primary-transfer.toml and primary-repository-transfer.md define the audited transfer surface and runbook. Authentication was valid on October 5 but must be rechecked at the freeze; governance decisions, durable backup, execution, verification, owner recovery, and rollback remain before any split repository may be created."
 
 [[decisions]]
 id = "history-and-rollback"
 status = "provisional"
-evidence = "The VS Code subtree rehearsal and remote mirror restore rehearsal passed (rehearsals/vscode.md and rehearsals/primary-backup.md). Release metadata was inventoried, but durable backup, asset download verification, approved extraction tooling, shared-file import, and rollback drills remain."
+evidence = "The VS Code subtree, including its live Extension Host test, and the remote mirror restore rehearsal passed (rehearsals/vscode.md and rehearsals/primary-backup.md). Release metadata and mocked download integrity were verified, but durable backup, real asset download, approved extraction tooling, shared-file import, and rollback drills remain."
 
 [[decisions]]
 id = "space-game-seed"

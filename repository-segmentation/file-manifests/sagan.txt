@@ -141,6 +141,7 @@ scripts/main_release_policy_test.sh
 scripts/orbit_math_demo.sh
 scripts/package_demo.sh
 scripts/primary_release_backup.sh
+scripts/primary_release_backup_test.sh
 scripts/primary_repository_transfer_audit.sh
 scripts/rehearse_primary_backup.sh
 scripts/rehearse_vscode_extraction.sh
