@@ -1,0 +1,49 @@
+From db57bb3a3767b2fc4a2e6c687c78668ff940bf43 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 02:24:43 -0500
+Subject: [PATCH] Keep extension CI focused on runtime changes
+
+---
+ .github/workflows/vscode-extension.yml | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/.github/workflows/vscode-extension.yml b/.github/workflows/vscode-extension.yml
+index e91c010..f7d409d 100644
+--- a/.github/workflows/vscode-extension.yml
++++ b/.github/workflows/vscode-extension.yml
+@@ -3,8 +3,32 @@ name: VS Code Extension
+ on:
+   push:
+     branches: [dev, main]
++    paths:
++      - ".github/workflows/vscode-extension.yml"
++      - "src/**"
++      - "tests/**"
++      - "syntaxes/**"
++      - "scripts/**"
++      - "examples/**"
++      - "images/**"
++      - "package.json"
++      - "package-lock.json"
++      - "sagan-source-commit.txt"
++      - "*language-configuration.json"
+   pull_request:
+     branches: [dev, main]
++    paths:
++      - ".github/workflows/vscode-extension.yml"
++      - "src/**"
++      - "tests/**"
++      - "syntaxes/**"
++      - "scripts/**"
++      - "examples/**"
++      - "images/**"
++      - "package.json"
++      - "package-lock.json"
++      - "sagan-source-commit.txt"
++      - "*language-configuration.json"
+   workflow_dispatch:
+ 
+ permissions:
+-- 
+2.51.0.windows.2
+

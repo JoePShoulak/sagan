@@ -1,0 +1,424 @@
+From 233a86674602774bb76512071e4036d6ab28b260 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 02:18:47 -0500
+Subject: [PATCH 1/2] Prepare independent extension CI with pinned Sagan source
+
+---
+ .github/workflows/vscode-extension.yml | 142 ++++++++++++-------------
+ README.md                              |  28 ++---
+ package.json                           |   3 +-
+ sagan-source-commit.txt                |   1 +
+ scripts/linux-acceptance.sh            |   7 +-
+ scripts/vscode/build_release.sh        |  12 +--
+ scripts/vscode/install_release_test.js |   2 +-
+ scripts/vscode/test_release.sh         |  13 ++-
+ tests/integration/run.js               |  15 ++-
+ 9 files changed, 107 insertions(+), 116 deletions(-)
+ create mode 100644 sagan-source-commit.txt
+
+diff --git a/.github/workflows/vscode-extension.yml b/.github/workflows/vscode-extension.yml
+index 55ef83a..9ec947b 100644
+--- a/.github/workflows/vscode-extension.yml
++++ b/.github/workflows/vscode-extension.yml
+@@ -5,79 +5,68 @@ on:
+     branches: [dev, main]
+   pull_request:
+     branches: [dev, main]
+-    paths:
+-      - ".github/workflows/vscode-extension.yml"
+-      - "editors/vscode-sagan/**"
+-      - "makefile"
+-      - "scripts/version.sh"
+-      - "src/**"
+-      - "third_party/uni-algo/**"
+   workflow_dispatch:
+ 
+ permissions:
+   contents: read
+ 
+ jobs:
+-  linux:
+-    name: Linux extension host
+-    runs-on: ubuntu-latest
+-    timeout-minutes: 30
++  extension-host:
++    name: ${{ matrix.name }} extension host
++    runs-on: ${{ matrix.runner }}
++    timeout-minutes: 45
++    strategy:
++      fail-fast: false
++      matrix:
++        include:
++          - name: Linux
++            runner: ubuntu-latest
++            compiler: sagan
++            server: sagan-lsp
++          - name: macOS
++            runner: macos-latest
++            compiler: sagan
++            server: sagan-lsp
++          - name: Windows
++            runner: windows-latest
++            compiler: sagan.exe
++            server: sagan-lsp.exe
++    env:
++      SAGAN_COMPILER_PATH: ${{ github.workspace }}/sagan-source/bin/${{ matrix.compiler }}
++      SAGAN_LSP_PATH: ${{ github.workspace }}/sagan-source/bin/${{ matrix.server }}
+     steps:
+-      - name: Check out repository
++      - name: Check out extension
+         uses: actions/checkout@v7
+         with:
+-          fetch-depth: 0
+-      - name: Install virtual display support
+-        run: sudo apt-get update && sudo apt-get install --yes xvfb
+-      - name: Build compiler and language server
+-        run: make all bin/sagan-lsp
+-      - name: Install extension dependencies
+-        working-directory: editors/vscode-sagan
+-        run: npm ci
+-      - name: Run extension unit tests
+-        working-directory: editors/vscode-sagan
+-        run: npm test
+-      - name: Verify extension bundle
+-        working-directory: editors/vscode-sagan
+-        run: npm run test:bundle
+-      - name: Run Extension Development Host integration
+-        working-directory: editors/vscode-sagan
+-        run: xvfb-run --auto-servernum npm run test:integration
+-
+-  macos:
+-    name: macOS extension host
+-    runs-on: macos-latest
+-    timeout-minutes: 30
+-    steps:
+-      - name: Check out repository
++          path: extension
++          persist-credentials: false
++      - name: Resolve pinned compiler source
++        id: source
++        shell: bash
++        working-directory: extension
++        run: echo "sha=$(cat sagan-source-commit.txt)" >> "$GITHUB_OUTPUT"
++      - name: Check out pinned Sagan compiler source
+         uses: actions/checkout@v7
+         with:
+-          fetch-depth: 0
+-      - name: Build compiler and language server
+-        run: make CXX=clang++ all bin/sagan-lsp
+-      - name: Install extension dependencies
+-        working-directory: editors/vscode-sagan
+-        run: npm ci
+-      - name: Run extension unit tests
+-        working-directory: editors/vscode-sagan
+-        run: npm test
+-      - name: Verify extension bundle
+-        working-directory: editors/vscode-sagan
+-        run: npm run test:bundle
+-      - name: Run Extension Development Host integration
+-        working-directory: editors/vscode-sagan
+-        run: npm run test:integration
+-
+-  windows:
+-    name: Windows extension host
+-    runs-on: windows-latest
+-    timeout-minutes: 30
+-    steps:
+-      - name: Check out repository
+-        uses: actions/checkout@v7
++          repository: Sagan-Shoulak/sagan
++          ref: ${{ steps.source.outputs.sha }}
++          path: sagan-source
++          persist-credentials: false
++      - name: Verify compiler source pin
++        shell: bash
++        working-directory: sagan-source
++        env:
++          EXPECTED_SHA: ${{ steps.source.outputs.sha }}
++        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
++      - name: Set up Node.js
++        uses: actions/setup-node@v4
+         with:
+-          fetch-depth: 0
++          node-version: '22'
++      - name: Install virtual display support
++        if: runner.os == 'Linux'
++        run: sudo apt-get update && sudo apt-get install --yes xvfb
+       - name: Set up MSYS2 UCRT64
++        if: runner.os == 'Windows'
+         uses: msys2/setup-msys2@v2
+         with:
+           msystem: UCRT64
+@@ -87,26 +76,33 @@ jobs:
+             make
+             mingw-w64-ucrt-x86_64-binutils
+             mingw-w64-ucrt-x86_64-gcc
+-      - name: Build compiler and language server
++      - name: Build compiler and language server on Windows
++        if: runner.os == 'Windows'
+         shell: msys2 {0}
++        working-directory: sagan-source
++        run: make all bin/sagan-lsp
++      - name: Build compiler and language server on macOS
++        if: runner.os == 'macOS'
++        working-directory: sagan-source
++        run: make CXX=clang++ all bin/sagan-lsp
++      - name: Build compiler and language server on Linux
++        if: runner.os == 'Linux'
++        working-directory: sagan-source
+         run: make all bin/sagan-lsp
+-      - name: Set up Node.js
+-        uses: actions/setup-node@v4
+-        with:
+-          node-version: '22'
+       - name: Install extension dependencies
+-        shell: bash
+-        working-directory: editors/vscode-sagan
++        working-directory: extension
+         run: npm ci
+       - name: Run extension unit tests
+-        shell: bash
+-        working-directory: editors/vscode-sagan
++        working-directory: extension
+         run: npm test
+       - name: Verify extension bundle
+-        shell: bash
+-        working-directory: editors/vscode-sagan
++        working-directory: extension
+         run: npm run test:bundle
+       - name: Run Extension Development Host integration
+-        shell: bash
+-        working-directory: editors/vscode-sagan
++        if: runner.os != 'Linux'
++        working-directory: extension
+         run: npm run test:integration
++      - name: Run Extension Development Host integration on Linux
++        if: runner.os == 'Linux'
++        working-directory: extension
++        run: xvfb-run --auto-servernum npm run test:integration
+diff --git a/README.md b/README.md
+index 80033a5..264dbf9 100644
+--- a/README.md
++++ b/README.md
+@@ -88,15 +88,16 @@ suggestions and some navigation and hover support. Complete package completion
+ and automatic import edits are still in development. The compiler also has an
+ experimental debug adapter, but it is not packaged or advertised as a
+ supported debugger; this extension does not offer a Sagan debug configuration
+-yet. The [extension roadmap](../../docs/tooling/vscode-extension-roadmap.md)
++yet. The [extension roadmap](docs/tooling/vscode-extension-roadmap.md)
+ tracks those gates.
+ 
+ ## Local development
+ 
+-1. Build the repository with `make all bin/sagan-lsp` so both the compiler and
+-   language server are available.
+-2. Run `npm ci` and `npm run build` in `editors/vscode-sagan`.
+-3. Open the Sagan repository in VS Code.
++1. Build the compiler and language server from the
++   [pinned Sagan source commit](sagan-source-commit.txt), or install matching
++   binaries separately.
++2. Run `npm ci` and `npm run build` in this repository.
++3. Open this extension repository in VS Code.
+ 4. Press `F5` and choose **Run Sagan Extension** if prompted.
+ 5. The Extension Development Host opens `examples/demo.sagan` from this extension.
+ 6. Confirm the status bar identifies the file as **Sagan** and the Sagan output channel reports that the language server started.
+@@ -105,26 +106,27 @@ TextMate grammar or bundled-client changes require rebuilding and restarting the
+ 
+ ## Test
+ 
+-Install the pinned development dependencies and run the grammar against focused fixtures plus the repository's comprehensive parser demo:
++Install the pinned development dependencies and run the extension-owned fixtures:
+ 
+ ```bash
+ npm ci
+ npm test
+ npm run test:bundle
++export SAGAN_COMPILER_PATH=/absolute/path/to/sagan
++export SAGAN_LSP_PATH=/absolute/path/to/sagan-lsp
+ npm run test:integration
+ ```
+ 
+-The tests use VS Code's TextMate and Oniguruma engines to verify syntax scopes and mocked lifecycle tests to verify server discovery, client startup, command registration, and shutdown. `npm run test:bundle` additionally builds and checks the packaged entry point. The opt-in integration test launches a real VS Code Extension Development Host against a built `bin/sagan-lsp`; set `SAGAN_LSP_PATH` to use another compatible server.
++The tests use VS Code's TextMate and Oniguruma engines to verify syntax scopes and mocked lifecycle tests to verify server discovery, client startup, command registration, and shutdown. `npm run test:bundle` additionally builds and checks the packaged entry point. The opt-in integration test launches a real VS Code Extension Development Host and requires explicit paths to a matching compiler and language server.
+ 
+ The integration test also validates `examples/demo.sagan` with the matching
+-compiler and requires it to be diagnostic-free. Set `SAGAN_COMPILER_PATH` when
+-testing against a compiler outside the repository's `bin` directory.
++compiler and requires it to be diagnostic-free.
+ 
+-On Linux, run the complete clean-build, test, integration, and packaging gate
+-from the repository with:
++On Linux, after setting both native-tool paths, run the extension's complete
++test, integration, and packaging gate with:
+ 
+ ```bash
+-bash editors/vscode-sagan/scripts/linux-acceptance.sh
++bash scripts/linux-acceptance.sh
+ ```
+ 
+ Pass an output path as the first argument to choose where the VSIX is written.
+@@ -144,7 +146,7 @@ The resulting `.vsix` can be installed from VS Code's Extensions view or with th
+ Official Sagan releases attach the compatible VSIX and its SHA-256 checksum to
+ the GitHub Release. The same files are available from the HP1 download mirror.
+ The extension is not currently published to the Visual Studio Marketplace.
+-The repository [VS Code extension roadmap](../../docs/tooling/vscode-extension-roadmap.md) records remaining release validation and compiler-blocked features.
++The [VS Code extension roadmap](docs/tooling/vscode-extension-roadmap.md) records remaining release validation and compiler-blocked features.
+ 
+ ## Grammar limits
+ 
+diff --git a/package.json b/package.json
+index 83b0ed0..02afce7 100644
+--- a/package.json
++++ b/package.json
+@@ -7,8 +7,7 @@
+   "icon": "images/sagan-logo.png",
+   "repository": {
+     "type": "git",
+-    "url": "https://github.com/Sagan-Shoulak/sagan.git",
+-    "directory": "editors/vscode-sagan"
++    "url": "https://github.com/Sagan-Shoulak/sagan-vscode.git"
+   },
+   "engines": {
+     "vscode": "^1.85.0"
+diff --git a/sagan-source-commit.txt b/sagan-source-commit.txt
+new file mode 100644
+index 0000000..79401ed
+--- /dev/null
++++ b/sagan-source-commit.txt
+@@ -0,0 +1 @@
++4132c8c37f99dc5f89c7141f5780b583b64d192e
+diff --git a/scripts/linux-acceptance.sh b/scripts/linux-acceptance.sh
+index 0fc1343..b6c9a55 100644
+--- a/scripts/linux-acceptance.sh
++++ b/scripts/linux-acceptance.sh
+@@ -2,12 +2,13 @@
+ set -euo pipefail
+ 
+ extension_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-repository_root="$(cd "$extension_root/../.." && pwd)"
+ extension_version="$(node -p "require('$extension_root/package.json').version")"
+ output_path="${1:-$extension_root/sagan-language-$extension_version.vsix}"
+ 
+-cd "$repository_root"
+-make all bin/sagan-lsp
++: "${SAGAN_COMPILER_PATH:?Set SAGAN_COMPILER_PATH to the matching Sagan compiler}"
++: "${SAGAN_LSP_PATH:?Set SAGAN_LSP_PATH to the matching Sagan language server}"
++[[ -x "$SAGAN_COMPILER_PATH" ]] || { echo "Compiler is not executable: $SAGAN_COMPILER_PATH" >&2; exit 1; }
++[[ -x "$SAGAN_LSP_PATH" ]] || { echo "Language server is not executable: $SAGAN_LSP_PATH" >&2; exit 1; }
+ 
+ cd "$extension_root"
+ npm ci
+diff --git a/scripts/vscode/build_release.sh b/scripts/vscode/build_release.sh
+index 00e09c5..a2d674a 100644
+--- a/scripts/vscode/build_release.sh
++++ b/scripts/vscode/build_release.sh
+@@ -4,12 +4,11 @@ set -euo pipefail
+ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+-extension_dir="editors/vscode-sagan"
+ output_dir="build/release"
+ 
+ cd "$repo_root"
+ 
+-extension_version="$(cd "$extension_dir" && npm pkg get version | tr -d '"[:space:]')"
++extension_version="$(npm pkg get version | tr -d '"[:space:]')"
+ [[ "$extension_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+   echo "Invalid VS Code extension version: $extension_version" >&2
+   exit 1
+@@ -18,12 +17,9 @@ extension_version="$(cd "$extension_dir" && npm pkg get version | tr -d '"[:spac
+ mkdir -p "$output_dir"
+ output="$output_dir/sagan-language-$extension_version.vsix"
+ 
+-(
+-  cd "$extension_dir"
+-  npm ci
+-  npm test
+-  npm run package -- --out "../../$output"
+-)
++npm ci
++npm test
++npm run package -- --out "$output"
+ 
+ (cd "$output_dir" && sha256sum "$(basename "$output")" > "$(basename "$output").sha256")
+ 
+diff --git a/scripts/vscode/install_release_test.js b/scripts/vscode/install_release_test.js
+index 2492734..f022961 100644
+--- a/scripts/vscode/install_release_test.js
++++ b/scripts/vscode/install_release_test.js
+@@ -7,7 +7,7 @@ const { spawnSync } = require("node:child_process");
+ const {
+   downloadAndUnzipVSCode,
+   resolveCliArgsFromVSCodeExecutablePath
+-} = require("../../editors/vscode-sagan/node_modules/@vscode/test-electron");
++} = require("../../node_modules/@vscode/test-electron");
+ 
+ async function main() {
+   const [vsixArgument, expectedVersion] = process.argv.slice(2);
+diff --git a/scripts/vscode/test_release.sh b/scripts/vscode/test_release.sh
+index b5feb43..0e4825f 100644
+--- a/scripts/vscode/test_release.sh
++++ b/scripts/vscode/test_release.sh
+@@ -4,18 +4,17 @@ set -euo pipefail
+ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+-extension_dir="$repo_root/editors/vscode-sagan"
+-extension_version="$(cd "$extension_dir" && npm pkg get version | tr -d '"[:space:]')"
++extension_version="$(cd "$repo_root" && npm pkg get version | tr -d '"[:space:]')"
+ vsix="${1:-$repo_root/build/release/sagan-language-$extension_version.vsix}"
+ checksum="$vsix.sha256"
+-compiler="${SAGAN_COMPILER_PATH:-$repo_root/build/portable-smoke/bin/sagan.exe}"
+-server="${SAGAN_LSP_PATH:-$repo_root/build/portable-smoke/bin/sagan-lsp.exe}"
++compiler="${SAGAN_COMPILER_PATH:-}"
++server="${SAGAN_LSP_PATH:-}"
+ unpack_dir="$repo_root/build/vsix-smoke"
+ 
+ [[ -f "$vsix" ]] || { echo "Missing VSIX: $vsix" >&2; exit 1; }
+ [[ -f "$checksum" ]] || { echo "Missing VSIX checksum: $checksum" >&2; exit 1; }
+-[[ -x "$compiler" ]] || { echo "Missing matching Sagan compiler: $compiler" >&2; exit 1; }
+-[[ -x "$server" ]] || { echo "Missing matching Sagan language server: $server" >&2; exit 1; }
++[[ -n "$compiler" && -x "$compiler" ]] || { echo "Set SAGAN_COMPILER_PATH to a matching executable." >&2; exit 1; }
++[[ -n "$server" && -x "$server" ]] || { echo "Set SAGAN_LSP_PATH to a matching executable." >&2; exit 1; }
+ 
+ (cd "$(dirname "$vsix")" && sha256sum -c "$(basename "$checksum")")
+ rm -rf "$unpack_dir"
+@@ -25,7 +24,7 @@ node "$repo_root/scripts/vscode/verify_release.js" \
+   "$unpack_dir/extension/package.json" "$extension_version"
+ node "$repo_root/scripts/vscode/install_release_test.js" "$vsix" "$extension_version"
+ 
+-cd "$extension_dir"
++cd "$repo_root"
+ SAGAN_COMPILER_PATH="$compiler" SAGAN_LSP_PATH="$server" npm run test:integration
+ 
+ echo "VSIX checksum, contents, isolated installation, and matching native-tooling activation checks passed."
+diff --git a/tests/integration/run.js b/tests/integration/run.js
+index fdbe139..b4d1d52 100644
+--- a/tests/integration/run.js
++++ b/tests/integration/run.js
+@@ -22,16 +22,13 @@ function verifyPackagedDemo(extensionDevelopmentPath, compilerPath) {
+ 
+ async function main() {
+   const extensionDevelopmentPath = path.resolve(__dirname, "..", "..");
+-  const repositoryRoot = path.resolve(extensionDevelopmentPath, "..", "..");
+-  const serverName = process.platform === "win32" ? "sagan-lsp.exe" : "sagan-lsp";
+-  const compilerName = process.platform === "win32" ? "sagan.exe" : "sagan";
+-  const serverPath = process.env.SAGAN_LSP_PATH || path.join(repositoryRoot, "bin", serverName);
+-  const compilerPath = process.env.SAGAN_COMPILER_PATH || path.join(repositoryRoot, "bin", compilerName);
+-  if (!fs.existsSync(serverPath)) {
+-    throw new Error(`Build the language server first or set SAGAN_LSP_PATH: ${serverPath}`);
++  const serverPath = process.env.SAGAN_LSP_PATH;
++  const compilerPath = process.env.SAGAN_COMPILER_PATH;
++  if (!serverPath || !fs.existsSync(serverPath)) {
++    throw new Error(`Set SAGAN_LSP_PATH to an existing language-server executable: ${serverPath || "<unset>"}`);
+   }
+-  if (!fs.existsSync(compilerPath)) {
+-    throw new Error(`Build the compiler first or set SAGAN_COMPILER_PATH: ${compilerPath}`);
++  if (!compilerPath || !fs.existsSync(compilerPath)) {
++    throw new Error(`Set SAGAN_COMPILER_PATH to an existing compiler executable: ${compilerPath || "<unset>"}`);
+   }
+ 
+   verifyPackagedDemo(extensionDevelopmentPath, compilerPath);
+-- 
+2.51.0.windows.2
+

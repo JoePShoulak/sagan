@@ -75,8 +75,19 @@ repository nor its transfer backup was filtered.
 ## Remaining gates
 
 The full path set and its history now pass a pinned filter-repo rehearsal.
-The shared workflow, documentation, and release scripts still contain
-monorepo-relative behavior. Apply the rewrites in
+The first standalone source-build and release-script rewrite is preserved
+as an ordered local patch series in `../patches/vscode/`. Its Windows
+rehearsal passed `npm test`, `npm run test:bundle`, live
+`npm run test:integration`, standalone VSIX packaging/checksum, isolated
+VSIX installation, and matching-native-tool activation. The integration
+and package checks used the existing local native compiler/server, not
+a fresh CI build of the exact pinned source. The extracted CI workflow has
+not yet run on GitHub or on Linux/macOS. `npm ci` continued to report six
+high-severity dependency findings; no automatic dependency rewrite was
+performed.
+
+Imported documentation and remaining release integration still contain
+monorepo-relative behavior beyond this first patch. Apply the rewrites in
 `../vscode-relocation.toml` and test the resulting independent repository
 before creation. The owner approved a temporary CI contract that checks out
 an exact pinned Sagan source commit and builds compiler/LSP on each platform;

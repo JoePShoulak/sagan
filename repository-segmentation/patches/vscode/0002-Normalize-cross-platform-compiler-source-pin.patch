@@ -1,0 +1,28 @@
+From 68eb0b0685d3647f4300504f1a4d7c1765d95355 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 02:23:20 -0500
+Subject: [PATCH 2/2] Normalize cross-platform compiler source pin
+
+---
+ .github/workflows/vscode-extension.yml | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/.github/workflows/vscode-extension.yml b/.github/workflows/vscode-extension.yml
+index 9ec947b..e91c010 100644
+--- a/.github/workflows/vscode-extension.yml
++++ b/.github/workflows/vscode-extension.yml
+@@ -44,7 +44,10 @@ jobs:
+         id: source
+         shell: bash
+         working-directory: extension
+-        run: echo "sha=$(cat sagan-source-commit.txt)" >> "$GITHUB_OUTPUT"
++        run: |
++          sha="$(tr -d '\r\n' < sagan-source-commit.txt)"
++          [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
++          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+       - name: Check out pinned Sagan compiler source
+         uses: actions/checkout@v7
+         with:
+-- 
+2.51.0.windows.2
+
