@@ -234,6 +234,10 @@ pattern = "scripts/repository_segmentation_check.*"
 repository = "sagan-workspace"
 
 [[rules]]
+pattern = "scripts/verify_initial_split_refs.sh"
+repository = "sagan-workspace"
+
+[[rules]]
 pattern = "src/**"
 repository = "sagan"
 

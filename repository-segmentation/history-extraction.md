@@ -88,6 +88,9 @@ owner approves an extension-specific release-tag policy after releases resume.
 Do not delete or rewrite the monorepo copy at this stage. If verification, CI,
 documentation aggregation, package consumption, or workspace integration
 fails, abandon the destination candidate and restore from the untouched mirror.
+Before publication, run `bash scripts/verify_initial_split_refs.sh` against
+the candidate bare repository. It requires exactly `dev` and `main`, a
+`dev` default HEAD, zero tags, and a clean Git object check.
 
 Remove the monorepo copy only in a later reviewed request after the destination
 release, exact workspace lock, documentation aggregation, redirects, and

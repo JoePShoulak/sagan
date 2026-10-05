@@ -60,6 +60,7 @@ scripts/repository_segmentation_check.py
 scripts/repository_segmentation_check.sh
 scripts/solar_lagrange_demo.sh
 scripts/two_body_demo.sh
+scripts/verify_initial_split_refs.sh
 tests/integration/lagrange_window_test.sh
 tests/integration/solar_lagrange_window_test.sh
 tests/integration/two_body_window_test.sh
