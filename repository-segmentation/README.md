@@ -74,7 +74,7 @@ bash scripts/primary_repository_transfer_audit.sh
 bash scripts/rehearse_primary_backup.sh
 bash scripts/primary_release_backup.sh inventory
 bash scripts/primary_release_backup_test.sh
-bash scripts/verify_primary_transfer_parity.sh /c/Users/joeps/coding/sagan-pretransfer-rehearsal-2026-10-05 JoePShoulak/sagan
+bash scripts/verify_primary_transfer_parity.sh /c/Users/joeps/coding/sagan-pretransfer-script-rehearsal-2026-10-05 JoePShoulak/sagan
 ```
 
 Run executable documentation examples only when examples or their supporting

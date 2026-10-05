@@ -31,10 +31,10 @@ transfer. The rehearsal backup is not the final frozen-`dev` backup.
 ## Independently verify the local recovery material
 
 ```bash
-bash scripts/verify_primary_local_backup.sh /c/Users/joeps/coding/sagan-pretransfer-rehearsal-2026-10-05
+bash scripts/verify_primary_local_backup.sh /c/Users/joeps/coding/sagan-pretransfer-script-rehearsal-2026-10-05
 gh auth status
 gh repo view JoePShoulak/sagan --json nameWithOwner,visibility,defaultBranchRef
-bash scripts/verify_primary_transfer_parity.sh /c/Users/joeps/coding/sagan-pretransfer-rehearsal-2026-10-05 JoePShoulak/sagan
+bash scripts/verify_primary_transfer_parity.sh /c/Users/joeps/coding/sagan-pretransfer-script-rehearsal-2026-10-05 JoePShoulak/sagan
 ```
 
 The backup verifier checks the mirror and all downloaded asset checksums, compares

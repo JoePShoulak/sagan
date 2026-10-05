@@ -54,3 +54,20 @@ The separate read-only parity checker also passed against the still-current
 source repository, matching its refs, releases, visibility, and default
 branch to this backup. Its destination and redirect branches remain untested
 until the transfer occurs.
+
+## End-to-end backup command rehearsal
+
+The committed `create_primary_local_backup.sh` command subsequently ran from
+start to finish into a new directory outside the checkout:
+
+```text
+C:\Users\joeps\coding\sagan-pretransfer-script-rehearsal-2026-10-05
+```
+
+It fetched the remote mirror and all five releases, verified 21 stable refs
+and 33 assets against GitHub's digests and sizes, and restored a separate
+checkout. The ref-list and asset-manifest SHA-256 hashes match the first
+rehearsal above; the new backup occupies about 548 MiB. The source-only parity
+check also passed against this second backup. Both copies are retained; neither
+contains the future post-merge frozen `dev` baseline or protects against
+losing this machine.

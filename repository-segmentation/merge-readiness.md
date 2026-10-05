@@ -27,8 +27,10 @@ permission to skip those dynamic checks.
   download, publisher-digest verification, corruption rejection, and refusal
   to write into a nonempty backup directory. A separate local rehearsal then
   downloaded all 33 real release assets, verified their publisher digests and
-  21 Git refs, and restored a checkout from the mirror. The rehearsal is not
-  the final backup of the post-merge frozen `dev` commit.
+  21 Git refs, and restored a checkout from the mirror. The one-command local
+  backup creator then passed end-to-end into a second local directory, with
+  the same refs and asset checksums. Neither rehearsal is the final backup of
+  the post-merge frozen `dev` commit.
 - The VS Code extension passed `npm test`, `npm run test:bundle`, and
   `npm run test:integration` in the current checkout. Its copied, history-
   filtered subtree passed `npm ci`, the unit and bundle tests, compiler-demo

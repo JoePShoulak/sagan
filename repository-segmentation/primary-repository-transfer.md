@@ -66,7 +66,7 @@ recheck it immediately before transfer because GitHub settings and `dev` move.
 
 Choose a **new** directory outside the normal checkout on this machine. The
 October 5 rehearsal at
-`/c/Users/joeps/coding/sagan-pretransfer-rehearsal-2026-10-05` verified 21
+`/c/Users/joeps/coding/sagan-pretransfer-script-rehearsal-2026-10-05` verified 21
 refs, five releases, 33 assets, their publisher digests, and an independent
 restore. It is a rehearsal from the pre-merge remote `dev`, not the final
 transfer-freeze backup. Refresh after `dev` is merged, pushed, and frozen:
