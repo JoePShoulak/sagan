@@ -37,6 +37,11 @@ def reader(stream, messages):
         messages.put(error)
 
 
+def same_path(actual, expected):
+    return os.path.normcase(os.path.normpath(actual)) == \
+        os.path.normcase(os.path.normpath(str(expected)))
+
+
 def malformed_frame(binary, environment=None):
     process = subprocess.Popen([str(binary)], stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -160,7 +165,7 @@ def source_stop_on_entry(binary, gdb):
             stack = expect(lambda item: item.get("request_seq") == 4)
             assert stack["success"] and stack["body"]["stackFrames"], stack
             top = stack["body"]["stackFrames"][0]
-            assert top["source"]["path"] == str(source) and top["line"] == 4, top
+            assert same_path(top["source"]["path"], source) and top["line"] == 4, top
             send(5, "continue", {"threadId": thread_id})
             assert expect(lambda item: item.get("request_seq") == 5)["success"]
             breakpoint = expect(lambda item: item.get("event") == "stopped")
@@ -257,7 +262,7 @@ def mapped_runtime_failure(binary, gdb, fixture, expected_code):
         process.wait(timeout=10)
         failures = [item for item in output_events if expected_code in item.get("output", "")]
         assert len(failures) == 1, (observed, process.stderr.read().decode("utf-8", "replace"))
-        assert failures[0]["source"]["path"] == str(source), failures[0]
+        assert same_path(failures[0]["source"]["path"], source), failures[0]
         assert failures[0]["line"] >= 1 and failures[0]["column"] >= 1, failures[0]
         assert not any("SAGAN_RUNTIME_ERROR" in item.get("output", "")
                        for item in output_events), output_events
@@ -319,21 +324,21 @@ def imported_module_breakpoint(binary, gdb):
         send(5, "stackTrace", {"threadId": thread_id})
         stack = expect(lambda item: item.get("request_seq") == 5)
         assert stack["success"] and stack["body"]["stackFrames"], stack
-        assert stack["body"]["stackFrames"][0]["source"]["path"] == str(source), stack
+        assert same_path(stack["body"]["stackFrames"][0]["source"]["path"], source), stack
         send(13, "stepIn", {"threadId": thread_id})
         assert expect(lambda item: item.get("request_seq") == 13)["success"]
         assert expect(lambda item: item.get("event") == "stopped")["body"]["reason"] == "step"
         send(14, "stackTrace", {"threadId": thread_id})
         nested = expect(lambda item: item.get("request_seq") == 14)["body"]["stackFrames"]
         assert nested and nested[0]["name"] in ("helper", "offset") and \
-            nested[1]["source"]["path"] == str(source) and \
+            same_path(nested[1]["source"]["path"], source) and \
             nested[1]["name"] == "calculate", nested
         send(15, "stepOut", {"threadId": thread_id})
         assert expect(lambda item: item.get("request_seq") == 15)["success"]
         assert expect(lambda item: item.get("event") == "stopped")["body"]["reason"] == "step"
         send(16, "stackTrace", {"threadId": thread_id})
         resumed = expect(lambda item: item.get("request_seq") == 16)["body"]["stackFrames"]
-        assert resumed and resumed[0]["source"]["path"] == str(source), resumed
+        assert resumed and same_path(resumed[0]["source"]["path"], source), resumed
         send(6, "setBreakpoints", {"source": {"path": str(source)}, "breakpoints": []})
         assert expect(lambda item: item.get("request_seq") == 6)["success"]
         send(7, "continue", {"threadId": thread_id})
@@ -342,7 +347,7 @@ def imported_module_breakpoint(binary, gdb):
         assert second["body"]["reason"] == "breakpoint", second
         send(10, "stackTrace", {"threadId": thread_id})
         second_stack = expect(lambda item: item.get("request_seq") == 10)
-        assert second_stack["body"]["stackFrames"][0]["source"]["path"] == str(entry), second_stack
+        assert same_path(second_stack["body"]["stackFrames"][0]["source"]["path"], entry), second_stack
         send(11, "setBreakpoints", {"source": {"path": str(entry)}, "breakpoints": []})
         assert expect(lambda item: item.get("request_seq") == 11)["success"]
         send(12, "continue", {"threadId": thread_id})
@@ -414,7 +419,7 @@ def source_step_in_out(binary, gdb):
         assert not expect(lambda item: item.get("request_seq") == 16)["success"]
         send(7, "stackTrace", {"threadId": thread_id})
         inside = expect(lambda item: item.get("request_seq") == 7)["body"]["stackFrames"]
-        assert inside and inside[0]["source"]["path"] == str(source) and \
+        assert inside and same_path(inside[0]["source"]["path"], source) and \
             inside[0]["line"] == 1 and inside[0]["name"] == "answer", inside
         send(14, "evaluate", {"frameId": inside[0]["id"], "expression": "value"})
         assert not expect(lambda item: item.get("request_seq") == 14)["success"]
@@ -426,7 +431,7 @@ def source_step_in_out(binary, gdb):
         assert stepped_out["body"]["reason"] == "step", stepped_out
         send(9, "stackTrace", {"threadId": thread_id})
         outside = expect(lambda item: item.get("request_seq") == 9)["body"]["stackFrames"]
-        assert outside and outside[0]["source"]["path"] == str(source) and \
+        assert outside and same_path(outside[0]["source"]["path"], source) and \
             outside[0]["name"] == "<top level>", outside
         send(10, "disconnect", {"terminateDebuggee": True})
         assert expect(lambda item: item.get("request_seq") == 10)["success"]
@@ -628,7 +633,7 @@ def run():
             stack = expect(lambda item: item.get("request_seq") == 6)
             assert stack["success"], stack
             assert stack["body"]["stackFrames"], stack
-            assert stack["body"]["stackFrames"][0]["source"]["path"] == str(source), stack
+            assert same_path(stack["body"]["stackFrames"][0]["source"]["path"], source), stack
             send(9, "scopes", {"frameId": stack["body"]["stackFrames"][0]["id"]})
             scopes = expect(lambda item: item.get("request_seq") == 9)
             assert scopes["success"], scopes
