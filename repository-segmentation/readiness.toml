@@ -11,12 +11,12 @@ owner_recovery_drill = "owner-reported-passed-2026-10-05; checkout-abbabe9; see-
 release_policy = "paused; signing abandoned for now"
 
 [tooling]
-git_filter_repo = "missing"
+git_filter_repo = "pinned-v2.47.0-commit-6f79afc8-in-disposable-checkout; not globally installed"
 github_cli_authentication = "valid-2026-10-05"
 destination_repository_access = "org-admin-confirmed-transferred-2026-10-05"
 vscode_local_extraction_rehearsal = "passed-2026-10-05"
-vscode_shared_file_import = "not-rehearsed"
-vscode_live_host_rehearsal = "passed-in-monorepo-and-extracted-subtree-2026-10-05"
+vscode_shared_file_import = "nine-shared-paths-preserved-with-filter-repo; required-content-rewrites-not-yet-tested"
+vscode_live_host_rehearsal = "passed-in-monorepo-and-61-file-filter-repo-checkout-2026-10-05"
 primary_repository_transfer = "transferred-2026-10-05; refs-settings-redirects-verified; post-transfer-reference-update-in-progress"
 primary_remote_backup_rehearsal = "passed-2026-10-05"
 primary_release_inventory = "metadata-and-33-assets-verified-in-local-rehearsal-2026-10-05"
@@ -69,7 +69,7 @@ evidence = "The intact repository moved to Sagan-Shoulak/sagan with frozen dev 6
 [[decisions]]
 id = "history-and-rollback"
 status = "provisional"
-evidence = "The VS Code subtree and live Extension Host passed, and the final local-only transfer backup verified 21 refs, all 33 release assets, and an independent restore. Approved extraction tooling, shared-file import, and owner rollback drills remain for the split repositories."
+evidence = "A pinned git-filter-repo v2.47.0 rehearsal preserved the exact 61-file VS Code manifest and passed an independent live Extension Host test. The final local-only transfer backup verified 21 refs, all 33 release assets, and an independent restore. Shared-file content rewrites, tag policy, and owner rollback drills remain for the split repositories."
 
 [[decisions]]
 id = "space-game-seed"

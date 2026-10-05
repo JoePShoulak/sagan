@@ -43,17 +43,45 @@ rehearsal wrapper stopped because a relative Windows tool path was supplied;
 the corrected absolute paths passed in the same extracted clone. No remote
 repository was changed.
 
+## Pinned filter-repo rehearsal after the organization transfer
+
+On October 5, 2026, a separate disposable mirror was cloned from
+`Sagan-Shoulak/sagan` at source `dev`
+`4132c8c37f99dc5f89c7141f5780b583b64d192e`. A pinned copy of
+[upstream git-filter-repo](https://github.com/newren/git-filter-repo/releases/tag/v2.47.0)
+was taken from tag `v2.47.0`, which resolves to commit
+`6f79afc8c90c592a3052e6cc53c2ca8907515bca`. The single-file script's
+SHA-256 was
+`67447413e273fc76809289111748870b6f6072f08b17efe94863a92d810b7d94`.
+The upstream tag did not carry a verifiable signature; the commit and file
+hash are recorded for repeatability. The script ran directly with the local
+Python interpreter, without modifying Git's global installation.
+
+The filter retained `editors/vscode-sagan/` and all nine shared paths in
+`vscode-relocation.toml`, then relocated the extension subtree to the root.
+The filtered `dev` tree has **exactly 61 files**, matching the ownership
+manifest after relocation: no missing or extra paths. The filtered `dev`
+history has 99 commits and tip
+`5a8d156f18785d12ba6603f751f9a5533c2ea1b9`; `main` has 98 commits.
+`git fsck --full` passed, and a representative rewritten commit preserved
+its source author, committer, timestamps, and subject.
+
+A fresh normal clone of that filtered mirror passed `npm ci`, `npm test`,
+`npm run test:bundle`, and the live `npm run test:integration` with explicit
+existing compiler and language-server paths. This was a **local-only**
+rehearsal: no split repository was created or pushed, and neither the source
+repository nor its transfer backup was filtered.
+
 ## Remaining gates
 
-This rehearsal intentionally covered only the extension subtree. The exact
-`sagan-vscode` ownership manifest also assigns selected root workflows,
-documentation, and release scripts. Their destination paths and required
-rewrites are recorded in `../vscode-relocation.toml`; importing and testing
-them together still remains before the real extraction.
-
-`git filter-repo` remains unavailable, so this rehearsal used the slower
-`git filter-branch` fallback. Production history extraction remains blocked on
-the approved tool, backup, ref/tag policy, and rollback drill.
+The full path set and its history now pass a pinned filter-repo rehearsal.
+The shared workflow, documentation, and release scripts still contain
+monorepo-relative behavior. Apply the rewrites in
+`../vscode-relocation.toml` and test the resulting independent repository
+before creation. The filtered mirror retained nine historical Sagan release
+tags, which must **not** be published as VS Code extension releases by
+accident; approve a branch/tag policy first. Complete the destination
+governance and owner-survivability/rollback drills before publishing.
 
 `npm ci` reported six high-severity dependency findings. Do not apply an
 automatic breaking dependency rewrite; audit and resolve them in a dedicated

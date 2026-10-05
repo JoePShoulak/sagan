@@ -15,8 +15,10 @@ the working checkout.
 - `git filter-repo` installed and its version recorded.
 - An approved exact include/rename list derived from `inventory.tsv`.
 
-The October 5, 2026 audit found that `git filter-repo` is not installed.
-GitHub CLI authentication works for an active `Sagan-Shoulak` admin. The
+An official upstream `git-filter-repo` v2.47.0 copy is pinned by commit and
+file hash in `rehearsals/vscode.md`; it ran from a disposable checkout, not a
+global installation. GitHub CLI authentication works for an active
+`Sagan-Shoulak` admin. The
 intact primary repository transfer and its frozen-baseline local backup passed;
 see `audits/primary-transfer-result-2026-10-05.md`. Destination permissions,
 exact ownership, approved extraction tooling, and rollback rehearsal still
