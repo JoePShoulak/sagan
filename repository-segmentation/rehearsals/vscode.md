@@ -76,7 +76,9 @@ repository nor its transfer backup was filtered.
 
 The full path set and its history now pass a pinned filter-repo rehearsal.
 The first standalone source-build and release-script rewrite is preserved
-as an ordered local patch series in `../patches/vscode/`. Its Windows
+as an ordered four-patch local series in `../patches/vscode/`, including
+draft `MAINTAINERS.md`, `TECHNOLOGY.md`, `CODEX_START.md`, and
+`AGENTS.md`. A fresh-clone replay matched the branch tree exactly. Its Windows
 rehearsal passed `npm test`, `npm run test:bundle`, live
 `npm run test:integration`, standalone VSIX packaging/checksum, isolated
 VSIX installation, and matching-native-tool activation. The integration
@@ -88,7 +90,8 @@ performed.
 
 The filtered history still contains nine **language** release tags. A
 disposable bare-repository publication rehearsal pushed only the reviewed
-extension candidate as `dev` (`db57bb3`) and the filtered language
+extension candidate as `dev` (initially `db57bb3`, fast-forwarded to
+`aa8a414` after the fourth patch) and the filtered language
 `main` snapshot as `main` (`4045491`), set the bare default HEAD to
 `dev`, and passed `git fsck --full`. The destination had exactly those two
 heads and **zero tags**. The real destination must likewise use explicit
