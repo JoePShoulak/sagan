@@ -1,11 +1,15 @@
 # Maintaining Sagan
 
-This repository currently owns the Sagan compiler, language service, LSP and
-DAP executables, core runtime, first-party math, physics and rendering sources,
-the VS Code extension, documentation sources, tests, and Windows distribution
-machinery. The [repository split roadmap](docs/contributing/repository-fracturing-roadmap.md)
-describes the intended future owners of those components; it has **not** yet
-happened. Do not assume the proposed sibling repositories or their locks exist.
+This repository owns the Sagan compiler, language service, LSP and DAP
+executables, core runtime, first-party math, tests, and Windows distribution
+machinery. Its original physics, rendering, extension, game, and documentation
+copies still exist pending a reviewed cutover. The six public sibling
+repositories now exist under Sagan-Shoulak, but their mere publication does
+not mean their locks, CI, and documentation aggregation are operational.
+The [repository split roadmap](docs/contributing/repository-fracturing-roadmap.md)
+and [tracking issue](https://github.com/Sagan-Shoulak/sagan/issues/6) record
+the remaining gates. Preserve the old copies until parity and rollback are
+verified.
 
 This repository does not own the user's installed toolchain, GitHub secrets,
 the HP1 host, or a signing certificate. Those are external dependencies.
@@ -19,7 +23,8 @@ version in this file. Inspect `git rev-parse HEAD`, `git status --short`,
 `version.conf`, and `bash scripts/version.sh current` together. Package
 projects use `sagan.toml` and a lockfile as described in the
 [package catalog contract](docs/tooling/package-catalog-contract.md). The
-multi-repository lock described in the split roadmap is future work.
+workspace lock exists, but its component entries are not all active yet;
+verify its contents rather than assuming published remotes are integrated.
 
 ## First safe checkout and verification
 

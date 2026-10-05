@@ -18,17 +18,18 @@ REQUIRED = {
         "docs/tooling/language-service-contracts.md",
         "docs/tooling/debug-adapter-contract.md",
     ),
-    "CODEX_START.md": ("MAINTAINERS.md",),
 }
+OPTIONAL = {"CODEX_START.md": ("MAINTAINERS.md",)}
 LINK = re.compile(r"\]\(([^)]+)\)")
 
 
 def main() -> int:
     failures = []
-    for name, required_links in REQUIRED.items():
+    for name, required_links in {**REQUIRED, **OPTIONAL}.items():
         path = ROOT / name
         if not path.is_file():
-            failures.append(f"missing {name}")
+            if name in REQUIRED:
+                failures.append(f"missing {name}")
             continue
         content = path.read_text(encoding="utf-8")
         targets = {match.group(1).split("#", 1)[0] for match in LINK.finditer(content)}

@@ -23,13 +23,13 @@ can be explained and reproduced by a human maintainer.
 
 ## Required artifact in every repository
 
-Every Sagan organization repository must contain `MAINTAINERS.md` and
-`CODEX_START.md` at its root. `MAINTAINERS.md` is the guaranteed human
-operations entry point. `CODEX_START.md` is the ready-to-paste prompt for a new
-Codex chat required by the
-[multi-repository fracture roadmap](repository-fracturing-roadmap.md). Either
-may link to detailed material under `docs/maintaining/`, but neither may
-require its reader to guess which canonical document to read next.
+Every Sagan organization repository must retain `AGENTS.md`, `TECHNOLOGY.md`,
+and `MAINTAINERS.md` at its root. `MAINTAINERS.md` is the guaranteed human
+operations entry point. `CODEX_START.md` is a one-time tracked prompt for the
+first specialized chat, then is deleted through a reviewed PR as required by
+the [multi-repository fracture roadmap](repository-fracturing-roadmap.md).
+Durable guides may link to detail under `docs/maintaining/`, but must never
+require hidden chat history or a deleted prompt to find canonical context.
 
 The root document must begin with:
 
@@ -259,9 +259,9 @@ Every repository must provide an automated maintainer-documentation check. At
 minimum it must verify:
 
 - `MAINTAINERS.md` exists and links to all mandatory detailed sections;
-- `CODEX_START.md` exists, links only to valid onboarding sources, and covers
-  both repository-local and whole-ecosystem orientation, including the owner's
-  teaching-first and explicit-implementation policy;
+- durable `AGENTS.md`, `TECHNOLOGY.md`, and `MAINTAINERS.md` survive deletion
+  of the one-time `CODEX_START.md` and cover repository-local and ecosystem
+  orientation, teaching-first behavior, and explicit-implementation policy;
 - referenced files, commands, workflows, scripts, and documentation pages
   exist;
 - the repository's current manifests and workflow filenames are enumerated;
@@ -312,8 +312,9 @@ An unclear or undocumented step fails the drill and creates a roadmap item.
 This milestone is complete only when:
 
 - every repository has its root `MAINTAINERS.md` and required detail;
-- every repository has a tested root `CODEX_START.md` that successfully
-  orients a clean chat without hidden conversation history;
+- every repository's one-time root `CODEX_START.md` has oriented a clean chat
+  without hidden context, then been deleted through a reviewed PR while its
+  durable onboarding guides remain usable;
 - the organization landing page points unambiguously to the workspace and
   maintainer entry points;
 - the official holistic documentation explains the ecosystem at a user and

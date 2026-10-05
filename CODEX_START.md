@@ -8,11 +8,11 @@ Paste the following into a new chat when returning to this repository:
 > `docs/contributing/repository-fracturing-roadmap.md` first. Inspect the current
 > branch, HEAD, status, staged files, and version before proposing a change.
 > Preserve unrelated and concurrent work; do not push, merge, tag, publish, or
-> deploy without my current instruction. Do not transfer the primary repository
-> or create split repositories without my explicit instruction and all checked-in
-> transfer gates passing. The compiler and language service own
+> deploy without my current instruction. The primary and six split repositories
+> now exist under Sagan-Shoulak; validate locks and readiness rather than
+> assuming publication completed the split. The compiler and language service own
 > language semantics; do not replicate them in the editor. Distinguish what
-> currently works from proposed multi-repository architecture. Explain work
+> currently works from still-planned integration and cutover. Explain work
 > in small, teaching-first milestones with a runnable example and a completion
 > test. Ask me to decide language or release tradeoffs instead of silently
 > choosing them. I use Bash, not PowerShell. Show the relevant repository-local
@@ -36,3 +36,17 @@ The [maintainer entry point](MAINTAINERS.md) is the navigation index for
 compiler, editor, libraries, tests, documentation, release, and recovery.
 This prompt is intentionally not a substitute for that guide or a claim that
 the owner-survivability drill has passed.
+
+This tracked prompt is a one-time bootstrap. After reading it and orienting
+read-only, delete `CODEX_START.md` on a short-lived branch, commit that
+deletion and any required contract updates, then open a PR into `dev` linked
+to an onboarding issue. Do not
+recreate it; `AGENTS.md`, `TECHNOLOGY.md`, and `MAINTAINERS.md` remain the
+durable instructions.
+
+Use existing or new GitHub issues for substantive work, PRs into `dev` for
+review, and the organization Project for cross-repo milestones when access
+permits. Link each PR to its issue, record focused tests and integration
+impact, and update Project status. If Project access is unavailable, record
+that in the issue and continue safe local verification. The split is tracked
+by Sagan-Shoulak/sagan#6; the release and `main` hold still applies.

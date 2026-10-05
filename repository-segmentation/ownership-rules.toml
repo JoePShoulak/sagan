@@ -30,6 +30,10 @@ pattern = "CODEX_START.md"
 repository = "sagan"
 
 [[rules]]
+pattern = "AGENTS.md"
+repository = "sagan"
+
+[[rules]]
 pattern = "MAINTAINERS.md"
 repository = "sagan"
 
