@@ -64,6 +64,10 @@ canonical source. Exact operational commands and recovery procedures belong in
 
 The planned repositories are `sagan`, `sagan-vscode`, `sagan-physics`,
 `sagan-render`, `sagan-workspace`, `sagan-docs`, and `sagan-space-game`.
+The intact `sagan` repository moves to `Sagan-Shoulak` before any of the other
+six repositories is created, so extraction work begins inside the permanent
+organization boundary. That transfer changes hosting and integration state,
+not source ownership; extraction remains a later gated operation.
 Component repositories own their implementation and documentation sources;
 the workspace locks tested commits together; the documentation repository
 assembles approved exports into one site. Released and workspace-locked modes
@@ -72,4 +76,6 @@ dependencies.
 
 See the [concise execution plan](docs/contributing/repository-fracturing-execution.md)
 for sequencing and `repository-segmentation/inventory.tsv` for the initial
-ownership inventory.
+ownership inventory. The primary transfer surface and recovery procedure are
+recorded in `repository-segmentation/primary-transfer.toml` and
+`repository-segmentation/primary-repository-transfer.md`.

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sagan.shoulak.org/schemas/primary-transfer-v1.json",
+  "title": "Sagan primary repository transfer inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source",
+    "destination",
+    "required_default_branch",
+    "split_repository_creation_blocked_until_verified",
+    "local_remote",
+    "github",
+    "legacy_references",
+    "external_integrations"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "source": { "const": "JoePShoulak/sagan" },
+    "destination": { "const": "Sagan-Shoulak/sagan" },
+    "required_default_branch": { "const": "dev" },
+    "split_repository_creation_blocked_until_verified": { "const": true },
+    "local_remote": {
+      "type": "object",
+      "required": ["name", "before", "after"]
+    },
+    "github": {
+      "type": "object",
+      "required": ["environments", "secret_names", "self_hosted_runner_labels", "workflows"]
+    },
+    "legacy_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "purpose"]
+      }
+    },
+    "external_integrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "verification"]
+      }
+    }
+  }
+}

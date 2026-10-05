@@ -56,6 +56,7 @@ known-good; editor support is under `editors/vscode-sagan`.
 | Release assets and signing | [Windows installer gate](docs/contributing/windows-installer-release.md), [code signing](docs/contributing/code-signing-policy.md) |
 | Documentation source, status, and hosting | [Documentation workflow](docs/contributing/documentation.md), [hosting](docs/contributing/hosting.md) |
 | Planned repo ownership and compatibility | [Split roadmap](docs/contributing/repository-fracturing-roadmap.md), [ecosystem readiness](docs/contributing/ecosystem-release-readiness.md) |
+| Primary repository organization transfer | [Transfer runbook](repository-segmentation/primary-repository-transfer.md), [transfer inventory](repository-segmentation/primary-transfer.toml) |
 | Remaining work and handoff standard | [Active roadmap](docs/contributing/active-roadmap.md), [handoff roadmap](docs/contributing/maintainer-handoff-roadmap.md) |
 
 Major subtrees: `src/` implements the compiler and protocols; `libraries/`
@@ -117,6 +118,7 @@ tagging, mirroring, deployment, or recovery.
 | Physics or rendering package | Relevant headless or graphical package test | The same affected package checks plus directly affected integration demonstrations |
 | Release, packaging, installer, deployment, or cross-component integration | Relevant policy or artifact test | The same affected policy, artifact, platform, or integration checks |
 | Repository segmentation contracts or ownership inventory | `bash scripts/repository_segmentation_check.sh` | Segmentation contract check plus affected documentation checks |
+| Primary repository transfer preparation | `bash scripts/primary_repository_transfer_audit.sh` (expected to report blockers until the transfer window) plus `bash scripts/repository_segmentation_check.sh` | Repeat the read-only audit; never treat it as transfer authorization |
 
 When a change spans rows, use the union of their requirements. An apparently
 documentation-only edit is not exempt when it changes executable snippets,

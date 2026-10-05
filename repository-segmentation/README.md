@@ -18,6 +18,9 @@ extraction. The canonical policy remains the
 - `workspace.toml` is the proposed clone layout and repository URL map; it does
   not imply that its planned remotes exist. `history-extraction.md` is the
   preservation-first filter, verification, publication, and rollback draft.
+- `primary-transfer.toml` inventories the intact repository's transfer surface;
+  `primary-repository-transfer.md` is the transfer, verification, and recovery
+  runbook. The primary transfer must pass before any split repository exists.
 - `schemas/` defines the initial component, workspace-lock, documentation-
   export, and chat-map contracts. `templates/` provides the shared root files
   that each repository must specialize and test.
@@ -38,6 +41,9 @@ extraction. The canonical policy remains the
 - Resolve every `needs-split` and `needs-rewrite` inventory row into exact
   extraction ownership before deleting any monorepo copy.
 - Record a clean, green baseline commit and a recoverable backup reference.
+- Select and pass the relevant checks for transfer or extraction impact. The
+  full repository suite remains reserved for `dev` to `main` promotion or a
+  release.
 - Finalize schemas for component metadata, workspace locks, documentation
   exports, repository prompts, maintainer guides, and technology overviews.
 - Record GitHub organization teams, repository visibility, branch protection,
@@ -55,6 +61,7 @@ git rev-parse HEAD
 git ls-files
 bash scripts/docs.sh check-structure
 bash scripts/repository_segmentation_check.sh
+bash scripts/primary_repository_transfer_audit.sh
 ```
 
 Run executable documentation examples only when examples or their supporting

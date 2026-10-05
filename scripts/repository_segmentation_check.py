@@ -162,6 +162,70 @@ def check_components_and_readiness() -> None:
             fail(f"workspace repository {entry['id']} has unexpected URL")
 
 
+def check_primary_transfer() -> None:
+    data = read_toml(SEGMENTATION / "primary-transfer.toml")
+    if data.get("schema_version") != 1:
+        fail("primary-transfer.toml must use schema_version = 1")
+    if data.get("source") != "JoePShoulak/sagan":
+        fail("primary-transfer.toml has an unexpected source repository")
+    if data.get("destination") != "Sagan-Shoulak/sagan":
+        fail("primary-transfer.toml has an unexpected destination repository")
+    if data.get("required_default_branch") != "dev":
+        fail("primary-transfer.toml must preserve dev as the default branch")
+    if data.get("split_repository_creation_blocked_until_verified") is not True:
+        fail("primary transfer must block split repository creation until verified")
+
+    github = data.get("github", {})
+    expected_workflows = {path.name for path in (ROOT / ".github" / "workflows").glob("*.yml")}
+    if set(github.get("workflows", [])) != expected_workflows:
+        fail("primary-transfer.toml workflow inventory is stale")
+
+    legacy_paths = [entry.get("path") for entry in data.get("legacy_references", [])]
+    if len(legacy_paths) != len(set(legacy_paths)):
+        fail("primary-transfer.toml contains duplicate legacy reference paths")
+    for path in legacy_paths:
+        if not isinstance(path, str) or not (ROOT / path).is_file():
+            fail(f"primary-transfer.toml legacy reference does not exist: {path}")
+
+    search_roots = [
+        ROOT / "README.md",
+        ROOT / "MAINTAINERS.md",
+        ROOT / "docs",
+        ROOT / "packaging",
+        ROOT / "deploy",
+        ROOT / "scripts",
+    ]
+    ignored_files = {
+        ROOT / "scripts" / "primary_repository_transfer_audit.sh",
+        ROOT / "scripts" / "repository_segmentation_check.py",
+    }
+    discovered_legacy_paths: set[str] = set()
+    for search_root in search_roots:
+        candidates = [search_root] if search_root.is_file() else search_root.rglob("*")
+        for candidate in candidates:
+            if not candidate.is_file() or candidate in ignored_files:
+                continue
+            try:
+                contents = candidate.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            if "JoePShoulak/sagan" in contents:
+                discovered_legacy_paths.add(candidate.relative_to(ROOT).as_posix())
+    if set(legacy_paths) != discovered_legacy_paths:
+        fail(
+            "primary-transfer.toml legacy reference inventory is stale: "
+            f"expected {sorted(discovered_legacy_paths)}, recorded {sorted(legacy_paths)}"
+        )
+
+    integration_ids = [
+        entry.get("id") for entry in data.get("external_integrations", [])
+    ]
+    if len(integration_ids) != len(set(integration_ids)):
+        fail("primary-transfer.toml contains duplicate external integration IDs")
+    if any(not entry.get("verification") for entry in data.get("external_integrations", [])):
+        fail("every primary transfer integration requires a verification rule")
+
+
 def check_schemas_and_templates() -> None:
     schema_directory = SEGMENTATION / "schemas"
     schemas = sorted(schema_directory.glob("*.schema.json"))
@@ -170,6 +234,7 @@ def check_schemas_and_templates() -> None:
         "component-manifest.schema.json",
         "documentation-export.schema.json",
         "extraction-plan.schema.json",
+        "primary-transfer.schema.json",
         "readiness.schema.json",
         "workspace-lock.schema.json",
         "workspace-manifest.schema.json",
@@ -208,6 +273,7 @@ def main() -> int:
         check_chat_map()
         check_inventory()
         check_components_and_readiness()
+        check_primary_transfer()
         check_schemas_and_templates()
         check_root_contract()
         check_file_manifests()

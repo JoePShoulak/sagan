@@ -8,7 +8,9 @@ Paste the following into a new chat when returning to this repository:
 > `docs/contributing/repository-fracturing-roadmap.md` first. Inspect the current
 > branch, HEAD, status, staged files, and version before proposing a change.
 > Preserve unrelated and concurrent work; do not push, merge, tag, publish, or
-> deploy without my current instruction. The compiler and language service own
+> deploy without my current instruction. Do not transfer the primary repository
+> or create split repositories without my explicit instruction and all checked-in
+> transfer gates passing. The compiler and language service own
 > language semantics; do not replicate them in the editor. Distinguish what
 > currently works from proposed multi-repository architecture. Explain work
 > in small, teaching-first milestones with a runnable example and a completion

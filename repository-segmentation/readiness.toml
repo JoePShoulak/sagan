@@ -4,7 +4,7 @@ schema_version = 1
 branch = "dev"
 commit = "c8fa3a1"
 backup_reference = "unrecorded"
-full_suite = "required-before-first-extraction"
+full_suite = "required-only-for-main-promotion-or-release"
 owner_recovery_drill = "not-run"
 
 [tooling]
@@ -47,7 +47,7 @@ evidence = "Teams, protections, secrets, environments, runners, and transfer per
 [[decisions]]
 id = "primary-repository-transfer"
 status = "required"
-evidence = "Transfer the intact sagan repository to Sagan-Shoulak and verify redirects, remotes, governance, CI, documentation, integrations, owner recovery, and rollback before creating any split repository."
+evidence = "primary-transfer.toml and primary-repository-transfer.md define the audited transfer surface and runbook. Authentication, governance decisions, backup, execution, verification, owner recovery, and rollback still remain before any split repository may be created."
 
 [[decisions]]
 id = "history-and-rollback"

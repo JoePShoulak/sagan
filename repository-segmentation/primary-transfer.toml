@@ -1,0 +1,93 @@
+schema_version = 1
+source = "JoePShoulak/sagan"
+destination = "Sagan-Shoulak/sagan"
+required_default_branch = "dev"
+split_repository_creation_blocked_until_verified = true
+
+[local_remote]
+name = "origin"
+before = "https://github.com/JoePShoulak/sagan"
+after = "https://github.com/Sagan-Shoulak/sagan.git"
+
+[github]
+environments = [
+  "documentation",
+  "initial-unsigned-release",
+  "release-signing",
+  "stable-release",
+]
+secret_names = [
+  "SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY",
+  "SAGAN_SIGNTOOL_COMMAND",
+]
+self_hosted_runner_labels = ["self-hosted", "sagan-docs-hp1"]
+workflows = [
+  "coverage.yml",
+  "documentation.yml",
+  "integration.yml",
+  "release-mirror.yml",
+  "release-on-main.yml",
+  "release.yml",
+  "vscode-extension.yml",
+  "windows-installer.yml",
+]
+
+[[legacy_references]]
+path = "README.md"
+purpose = "documentation and Codecov badges plus release links"
+
+[[legacy_references]]
+path = "MAINTAINERS.md"
+purpose = "canonical clone command"
+
+[[legacy_references]]
+path = "docs/getting-started/downloads.md"
+purpose = "release download link"
+
+[[legacy_references]]
+path = "docs/getting-started/editor-support.md"
+purpose = "extension release link"
+
+[[legacy_references]]
+path = "docs/contributing/hosting.md"
+purpose = "self-hosted runner configuration"
+
+[[legacy_references]]
+path = "packaging/windows/sagan.iss"
+purpose = "publisher, support, and update URLs"
+
+[[legacy_references]]
+path = "deploy/releases/github.py"
+purpose = "GitHub API repository endpoint"
+
+[[legacy_references]]
+path = "deploy/releases/index.py"
+purpose = "rendered release navigation"
+
+[[legacy_references]]
+path = "scripts/release_metadata.sh"
+purpose = "SBOM namespace"
+
+[[external_integrations]]
+id = "github-actions"
+verification = "All required checks run on dev and protected settings match the recorded policy."
+
+[[external_integrations]]
+id = "github-releases"
+verification = "Existing tags, releases, assets, checksums, and latest-release state are unchanged."
+
+[[external_integrations]]
+id = "github-pages-and-docs"
+verification = "Documentation URLs, deployment environment, version publishing, and redirects work."
+
+[[external_integrations]]
+id = "hp1-runner"
+verification = "The sagan-docs-hp1 runner is visible to the transferred repository and both documentation and release-mirror jobs can be dispatched."
+
+[[external_integrations]]
+id = "release-signing"
+verification = "Environment approvals and named secrets remain configured without exposing secret values."
+
+[[external_integrations]]
+id = "release-mirror"
+verification = "HP1 can read releases through the new canonical repository path and old-path redirects."
