@@ -76,9 +76,10 @@ repository nor its transfer backup was filtered.
 
 The full path set and its history now pass a pinned filter-repo rehearsal.
 The first standalone source-build and release-script rewrite is preserved
-as an ordered four-patch local series in `../patches/vscode/`, including
+as an ordered five-patch local series in `../patches/vscode/`, including
 draft `MAINTAINERS.md`, `TECHNOLOGY.md`, `CODEX_START.md`, and
-`AGENTS.md`. A fresh-clone replay matched the branch tree exactly. Its Windows
+`AGENTS.md` and review-needed independent editor documentation. A
+fresh-clone replay matched the branch tree exactly. Its Windows
 rehearsal passed `npm test`, `npm run test:bundle`, live
 `npm run test:integration`, standalone VSIX packaging/checksum, isolated
 VSIX installation, and matching-native-tool activation. The integration
@@ -91,7 +92,7 @@ performed.
 The filtered history still contains nine **language** release tags. A
 disposable bare-repository publication rehearsal pushed only the reviewed
 extension candidate as `dev` (initially `db57bb3`, fast-forwarded to
-`aa8a414` after the fourth patch) and the filtered language
+`7daecdb` after the fifth patch) and the filtered language
 `main` snapshot as `main` (`4045491`), set the bare default HEAD to
 `dev`, and passed `git fsck --full`. The destination had exactly those two
 heads and **zero tags**. The real destination must likewise use explicit
@@ -100,9 +101,10 @@ branch refspecs; never use `--mirror`, `--all`, `--tags`, or
 remain deferred until the owner resumes publication and approves their
 names. This local push did not create or contact a GitHub repository.
 
-Imported documentation and remaining release integration still contain
-monorepo-relative behavior beyond this first patch. Apply the rewrites in
-`../vscode-relocation.toml` and test the resulting independent repository
+The imported documentation now uses independent-repository paths and verified
+official-site links, but a human documentation audit and actual site
+aggregation are still required. Complete any remaining release integration
+in `../vscode-relocation.toml` and test the resulting independent repository
 before creation. The owner approved a temporary CI contract that checks out
 an exact pinned Sagan source commit and builds compiler/LSP on each platform;
 the draft lock is recorded in the patch, but its cross-platform jobs still

@@ -5,9 +5,9 @@ They apply in order after filtering the organization repository at source
 `dev` commit `4132c8c37f99dc5f89c7141f5780b583b64d192e` with
 `vscode-relocation.toml`. The expected filtered base is
 `5a8d156f18785d12ba6603f751f9a5533c2ea1b9`. Verify both hashes before
-applying the four numbered patches with `git am`; do not apply them to the
-intact Sagan repository. A fresh-clone replay of all four patches produced
-tree `9590c0b30ef36edea5933ecab9886b34af2965ec`, identical to the
+applying the five numbered patches with `git am`; do not apply them to the
+intact Sagan repository. A fresh-clone replay of all five patches produced
+tree `98771f9cedf5b83b542240c10eb13e2315838fdf`, identical to the
 draft branch.
 
 The workflow checks out the public `Sagan-Shoulak/sagan` repository at the
@@ -24,8 +24,10 @@ The pinned source itself has **not** yet been built in the independent
 workflow, and Linux/macOS jobs have **not** run. Do not publish a split
 repository or claim independent CI parity on this evidence alone.
 
-The patches include draft maintainer, technology, and new-chat guides. They
-do not complete cross-repository documentation links, an owner recovery
+The patches include draft maintainer, technology, and new-chat guides and
+rewrite imported editor-documentation links to verified official-site URLs.
+The edited pages are `review-needed` and not publication-ready. The patches
+do not complete site aggregation, an owner recovery
 drill, independent hosted CI, extension release-tag naming, or destination
 governance. All imported docs remain `publication_ready: false`
 and require human review after their links and ownership are rewritten.

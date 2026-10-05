@@ -1,0 +1,205 @@
+From 7daecdba12aa8bb4ce8cbeec6eb43a52fa86752f Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 02:35:30 -0500
+Subject: [PATCH] Relink extension documentation for independent ownership
+
+---
+ docs/getting-started/editor-support.md   | 33 ++++++++++++++----------
+ docs/tooling/editor-support.md           |  8 +++---
+ docs/tooling/extension-readiness.md      |  5 +++-
+ docs/tooling/vscode-extension-roadmap.md | 13 ++++++----
+ 4 files changed, 36 insertions(+), 23 deletions(-)
+
+diff --git a/docs/getting-started/editor-support.md b/docs/getting-started/editor-support.md
+index 0d1fbf7..0263ce7 100644
+--- a/docs/getting-started/editor-support.md
++++ b/docs/getting-started/editor-support.md
+@@ -1,6 +1,6 @@
+ ---
+ title: Editor support
+-status: work-in-progress
++status: review-needed
+ publication_ready: false
+ verified_in: null
+ verified_on: null
+@@ -34,22 +34,28 @@ Alternatively, install the downloaded asset from Bash:
+ code --install-extension sagan-language-VERSION.vsix
+ ```
+ 
+-## Build and install from a repository clone
++## Build and install from an extension repository clone
+ 
+-Use this route when working with Sagan's experimental branch:
++Use this route when working with an extension development branch. Build or
++install a matching Sagan compiler and language server separately:
+ 
+ ```bash
+-cd editors/vscode-sagan
++git clone https://github.com/Sagan-Shoulak/sagan-vscode.git
++cd sagan-vscode
+ npm ci
+ npm test
+ npm run test:bundle
++export SAGAN_COMPILER_PATH=/absolute/path/to/sagan
++export SAGAN_LSP_PATH=/absolute/path/to/sagan-lsp
+ npm run test:integration
+ npm run package
+ code --install-extension sagan-language-*.vsix
+ ```
+ 
+-The repository's extension version is currently 0.3.6. Its version is
+-independent of the compiler version.
++On Windows, use the `.exe` paths. The extension version is independent of
++the compiler version; `sagan-source-commit.txt` records the exact compiler
++revision initially tested by independent extension CI. Releases remain
++paused pending the owner's publication decision.
+ 
+ ## Verify the installation
+ 
+@@ -67,16 +73,16 @@ independent of the compiler version.
+ 7. If discovery fails, set `sagan.compiler.path` and `sagan.server.path` to the
+    matching executables. Relevant setting changes restart the server automatically.
+ 
+-See [Testing Sagan programs](../tooling/testing-sagan-programs.md) for test
++See [Testing Sagan programs](https://sagan.shoulak.org/experimental/tooling/testing-sagan-programs/) for test
+ syntax, suites, document versus project runs, selection, output, cancellation,
+ and the current absence of a public terminal test command.
+ 
+-The extension locates the compiler and [language server](../tooling/language-server.md),
++The extension locates the compiler and [language server](https://sagan.shoulak.org/experimental/tooling/language-server/),
+ then enables only the capabilities advertised during LSP initialization.
+ TextMate coloring remains lexical and is not proof that code parses or
+ type-checks. The VSIX does not embed the native language-server executable; a
+ matching Sagan installation must provide `sagan-lsp` on `PATH`, beside the
+-configured compiler, in the repository `bin` directory, or through
++configured compiler, in the active Sagan project's `bin` directory, or through
+ `sagan.server.path`.
+ 
+ Package names and imported symbols already have some compiler-backed
+@@ -87,7 +93,7 @@ experimental adapter has not passed its release and capability gates.
+ ## Troubleshooting
+ 
+ - If code has changed locally but diagnostics still describe old syntax, rebuild
+-  `bin/sagan` and `bin/sagan-lsp` from the checkout. Then run **Sagan: Restart
++  `bin/sagan` and `bin/sagan-lsp` from the Sagan source checkout. Then run **Sagan: Restart
+   Language Server** or **Developer: Reload Window**. Reinstalling the VSIX
+   alone does not replace the native server. On Windows, close VS Code before
+   rebuilding if its running `sagan-lsp.exe` prevents replacement.
+@@ -106,11 +112,12 @@ experimental adapter has not passed its release and capability gates.
+ 
+ ## Development-host testing
+ 
+-Open `editors/vscode-sagan/` in VS Code, press `F5`, and choose **Run Sagan
++Open this extension repository in VS Code, press `F5`, and choose **Run Sagan
+ Extension** if prompted. The Extension Development Host opens the bundled
+ demonstration file. This is intended for extension development, not ordinary
+ installation.
+ 
+ The opt-in `npm run test:integration` command downloads or reuses a supported
+-VS Code test runtime and requires a built `bin/sagan-lsp` (or an explicit
+-`SAGAN_LSP_PATH`). Ordinary `npm test` remains offline and deterministic.
++VS Code test runtime and requires explicit `SAGAN_COMPILER_PATH` and
++`SAGAN_LSP_PATH` pointing to compatible native executables. Ordinary
++`npm test` remains offline and deterministic.
+diff --git a/docs/tooling/editor-support.md b/docs/tooling/editor-support.md
+index fb97053..9565f9b 100644
+--- a/docs/tooling/editor-support.md
++++ b/docs/tooling/editor-support.md
+@@ -1,6 +1,6 @@
+ ---
+ title: Editor support
+-status: work-in-progress
++status: review-needed
+ publication_ready: false
+ verified_in: null
+ verified_on: null
+@@ -8,7 +8,7 @@ verified_by: null
+ ---
+ 
+ # Editor support
+-The version 0.3.6 VS Code extension in `editors/vscode-sagan/` associates
++The VS Code extension in this repository associates
+ `.sagan` files with the language and provides a tokenizer-aligned Sagan TextMate
+ grammar. It covers declarations (including explicit `const` and visibly invalid
+ `let ALL_CAPS` names), keywords, types, literals, operators, punctuation,
+@@ -24,7 +24,7 @@ exposes **Sagan: Show Tooling Status** and **Sagan: Restart Language Server**.
+ TextMate remains lexical and cannot resolve whether braces are blocks or
+ dictionaries, or whether angle brackets are vectors or comparisons.
+ 
+-The extension connects to the standalone [language server](language-server.md)
++The extension connects to the standalone [language server](https://sagan.shoulak.org/experimental/tooling/language-server/)
+ with VS Code's standard language client. Diagnostics, hover, completion,
+ signature help, navigation, symbols, semantic tokens, folding, selection
+ ranges, links, inlay hints, safe edits, formatting, and type/call hierarchies
+@@ -41,7 +41,7 @@ installation.
+ Compiler-owned editor infrastructure is separate from the extension. Source
+ snapshots, diagnostics, recovering syntax, overlays, semantic identities,
+ position queries, and LSP transport are available. Track the [editor feature readiness checklist](extension-readiness.md)
+-and [language-server capability contract](language-server-capabilities.md).
++and [language-server capability contract](https://sagan.shoulak.org/experimental/tooling/language-server-capabilities/).
+ The extension must not duplicate Sagan parsing, semantics, project rules, or
+ standard-library metadata.
+ 
+diff --git a/docs/tooling/extension-readiness.md b/docs/tooling/extension-readiness.md
+index 1c5f82b..f553094 100644
+--- a/docs/tooling/extension-readiness.md
++++ b/docs/tooling/extension-readiness.md
+@@ -1,6 +1,6 @@
+ ---
+ title: Editor feature readiness
+-status: work-in-progress
++status: review-needed
+ publication_ready: false
+ verified_in: null
+ verified_on: null
+@@ -12,6 +12,9 @@ verified_by: null
+ The extension project should use this checklist rather than infer readiness
+ from compiler version numbers. “Blocked” means the authoritative shared service
+ contract is not yet implemented; the extension must not reproduce it.
++Compiler-side implementation and protocol evidence belong in
++[the official language-server documentation](https://sagan.shoulak.org/experimental/tooling/language-server/);
++this page tracks the extension's consumer obligations.
+ 
+ **Handoff status:** the Phase 9 server reliability gate has passed on Windows.
+ The extension chat can now wire up the LSP features advertised by `initialize`
+diff --git a/docs/tooling/vscode-extension-roadmap.md b/docs/tooling/vscode-extension-roadmap.md
+index 96d8e92..f81c071 100644
+--- a/docs/tooling/vscode-extension-roadmap.md
++++ b/docs/tooling/vscode-extension-roadmap.md
+@@ -1,6 +1,6 @@
+ ---
+ title: VS Code extension roadmap
+-status: work-in-progress
++status: review-needed
+ publication_ready: false
+ verified_in: null
+ verified_on: null
+@@ -13,6 +13,9 @@ Version 0.3.6 is a usable language client for the capabilities currently
+ advertised by `sagan-lsp`. This roadmap lists work that remains after the
+ initial client integration. The extension must continue to consume compiler
+ contracts rather than reproduce parsing, semantics, project rules, or catalogs.
++This independent-repository draft has a pinned-source CI workflow; its
++Linux, macOS, and Windows jobs still need to run in the destination repository
++before that extraction is ready.
+ 
+ ## Current compiler handoff checkpoint
+ 
+@@ -69,11 +72,11 @@ for continued local extension development:
+   automated Windows integration path is now verified; platform-specific visual
+   behavior, including file-icon theme interaction, and features outside its
+   representative request set remain.
+-- Observe the first hosted run of the automated Extension Development Host
+-  integration suite after the relevant commits are pushed. Keep it passing on
+-  each supported CI platform. The dedicated workflow builds the matching
++- Observe the first **independent-repository** hosted run of the automated
++  Extension Development Host integration suite. Keep it passing on each
++  supported CI platform. The draft dedicated workflow builds the matching
+   compiler and server and runs unit, bundle, and live-host tests on Windows,
+-  Linux, and macOS; its first hosted run remains to be observed. The suite
++  Linux, and macOS; that independent hosted run remains to be observed. The suite
+   covers real activation, diagnostics, hover, definition, completion,
+   signature help, symbols, and formatting without making ordinary unit tests
+   network-dependent. A clean
+-- 
+2.51.0.windows.2
+
