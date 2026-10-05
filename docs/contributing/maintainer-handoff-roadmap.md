@@ -1,6 +1,6 @@
 ---
 title: Maintainer handoff and project survivability
-status: work-in-progress
+status: review-needed
 publication_ready: false
 verified_in: null
 verified_on: null

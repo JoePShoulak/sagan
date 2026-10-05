@@ -23,7 +23,10 @@ extraction. The canonical policy remains the
   runbook. `audits/` records dated read-only GitHub settings snapshots. The
   primary transfer must pass before any split repository exists.
 - `merge-readiness.md` separates this preparation branch's merge checks from
-  the later transfer and per-repository extraction gates.
+  the later transfer and per-repository extraction gates. It remains blocked
+  until the primary transfer can begin safely immediately after that merge.
+- `owner-transfer-start-drill.md` is the owner's clean-checkout, local-backup
+  recovery rehearsal required before this branch may merge.
 - `vscode-relocation.toml` assigns destination paths and rewrites for every
   extension-owned file outside `editors/vscode-sagan/`; the validator checks it
   against the exact ownership manifest.

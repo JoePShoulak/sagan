@@ -131,6 +131,7 @@ scripts/ast_demo.sh
 scripts/cli_test.sh
 scripts/coverage.sh
 scripts/coverage_threshold.sh
+scripts/create_primary_local_backup.sh
 scripts/dap_protocol_test.sh
 scripts/editor_tooling_demo.sh
 scripts/generate_unicode_tables.py
@@ -153,6 +154,7 @@ scripts/run_demo.sh
 scripts/test.sh
 scripts/units_demo.sh
 scripts/update_unicode_tables.sh
+scripts/verify_primary_local_backup.sh
 scripts/version.sh
 scripts/version_test.sh
 scripts/windows/build_installer.sh

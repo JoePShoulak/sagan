@@ -1,6 +1,6 @@
 ---
 title: Release lifecycle
-status: work-in-progress
+status: review-needed
 publication_ready: false
 verified_in: null
 verified_on: null
@@ -9,9 +9,17 @@ verified_by: null
 
 # Release lifecycle
 
+Owner hold, October 5, 2026: release publication and promotion to `main` are
+paused, and signing work is deferred because of its cost. The procedures below
+describe the existing automation and historical release gates; they do not
+authorize a preview, stable tag, `main` push, or unsigned replacement policy.
+The owner must explicitly reopen publication and decide the future signing or
+unsigned-release policy before these procedures are used again.
+
 Development occurs on focused branches created from `dev`. Changes merge into
-`dev` through pull requests, where the combined state receives the full
-integration suite. The project owner promotes validated `dev` history to `main`
+`dev` through pull requests, where the combined state receives relevant
+integration checks for the affected surfaces. The project owner promotes
+validated `dev` history to `main`
 only when intentionally preparing a release; ordinary feature and fix work does
 not land directly on either protected branch. See the
 [change and publication lifecycle](change-lifecycle.md) for the complete path.

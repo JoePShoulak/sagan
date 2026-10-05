@@ -1,6 +1,6 @@
 ---
 title: Code signing policy
-status: work-in-progress
+status: review-needed
 publication_ready: false
 verified_in: null
 verified_on: null
@@ -10,10 +10,11 @@ verified_by: null
 # Code signing policy
 
 Sagan's initial 1.0.0 Windows installer was published unsigned, with a warning
-on its release page. Future installers are intended to use SignPath Foundation
-signing once the project is accepted and the release pipeline has been verified.
-Until then, do not describe an artifact as signed merely because it came from
-GitHub Releases or has a SHA-256 checksum.
+on its release page. On October 5, 2026, the owner deferred further signing
+work because of its cost and paused all release publication for now. The
+SignPath design below is historical and conditional, not an active plan or a
+completed capability. Do not describe an artifact as signed merely because it
+came from GitHub Releases or has a SHA-256 checksum.
 
 Free code signing provided by [SignPath.io](https://signpath.io/), certificate
 by [SignPath Foundation](https://signpath.org/). The Authenticode publisher on

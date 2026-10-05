@@ -5,9 +5,10 @@ branch = "dev"
 commit = "pending-current-dev-selection"
 initial_preparation_commit = "c8fa3a1"
 remote_dev_observed_2026_10_05 = "1e1675037ca5273c1381588e6a8dadd395813bb6"
-backup_reference = "unrecorded"
+backup_reference = "local-rehearsal:/c/Users/joeps/coding/sagan-pretransfer-rehearsal-2026-10-05; refresh-after-dev-freeze"
 full_suite = "required-only-for-main-promotion-or-release"
 owner_recovery_drill = "not-run"
+release_policy = "paused; signing abandoned for now"
 
 [tooling]
 git_filter_repo = "missing"
@@ -18,8 +19,9 @@ vscode_shared_file_import = "not-rehearsed"
 vscode_live_host_rehearsal = "passed-in-monorepo-and-extracted-subtree-2026-10-05"
 primary_repository_transfer = "required-before-split-repository-creation"
 primary_remote_backup_rehearsal = "passed-2026-10-05"
-primary_release_inventory = "metadata-validated-2026-10-05; assets-not-downloaded"
+primary_release_inventory = "metadata-and-33-assets-verified-in-local-rehearsal-2026-10-05"
 primary_release_backup_test = "mock-download-and-corruption-rejection-passed-2026-10-05"
+primary_local_backup_rehearsal = "21-refs-and-33-assets-verified-with-restore-2026-10-05"
 
 [[decisions]]
 id = "repository-names"
@@ -44,22 +46,22 @@ evidence = "ecosystem.toml and its forbidden dependency rules"
 [[decisions]]
 id = "artifact-formats"
 status = "required"
-evidence = "Native rendering and released package formats remain undecided."
+evidence = "Native rendering and released package formats remain undecided; settle them before the relevant library extraction, not before the intact primary-repository transfer."
 
 [[decisions]]
 id = "github-governance"
-status = "required"
-evidence = "A read-only source-settings snapshot is in audits/github-transfer-2026-10-05.md. Target team policy, dev protection choice, missing release-signing secret, and post-transfer parity remain unresolved."
+status = "provisional"
+evidence = "The owner chose to preserve observed access and branch protection during transfer and tighten later. Source has only JoePShoulak as collaborator, target organization has no teams and default read permission, and JoePShoulak is the stable-release reviewer. All releases are paused and signing is deferred. Recheck policy and post-transfer parity at the freeze; see audits/github-transfer-2026-10-05.md."
 
 [[decisions]]
 id = "primary-repository-transfer"
 status = "required"
-evidence = "primary-transfer.toml and primary-repository-transfer.md define the audited transfer surface and runbook. Authentication was valid on October 5 but must be rechecked at the freeze; governance decisions, durable backup, execution, verification, owner recovery, and rollback remain before any split repository may be created."
+evidence = "primary-transfer.toml and primary-repository-transfer.md define the transfer surface and runbook. A local-only rehearsal backup and restore passed (audits/local-backup-2026-10-05.md). Authentication, frozen dev baseline, fresh backup, execution, parity verification, owner recovery, and rollback remain before any split repository may be created."
 
 [[decisions]]
 id = "history-and-rollback"
 status = "provisional"
-evidence = "The VS Code subtree, including its live Extension Host test, and the remote mirror restore rehearsal passed (rehearsals/vscode.md and rehearsals/primary-backup.md). Release metadata and mocked download integrity were verified, but durable backup, real asset download, approved extraction tooling, shared-file import, and rollback drills remain."
+evidence = "The VS Code subtree and live Extension Host passed, and the local transfer rehearsal verified a Git mirror, all 33 release assets, and an independent restore. The final frozen-dev backup, approved extraction tooling, shared-file import, and owner rollback drills remain."
 
 [[decisions]]
 id = "space-game-seed"

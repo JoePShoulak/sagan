@@ -39,11 +39,33 @@ No secret values were read or recorded.
 
 ## Still required
 
-- Decide and document the destination team's access and whether `dev` should
-  gain protection before or after transfer.
-- Verify the signing secret's intended location and stable-release reviewer
-  identity without recording values in the repository.
-- Record the exact transfer baseline, offline mirror backup, ref inventory,
+- Preserve observed access and branch protection through transfer, then verify
+  parity before making any new team or `dev` protection changes.
+- Keep all releases paused. Signing is deferred; no signing-secret setup is
+  required for this transfer.
+- Record the exact transfer baseline, local mirror backup, ref inventory,
   release inventory, checksums, and recovery drill.
 - Verify every setting above after transfer, then run the relevant CI, docs,
   installer, and mirror checks before allowing any split repository creation.
+
+## Later read-only checks and owner decisions on October 5
+
+- The source collaborator list contains only `JoePShoulak` with admin access.
+  The target organization currently has no teams; its default repository
+  permission is `read`. The owner chose to preserve the observed policy through
+  transfer and consider tighter `dev` protection and team access afterward.
+- `JoePShoulak` is the one required reviewer for `stable-release`. The source
+  repository secret list contains `SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY`; the
+  `release-signing` environment has no secret names. The current token cannot
+  list organization Actions secrets (`admin:org` scope required), so no claim
+  is made about them. The owner abandoned signing work because of its cost and
+  paused **all** release publication for now. Do not create or seek the missing
+  `SAGAN_SIGNTOOL_COMMAND` credential as a transfer prerequisite.
+- The owner approved a local-only backup on this machine. Its verified
+  rehearsal is recorded in `local-backup-2026-10-05.md`; it must be refreshed
+  from frozen `dev` after merge and before transfer.
+- [GitHub's transfer documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository)
+  says repository secrets and collaborators remain associated, while the
+  organization's default permissions apply. It also warns that creating a
+  repository at the old location destroys the redirect. These are verification
+  expectations, not proof that the transfer has occurred.

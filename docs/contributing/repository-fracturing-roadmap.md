@@ -421,6 +421,12 @@ workspace compatibility evidence used to build them.
 
 ## Branch and publication policy
 
+Release publication and `main` promotion are currently paused by the owner;
+signing is deferred because of its cost. The policy below describes how
+publication will work only after the owner explicitly reopens it. Repository
+segmentation preparation and the intact-repository transfer do not themselves
+resume release publication.
+
 Every product repository uses the same default policy:
 
 - `dev` is the integration branch and is not the normal implementation

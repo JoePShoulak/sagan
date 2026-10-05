@@ -19,8 +19,10 @@ environments = [
 ]
 secret_names = [
   "SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY",
-  "SAGAN_SIGNTOOL_COMMAND",
 ]
+deferred_signing_secret_names = ["SAGAN_SIGNTOOL_COMMAND"]
+transfer_policy = "preserve-observed-settings-before-tightening"
+release_policy = "paused-until-owner-decides-publication-policy"
 self_hosted_runner_labels = ["self-hosted", "sagan-docs-hp1"]
 workflows = [
   "coverage.yml",
@@ -74,6 +76,10 @@ path = "scripts/primary_release_backup.sh"
 purpose = "pre-transfer release source; retire or update after cutover"
 
 [[legacy_references]]
+path = "scripts/create_primary_local_backup.sh"
+purpose = "pre-transfer mirror source; retire or update after cutover"
+
+[[legacy_references]]
 path = "scripts/primary_release_backup_test.sh"
 purpose = "pre-transfer release-backup mock; retire or update after cutover"
 
@@ -83,7 +89,7 @@ purpose = "pre-transfer mirror source; retire or update after cutover"
 
 [[external_integrations]]
 id = "github-actions"
-verification = "All required checks run on dev and protected settings match the recorded policy."
+verification = "Affected dev checks run and observed branch policies match the recorded pre-transfer snapshot; do not add protection during transfer."
 
 [[external_integrations]]
 id = "github-releases"
@@ -91,16 +97,16 @@ verification = "Existing tags, releases, assets, checksums, and latest-release s
 
 [[external_integrations]]
 id = "github-pages-and-docs"
-verification = "Documentation URLs, deployment environment, version publishing, and redirects work."
+verification = "Existing documentation URLs, deployment configuration, and redirects are intact; deployment remains frozen during transfer."
 
 [[external_integrations]]
 id = "hp1-runner"
-verification = "The sagan-docs-hp1 runner is visible to the transferred repository and both documentation and release-mirror jobs can be dispatched."
+verification = "The sagan-docs-hp1 runner remains visible to the transferred repository; do not dispatch publication jobs while releases and deployment are paused."
 
 [[external_integrations]]
 id = "release-signing"
-verification = "Environment approvals and named secrets remain configured without exposing secret values."
+verification = "The existing environment and reviewer policy are inventoried; signing is deferred, the signing secret is not required for transfer, and all releases remain paused."
 
 [[external_integrations]]
 id = "release-mirror"
-verification = "HP1 can read releases through the new canonical repository path and old-path redirects."
+verification = "Read-only HP1 access to existing releases works through the new canonical path and old-path redirects; synchronization remains frozen during transfer."

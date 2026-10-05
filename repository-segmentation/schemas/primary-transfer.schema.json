@@ -29,7 +29,19 @@
     },
     "github": {
       "type": "object",
-      "required": ["environments", "secret_names", "self_hosted_runner_labels", "workflows"]
+      "required": [
+        "environments",
+        "secret_names",
+        "deferred_signing_secret_names",
+        "transfer_policy",
+        "release_policy",
+        "self_hosted_runner_labels",
+        "workflows"
+      ],
+      "properties": {
+        "transfer_policy": { "const": "preserve-observed-settings-before-tightening" },
+        "release_policy": { "const": "paused-until-owner-decides-publication-policy" }
+      }
     },
     "legacy_references": {
       "type": "array",

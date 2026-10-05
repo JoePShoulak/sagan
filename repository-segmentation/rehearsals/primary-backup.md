@@ -12,18 +12,20 @@ The temporary remote-mirror rehearsal passed on October 5, 2026 using
 - `git fsck --full` passed on the mirror and on an independent restored clone
 - The restored checkout contained `README.md` and had the same `HEAD` as the mirror
 
-The rehearsal used a temporary directory. It is not the durable, off-machine
-backup required immediately before transfer. Git history alone also does not
-back up GitHub release assets, environment settings, secrets, issues, or pull
-requests. Those inventories and the approved recovery location remain part of
-the transfer gate.
+The first rehearsal used a temporary directory. A later local-only backup of
+the same source refs and the real release assets passed verification and is
+recorded in `../audits/local-backup-2026-10-05.md`. Neither rehearsal is the
+final backup of frozen post-merge `dev`. Git history and release assets do not
+back up GitHub environment settings, secrets, issues, or pull requests. The
+owner accepted that a local-only backup cannot recover from loss of this
+machine.
 
 The read-only release inventory mode of
 `bash scripts/primary_release_backup.sh inventory` also passed on October 5.
 It found five releases with 33 assets totaling 565,009,480 bytes and validated
 that the current asset names, sizes, and publisher SHA-256 digests are present
-and safe for the backup script. The asset download and checksum comparison
-remain untested against the real releases until a durable backup destination
-is selected. `bash scripts/primary_release_backup_test.sh` passed with a mock
-GitHub release: it exercised inventory, download, checksum verification,
-rejection of a corrupted asset, and refusal to write into a nonempty target.
+and safe for the backup script. The later local backup downloaded all 33 real
+assets and verified publisher digests and sizes. In addition,
+`bash scripts/primary_release_backup_test.sh` passed with a mock GitHub
+release: it exercised inventory, download, checksum verification, rejection
+of a corrupted asset, and refusal to write into a nonempty target.

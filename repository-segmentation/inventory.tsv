@@ -1,7 +1,7 @@
 path	destination	status	notes
 .gitignore	sagan	needs-rewrite	Each repository receives ownership-specific ignore rules.
 .vscode/	sagan	needs-split	Language launch configuration remains; multi-root workspace configuration moves to workspace.
-.github/allowed_signers	sagan	needs-split	Language release signing remains; other repositories require deliberate signer policies.
+.github/allowed_signers	sagan	needs-split	Preserve the historical language tag-signing policy while releases are paused; future signer policies are deferred until publication resumes.
 src/	sagan	proposed	Compiler, CLI, LSP, DAP, package system, runtime, and language services.
 tests/	sagan	needs-split	Compiler tests remain; package and cross-component fixtures move with their owners.
 third_party/	sagan	proposed	Audit each vendored dependency before extraction; native-render-only dependencies move with rendering.

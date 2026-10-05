@@ -178,6 +178,14 @@ def check_primary_transfer() -> None:
         fail("primary transfer must block split repository creation until verified")
 
     github = data.get("github", {})
+    if github.get("transfer_policy") != "preserve-observed-settings-before-tightening":
+        fail("primary transfer must preserve observed settings before tightening")
+    if github.get("release_policy") != "paused-until-owner-decides-publication-policy":
+        fail("primary transfer must keep all releases paused")
+    if github.get("secret_names") != ["SAGAN_RELEASE_TAG_SSH_PRIVATE_KEY"]:
+        fail("primary transfer must inventory the observed repository secret")
+    if github.get("deferred_signing_secret_names") != ["SAGAN_SIGNTOOL_COMMAND"]:
+        fail("primary transfer must record the deferred signing secret separately")
     expected_workflows = {path.name for path in (ROOT / ".github" / "workflows").glob("*.yml")}
     if set(github.get("workflows", [])) != expected_workflows:
         fail("primary-transfer.toml workflow inventory is stale")

@@ -13,6 +13,7 @@ examples/two_body_demo/sagan.toml
 examples/two_body_demo/src/main.sagan
 repository-segmentation/README.md
 repository-segmentation/audits/github-transfer-2026-10-05.md
+repository-segmentation/audits/local-backup-2026-10-05.md
 repository-segmentation/chat-map.toml
 repository-segmentation/components.toml
 repository-segmentation/ecosystem.toml
@@ -26,6 +27,7 @@ repository-segmentation/file-manifests/sagan.txt
 repository-segmentation/history-extraction.md
 repository-segmentation/inventory.tsv
 repository-segmentation/merge-readiness.md
+repository-segmentation/owner-transfer-start-drill.md
 repository-segmentation/ownership-rules.toml
 repository-segmentation/primary-repository-transfer.md
 repository-segmentation/primary-transfer.toml

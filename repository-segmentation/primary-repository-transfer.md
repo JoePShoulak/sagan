@@ -13,19 +13,24 @@ Before scheduling the transfer:
    create or receive repositories in `Sagan-Shoulak`.
 2. Confirm that `Sagan-Shoulak/sagan` does not already exist and that no
    repository or fork will prevent GitHub from preserving the old URL redirect.
-3. Preserve the source repository's public visibility. Record organization
-   owner/team access, `dev`
-   and `main` protection, Actions policy, environment reviewers, runner access,
-   Pages/custom-domain behavior, and secret owners.
+3. Preserve the source repository's public visibility and observed policy
+   through transfer; tighten access and branch protection only after verifying
+   parity in the organization. Record owner/team access, `dev` and `main`
+   protection, Actions policy, environment reviewers, runner access,
+   Pages/custom-domain behavior, and configured secret names.
 4. Reach a clean reviewed `dev` commit and run the relevant hosting, workflow,
    documentation, release-policy, and integration checks. Do not run the full
    repository suite solely for a transfer; it remains reserved for promotion
    from `dev` to `main` or a release.
    The local `dev` commit must match the remote `dev` commit at the freeze.
-5. Create and verify an offline mirror backup and ref inventory. Store its
-   location and hashes outside this checkout in the approved recovery system.
-6. Freeze releases, documentation deployment, mirror synchronization, branch
-   changes, and repository administration for the transfer window.
+5. Create and verify a local mirror, ref inventory, release-asset backup, and
+   independent restore outside this checkout. The owner chose a backup on this
+   machine only. This protects against a transfer mistake but **not** against
+   loss of this computer or its storage; do not call it an off-machine backup.
+6. Freeze all releases, documentation deployment, mirror synchronization,
+   branch changes, and repository administration for the transfer window.
+   Signing is abandoned for now, and release publication remains paused until
+   the owner makes a separate publication-policy decision.
 
 The inventory in `primary-transfer.toml` names repository settings and files;
 it deliberately contains no secret values.
@@ -48,24 +53,25 @@ gh api repos/JoePShoulak/sagan/branches/main/protection
 ```
 
 Query secret and environment *names and policy only*. Never print secret
-values. Verify the four environments and two secret names listed in
-`primary-transfer.toml`, plus access for the `sagan-docs-hp1` runner.
+values. Verify the four environments, the configured repository secret name,
+the explicitly deferred signing-secret name, and access for the
+`sagan-docs-hp1` runner. Do not procure a signing credential for this transfer.
 The read-only October 5 snapshot is in `audits/github-transfer-2026-10-05.md`;
 recheck it immediately before transfer because GitHub settings and `dev` move.
 
 ## Backup immediately before transfer
 
-Choose an explicit backup directory outside the normal checkout:
+Choose a **new** directory outside the normal checkout on this machine. The
+October 5 rehearsal at
+`/c/Users/joeps/coding/sagan-pretransfer-rehearsal-2026-10-05` verified 21
+refs, five releases, 33 assets, their publisher digests, and an independent
+restore. It is a rehearsal from the pre-merge remote `dev`, not the final
+transfer-freeze backup. Refresh after `dev` is merged, pushed, and frozen:
 
 ```bash
-backup_root=/approved/backup/location/sagan-transfer-YYYYMMDD
-mkdir -p "$backup_root"
-git clone --mirror https://github.com/JoePShoulak/sagan.git "$backup_root/sagan.git"
-git -C "$backup_root/sagan.git" show-ref > "$backup_root/refs.txt"
-git -C "$backup_root/sagan.git" fsck --full
-(cd "$backup_root" && sha256sum refs.txt > SHA256SUMS)
-mkdir "$backup_root/release-assets"
-bash scripts/primary_release_backup.sh download "$backup_root/release-assets"
+backup_root=/c/Users/joeps/coding/sagan-transfer-freeze-YYYYMMDD
+bash scripts/create_primary_local_backup.sh "$backup_root"
+bash scripts/verify_primary_local_backup.sh "$backup_root"
 ```
 
 Record the backup path, ref-inventory hash, source `dev` commit, source `main`
@@ -74,12 +80,14 @@ Restore a disposable clone from the mirror before treating it as recoverable.
 The release-asset backup verifies each downloaded file against the digest and
 size reported by GitHub. It currently requires simple tag and asset names; if
 GitHub returns a name outside that safe set, stop and review the target path
-before downloading. Copy the mirror, release assets, inventories, checksums,
-and restore evidence to approved off-machine storage.
+before downloading. Keep the local backup directory, its inventories,
+checksums, and restore evidence intact. Do not place the only backup in
+`build/`, a temporary directory, or the checkout being transferred.
 
 ## Transfer window
 
-Use GitHub's repository transfer flow while signed in as the authorized owner.
+Use [GitHub's repository transfer flow](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository)
+while signed in as the authorized owner.
 Confirm the destination owner and repository name character by character. The
 transfer itself is the only intended remote mutation in this step.
 
@@ -100,7 +108,7 @@ gh release list --repo Sagan-Shoulak/sagan --limit 100
 ```
 
 Compare the remote refs and releases with the backup inventory. Then verify
-teams, protections, required checks, Actions permissions, environments,
+teams, protections, affected checks, Actions permissions, environments,
 reviewers, secret names, runner access, Pages, webhooks, deploy keys, releases,
 and security settings. A redirect working by itself is not success.
 
@@ -123,11 +131,14 @@ The transfer is complete only when:
 
 - every backed-up ref and release exists at the destination;
 - the old URL redirects and no namespace collision can break it;
-- `dev` and `main` policies, teams, environments, approvals, secrets, runners,
-  Pages, webhooks, deploy keys, and security settings are verified;
-- all eight workflows are visible and the required `dev` checks pass;
-- documentation, release signing, release mirroring, installer metadata, and
+- `dev` and `main` policies, teams, environments, approvals, configured secret
+  names, runners, Pages, webhooks, deploy keys, and security settings are
+  verified;
+- all eight workflows are visible and the affected `dev` checks pass;
+- documentation, release mirroring, installer metadata, and
   download links use or safely resolve to the canonical organization path;
+- release publication remains paused and no signed-release capability is
+  claimed from the missing signing secret;
 - a clean clone from the new URL passes the owner bootstrap procedure; and
 - the rollback drill and evidence record are complete.
 
@@ -135,9 +146,11 @@ Only then may the first split repository be created.
 
 ## Recovery boundary
 
-If refs, releases, access, automation, signing, documentation, or runners do
+If refs, releases, access, automation, documentation, or runners do
 not match, stop releases and extraction work. Preserve the transferred state
 and evidence; do not delete, recreate, or force-push either namespace. Use the
 verified mirror for read-only recovery and coordinate any reverse transfer
 through GitHub with the same inventory and freeze. A reverse transfer is not a
-substitute for repairing an unverified backup.
+substitute for repairing an unverified backup. The approved local-only backup
+cannot recover from loss of this machine; that limitation is knowingly
+accepted for this transfer and remains a separate disaster-recovery gap.
