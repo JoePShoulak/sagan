@@ -20,9 +20,9 @@ promotion remain paused.
 
 | Component | Local result | Still required before independent publication |
 | --- | --- | --- |
-| Primary `sagan` | Transfer parity, redirects, backup/restore, canonical links, docs, extension, and installer checks passed. Codecov's incident resolved; coverage build, artifact, and floor passed again. | The post-transfer upload now fails `Repository not found`; the organization currently reports zero GitHub App installations. Connect the transferred repo to Codecov, rerun the upload gate, then verify the organization badge/report. No gate bypass. |
+| Primary `sagan` | Transfer parity, redirects, backup/restore, canonical links, docs, extension, and installer checks passed. After the owner's Codecov installation, the pinned coverage job and required upload gate passed; the organization badge returned 92% and the commit URL resolved. | The new badge link is prepared only in this local branch; integrate it with a reviewed `dev` change. The local-only backup still cannot survive this machine's loss or restore GitHub settings/history. Releases and `main` remain paused. |
 | `sagan-workspace` | Path/history and dev/main-only local-ref rehearsals passed. Four replayable patches passed fifteen offline tests and a real primary clone. A combined catalog resolved local physics/rendering candidates; game, three physics checks, and two Windows native render checks passed. Three-platform offline CI is drafted but not hosted-tested. | Curate monorepo-only audit scripts, implement update/build/test/lock-refresh and editor workspace generation, hosted CI and other-platform checks, clean-machine owner drill. |
-| `sagan-docs` | Path/history and dev/main-only local-ref rehearsals passed. Three patches passed eight offline tests, clean replay, and a strict Windows MkDocs build with pinned local extension/physics/rendering mounts; canonical remotes remain planned. Three-platform primary-source CI is drafted but not hosted-tested. | Wire build/deploy scripts to aggregate, add preview/review/version gates, host cutover/rollback, hosted CI, owner drill. Live HP1 site stays on intact repo. |
+| `sagan-docs` | Path/history and dev/main-only local-ref rehearsals passed. Four patches passed twelve offline tests and clean replay. Strict Windows MkDocs builds passed with pinned local extension/physics/rendering mounts and, separately, with a real locked primary clone through the new automatic active-source bootstrap. Canonical component remotes remain planned; three-platform CI is drafted but not hosted-tested. | Wire build/deploy scripts to aggregate, add preview/review/version gates, host cutover/rollback, hosted CI, owner drill. Live HP1 site stays on intact repo. |
 | `sagan-vscode` | 61-file history extraction and five local relocation patches; Windows unit, bundle, live host, VSIX, and isolated install checks passed. | Build the pinned Sagan source in independent Linux/macOS/Windows hosted CI; complete docs aggregation, release tag policy, governance and owner drill. |
 | `sagan-physics` | `--no-ff` filter retained exact 29 files; candidate-local catalog, all three headless numeric suites, and fresh patch replay passed on Windows. | Final package-root relocation, independent hosted CI/platform checks, distribution/compatibility, docs mount, owner drill. |
 | `sagan-render` | Exact 21-file filter; candidate-local catalog, auto-closing Win32 window and BMP tests, stock-icon fallback, and fresh patch replay passed. | Final package-root relocation, independent hosted Windows CI, Windows package distribution, docs mount, owner drill. Linux/macOS native backend is explicitly unsupported and must not be advertised. |
@@ -35,21 +35,15 @@ GitHub settings, secrets, issues, or PR conversations.
 
 ## Do not collapse these gates
 
-1. With owner approval, connect `Sagan-Shoulak/sagan` to Codecov after the
-   transfer. The service outage is resolved, but the new owner/repository
-   record was not found on attempt 3. Follow the evidence and safe steps in
-   `audits/codecov-post-transfer-2026-10-05.md`, rerun only the failed
-   coverage job, and verify the organization badge shows a real report. The
-   measured coverage floor passing is not an upload pass.
-2. Refresh source refs and backups at the final extraction freeze. The local
+1. Refresh source refs and backups at the final extraction freeze. The local
    patch bases are dated rehearsals; re-filter from then-current reviewed
    `dev` and compare exact owned paths. Physics requires `--no-ff` unless a
    newer verified filter procedure supersedes it.
-3. Finish each destination's independent functional/CI, docs, governance,
+2. Finish each destination's independent functional/CI, docs, governance,
    rollback, and owner-maintainer gates before creating or pushing it. Do not
    transfer inherited Sagan release tags; initial push must name only the
    reviewed `dev` and `main` refs when those refs meet their own rules.
-4. Keep the monorepo copies and shared dirty sandbox until the destination
+3. Keep the monorepo copies and shared dirty sandbox until the destination
    is verified and a later reviewed removal request occurs. Do not merge the
    preparation branch or open remote split repositories merely because a
    local extraction filter succeeded.

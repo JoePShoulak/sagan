@@ -16,7 +16,7 @@ github_cli_authentication = "valid-2026-10-05"
 destination_repository_access = "org-admin-confirmed-transferred-2026-10-05"
 vscode_local_extraction_rehearsal = "passed-2026-10-05"
 workspace_local_extraction_rehearsal = "69-file-pinned-filter-repo-history-and-dev-main-no-tags-local-publication-passed-2026-10-05; four-patch-exact-lock-combined-catalog-and-draft-three-platform-offline-CI-fifteen-tests-real-primary-clone-game-physics-Windows-render-smoke-and-replay-passed; hosted-CI-and-other-integration-work-pending"
-docs_local_extraction_rehearsal = "27-file-pinned-filter-repo-history-and-dev-main-no-tags-local-publication-passed-2026-10-05; three-patch-primary-plus-three-component-local-mounts-eight-tests-strict-Windows-MkDocs-build-draft-three-platform-primary-CI-and-clean-replay-passed; hosted-CI-review-version-and-host-cutover-pending"
+docs_local_extraction_rehearsal = "27-file-pinned-filter-repo-history-and-dev-main-no-tags-local-publication-passed-2026-10-05; four-patch-primary-plus-three-component-local-mounts-twelve-tests-exact-lock-bootstrap-strict-Windows-MkDocs-build-clean-replay-and-draft-three-platform-CI-passed-locally; hosted-CI-review-version-and-host-cutover-pending"
 physics_local_extraction_rehearsal = "29-file-pinned-filter-repo-no-ff-exact-history-and-fsck-passed-2026-10-05; candidate-local-catalog-three-headless-integration-tests-and-fresh-patch-replay-passed; final-package-relocation-and-hosted-CI-pending"
 render_local_extraction_rehearsal = "21-file-pinned-filter-repo-exact-history-and-fsck-passed-2026-10-05; candidate-local-catalog-Windows-window-and-BMP-tests-stock-icon-fallback-and-fresh-patch-replay-passed; final-root-relocation-and-hosted-CI-pending"
 space_game_local_extraction_rehearsal = "4-file-root-relocation-and-two-patch-current-seed-replay-passed-2026-10-05; existing-toolchain-print-demo-passed; independent-packages-and-owner-review-pending"
@@ -24,7 +24,7 @@ vscode_shared_file_import = "nine-shared-paths-preserved-with-filter-repo; five-
 vscode_live_host_rehearsal = "passed-in-monorepo-and-61-file-filter-repo-checkout; standalone-VSIX-and-live-host-rewrite-passed-on-Windows-2026-10-05"
 vscode_maintainer_guides = "draft-MAINTAINERS-TECHNOLOGY-CODEX_START-and-AGENTS-preserved-in-four-patch-series; owner-drill-and-doc-links-pending"
 space_game_seed_preservation = "two-local-only-four-file-copies-verified-2026-10-05; later-main.sagan-sha256-545cf284-preserved-without-staging; recheck-shared-file-before-final-extraction"
-primary_repository_transfer = "transferred-2026-10-05; canonical-references-and-live-docs-verified; Codecov-outage-resolved-but-new-org-repo-record-not-found-on-coverage-attempt-3; zero-org-app-installations-observed; see-audits/codecov-post-transfer-2026-10-05.md"
+primary_repository_transfer = "transferred-2026-10-05; canonical-references-and-live-docs-verified; owner-installed-Codecov-app; pinned-coverage-attempt-4-upload-gate-passed-and-new-org-badge-92-percent; local-branch-badge-link-awaits-dev-integration; see-audits/codecov-post-transfer-2026-10-05.md"
 primary_remote_backup_rehearsal = "passed-2026-10-05"
 primary_release_inventory = "metadata-and-33-assets-verified-in-local-rehearsal-2026-10-05"
 primary_release_backup_test = "mock-download-and-corruption-rejection-passed-2026-10-05"
@@ -76,7 +76,7 @@ evidence = "Owner confirmed on 2026-10-05: independent sagan-vscode CI may check
 [[decisions]]
 id = "primary-repository-transfer"
 status = "provisional"
-evidence = "The intact repository moved to Sagan-Shoulak/sagan with frozen dev 689e6ec, a verified local-only mirror and 33 release assets, matching destination refs/releases/settings, working old redirects, and a clean-clone focused bootstrap. Canonical references, docs, installer, and extension passed at dev 4132c8c. Codecov's October 5 SSL certificate outage blocked the new-organization upload and badge verification; this gate remains provisional. See audits/primary-transfer-result-2026-10-05.md."
+evidence = "The intact repository moved to Sagan-Shoulak/sagan with frozen dev 689e6ec, a verified local-only mirror and 33 release assets, matching destination refs/releases/settings, working old redirects, and a clean-clone focused bootstrap. Canonical references, docs, installer, and extension passed at dev 4132c8c. Following owner installation of Codecov, coverage attempt 4 uploaded successfully and the public organization badge showed 92 percent. The new badge URL remains a local-branch change; dev integration and split destination gates remain. See audits/primary-transfer-result-2026-10-05.md and audits/codecov-post-transfer-2026-10-05.md."
 
 [[decisions]]
 id = "history-and-rollback"

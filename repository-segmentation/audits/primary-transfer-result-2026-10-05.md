@@ -77,15 +77,15 @@ parity and the clean clone passed.
   link to the organization repository. The full compiler suite did not run on
   this `dev` push; its workflow now targets `main` or explicit dispatch.
 - Coverage CI run `37274993834` built the compiler, preserved its measured
-  report, and passed the coverage floor, but the Codecov CLI download failed
-  during TLS negotiation. The [official Codecov status incident](https://status.codecov.com/incidents/n8kwr2rr2v6v)
-  reported an SSL certificate expiration and partial service outage beginning
-  October 5 at 06:53 UTC. A single failed-job retry (attempt 2) completed with
-  the same TLS handshake failure at 07:13 UTC; the local coverage floor passed
-  again, but the mandatory upload gate remained red. Do not treat
-  that external failure as a Sagan coverage regression, bypass the existing
-  upload gate, or switch the badge while the new-organization badge says
-  **unknown**. Verify a successful post-transfer upload after Codecov recovers.
+  report, and passed the coverage floor. Its initial upload failed during
+  the [official Codecov TLS incident](https://status.codecov.com/incidents/n8kwr2rr2v6v).
+  Attempt 2 failed similarly; after service recovery, attempt 3 reached
+  Codecov but returned `Repository not found`. The owner installed the Codecov
+  GitHub App for the transferred repository. Attempt 4 passed the mandatory
+  upload gate at the same pinned commit, and the public organization badge
+  returned 92%. See `codecov-post-transfer-2026-10-05.md` for exact evidence.
+  The new badge URL is only prepared in the local segmentation branch, not
+  integrated on published `dev` yet.
 - Keep releases paused. Do not promote `dev` to `main` or run a release
   workflow without the owner's later publication decision and the full-suite
   promotion gate.

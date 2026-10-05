@@ -1,0 +1,349 @@
+From 9cbec0df1920ddca3f93f073e170a1b61f018e52 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 12:03:02 -0500
+Subject: [PATCH] Bootstrap exact locked documentation sources
+
+---
+ .github/workflows/docs-checks.yml    |  11 +--
+ MAINTAINERS.md                       |  25 ++++--
+ README.md                            |   5 ++
+ TECHNOLOGY.md                        |   7 +-
+ scripts/assemble_docs.py             |  31 ++++++--
+ scripts/bootstrap_docs_sources.py    |  57 ++++++++++++++
+ tests/bootstrap_docs_sources_test.py | 113 +++++++++++++++++++++++++++
+ 7 files changed, 227 insertions(+), 22 deletions(-)
+ create mode 100644 scripts/bootstrap_docs_sources.py
+ create mode 100644 tests/bootstrap_docs_sources_test.py
+
+diff --git a/.github/workflows/docs-checks.yml b/.github/workflows/docs-checks.yml
+index 6f32bcc..b7457bc 100644
+--- a/.github/workflows/docs-checks.yml
++++ b/.github/workflows/docs-checks.yml
+@@ -24,14 +24,11 @@ jobs:
+       - name: Install pinned docs dependencies
+         run: python -m pip install -r requirements-docs.txt
+       - name: Test source and ownership contracts
+-        run: python -m unittest discover -s tests -p assemble_docs_test.py -v
+-      - name: Clone exact primary documentation source
+-        shell: bash
+-        run: |
+-          git clone --no-checkout https://github.com/Sagan-Shoulak/sagan.git build/sources/sagan
+-          git -C build/sources/sagan checkout --detach 4132c8c37f99dc5f89c7141f5780b583b64d192e
++        run: python -m unittest discover -s tests -p '*_test.py' -v
++      - name: Clone exact active documentation sources
++        run: python scripts/bootstrap_docs_sources.py --root build/sources
+       - name: Assemble and strictly build the pinned site
+         shell: bash
+         run: |
+-          python scripts/assemble_docs.py --sagan build/sources/sagan --output build/assembled-ci
++          python scripts/assemble_docs.py --source-root build/sources --output build/assembled-ci
+           python -m mkdocs build --strict --clean -f build/assembled-ci/mkdocs.yml
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index 98d6d39..2b2bb49 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -67,6 +67,22 @@ build/docs-venv/Scripts/python.exe -m mkdocs build --strict --clean \
+ 
+ Use `build/docs-venv/bin/python` on Linux/macOS. Exactly the active
+ components must be supplied; a planned component must not be supplied.
++For ordinary exact-lock operation, the bootstrap and aggregate can instead
++derive that set automatically:
++
++```bash
++python scripts/bootstrap_docs_sources.py --root build/sources
++python scripts/assemble_docs.py --source-root build/sources \
++  --output build/assembled-locked
++build/docs-venv/Scripts/python.exe -m mkdocs build --strict --clean \
++  -f build/assembled-locked/mkdocs.yml
++```
++
++Bootstrap clones missing active sources and detaches at their exact pins.
++It never updates, resets, or deletes an existing checkout: wrong origin,
++wrong HEAD, dirty work, or a partial clone needs inspection and deliberate
++recovery. A failure after earlier sources cloned is not atomic. Use a fresh
++output path for each assembly; the assembler refuses existing output.
+ Each component's full `docs/` file set must equal its listed paths, with no
+ symlinks, dirty checkout, wrong origin, or wrong HEAD. The generated
+ `sources.json` records URL, commit, and paths for every mounted component.
+@@ -75,11 +91,10 @@ passed eight offline tests and a strict Windows MkDocs build. It did not
+ activate their canonical entries or deploy the site. The existing unlisted
+ contributor checkpoint page warning remained unchanged.
+ 
+-The draft `.github/workflows/docs-checks.yml` runs offline contracts and
+-strictly builds the pinned primary-source aggregate on Linux, Windows, and
+-macOS. It has not run in an independent destination. When any component
+-becomes active, update this workflow to check out that exact locked source;
+-the assembler will otherwise fail closed for the missing component.
++The draft `.github/workflows/docs-checks.yml` runs all offline contracts,
++bootstraps every active locked source, and strictly builds the aggregate on
++Linux, Windows, and macOS. Twelve offline tests and the exact-lock local
++Windows build passed; hosted CI has not run in an independent destination.
+ 
+ ## Ownership, editing, and tests
+ 
+diff --git a/README.md b/README.md
+index 101610a..40cceee 100644
+--- a/README.md
++++ b/README.md
+@@ -16,6 +16,11 @@ the assembler then replaces only its explicitly owned pages/assets and
+ records that provenance. No split remote is active, and deployment remains
+ paused.
+ 
++`scripts/bootstrap_docs_sources.py` clones only active lock entries to
++ordinary ignored checkouts and refuses to move or overwrite an existing
++checkout. The draft CI uses those exact sources and assembles them with
++`--source-root`; hosted CI has not been run in an independent docs repo.
++
+ Start with [MAINTAINERS.md](MAINTAINERS.md) for Bash commands and recovery,
+ [TECHNOLOGY.md](TECHNOLOGY.md) for the ownership model, and
+ [CODEX_START.md](CODEX_START.md) for a new chat. The broader sequencing lives
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 6eea464..04a3181 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -42,8 +42,11 @@ Those files replace only their same-named locations in the generated site;
+ `sources.json` records each component pin. A local rehearsal of all three
+ component candidates passed a strict MkDocs build, but their GitHub remotes
+ do not yet exist and the canonical lock keeps them inactive.
+-The draft three-platform CI validates only the current primary-active lock;
+-hosted execution and component-source CI wiring remain unverified.
++The source bootstrap reads the same lock, clones only active entries, and
++refuses to move or overwrite existing checkout work. The assembler's
++`--source-root` mode maps that exact checkout set automatically. Draft CI
++uses both operations so a future active component is not silently omitted;
++hosted execution remains unverified.
+ 
+ The dependency direction is one-way: the docs site consumes component docs
+ and exact source locks; a language, extension, physics, rendering, or game
+diff --git a/scripts/assemble_docs.py b/scripts/assemble_docs.py
+index 6de0604..78ed902 100644
+--- a/scripts/assemble_docs.py
++++ b/scripts/assemble_docs.py
+@@ -168,19 +168,34 @@ def assemble(root: Path, lock_path: Path, checkout: Path, output: Path,
+ 
+ def main() -> int:
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("--sagan", type=Path, required=True)
++    parser.add_argument("--sagan", type=Path)
++    parser.add_argument("--source-root", type=Path)
+     parser.add_argument("--output", type=Path, required=True)
+     parser.add_argument("--lock", type=Path, default=ROOT / "docs-sources.lock")
+     parser.add_argument("--component", action="append", default=[], metavar="ID=CHECKOUT")
+     args = parser.parse_args()
+     try:
+-        component_checkouts = {}
+-        for item in args.component:
+-            identifier, separator, path = item.partition("=")
+-            if not separator or not identifier or not path or identifier in component_checkouts:
+-                raise ValueError(f"invalid or duplicate --component: {item!r}")
+-            component_checkouts[identifier] = Path(path).absolute()
+-        assemble(ROOT, args.lock, args.sagan.absolute(), args.output.absolute(),
++        if args.source_root is not None:
++            if args.sagan is not None or args.component:
++                raise ValueError("--source-root cannot be combined with --sagan or --component")
++            source_root = args.source_root.absolute()
++            _, _, _, entries = read_lock(args.lock)
++            sagan_checkout = source_root / "sagan"
++            component_checkouts = {
++                entry["id"]: source_root / entry["id"]
++                for entry in entries if entry["state"] == "active"
++            }
++        else:
++            if args.sagan is None:
++                raise ValueError("provide --source-root or --sagan")
++            sagan_checkout = args.sagan.absolute()
++            component_checkouts = {}
++            for item in args.component:
++                identifier, separator, path = item.partition("=")
++                if not separator or not identifier or not path or identifier in component_checkouts:
++                    raise ValueError(f"invalid or duplicate --component: {item!r}")
++                component_checkouts[identifier] = Path(path).absolute()
++        assemble(ROOT, args.lock, sagan_checkout, args.output.absolute(),
+                  component_checkouts)
+     except (OSError, ValueError, tomllib.TOMLDecodeError) as error:
+         print(f"Documentation assembly failed: {error}", file=sys.stderr)
+diff --git a/scripts/bootstrap_docs_sources.py b/scripts/bootstrap_docs_sources.py
+new file mode 100644
+index 0000000..bab36ea
+--- /dev/null
++++ b/scripts/bootstrap_docs_sources.py
+@@ -0,0 +1,57 @@
++"""Clone only the exact active source revisions in docs-sources.lock."""
++
++from __future__ import annotations
++
++import argparse
++from pathlib import Path
++import subprocess
++import sys
++import tomllib
++
++from assemble_docs import ROOT, read_lock, verify_source
++
++
++def git(*arguments: str) -> None:
++    result = subprocess.run(["git", *arguments], text=True, capture_output=True, check=False)
++    if result.returncode:
++        raise ValueError((result.stderr or result.stdout).strip())
++
++
++def bootstrap(lock_path: Path, source_root: Path) -> list[str]:
++    url, commit, _, components = read_lock(lock_path)
++    entries = [{"id": "sagan", "url": url, "commit": commit}]
++    entries.extend(component for component in components if component["state"] == "active")
++    if source_root.is_symlink() or (source_root.exists() and not source_root.is_dir()):
++        raise ValueError("source root is unsafe or not a directory")
++    source_root.mkdir(parents=True, exist_ok=True)
++    for entry in entries:
++        target = source_root / entry["id"]
++        if not target.exists() and not target.is_symlink():
++            print(f"{entry['id']}: cloning {entry['url']} at {entry['commit'][:12]}", flush=True)
++            try:
++                git("clone", "--no-checkout", "--no-tags", entry["url"], str(target))
++                git("-C", str(target), "checkout", "--detach", entry["commit"])
++            except ValueError as error:
++                raise ValueError(
++                    f"{error}. Preserve partial checkout {target} for inspection."
++                ) from error
++        verify_source(target, entry["url"], entry["commit"], entry["id"])
++        print(f"{entry['id']}: clean at locked commit {entry['commit'][:12]}")
++    return [entry["id"] for entry in entries]
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--lock", type=Path, default=ROOT / "docs-sources.lock")
++    parser.add_argument("--root", type=Path, default=ROOT / "build" / "sources")
++    arguments = parser.parse_args()
++    try:
++        bootstrap(arguments.lock.resolve(), arguments.root.absolute())
++        return 0
++    except (OSError, ValueError, tomllib.TOMLDecodeError) as error:
++        print(f"Documentation source bootstrap failed: {error}", file=sys.stderr)
++        return 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/bootstrap_docs_sources_test.py b/tests/bootstrap_docs_sources_test.py
+new file mode 100644
+index 0000000..c7f2ebf
+--- /dev/null
++++ b/tests/bootstrap_docs_sources_test.py
+@@ -0,0 +1,113 @@
++"""Offline tests for exact-revision documentation source bootstrap."""
++
++from __future__ import annotations
++
++import json
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "scripts"))
++import bootstrap_docs_sources  # noqa: E402
++import assemble_docs  # noqa: E402
++
++
++def git(*arguments: str, cwd: Path) -> str:
++    result = subprocess.run(["git", *arguments], cwd=cwd, text=True,
++                            capture_output=True, check=True)
++    return result.stdout.strip()
++
++
++class BootstrapDocsSourcesTest(unittest.TestCase):
++    def setUp(self) -> None:
++        temporary = tempfile.TemporaryDirectory(prefix="sagan-docs-bootstrap-test-")
++        self.addCleanup(temporary.cleanup)
++        self.root = Path(temporary.name)
++        self.sources = self.root / "sources"
++        self.lock = self.root / "docs-sources.lock"
++        self.sagan_url, self.sagan_commit = self.create_repo(
++            "sagan", "index.md", "# Sagan fixture\n"
++        )
++        self.physics_url, self.physics_commit = self.create_repo(
++            "physics", "standard-library/physics.md", "# Physics fixture\n"
++        )
++        self.write_lock()
++
++    def create_repo(self, name: str, path: str, content: str) -> tuple[str, str]:
++        checkout = self.root / f"{name}-source"
++        checkout.mkdir()
++        git("init", "-b", "dev", cwd=checkout)
++        document = checkout / "docs" / path
++        document.parent.mkdir(parents=True)
++        document.write_text(content, encoding="utf-8")
++        git("add", "docs", cwd=checkout)
++        git("-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test",
++            "-c", "user.email=test@example.invalid", "commit", "-m", "Fixture", cwd=checkout)
++        commit = git("rev-parse", "HEAD", cwd=checkout)
++        bare = self.root / f"{name}.git"
++        git("clone", "--bare", str(checkout), str(bare), cwd=self.root)
++        return bare.as_posix(), commit
++
++    def write_lock(self, *, physics_state: str = "active") -> None:
++        overlays = assemble_docs.read_lock(ROOT / "docs-sources.lock")[2]
++        physics_commit = f'commit = "{self.physics_commit}"\n' if physics_state == "active" else ""
++        self.lock.write_text(
++            "schema_version = 1\n"
++            "[sagan]\n"
++            f'url = "{self.sagan_url}"\n'
++            f'commit = "{self.sagan_commit}"\n'
++            "[site]\n"
++            f"overlay_paths = {json.dumps(overlays)}\n"
++            "[[components]]\n"
++            'id = "sagan-physics"\n'
++            f'state = "{physics_state}"\n'
++            f'url = "{self.physics_url}"\n'
++            f"{physics_commit}"
++            'paths = ["standard-library/physics.md"]\n',
++            encoding="utf-8",
++        )
++
++    def test_bootstrap_clones_only_active_pins_and_is_idempotent(self) -> None:
++        self.assertEqual(["sagan", "sagan-physics"],
++                         bootstrap_docs_sources.bootstrap(self.lock, self.sources))
++        self.assertEqual(self.sagan_commit,
++                         git("rev-parse", "HEAD", cwd=self.sources / "sagan"))
++        self.assertEqual(self.physics_commit,
++                         git("rev-parse", "HEAD", cwd=self.sources / "sagan-physics"))
++        self.assertEqual(["sagan", "sagan-physics"],
++                         bootstrap_docs_sources.bootstrap(self.lock, self.sources))
++
++    def test_dirty_or_wrong_origin_is_preserved(self) -> None:
++        bootstrap_docs_sources.bootstrap(self.lock, self.sources)
++        document = self.sources / "sagan-physics" / "docs" / "local.md"
++        document.write_text("preserve me\n", encoding="utf-8")
++        with self.assertRaisesRegex(ValueError, "dirty"):
++            bootstrap_docs_sources.bootstrap(self.lock, self.sources)
++        self.assertTrue(document.is_file())
++        document.unlink()
++        git("remote", "set-url", "origin", "https://example.invalid/wrong.git",
++            cwd=self.sources / "sagan-physics")
++        with self.assertRaisesRegex(ValueError, "origin differs"):
++            bootstrap_docs_sources.bootstrap(self.lock, self.sources)
++
++    def test_planned_component_is_not_cloned(self) -> None:
++        self.write_lock(physics_state="planned")
++        self.assertEqual(["sagan"], bootstrap_docs_sources.bootstrap(self.lock, self.sources))
++        self.assertFalse((self.sources / "sagan-physics").exists())
++
++    def test_source_root_can_be_assembled(self) -> None:
++        bootstrap_docs_sources.bootstrap(self.lock, self.sources)
++        output = self.root / "assembled"
++        assemble_docs.assemble(ROOT, self.lock, self.sources / "sagan", output,
++                               {"sagan-physics": self.sources / "sagan-physics"})
++        self.assertEqual("# Physics fixture\n",
++                         (output / "docs" / "standard-library" / "physics.md")
++                         .read_text(encoding="utf-8"))
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.51.0.windows.2
+

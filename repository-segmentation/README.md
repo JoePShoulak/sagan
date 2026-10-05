@@ -46,8 +46,9 @@ or canonical component files extracted. The canonical policy remains the
 
 ## Before moving any code
 
-- Finish post-transfer canonical references and the new-organization Codecov
-  integration check; confirm the recorded redirects, governance, CI,
+- Confirm the passed post-transfer canonical references and new-organization
+  Codecov integration check; integrate the prepared badge URL with a reviewed
+  `dev` change, and confirm the recorded redirects, governance, CI,
   documentation, owner recovery, and rollback before creating a split repository.
 - Resolve every `required` decision in `readiness.toml` and record its evidence.
 - Resolve every `needs-split` and `needs-rewrite` inventory row into exact

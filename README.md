@@ -6,7 +6,7 @@
 
 [![Development version 4.9.5](https://img.shields.io/badge/development-4.9.5-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/Sagan-Shoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/Sagan-Shoulak/sagan/actions/workflows/documentation.yml)
-[![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
+[![Codecov](https://codecov.io/gh/Sagan-Shoulak/sagan/graph/badge.svg)](https://codecov.io/gh/Sagan-Shoulak/sagan)
 
 Sagan is a strongly typed programming language for simulations: orbits,
 geometry, physical units, moving bodies, and—eventually—whole worlds you can

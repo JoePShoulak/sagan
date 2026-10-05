@@ -36,10 +36,6 @@ workflows = [
 ]
 
 [[legacy_references]]
-path = "README.md"
-purpose = "Old Codecov badge remains until a new-organization upload establishes coverage data"
-
-[[legacy_references]]
 path = "scripts/verify_primary_transfer_parity.sh"
 purpose = "Historical source URL must remain for post-transfer redirect verification"
 

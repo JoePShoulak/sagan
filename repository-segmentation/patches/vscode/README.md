@@ -31,8 +31,9 @@ do not complete site aggregation, an owner recovery
 drill, independent hosted CI, extension release-tag naming, or destination
 governance. All imported docs remain `publication_ready: false`
 and require human review after their links and ownership are rewritten.
-The primary transfer gate remains provisional while Codecov's upstream
-October 5 TLS outage prevents a successful post-transfer upload.
+The primary post-transfer Codecov upload and organization badge now pass;
+the new badge URL is prepared in the local segmentation branch but not yet
+integrated on `dev`. The other split destination gates remain open.
 
 After the primary transfer gate clears, re-run the extraction from the
 then-current reviewed `dev` commit. Recompute this patch series if its base

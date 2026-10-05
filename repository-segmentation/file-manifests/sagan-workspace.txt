@@ -38,6 +38,7 @@ repository-segmentation/patches/.gitattributes
 repository-segmentation/patches/docs/0001-Assemble-official-docs-from-pinned-Sagan-source.patch
 repository-segmentation/patches/docs/0002-Mount-pinned-component-docs-in-official-site-aggrega.patch
 repository-segmentation/patches/docs/0003-Draft-independent-pinned-docs-CI.patch
+repository-segmentation/patches/docs/0004-Bootstrap-exact-locked-documentation-sources.patch
 repository-segmentation/patches/docs/README.md
 repository-segmentation/patches/physics/0001-Run-extracted-physics-demos-with-local-package-catal.patch
 repository-segmentation/patches/physics/README.md

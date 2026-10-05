@@ -5,10 +5,10 @@ repository. It applies with `git am` only to a disposable normal clone of
 the docs-filtered repository at base
 `47bdebf2cd576eab2d3bb6468daad13231c8b449`, itself filtered from
 source preparation commit `72edf479f8820ed63699fa942354244f1f583e36`.
-Do not apply the three numbered patches to the intact Sagan repository. The
+Do not apply the four numbered patches to the intact Sagan repository. The
 expected draft result is commit
-`e7335089ddfaa5f39518e593fb0f0265edd24562`, tree
-`cb43889503119e49cb454fd3d0334def3c9123e0`.
+`9cbec0df1920ddca3f93f073e170a1b61f018e52` in the functional checkout, tree
+`ce5b00e0a6413ca2690e2de2aaa02f82e88266ff`.
 
 The patch pins the primary Sagan source to public organization commit
 `4132c8c37f99dc5f89c7141f5780b583b64d192e`, declares the six
@@ -25,9 +25,10 @@ a matching clean checkout, an exact owned-file set, and collision-free
 destination paths. Local fixture lock entries activated all three extracted
 candidate checkouts without changing the canonical planned states. The
 aggregate included their pages and images and passed strict MkDocs build.
-The third patch drafts independent three-platform CI for the current
-primary-only lock. It has not run in a split GitHub destination; activating
-component mounts will require exact-source CI checkout wiring first.
+The third patch drafts independent three-platform CI. The fourth patch adds
+an exact-lock source bootstrap and automatic active-component mapping, so
+CI follows the lock when a component becomes active. It refuses to reset or
+overwrite existing checkouts. CI has not run in a split GitHub destination.
 
 Five offline assembler tests passed on Windows. The public primary checkout
 at the pinned SHA assembled successfully, and the generated tree passed a
@@ -38,8 +39,13 @@ expected tree, passed `git fsck --full`, and reran all five tests. No split
 remote was created, no deployment ran,
 and the live HP1 site was untouched. After the second patch, eight offline
 tests passed on the functional and fresh replay trees; `git fsck --full`
-and tree equality after all three patches also passed. The component-mount build was Windows-local,
-not independent hosted CI.
+and tree equality after all three patches also passed. The component-mount
+build was Windows-local, not independent hosted CI. After the fourth patch,
+twelve offline tests passed in both functional and clean replay checkouts,
+their trees matched, and `git fsck --full` passed. A real public clone at the
+locked primary commit assembled and passed strict Windows MkDocs build via
+the new source-root path. That did not exercise hosted CI or activate the
+planned component remotes.
 
 This is a **pinned multi-source assembly rehearsal**, not full docs readiness.
 Existing `docs.sh`, release/version scripts, and hosting automation still

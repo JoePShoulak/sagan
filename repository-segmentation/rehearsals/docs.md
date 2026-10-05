@@ -75,3 +75,13 @@ strict-build workflow. Its candidate and replay trees both equal
 passed. The workflow is not a hosted CI pass and intentionally fails closed
 if component mounts become active before its source-checkout step is
 extended. No workflow was dispatched in a split destination.
+
+A fourth patch removes that future CI source-checkout gap: its bootstrap
+clones every active lock entry at its exact commit and refuses to move,
+reset, or overwrite an existing checkout. The assembler's `--source-root`
+mode maps the same active set. Twelve offline tests passed in the functional
+candidate and fresh patch replay; both trees equal
+`ce5b00e0a6413ca2690e2de2aaa02f82e88266ff`, and `git fsck --full`
+passed. A real public clone of the locked primary commit assembled through
+this route and passed strict Windows MkDocs build. The canonical component
+entries remain planned and hosted three-platform CI remains unverified.
