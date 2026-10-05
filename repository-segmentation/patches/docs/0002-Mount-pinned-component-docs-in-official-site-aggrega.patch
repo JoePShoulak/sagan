@@ -1,0 +1,398 @@
+From 3640c57c1dfe731350ede217b6263b673bb0c43a Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 11:34:03 -0500
+Subject: [PATCH] Mount pinned component docs in official site aggregate
+
+---
+ MAINTAINERS.md              |  30 +++++++++
+ README.md                   |   8 ++-
+ TECHNOLOGY.md               |  10 +++
+ docs-sources.lock           |  28 +++++++++
+ scripts/assemble_docs.py    | 119 ++++++++++++++++++++++++++++--------
+ tests/assemble_docs_test.py |  68 ++++++++++++++++++++-
+ 6 files changed, 232 insertions(+), 31 deletions(-)
+
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index cac9ea4..6f19439 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -45,6 +45,36 @@ build reported the existing unlisted
+ `contributing/late-bound-face-defaults-checkpoint.md` page but exited zero.
+ Linux/macOS and independent hosted CI are not yet verified.
+ 
++## Component documentation mounts
++
++`docs-sources.lock` lists VS Code, physics, and rendering page/asset paths as
++`planned`. They are not fetched or published from nonexistent split remotes.
++After a component repository exists and passes its extraction gate, change
++only its reviewed lock entry to `state = "active"`, add its exact `commit`,
++and supply a clean checkout at that URL and commit. For all three active
++components, the assembly syntax is:
++
++```bash
++python scripts/assemble_docs.py \
++  --sagan "$sagan_checkout" \
++  --component sagan-vscode="$vscode_checkout" \
++  --component sagan-physics="$physics_checkout" \
++  --component sagan-render="$render_checkout" \
++  --output build/assembled-components
++build/docs-venv/Scripts/python.exe -m mkdocs build --strict --clean \
++  -f build/assembled-components/mkdocs.yml
++```
++
++Use `build/docs-venv/bin/python` on Linux/macOS. Exactly the active
++components must be supplied; a planned component must not be supplied.
++Each component's full `docs/` file set must equal its listed paths, with no
++symlinks, dirty checkout, wrong origin, or wrong HEAD. The generated
++`sources.json` records URL, commit, and paths for every mounted component.
++The local ignored-lock rehearsal mounted all three extracted candidates,
++passed eight offline tests and a strict Windows MkDocs build. It did not
++activate their canonical entries or deploy the site. The existing unlisted
++contributor checkpoint page warning remained unchanged.
++
+ ## Ownership, editing, and tests
+ 
+ `docs-sources.lock` pins the consumed source. The six paths in its
+diff --git a/README.md b/README.md
+index bf41660..101610a 100644
+--- a/README.md
++++ b/README.md
+@@ -9,8 +9,12 @@ technical accuracy and source of their sections.
+ an exact commit. `scripts/assemble_docs.py` checks that source, copies its
+ documentation into a new generated tree, and overlays this repository's six
+ explicitly listed site-owned files. It never alters the source checkout or an
+-existing output directory. The remaining component sources are not yet
+-active, and deployment remains paused.
++existing output directory. The lock also lists exact future mount paths for
++extension, physics, and rendering docs, all still `planned`. An active
++component must have a full pinned commit and a clean, exact-origin checkout;
++the assembler then replaces only its explicitly owned pages/assets and
++records that provenance. No split remote is active, and deployment remains
++paused.
+ 
+ Start with [MAINTAINERS.md](MAINTAINERS.md) for Bash commands and recovery,
+ [TECHNOLOGY.md](TECHNOLOGY.md) for the ownership model, and
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 8491054..97722a9 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -33,6 +33,16 @@ still assume monorepo layout and are not yet wired to the aggregate. This
+ candidate does not implement component-PR previews, cross-repository version
+ selection, approved publication gating, or a hosting cutover.
+ 
++The lock now names the future extension, physics, and rendering mounts as
++`planned`, with exact destination paths. When one becomes `active`, the
++assembler requires its owner URL, full commit pin, and a matching clean
++checkout. The component's entire `docs/` file set must equal its locked path
++list, and paths may not conflict with another component or site overlay.
++Those files replace only their same-named locations in the generated site;
++`sources.json` records each component pin. A local rehearsal of all three
++component candidates passed a strict MkDocs build, but their GitHub remotes
++do not yet exist and the canonical lock keeps them inactive.
++
+ The dependency direction is one-way: the docs site consumes component docs
+ and exact source locks; a language, extension, physics, rendering, or game
+ build must not depend on this repository to compile. A workspace lock may
+diff --git a/docs-sources.lock b/docs-sources.lock
+index 508229e..7b78d8f 100644
+--- a/docs-sources.lock
++++ b/docs-sources.lock
+@@ -13,3 +13,31 @@ overlay_paths = [
+   "stylesheets/brand.css",
+   "stylesheets/status.css",
+ ]
++
++[[components]]
++id = "sagan-vscode"
++state = "planned"
++url = "https://github.com/Sagan-Shoulak/sagan-vscode.git"
++paths = [
++  "getting-started/editor-support.md",
++  "tooling/editor-support.md",
++  "tooling/extension-readiness.md",
++  "tooling/vscode-extension-roadmap.md",
++]
++
++[[components]]
++id = "sagan-physics"
++state = "planned"
++url = "https://github.com/Sagan-Shoulak/sagan-physics.git"
++paths = ["standard-library/physics.md"]
++
++[[components]]
++id = "sagan-render"
++state = "planned"
++url = "https://github.com/Sagan-Shoulak/sagan-render.git"
++paths = [
++  "standard-library/rendering.md",
++  "assets/images/render-r1-shape-text.bmp",
++  "assets/images/render-r2-two-body.bmp",
++  "assets/images/render-r3-lagrange.bmp",
++]
+diff --git a/scripts/assemble_docs.py b/scripts/assemble_docs.py
+index a1d6836..6de0604 100644
+--- a/scripts/assemble_docs.py
++++ b/scripts/assemble_docs.py
+@@ -28,7 +28,22 @@ def git(checkout: Path, *args: str) -> str:
+     return result.stdout.strip()
+ 
+ 
+-def read_lock(path: Path) -> tuple[str, str, list[str]]:
++def safe_paths(paths: object, label: str) -> list[str]:
++    if not isinstance(paths, list) or not paths or any(
++        not isinstance(path, str) or not path for path in paths
++    ):
++        raise ValueError(f"{label} must be a nonempty array of paths")
++    for path in paths:
++        parts = PurePosixPath(path).parts
++        if ("\\" in path or path.startswith("/") or not parts or
++                any(part in (".", "..", "") for part in parts)):
++            raise ValueError(f"unsafe {label} path: {path}")
++    if len(paths) != len(set(paths)):
++        raise ValueError(f"{label} paths must be unique")
++    return paths
++
++
++def read_lock(path: Path) -> tuple[str, str, list[str], list[dict]]:
+     with path.open("rb") as source:
+         data = tomllib.load(source)
+     if data.get("schema_version") != 1:
+@@ -40,40 +55,73 @@ def read_lock(path: Path) -> tuple[str, str, list[str]]:
+     url, commit = sagan.get("url"), sagan.get("commit")
+     if not isinstance(url, str) or not url or not isinstance(commit, str) or not SHA.fullmatch(commit):
+         raise ValueError("docs source lock requires a URL and full lowercase commit SHA")
+-    overlays = site.get("overlay_paths")
+-    if not isinstance(overlays, list) or not overlays:
+-        raise ValueError("site overlay_paths must be a nonempty array")
+-    if any(not isinstance(path, str) or not path for path in overlays):
+-        raise ValueError("site overlay paths must be nonempty strings")
+-    for path in overlays:
+-        parts = PurePosixPath(path).parts
+-        if ("\\" in path or path.startswith("/") or not parts or
+-                any(part in (".", "..", "") for part in parts)):
+-            raise ValueError(f"unsafe site overlay path: {path}")
+-    if len(overlays) != len(set(overlays)):
+-        raise ValueError("site overlay paths must be unique")
+-    return url, commit, overlays
+-
+-
+-def verify_source(checkout: Path, url: str, commit: str) -> None:
++    overlays = safe_paths(site.get("overlay_paths"), "site overlay")
++    components = data.get("components", [])
++    if not isinstance(components, list):
++        raise ValueError("components must be an array of tables")
++    ids: set[str] = set()
++    destinations = set(overlays)
++    for component in components:
++        if not isinstance(component, dict):
++            raise ValueError("component entry must be a table")
++        identifier = component.get("id")
++        if not isinstance(identifier, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", identifier):
++            raise ValueError(f"invalid component id: {identifier!r}")
++        if identifier in ids:
++            raise ValueError(f"duplicate component id: {identifier}")
++        ids.add(identifier)
++        if component.get("state") not in ("planned", "active"):
++            raise ValueError(f"invalid component state: {identifier}")
++        if not isinstance(component.get("url"), str) or not component["url"]:
++            raise ValueError(f"component URL required: {identifier}")
++        paths = safe_paths(component.get("paths"), f"component {identifier}")
++        if destinations.intersection(paths):
++            raise ValueError(f"component paths conflict with another owner: {identifier}")
++        destinations.update(paths)
++        component_commit = component.get("commit")
++        if component["state"] == "active":
++            if not isinstance(component_commit, str) or not SHA.fullmatch(component_commit):
++                raise ValueError(f"active component requires full commit SHA: {identifier}")
++        elif component_commit is not None:
++            raise ValueError(f"planned component must not have a commit: {identifier}")
++    return url, commit, overlays, components
++
++
++def verify_source(checkout: Path, url: str, commit: str, label: str = "Sagan") -> None:
+     if not checkout.is_dir() or checkout.is_symlink():
+-        raise ValueError("Sagan source checkout is missing or unsafe")
++        raise ValueError(f"{label} source checkout is missing or unsafe")
+     top = Path(git(checkout, "rev-parse", "--show-toplevel")).resolve()
+     if top != checkout.resolve():
+-        raise ValueError("Sagan source path is inside a different Git checkout")
++        raise ValueError(f"{label} source path is inside a different Git checkout")
+     if git(checkout, "remote", "get-url", "origin") != url:
+-        raise ValueError("Sagan source origin differs from docs-sources.lock")
++        raise ValueError(f"{label} source origin differs from docs-sources.lock")
+     if git(checkout, "rev-parse", "HEAD") != commit:
+-        raise ValueError("Sagan source HEAD differs from docs-sources.lock")
++        raise ValueError(f"{label} source HEAD differs from docs-sources.lock")
+     if git(checkout, "status", "--porcelain", "--untracked-files=all"):
+-        raise ValueError("Sagan source checkout is dirty")
++        raise ValueError(f"{label} source checkout is dirty")
+     if not (checkout / "docs").is_dir():
+-        raise ValueError("Sagan source has no docs directory")
++        raise ValueError(f"{label} source has no docs directory")
+ 
+ 
+-def assemble(root: Path, lock_path: Path, checkout: Path, output: Path) -> None:
+-    url, commit, overlays = read_lock(lock_path)
++def assemble(root: Path, lock_path: Path, checkout: Path, output: Path,
++             component_checkouts: dict[str, Path] | None = None) -> None:
++    url, commit, overlays, components = read_lock(lock_path)
++    component_checkouts = component_checkouts or {}
+     verify_source(checkout, url, commit)
++    active = {entry["id"]: entry for entry in components if entry["state"] == "active"}
++    if set(component_checkouts) != set(active):
++        raise ValueError("component checkouts must match active docs-sources.lock entries exactly")
++    for identifier, entry in active.items():
++        source = component_checkouts[identifier]
++        verify_source(source, entry["url"], entry["commit"], identifier)
++        owned_paths = sorted(path.relative_to(source / "docs").as_posix()
++                             for path in (source / "docs").rglob("*") if path.is_file())
++        if owned_paths != sorted(entry["paths"]):
++            raise ValueError(f"{identifier} docs differ from exact locked paths")
++        if any(path.is_symlink() for path in (source / "docs").rglob("*")):
++            raise ValueError(f"{identifier} docs contain a symlink")
++        if output == source or output.is_relative_to(source):
++            raise ValueError(f"assembled output must not be inside {identifier} checkout")
+     if output == checkout or output.is_relative_to(checkout):
+         raise ValueError("assembled output must not be inside the Sagan source checkout")
+     if output == root / "docs" or output.is_relative_to(root / "docs"):
+@@ -97,13 +145,22 @@ def assemble(root: Path, lock_path: Path, checkout: Path, output: Path) -> None:
+             destination = stage / "docs" / relative
+             destination.parent.mkdir(parents=True, exist_ok=True)
+             shutil.copy2(root / "docs" / relative, destination)
++        for identifier, entry in sorted(active.items()):
++            source = component_checkouts[identifier]
++            for relative in entry["paths"]:
++                destination = stage / "docs" / relative
++                destination.parent.mkdir(parents=True, exist_ok=True)
++                shutil.copy2(source / "docs" / relative, destination)
+         shutil.copy2(root / "mkdocs.yml", stage / "mkdocs.yml")
+         (stage / "scripts").mkdir()
+         for hook in HOOKS:
+             shutil.copy2(root / "scripts" / hook, stage / "scripts" / hook)
+         (stage / "sources.json").write_text(
+             json.dumps({"sagan_url": url, "sagan_commit": commit,
+-                        "site_overlay_paths": overlays}, indent=2) + "\n",
++                        "site_overlay_paths": overlays,
++                        "components": [{"id": identifier, "url": entry["url"],
++                                        "commit": entry["commit"], "paths": entry["paths"]}
++                                       for identifier, entry in sorted(active.items())]}, indent=2) + "\n",
+             encoding="utf-8",
+         )
+         stage.rename(output)
+@@ -114,9 +171,17 @@ def main() -> int:
+     parser.add_argument("--sagan", type=Path, required=True)
+     parser.add_argument("--output", type=Path, required=True)
+     parser.add_argument("--lock", type=Path, default=ROOT / "docs-sources.lock")
++    parser.add_argument("--component", action="append", default=[], metavar="ID=CHECKOUT")
+     args = parser.parse_args()
+     try:
+-        assemble(ROOT, args.lock, args.sagan.absolute(), args.output.absolute())
++        component_checkouts = {}
++        for item in args.component:
++            identifier, separator, path = item.partition("=")
++            if not separator or not identifier or not path or identifier in component_checkouts:
++                raise ValueError(f"invalid or duplicate --component: {item!r}")
++            component_checkouts[identifier] = Path(path).absolute()
++        assemble(ROOT, args.lock, args.sagan.absolute(), args.output.absolute(),
++                 component_checkouts)
+     except (OSError, ValueError, tomllib.TOMLDecodeError) as error:
+         print(f"Documentation assembly failed: {error}", file=sys.stderr)
+         return 1
+diff --git a/tests/assemble_docs_test.py b/tests/assemble_docs_test.py
+index 8093572..52ebf13 100644
+--- a/tests/assemble_docs_test.py
++++ b/tests/assemble_docs_test.py
+@@ -44,17 +44,43 @@ class AssembleDocsTest(unittest.TestCase):
+         self.write_lock()
+         self.output = self.root / "assembled"
+ 
+-    def write_lock(self, *, commit: str | None = None, overlays: list[str] | None = None) -> None:
++    def write_lock(self, *, commit: str | None = None, overlays: list[str] | None = None,
++                   components: str = "") -> None:
+         self.lock.write_text(
+             "schema_version = 1\n"
+             "[sagan]\n"
+             f'url = "{self.url}"\n'
+             f'commit = "{commit or self.commit}"\n'
+             "[site]\n"
+-            f"overlay_paths = {json.dumps(overlays if overlays is not None else self.overlays)}\n",
++            f"overlay_paths = {json.dumps(overlays if overlays is not None else self.overlays)}\n"
++            f"{components}",
+             encoding="utf-8",
+         )
+ 
++    def component(self) -> tuple[Path, str, str]:
++        source = self.root / "physics"
++        source.mkdir()
++        git(source, "init", "-b", "dev")
++        docs = source / "docs" / "standard-library"
++        docs.mkdir(parents=True)
++        (docs / "physics.md").write_text("# Physics from component\n", encoding="utf-8")
++        git(source, "add", "docs/standard-library/physics.md")
++        git(source, "-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test",
++            "-c", "user.email=test@example.invalid", "commit", "-m", "Physics docs fixture")
++        commit = git(source, "rev-parse", "HEAD")
++        url = "https://example.invalid/sagan-physics.git"
++        git(source, "remote", "add", "origin", url)
++        return source, url, commit
++
++    @staticmethod
++    def component_lock(url: str, commit: str, path: str = "standard-library/physics.md") -> str:
++        return ("[[components]]\n"
++                'id = "sagan-physics"\n'
++                'state = "active"\n'
++                f'url = "{url}"\n'
++                f'commit = "{commit}"\n'
++                f'paths = {json.dumps([path])}\n')
++
+     def test_assembles_source_site_overlay_and_provenance(self) -> None:
+         assemble_docs.assemble(ROOT, self.lock, self.source, self.output)
+         self.assertEqual("# Pinned source\n",
+@@ -99,6 +125,44 @@ class AssembleDocsTest(unittest.TestCase):
+         with self.assertRaisesRegex(ValueError, "unsafe site overlay path"):
+             assemble_docs.read_lock(self.lock)
+ 
++    def test_active_component_replaces_same_destination_and_records_pin(self) -> None:
++        source, url, commit = self.component()
++        self.write_lock(components=self.component_lock(url, commit))
++        assemble_docs.assemble(ROOT, self.lock, self.source, self.output,
++                               {"sagan-physics": source})
++        self.assertEqual("# Physics from component\n",
++                         (self.output / "docs" / "standard-library" / "physics.md")
++                         .read_text(encoding="utf-8"))
++        provenance = json.loads((self.output / "sources.json").read_text(encoding="utf-8"))
++        self.assertEqual(commit, provenance["components"][0]["commit"])
++
++    def test_active_component_requires_exact_checkout_and_owned_paths(self) -> None:
++        source, url, commit = self.component()
++        self.write_lock(components=self.component_lock(url, commit))
++        with self.assertRaisesRegex(ValueError, "must match active"):
++            assemble_docs.assemble(ROOT, self.lock, self.source, self.output)
++        self.write_lock(components=self.component_lock(url, commit, "other.md"))
++        with self.assertRaisesRegex(ValueError, "docs differ from exact locked paths"):
++            assemble_docs.assemble(ROOT, self.lock, self.source, self.output,
++                                   {"sagan-physics": source})
++        self.write_lock(components=self.component_lock(url, commit))
++        (source / "docs" / "standard-library" / "untracked.md").write_text("work\n")
++        with self.assertRaisesRegex(ValueError, "dirty"):
++            assemble_docs.assemble(ROOT, self.lock, self.source, self.output,
++                                   {"sagan-physics": source})
++        self.assertFalse(self.output.exists())
++
++    def test_planned_components_do_not_require_checkout(self) -> None:
++        planned = ('[[components]]\n'
++                   'id = "sagan-physics"\n'
++                   'state = "planned"\n'
++                   'url = "https://example.invalid/sagan-physics.git"\n'
++                   'paths = ["standard-library/physics.md"]\n')
++        self.write_lock(components=planned)
++        assemble_docs.assemble(ROOT, self.lock, self.source, self.output)
++        provenance = json.loads((self.output / "sources.json").read_text(encoding="utf-8"))
++        self.assertEqual([], provenance["components"])
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+-- 
+2.51.0.windows.2
+

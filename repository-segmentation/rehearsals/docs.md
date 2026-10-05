@@ -48,3 +48,23 @@ publication review, or hosting rollback. No split remote was created or
 pushed. A fresh normal clone replayed the patch with `git am`, matched tree
 `d2992da632fe7e6cec654bde9a8f35fd76a1f31a`, passed `git fsck --full`,
 and reran all five offline tests.
+
+## Pinned component-mount rehearsal
+
+A second replayable patch on the same filtered base, candidate commit
+`3640c57c1dfe731350ede217b6263b673bb0c43a`, adds planned source mounts
+for the extension, physics, and rendering sections. The canonical
+`docs-sources.lock` leaves their nonexistent GitHub remotes inactive. An
+ignored local fixture instead pinned the three clean extracted candidates
+to their actual local origins and exact commits. The assembler copied their
+four extension pages, physics page, rendering page, and three rendered image
+assets into the official site's existing paths. `sources.json` recorded all
+four source pins, and a strict Windows MkDocs build passed. The same
+pre-existing unlisted contributor checkpoint warning remained.
+
+Eight offline assembler tests passed; a clean replay of both patches matched
+tree `6a4bc68abcf6eeadae6d0e2130796415a6c1b84f`, passed `git fsck
+--full`, and reran all eight tests. This proves local aggregation with
+ownership and lock checks. It does not prove hosted CI, component-PR preview,
+publication review, version selection, deployment, or HP1 rollback. No
+split remote was created or pushed.
