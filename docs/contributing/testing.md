@@ -77,8 +77,23 @@ required sequence.
 
 ## Documentation
 
-Validate documentation metadata, links, navigation, Markdown, executable
-examples, and rendering with:
+For prose, navigation, or metadata changes that cannot affect executable
+examples, validate documentation structure, links, navigation, Markdown, and
+rendering without compiling every example:
+
+```bash
+bash scripts/docs.sh check-structure
+```
+
+When executable examples or their supporting compiler, package, tooling, or
+harness behavior changes, test the examples directly:
+
+```bash
+bash scripts/docs.sh check-examples
+```
+
+Run the combined documentation gate when both surfaces are affected or when
+preparing integration and publication evidence:
 
 ```bash
 bash scripts/docs.sh check

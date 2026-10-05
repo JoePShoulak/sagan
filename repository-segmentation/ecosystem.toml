@@ -1,0 +1,62 @@
+schema_version = 1
+organization = "Sagan-Shoulak"
+integration_branch = "dev"
+publication_branch = "main"
+
+[[repositories]]
+id = "sagan"
+role = "language"
+chat = "language"
+depends_on = []
+
+[[repositories]]
+id = "sagan-vscode"
+role = "editor"
+chat = "vscode"
+depends_on = ["sagan"]
+
+[[repositories]]
+id = "sagan-physics"
+role = "library"
+chat = "physics"
+depends_on = ["sagan"]
+
+[[repositories]]
+id = "sagan-render"
+role = "library"
+chat = "rendering"
+depends_on = ["sagan"]
+
+[[repositories]]
+id = "sagan-workspace"
+role = "integration"
+chat = "workspace"
+depends_on = ["sagan", "sagan-vscode", "sagan-physics", "sagan-render", "sagan-space-game"]
+
+[[repositories]]
+id = "sagan-docs"
+role = "documentation"
+chat = "documentation"
+depends_on = ["sagan", "sagan-vscode", "sagan-physics", "sagan-render", "sagan-workspace", "sagan-space-game"]
+
+[[repositories]]
+id = "sagan-space-game"
+role = "application"
+chat = "space-game"
+depends_on = ["sagan", "sagan-physics", "sagan-render"]
+
+[[forbidden_dependencies]]
+from = "sagan-physics"
+to = "sagan-render"
+
+[[forbidden_dependencies]]
+from = "sagan-render"
+to = "sagan-physics"
+
+[[forbidden_dependencies]]
+from = "sagan-vscode"
+to = "sagan-physics"
+
+[[forbidden_dependencies]]
+from = "sagan-vscode"
+to = "sagan-render"

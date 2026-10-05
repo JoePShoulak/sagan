@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sagan.shoulak.org/schemas/documentation-export-v1.json",
+  "title": "Sagan documentation export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["component", "source_directory", "mount_point", "navigation", "publication"],
+  "properties": {
+    "component": { "type": "string", "pattern": "^sagan(?:-[a-z0-9]+)*$" },
+    "source_directory": { "type": "string", "minLength": 1 },
+    "mount_point": { "type": "string", "pattern": "^/.+/$" },
+    "navigation": { "type": "string", "minLength": 1 },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_status", "requires_human_review"],
+      "properties": {
+        "default_status": { "enum": ["review-needed", "work-in-progress"] },
+        "requires_human_review": { "const": true }
+      }
+    }
+  }
+}

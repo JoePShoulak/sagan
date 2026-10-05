@@ -69,10 +69,14 @@ outputs, not source or release evidence.
 ## Safe daily change sequence
 
 Inspect `git status --short --branch`, `git log -1 --oneline`, and the diff
-before editing. Concurrent work may be present. Stage only intended paths,
-then inspect `git diff --cached --check` and `git diff --cached --name-only`.
-Routine work targets `dev`; use a temporary branch for isolation or a risky
-change. `main` is publication-only: pushing to it triggers release automation.
+before editing. Concurrent work may be present. Every authorized Codex request
+that changes this repository starts from current `dev` on its own short-lived
+`codex/<request>` branch. Run the smallest tests that fully exercise the changed
+surface and refine the work until those focused tests pass. Stage only intended
+paths, then inspect `git diff --cached --check` and
+`git diff --cached --name-only`. Merge passing work into `dev`, then run the
+post-merge checks selected by the impact matrix below. `main` is
+publication-only: pushing to it triggers release automation.
 Never use `git reset --hard` or overwrite a shared branch to recover a failed
 check. Preserve the state, inspect the failure, and make a corrective commit.
 
@@ -99,6 +103,23 @@ and `bash scripts/windows/test_portable.sh`; installer smoke modifies a test
 installation and belongs on an isolated runner unless the owner approves it
 on a workstation. Consult the linked installer and release guides before
 tagging, mirroring, deployment, or recovery.
+
+## Impact-based test matrix
+
+| Change | Focused branch check | Required after merge to `dev` |
+| --- | --- | --- |
+| Documentation prose, navigation, or metadata that cannot affect executable examples | `bash scripts/docs.sh check-structure` | Documentation structure and publication-policy checks; do not run unrelated examples |
+| Executable documentation example or behavior supporting examples | `bash scripts/docs.sh check-examples` plus structural checks | Complete documentation check with `bash scripts/docs.sh check` |
+| Compiler, runtime, language service, package resolver, or shared test harness | The narrowest relevant test target | Complete `bash scripts/test.sh` and documentation examples when the changed behavior can affect them |
+| VS Code extension | Relevant extension unit or integration target | Complete extension gate documented in the testing guide |
+| Physics or rendering package | Relevant headless or graphical package test | Complete affected package gate plus workspace integration demonstrations |
+| Release, packaging, installer, deployment, or cross-component integration | Relevant policy or artifact test | Complete repository suite and the affected platform/release gates |
+| Repository segmentation contracts or ownership inventory | `bash scripts/repository_segmentation_check.sh` | Segmentation contract check plus affected documentation checks |
+
+When a change spans rows, use the union of their requirements. An apparently
+documentation-only edit is not exempt when it changes executable snippets,
+generated references, test discovery, or tooling behavior. See the
+[testing guide](docs/contributing/testing.md) for exact component commands.
 
 If a workstation is lost, start by cloning the last reviewed commit, verifying
 its tag and release checksums, then rebuilding; do not reconstruct a release

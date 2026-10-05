@@ -73,6 +73,3 @@ Testing/
 # Python and documentation environments
 __pycache__/
 .venv-docs/
-
-# Me-defined
-sandbox/

@@ -30,6 +30,8 @@ Before changing code or documentation:
 - follow the [multi-repository fracture roadmap](repository-fracturing-roadmap.md),
   including holistic documentation, Space Game extraction, and a tested root
   `CODEX_START.md` onboarding prompt in every repository;
+- use the concise [repository fracture execution plan](repository-fracturing-execution.md)
+  when carrying out the split, while treating the full roadmap as authoritative;
 - preserve the [Windows installer release gate](windows-installer-release.md);
 - follow the [release lifecycle](release-lifecycle.md) for public tags and artifacts;
 - record unsettled design as provisional or open rather than inventing semantics;

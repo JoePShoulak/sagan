@@ -1,0 +1,184 @@
+// sandbox.sagan
+// Currently a demo of how mass and planets might start working
+module main
+
+import GRAVITATIONAL_CONSTANT from physics.two_body
+
+face Named {
+  let .name: String
+
+  fun getName(): String => self.name
+}
+
+face Massive {
+  let .mass: Float<kilogram>
+
+  fun getMass(): Float<kilogram> => self.mass
+  fun getMassRatio(body: Massive): Float => self.getMass() / body.getMass()
+}
+
+face Position {
+  let .position: Point3<Float, kilometer>
+
+  fun getPosition(): Point3<Float, kilometer> => self.position
+  fun setPosition!(position: Point3<Float, kilometer>): Void { self.position = position }
+  fun getDisplacementToEntity(entity: Position): Vector3<Float, kilometer> => entity.getPosition() - self.position
+  fun getDistanceToEntity(entity: Position): Float<kilometer> => self.getDisplacementToEntity(entity).length()
+}
+
+face Physics has Position, Massive {
+  let .velocity: Vector3<Float, kilometer / second>
+  let .acceleration: Vector3<Float, kilometer / second ^ 2>
+
+  fun getVelocity(): Vector3<Float, kilometer / second> => self.velocity
+  fun setVelocity!(velocity: Vector3<Float, kilometer / second>): Void { self.velocity = velocity }
+
+  fun getAcceleration(): Vector3<Float, kilometer / second ^ 2> => self.acceleration
+  fun setAcceleration!(acceleration: Vector3<Float, kilometer / second ^ 2>): Void { self.acceleration = acceleration }
+
+  fun applyForce!(force: Vector3<Float, newton>): Void { self.setAcceleration!(force / self.getMass()) }
+  fun feelGravityFrom!(body: NaturalBody): Void {
+    let displacement: Vector3<Float, kilometer> = self.getDisplacementToEntity(body)
+    let distance_squared: Float<kilometer ^ 2> = displacement.squared_length()
+    let force_magnitude: Float<newton> = GRAVITATIONAL_CONSTANT * self.getMass() * body.getMass() / distance_squared
+    let force: Vector3<Float, newton> = displacement.normalized() * force_magnitude
+
+    self.applyForce!(force)
+  }
+}
+
+face Orbital has Physics {
+  fun getSMA(): Float<kilometer> => 384400 kilometer // TODO: Obtain the actual semimajor axis formula
+}
+
+face Gravitational has Orbital {
+  fun getParentBody(): Optional<Massive>
+
+  let .soiRadius: Float<kilometer>
+
+  fun calculateSOIRadius(): Float<kilometer> {
+    match self.getParentBody() {
+      case Some(body) { return self.getSMA() * self.getMassRatio(body) ^ (2.0 / 5.0)}
+      case None return inf kilometer
+      case else return nan kilometer
+    }
+  }
+
+  fun getSOIRadius(): Float<kilometer> => self.soiRadius
+}
+
+class NaturalBody has Named, Gravitational {
+  let .diameter: Float<kilometer>
+  weak let .parent_body: Massive
+
+  new(
+  name: String = "",
+  mass: Float<kilogram> = 1 kilogram,
+  diameter: Float<kilometer> = 1 kilometer,
+  parent_body: Optional<NaturalBody> = None,
+  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
+  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+  ) {
+    self.name = name
+    self.mass = mass
+    self.diameter = diameter
+    match parent_body {
+      case Some(body) self.parent_body = body
+      case None {}
+    }
+    self.position = position
+    self.velocity = velocity
+    self.acceleration = <0, 0, 0> (kilometer / second ^ 2)
+    self.soiRadius = self.calculateSOIRadius()
+  }
+
+  // Natural Body
+  fun getDiameter(): Float<kilometer> => self.diameter
+  fun printSummary(): Void {
+    print("${self.name}:")
+    print("  Mass: ${self.getMass()}")
+    print("  Diameter: ${self.getDiameter()}")
+    print("  SOI Radius: ${self.getSOIRadius()}")
+  }
+
+  // Gravitational
+  fun getParentBody(): Optional<Massive> => self.parent_body
+}
+
+class Star is NaturalBody {
+  new(
+  name: String,
+  mass: Float<kilogram>,
+  diameter: Float<kilometer>,
+  parent_star: Optional<Star> = None, // TODO: Stars may be binary, but this only allows us to do a star-orbiting-star system, not a co-orbiting stars at the moment
+  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
+  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+  ) is NaturalBody(name, mass, diameter, parent_star, position, velocity) { }
+}
+
+class Planet is NaturalBody {
+  new(
+  name: String,
+  mass: Float<kilogram>,
+  diameter: Float<kilometer>,
+  parent_star: Star,
+  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
+  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+  ) is NaturalBody(name, mass, diameter, Some(parent_star), position, velocity) { }
+}
+
+class DwarfPlanet is NaturalBody {
+  new(
+  name: String,
+  mass: Float<kilogram>,
+  diameter: Float<kilometer>,
+  parent_star: Star,
+  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
+  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+  ) is NaturalBody(name, mass, diameter, Some(parent_star), position, velocity) { }
+}
+
+class Moon is NaturalBody {
+  new(
+  name: String,
+  mass: Float<kilogram>,
+  diameter: Float<kilometer>,
+  parent_body: NaturalBody,
+  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
+  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+  ) is NaturalBody(name, mass, diameter, Some(parent_body), position, velocity) { }
+}
+
+class SmallBody is NaturalBody {
+  new(
+  name: String,
+  mass: Float<kilogram>,
+  diameter: Float<kilometer>,
+  parent_body: NaturalBody,
+  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
+  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+  ) is NaturalBody(name, mass, diameter, Some(parent_body), position, velocity) { }
+}
+
+let sol = Star("Sol", 1.9884e30 kilogram, 1.392e6 kilometer)
+let earth = Planet("Earth", 5.97e24 kilogram, 12756 kilometer, sol, (149593200, 0, 0) kilometer)
+let luna = Moon("Luna", 7.34e22 kilogram, 3474.8 kilometer, earth, (149977600, 0, 0) kilometer)
+let pluto = DwarfPlanet("Pluto", 1.303e22 kilogram, 2376.6 kilometer, sol, (-1.47730922e9, -4.182574868e9, 8.752154808e8) kilometer)
+let ceres = SmallBody("Ceres", 9.38416e20 kilogram, 939.4 kilometer, sol, (-3.559423585e8, 1.190030176e8, 6.926464763e7) kilometer)
+let hallesComet = SmallBody("Halley's Comet", 3.2e14 kilogram, 11 kilometer, sol, (-2.600907602e9, 2.540048592e9, -1.133650662e9) kilometer)
+
+// let nonstellarBodies: Array<NaturalBody> = [earth, luna, pluto, ceres, hallesComet]
+
+sol.printSummary()
+earth.printSummary()
+luna.printSummary()
+pluto.printSummary()
+ceres.printSummary()
+hallesComet.printSummary()
+
+print("Distances: Sol to...")
+print("  Earth: ${sol.getDistanceToEntity(earth)}")
+print("  Luna: ${sol.getDistanceToEntity(luna)}")
+print("  Pluto: ${sol.getDistanceToEntity(pluto)}")
+print("  Ceres: ${sol.getDistanceToEntity(ceres)}")
+print("  Halley's Comet: ${sol.getDistanceToEntity(hallesComet)}")

@@ -198,7 +198,8 @@ After reading, the chat must report:
 - what the repository owns and does not own;
 - upstream and downstream dependencies;
 - current supported versions and platforms;
-- build, focused-test, full-test, and documentation commands;
+- build, focused-test, full-test, and documentation commands, plus the
+  impact-based test matrix that says when each command is required;
 - `dev`/`main`, branching, commit, promotion, and release rules;
 - dirty or concurrent workspace state that must be preserved;
 - relevant open roadmap decisions; and
@@ -208,6 +209,25 @@ The prompt must tell the chat not to edit, commit, push, publish, transfer,
 release, deploy, or resolve an unsettled design question during familiarization
 unless the user explicitly asks. It must require Bash-facing commands and
 preservation of unrelated changes.
+
+After familiarization, every newly authorized Codex request that changes a
+repository must use its own short-lived branch created from current `dev`. The
+chat must test only what it changed first, diagnose and refine its work until
+the focused tests pass, and keep unrelated or concurrent changes out of its
+commits. It may merge the completed branch back into `dev` only after that
+focused gate.
+Immediately after the merge, it must run the post-merge checks required by the
+repository's impact-based test matrix on `dev` and resolve any integration
+failure before reporting the request complete. Code and integration changes
+normally require the complete repository suite. A documentation-only change
+that does not alter executable examples or the behavior supporting them runs
+documentation structure, metadata, link, and publication checks without
+re-running every documentation example. Changed examples and language,
+package, tooling, or harness changes that can affect examples require the
+relevant executable example tests. Every `CODEX_START.md` must state this
+workflow as a mandatory shared clause and point to the exact commands and
+impact matrix in `MAINTAINERS.md`. Repository-specific prompts may add stricter
+requirements but may not omit or weaken this clause.
 
 Every prompt must also state the owner's teaching-first preference. By default,
 the chat should teach the owner what to write and why through explanations,
@@ -274,6 +294,11 @@ The drill fails if the chat:
 - invents implementation status or language semantics;
 - cannot find the correct build and test commands;
 - recommends the wrong branch or publication workflow;
+- fails to create a request branch, iterate through focused tests, merge the
+  passing work into `dev`, or run the impact-required post-merge checks;
+- runs every executable documentation example for an unrelated documentation-
+  only edit, or skips affected example tests when examples or their supporting
+  behavior change;
 - misses the holistic documentation pipeline;
 - does not know the other specialized chats or cannot produce a useful handoff
   when work crosses a repository boundary;
@@ -394,9 +419,17 @@ workspace compatibility evidence used to build them.
 
 Every product repository uses the same default policy:
 
-- routine development occurs directly on `dev`;
-- temporary branches are exceptional and documented, not automatically
-  created per feature;
+- `dev` is the integration branch and is not the normal implementation
+  workspace for a Codex request;
+- every newly authorized Codex request that changes the repository starts from
+  current `dev` on its own short-lived `codex/<request>` branch;
+- the request branch is refined until its focused tests pass, then merged back
+  into `dev`;
+- the impact-required post-merge checks run on the resulting `dev`, and
+  integration failures must be resolved before the request is complete;
+- code and integration changes normally run the complete repository suite,
+  while unrelated documentation-only changes do not re-run all executable
+  documentation examples; affected examples must still be tested;
 - commits follow the repository's Conventional Commit/version rules;
 - `main` is reserved for reviewed publication promotion;
 - promotion occurs by pull request from `dev` to `main` with required checks;
@@ -572,6 +605,10 @@ The fracture is complete only when:
   and its conceptual place in the locked ecosystem without depending on chat
   history;
 - all maintainer and clean-chat onboarding drills pass;
+- every repository prompt and maintainer guide enforce and demonstrate the
+  request-branch, focused-test, merge-to-`dev`, and impact-based post-merge
+  verification cycle, including when executable documentation examples are and
+  are not required;
 - every repository prompt can identify the other specialized chats, route
   cross-repository work, and produce a context-complete handoff prompt;
 - `sagan-workspace` recreates a known-good ecosystem from exact commits;

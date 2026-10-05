@@ -172,6 +172,7 @@ nav:
           - Overview: contributing/index.md
           - Active development roadmap: contributing/active-roadmap.md
           - Multi-repository fracture roadmap: contributing/repository-fracturing-roadmap.md
+          - Repository fracture execution plan: contributing/repository-fracturing-execution.md
           - Maintainer handoff and project survivability: contributing/maintainer-handoff-roadmap.md
           - Development setup: contributing/development-setup.md
           - Change and publication lifecycle: contributing/change-lifecycle.md

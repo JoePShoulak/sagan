@@ -2,9 +2,10 @@
 
 Paste the following into a new chat when returning to this repository:
 
-> Work in the Sagan repository. Read `MAINTAINERS.md`, `README.md`,
+> Work in the Sagan repository. Begin read-only. Read `TECHNOLOGY.md`,
+> `MAINTAINERS.md`, `README.md`,
 > `docs/contributing/active-roadmap.md`, and
-> `docs/contributing/maintainer-handoff-roadmap.md` first. Inspect the current
+> `docs/contributing/repository-fracturing-roadmap.md` first. Inspect the current
 > branch, HEAD, status, staged files, and version before proposing a change.
 > Preserve unrelated and concurrent work; do not push, merge, tag, publish, or
 > deploy without my current instruction. The compiler and language service own
@@ -15,6 +16,15 @@ Paste the following into a new chat when returning to this repository:
 > choosing them. I use Bash, not PowerShell. Show the relevant repository-local
 > workflow and its impact on the whole Sagan ecosystem before implementing a
 > significant change. Do not write code unless I request implementation.
+> For every authorized request that changes the repository, start from current
+> `dev` on a new short-lived `codex/<request>` branch. Test only the affected
+> work first and refine it until it works and all focused tests pass. Commit
+> only intended paths, merge the completed branch into `dev`, then run the
+> post-merge suite required by the impact matrix in `MAINTAINERS.md`. Code and
+> integration changes normally require the full suite. Documentation-only
+> changes that cannot affect executable examples require structural docs checks
+> but not every example; test affected examples whenever their content or
+> supporting behavior changes. Resolve integration failures before completion.
 
 The [maintainer entry point](MAINTAINERS.md) is the navigation index for
 compiler, editor, libraries, tests, documentation, release, and recovery.

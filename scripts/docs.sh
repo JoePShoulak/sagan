@@ -55,6 +55,22 @@ case "${1:-}" in
     "$venv_python" -m mkdocs build --strict --clean
     "$venv_python" scripts/docs_syntax_test.py build/docs-site
     ;;
+  check-structure)
+    test -x "$venv_python" || {
+      echo "Documentation environment is missing. Run: bash scripts/docs.sh setup" >&2
+      exit 1
+    }
+    "$venv_python" scripts/maintainer_docs_test.py
+    "$venv_python" -m mkdocs build --strict --clean
+    "$venv_python" scripts/docs_syntax_test.py build/docs-site
+    ;;
+  check-examples)
+    test -x "$venv_python" || {
+      echo "Documentation environment is missing. Run: bash scripts/docs.sh setup" >&2
+      exit 1
+    }
+    bash scripts/docs_examples_test.sh
+    ;;
   release-check)
     test -x "$venv_python" || {
       echo "Documentation environment is missing. Run: bash scripts/docs.sh setup" >&2
@@ -64,7 +80,7 @@ case "${1:-}" in
     "$venv_python" scripts/docs_release_check.py
     ;;
   *)
-    echo "Usage: bash scripts/docs.sh {setup|serve|check|release-check}" >&2
+    echo "Usage: bash scripts/docs.sh {setup|serve|check|check-structure|check-examples|release-check}" >&2
     exit 2
     ;;
 esac

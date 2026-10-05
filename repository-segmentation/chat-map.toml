@@ -1,0 +1,40 @@
+schema_version = 1
+
+[[chats]]
+id = "language"
+repository = "sagan"
+owns = "Language design, compiler, CLI, LSP, DAP, packages, math, units, and toolchain distribution."
+
+[[chats]]
+id = "vscode"
+repository = "sagan-vscode"
+owns = "VS Code client, grammars, VSIX packaging, and editor integration tests."
+
+[[chats]]
+id = "physics"
+repository = "sagan-physics"
+owns = "Physics APIs, numerical models, tolerances, frames, headless examples, and physics documentation."
+
+[[chats]]
+id = "rendering"
+repository = "sagan-render"
+owns = "Rendering APIs, native bridges, platform backends, assets, graphical evidence, and rendering documentation."
+
+[[chats]]
+id = "workspace"
+repository = "sagan-workspace"
+owns = "Ecosystem bootstrap, exact locks, cross-repository tests, integrated demonstrations, and compatibility evidence."
+
+[[chats]]
+id = "documentation"
+repository = "sagan-docs"
+owns = "Holistic site assembly, navigation, previews, approved publication, hosting, and rollback."
+
+[[chats]]
+id = "space-game"
+repository = "sagan-space-game"
+owns = "Game design and application code; game goals come only from SPACE_GAME_DESIGN.md and owner clarification."
+
+[handoff]
+required_fields = ["destination_chat", "goal", "evidence", "constraints", "dependency_versions", "verification"]
+instruction = "Recommend the owning chat and provide a self-contained ready-to-paste prompt; never assume shared chat history."

@@ -1,0 +1,39 @@
+path	destination	status	notes
+src/	sagan	proposed	Compiler, CLI, LSP, DAP, package system, runtime, and language services.
+tests/	sagan	needs-split	Compiler tests remain; package and cross-component fixtures move with their owners.
+third_party/	sagan	proposed	Audit each vendored dependency before extraction; native-render-only dependencies move with rendering.
+libraries/physics/	sagan-physics	proposed	Physics package, numerical models, fixtures, and API documentation.
+libraries/render/	sagan-render	proposed	Rendering package, native bridge, assets, graphical tests, and API documentation.
+editors/vscode-sagan/	sagan-vscode	proposed	Extension client, grammars, bundle, VSIX lifecycle, and editor tests.
+examples/lagrange_demo/	sagan-workspace	proposed	Cross-component physics and rendering demonstration.
+examples/solar_lagrange_demo/	sagan-workspace	proposed	Cross-component physics and rendering demonstration.
+examples/window_demo/	sagan-render	proposed	Rendering-owned graphical example unless it becomes a workspace integration fixture.
+examples/shape_text_demo/	sagan-render	proposed	Rendering-owned graphical example.
+examples/two_body_demo/	sagan-workspace	proposed	Cross-component physics and rendering demonstration.
+examples/lagrange_numeric_demo/	sagan-physics	proposed	Headless numerical physics example.
+examples/solar_lagrange_numeric_demo/	sagan-physics	proposed	Headless numerical physics example.
+examples/orbit_numeric_demo/	sagan-physics	proposed	Headless numerical physics example.
+examples/*.sagan	sagan	needs-split	Language-only examples remain; package-dependent examples move with their owner.
+SPACE_GAME_DESIGN.md	sagan-space-game	proposed	Sole canonical game-design source after owner review and extraction.
+sandbox/	sagan-space-game	approved	Current Space Game seed project; preserve source, manifest, and lock during extraction.
+docs/	sagan-docs	needs-split	Site assembly moves to docs; component-authored pages move with components and are aggregated back.
+mkdocs.yml	sagan-docs	proposed	Global navigation and site assembly configuration.
+requirements-docs.txt	sagan-docs	proposed	Documentation build dependencies.
+deploy/docs/	sagan-docs	proposed	Official documentation deployment operations.
+deploy/hosting/	sagan-docs	proposed	Official documentation origin and public-route update orchestration.
+deploy/hp1/	sagan-docs	needs-split	Documentation services move; runner provisioning may become organization operations.
+deploy/releases/	sagan	proposed	Language release mirror until organization-wide release operations are deliberately separated.
+deploy/frontdoor/	sagan-docs	proposed	Official documentation route configuration and Frontdoor overlay.
+packaging/	sagan	proposed	Language and toolchain packaging; component-native packaging must be separated later.
+.github/workflows/documentation.yml	sagan-docs	proposed	Replace with component export checks plus aggregate docs CI.
+.github/workflows/vscode-extension.yml	sagan-vscode	proposed	Extension CI and VSIX validation.
+.github/workflows/windows-installer.yml	sagan	proposed	Language toolchain installer; consume released extension and packages explicitly.
+.github/workflows/coverage.yml	sagan	needs-split	Each repository owns coverage for its implementation.
+.github/workflows/integration.yml	sagan-workspace	needs-split	Component-focused checks stay local; ecosystem integration moves to workspace.
+.github/workflows/release*.yml	sagan	needs-split	Each product gains independent release workflows; ecosystem promotion belongs to workspace.
+scripts/	sagan	needs-split	Move component-specific scripts with owners and integration coordination to workspace.
+makefile	sagan	needs-split	Language targets remain; package, editor, docs, and integration targets become repository-local commands.
+README.md	sagan	needs-rewrite	Replace monorepo ownership claims after successful extractions.
+MAINTAINERS.md	sagan	needs-rewrite	Prototype contract; remove extracted operations only after parity.
+TECHNOLOGY.md	sagan	needs-rewrite	Prototype overview; narrow it as components leave.
+CODEX_START.md	sagan	needs-rewrite	Prototype prompt; add organization chat map and locked ecosystem sources.
