@@ -114,6 +114,7 @@ def source_stop_on_entry(binary, gdb):
     with tempfile.TemporaryDirectory(prefix="sagan entry ") as folder:
         source = Path(folder) / "entry 🚀.sagan"
         original = Path("tests/fixtures/runtime/root_script.sagan").read_bytes()
+        original = original.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         source.write_bytes(original.replace(b"\n", b"\r\n") + b'print("after entry")\r\n')
         environment = os.environ.copy()
         environment["SAGAN_GDB"] = str(gdb)
@@ -200,7 +201,7 @@ def package_launch(binary, gdb):
         while not (launched and terminated):
             item = messages.get(timeout=60)
             if item.get("request_seq") == 2:
-                assert item["success"], item
+                assert item["success"], (item, output_events)
                 launched = True
             if item.get("event") == "terminated":
                 terminated = True
@@ -232,6 +233,7 @@ def mapped_runtime_failure(binary, gdb, fixture, expected_code):
     try:
         send(1, "initialize", {"adapterID": "sagan"})
         output_events = []
+        observed = []
         while messages.get(timeout=15).get("request_seq") != 1:
             pass
         send(2, "launch", {"program": str(source)})
@@ -241,23 +243,24 @@ def mapped_runtime_failure(binary, gdb, fixture, expected_code):
             item = messages.get(timeout=60)
             if isinstance(item, BaseException):
                 raise item
+            observed.append(item)
             if item.get("request_seq") == 2:
-                assert item["success"], item
+                assert item["success"], (item, output_events)
                 launched = True
             if item.get("event") == "output":
                 output_events.append(item["body"])
             if item.get("event") == "terminated":
                 terminated = True
-        failures = [item for item in output_events if expected_code in item.get("output", "")]
-        assert len(failures) == 1, output_events
-        assert failures[0]["source"]["path"] == str(source), failures[0]
-        assert failures[0]["line"] >= 1 and failures[0]["column"] >= 1, failures[0]
-        assert not any("SAGAN_RUNTIME_ERROR" in item.get("output", "")
-                       for item in output_events), output_events
         send(4, "disconnect")
         while messages.get(timeout=15).get("request_seq") != 4:
             pass
         process.wait(timeout=10)
+        failures = [item for item in output_events if expected_code in item.get("output", "")]
+        assert len(failures) == 1, (observed, process.stderr.read().decode("utf-8", "replace"))
+        assert failures[0]["source"]["path"] == str(source), failures[0]
+        assert failures[0]["line"] >= 1 and failures[0]["column"] >= 1, failures[0]
+        assert not any("SAGAN_RUNTIME_ERROR" in item.get("output", "")
+                       for item in output_events), output_events
     finally:
         if process.poll() is None:
             process.kill()

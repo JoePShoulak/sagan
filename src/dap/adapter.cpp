@@ -489,9 +489,11 @@ namespace sagan::dap
             throw std::runtime_error("Debug build cancelled");
           if (!plan || !result->generated_source)
           {
-            const auto message = !result->diagnostics.empty()
+            auto message = !result->diagnostics.empty()
                 ? result->diagnostics.front().message
                 : result->standard_error.empty() ? "Sagan debug build failed" : result->standard_error;
+            if (!result->standard_error.empty() && message != result->standard_error)
+              message += ": " + result->standard_error.substr(0, 2048);
             throw std::runtime_error(message);
           }
           std::optional<std::pair<std::size_t, std::size_t>> entry_breakpoint;
@@ -1070,6 +1072,8 @@ namespace sagan::dap
 
     auto session::publish_runtime_failure() -> void
     {
+      if (runtime_stderr_.find("SAGAN_RUNTIME_ERROR\t") == std::string::npos && gdb_)
+        runtime_stderr_ += gdb_->captured_stderr();
       if (runtime_failure_published_ ||
           runtime_stderr_.find("SAGAN_RUNTIME_ERROR\t") == std::string::npos) return;
       runtime_failure_published_ = true;

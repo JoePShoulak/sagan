@@ -47,6 +47,14 @@ auto main() -> int
           "GDB native DAP rejected initialize");
   child.stop();
   require(!child.running(), "Stopping GDB DAP did not reap the process");
+#ifndef _WIN32
+  // A non-DAP child still proves that the POSIX stderr pipe is drained and
+  // never mixed into the framed protocol stream.
+  sagan::dap::gdb_process stderr_child;
+  stderr_child.start("/bin/sh");
+  require(!stderr_child.captured_stderr().empty(), "GDB stderr was not captured");
+  stderr_child.stop();
+#endif
   std::cout << "GDB native DAP transport passed.\n";
   return 0;
 }

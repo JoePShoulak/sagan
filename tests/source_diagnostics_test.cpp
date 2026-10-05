@@ -135,6 +135,19 @@ auto main() -> int
                       dimensionless_ratio.value.has_value() && dimensionless_ratio.diagnostics.empty(),
                   "equal measured units cancel to a dimensionless scalar");
 
+  source::document_snapshot vector_scalar_document(
+      source::document_identity{source::document_id{13}, source::document_uri{"file:///vector-scalar.sagan"}, {}},
+      1,
+      "fun scale(direction: Vector3<Float, kilometer>, ratio: Float): Vector3<Float, kilometer> {\n"
+      "  let forward = direction * ratio\n"
+      "  let reverse = ratio * direction\n"
+      "  return (forward + reverse) / ratio\n"
+      "}\n");
+  const auto vector_scalar = language_service::check_document(vector_scalar_document);
+  passed &= check(vector_scalar.state == diagnostics::result_state::complete &&
+                      vector_scalar.value.has_value() && vector_scalar.diagnostics.empty(),
+                  "dimensionless scalars scale measured vectors in both orders");
+
   diagnostics::cancellation_source pre_cancelled;
   pre_cancelled.cancel();
   const auto stopped = language_service::check_document(valid_document, {}, pre_cancelled.token());

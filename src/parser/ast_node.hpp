@@ -15,16 +15,6 @@ namespace parser
   struct expression;
   using expression_ref = std::unique_ptr<expression>;
 
-  struct function_parameter
-  {
-    std::string name;
-    std::optional<std::string> type_name;
-    expression_ref default_value;
-
-    function_parameter(std::string identifier, std::optional<std::string> annotation,
-                       expression_ref fallback = nullptr);
-  };
-
   struct ast_node
   {
     span range;
@@ -40,6 +30,18 @@ namespace parser
   struct expression : ast_node
   {
     using ast_node::ast_node;
+  };
+
+  // Keep the pointee complete before declaring the optional owning argument:
+  // libc++ instantiates its temporary unique_ptr destructor at this site.
+  struct function_parameter
+  {
+    std::string name;
+    std::optional<std::string> type_name;
+    expression_ref default_value;
+
+    function_parameter(std::string identifier, std::optional<std::string> annotation,
+                       expression_ref fallback = nullptr);
   };
 
   struct identifier_expression final : expression

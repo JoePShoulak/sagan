@@ -775,7 +775,7 @@ namespace semantic
 
         if (operation == "*" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
           return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
-                 common_type(left_dimensioned->component, right, range, "Vector scalar operands") + ">";
+                 arithmetic_type(operation, left_dimensioned->component, right, range) + ">";
         if ((operation == "*" || operation == "/") && left_dimensioned &&
             left_dimensioned->family == "Vector" &&
             units::parse_measured_type(right, unit_registry, range))
@@ -787,10 +787,10 @@ namespace semantic
                  arithmetic_type(operation, left, right_dimensioned->component, range) + ">";
         if (operation == "*" && right_dimensioned && right_dimensioned->family == "Vector" && is_numeric(left))
           return "Vector" + std::to_string(right_dimensioned->dimensions) + "<" +
-                 common_type(left, right_dimensioned->component, range, "Vector scalar operands") + ">";
+                 arithmetic_type(operation, left, right_dimensioned->component, range) + ">";
         if (operation == "/" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
           return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
-                 common_type(left_dimensioned->component, right, range, "Vector scalar operands") + ">";
+                 arithmetic_type(operation, left_dimensioned->component, right, range) + ">";
 
         require(false, "Operator '" + operation + "' is not defined for " + left + " and " + right, range);
         return std::string(unknown_type);

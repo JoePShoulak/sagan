@@ -93,7 +93,7 @@ jobs:
         shell: msys2 {0}
         run: bash scripts/docs.sh check
       - name: Validate versioned documentation after the 1.0 exception
-        if: needs.validate-tag.outputs.version != '1.0.0' && github.ref_name != 'v0.88.0-rc.1' && github.ref_name != 'v4.9.4'
+        if: needs.validate-tag.outputs.version != '1.0.0' && github.ref_name != 'v0.88.0-rc.1' && github.ref_name != 'v4.9.5'
         shell: msys2 {0}
         env:
           SAGAN_DOCS_VERSION: ${{ needs.validate-tag.outputs.version }}
@@ -122,7 +122,7 @@ jobs:
       - test
       - coverage
     runs-on: windows-latest
-    environment: ${{ (needs.validate-tag.outputs.version == '1.0.0' || github.ref_name == 'v0.88.0-rc.1' || github.ref_name == 'v4.9.4') && 'initial-unsigned-release' || 'release-signing' }}
+    environment: ${{ (needs.validate-tag.outputs.version == '1.0.0' || github.ref_name == 'v0.88.0-rc.1' || github.ref_name == 'v4.9.5') && 'initial-unsigned-release' || 'release-signing' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -151,7 +151,7 @@ jobs:
         shell: cmd
         run: choco install innosetup --yes --no-progress
       - name: Require configured signing command after the 1.0 exception
-        if: needs.validate-tag.outputs.version != '1.0.0' && github.ref_name != 'v0.88.0-rc.1' && github.ref_name != 'v4.9.4'
+        if: needs.validate-tag.outputs.version != '1.0.0' && github.ref_name != 'v0.88.0-rc.1' && github.ref_name != 'v4.9.5'
         shell: msys2 {0}
         env:
           SIGN_COMMAND: ${{ secrets.SAGAN_SIGNTOOL_COMMAND }}
@@ -171,7 +171,7 @@ jobs:
         run: |
           if [[ '${{ needs.validate-tag.outputs.version }}' == '1.0.0' ||
                 '${{ github.ref_name }}' == 'v0.88.0-rc.1' ||
-                '${{ github.ref_name }}' == 'v4.9.4' ]]; then
+                '${{ github.ref_name }}' == 'v4.9.5' ]]; then
             bash scripts/windows/verify_installer_artifact.sh
           else
             bash scripts/windows/verify_installer_artifact.sh --release
@@ -264,10 +264,10 @@ jobs:
                 printf '%s\n' 'These deferred gates will be completed in a later patch release rather than replacing immutable 1.0.0 assets.'
               else
                 printf '%s\n' '## Stable-release acceptance'
-                if [[ "$TAG" == v4.9.4 ]]; then
+                if [[ "$TAG" == v4.9.5 ]]; then
                   printf '%s\n' 'Clean-machine evidence: DEFERRED by one-time owner exception; isolated Windows CI installer smoke test required.'
                   printf '%s\n' 'One-time exception: this installer is unsigned and may trigger an unknown-publisher warning.'
-                  printf '%s\n' 'Documentation remains experimental and has not completed the page-by-page audit; no numbered 4.9.4 documentation archive will be published.'
+                  printf '%s\n' 'Documentation remains experimental and has not completed the page-by-page audit; no numbered 4.9.5 documentation archive will be published.'
                 else
                   printf '%s\n' 'Clean-machine evidence: PENDING'
                   printf '%s\n' 'Test the exact signed installer attached to this draft, then replace PENDING with VERIFIED, tester, date, Windows version, and installer SHA-256 before approving publication.'
@@ -295,7 +295,7 @@ jobs:
           TAG: ${{ github.ref_name }}
           VERSION: ${{ needs.validate-tag.outputs.version }}
         run: |
-          if [[ "$TAG" != v1.0.0 && "$TAG" != v4.9.4 ]]; then
+          if [[ "$TAG" != v1.0.0 && "$TAG" != v4.9.5 ]]; then
             body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body)"
             grep -Eq '^Clean-machine evidence: VERIFIED' <<<"$body" || {
               echo "Record clean-machine evidence in the draft release before approving stable publication." >&2
@@ -303,7 +303,7 @@ jobs:
             }
           fi
           gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
-          if [[ "$TAG" != v1.0.0 && "$TAG" != v4.9.4 ]]; then
+          if [[ "$TAG" != v1.0.0 && "$TAG" != v4.9.5 ]]; then
             gh workflow run documentation.yml --repo "$GITHUB_REPOSITORY" \
               --ref "$TAG" -f "release_version=$VERSION"
           fi
