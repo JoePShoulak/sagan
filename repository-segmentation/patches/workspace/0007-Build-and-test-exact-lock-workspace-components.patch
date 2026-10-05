@@ -1,0 +1,323 @@
+From 014d5ca1da62188be2eb9a41489539eb057604eb Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 12:52:53 -0500
+Subject: [PATCH] Build and test exact-lock workspace components
+
+---
+ .github/workflows/workspace-checks.yml |  2 +-
+ MAINTAINERS.md                         | 25 ++++++++++---
+ README.md                              |  6 ++++
+ TECHNOLOGY.md                          | 12 +++++--
+ scripts/build.sh                       | 12 +++++++
+ scripts/test.sh                        | 12 +++++++
+ scripts/workspace.py                   | 49 +++++++++++++++++++++++++-
+ tests/workspace_test.py                | 40 +++++++++++++++++++++
+ 8 files changed, 149 insertions(+), 9 deletions(-)
+ create mode 100644 scripts/build.sh
+ create mode 100644 scripts/test.sh
+
+diff --git a/.github/workflows/workspace-checks.yml b/.github/workflows/workspace-checks.yml
+index b093c4b..e37c1d5 100644
+--- a/.github/workflows/workspace-checks.yml
++++ b/.github/workflows/workspace-checks.yml
+@@ -23,6 +23,6 @@ jobs:
+           python-version: '3.11'
+       - name: Check Bash syntax
+         shell: bash
+-        run: bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++        run: bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/build.sh scripts/test.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+       - name: Test offline workspace contracts
+         run: python -m unittest discover -s tests -p '*_test.py' -v
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index fa8fca0..1ee7bd7 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -23,11 +23,13 @@ Use Git Bash, Git, and Python 3.11 or newer. From the workspace repository root:
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
+ bash scripts/update.sh
++bash scripts/build.sh
++bash scripts/test.sh
+ bash scripts/lock.sh
+ bash scripts/editor-workspace.sh
+ bash scripts/restore-lock.sh
+ python -m unittest discover -s tests -p '*_test.py' -v
+-bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/build.sh scripts/test.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+ ```
+ 
+ `bootstrap.sh` and `status.sh` accept `--root`, `--manifest`, and `--lock` for
+@@ -55,6 +57,18 @@ deliberately selected each reviewed remote tip in the corresponding clean
+ child checkout. If a child should remain at its old pin, do not advance the
+ lock merely because a newer remote tip exists.
+ 
++`build.sh` requires every active checkout to be clean at the exact lock.
++For the primary `sagan` checkout it invokes `mingw32-make` on Windows or
++`make` elsewhere for `bin/sagan` and `bin/sagan-lsp`. Use `--make PATH` to
++select a known compatible make executable. `test.sh` runs this workspace's
++offline unit tests, then builds and executes only the primary's focused
++package-catalog and package-resolution test binaries. It does not run the
++full compiler suite. Both commands may create ignored build outputs inside
++the child. Every future active component must provide its own reviewed
++`scripts/workspace-build.sh` and `scripts/workspace-test.sh`; an absent script
++is an error, never a silently skipped component. Component-owned scripts
++run inside their own checkout after exact-lock verification.
++
+ `editor-workspace.sh` requires every active checkout to pass the same exact
+ origin, clean-tree, and locked-HEAD checks as `status.sh`. It writes ignored
+ `build/sagan.code-workspace` with the coordinator and active child folders,
+@@ -122,6 +136,10 @@ suite is not authorization to publish.
+   and ancestry against the old pin. Do not force-push or rewrite the lock to
+   hide a divergent candidate. Preserve a copy of any reviewed prior lock
+   before a deliberate version migration.
++- `build` or `test` failed: inspect the failing child, toolchain, and ignored
++  output. Keep its lock pin unchanged and rerun only the affected focused
++  checks after repair; do not delete the child or run the full suite merely
++  to conceal a local prerequisite problem.
+ - `clone` or `checkout` failed: inspect the reported partial directory and
+   network/credentials. Do not overwrite it automatically. If it contains
+   useful state, back it up before a manual recovery.
+@@ -179,11 +197,10 @@ Focused verification for a catalog change is:
+ 
+ ```bash
+ python -m unittest discover -s tests -p '*_test.py' -v
+-bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/build.sh scripts/test.sh scripts/lock.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+ ```
+ 
+-The eventual maintainer guide must add exact
+-workspace build/test syntax, clean-machine drills,
++The eventual maintainer guide must add clean-machine drills,
+ platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
+ without their values. Those capabilities are not implemented in this candidate.
+ The draft `.github/workflows/workspace-checks.yml` runs the offline contract
+diff --git a/README.md b/README.md
+index f18a745..600b3fd 100644
+--- a/README.md
++++ b/README.md
+@@ -15,6 +15,8 @@ From Git Bash, with Python 3.11+ and Git installed:
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
+ bash scripts/update.sh
++bash scripts/build.sh
++bash scripts/test.sh
+ bash scripts/lock.sh
+ bash scripts/editor-workspace.sh
+ bash scripts/restore-lock.sh
+@@ -30,6 +32,10 @@ pin; it refuses dirty work and ignored-file collisions.
+ Update fetches the current `dev` tip without moving any checkout or lock.
+ Lock previews clean, fast-forward `origin/dev` tips and changes the lock only
+ with `bash scripts/lock.sh --write` after focused compatibility checks.
++Build compiles the pinned primary compiler and language server. Test runs the
++workspace contracts and the primary package-catalog/resolution tests, not
++the full compiler suite. Future active components must provide their own
++`scripts/workspace-build.sh` and `scripts/workspace-test.sh` entry points.
+ Editor-workspace generates ignored `build/sagan.code-workspace` from only
+ active, clean, exact-lock checkouts. It does not include planned repositories
+ or overwrite a differing editor file without explicit `--force`.
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 9fdecab..5e18c20 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -39,6 +39,13 @@ by default; an explicit write atomically records the reviewed SHA. A child
+ must be built and tested at its candidate revision before that write. The
+ current minimal lock format has no extra release/artifact fields; lock
+ refresh refuses to discard such fields if they appear later.
++Build and test first require all active sources to match the lock. For the
++current primary source, build compiles the compiler and language server;
++test runs the workspace's offline contracts and the language repository's
++focused package-catalog and package-resolution binaries. Future active
++components execute their own checked-in `scripts/workspace-build.sh` and
++`scripts/workspace-test.sh`; no unreviewed manifest shell command is run.
++Those scripts must exist and be safe before a component is activated.
+ The editor generator reads the same validated active set and checks each
+ checkout before writing a VS Code multi-root file under ignored `build/`.
+ Its folder paths are relative to the generated file, so the workspace root
+@@ -59,9 +66,8 @@ workspace lock or a package release.
+ 
+ An offline contract workflow is drafted for GitHub-hosted Linux, Windows,
+ and macOS runners, but it cannot be confirmed as passing in an independent
+-destination until that destination exists. Build orchestration, hosted
+-cross-repository CI, and full
+-integration tests remain later milestones in
++destination until that destination exists. Hosted cross-repository CI and
++full integration tests remain later milestones in
+ [the roadmap](docs/contributing/repository-fracturing-roadmap.md).
+ 
+ The lock is about source compatibility. Release manifests and Sagan package
+diff --git a/scripts/build.sh b/scripts/build.sh
+new file mode 100644
+index 0000000..9dc6e5d
+--- /dev/null
++++ b/scripts/build.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py build "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/test.sh b/scripts/test.sh
+new file mode 100644
+index 0000000..6a942c6
+--- /dev/null
++++ b/scripts/test.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py test "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/workspace.py b/scripts/workspace.py
+index 4561519..2f3c184 100644
+--- a/scripts/workspace.py
++++ b/scripts/workspace.py
+@@ -250,6 +250,48 @@ def refresh_lock(checkout_dir: Path, entries: list[dict], branch: str,
+     return True
+ 
+ 
++def run_checked(command: list[str], cwd: Path) -> None:
++    print(f"{cwd.name}: running {' '.join(command)}", flush=True)
++    result = subprocess.run(command, cwd=cwd, check=False)
++    if result.returncode:
++        raise RuntimeError(f"{cwd.name}: command failed with exit code {result.returncode}")
++
++
++def operate(root: Path, checkout_dir: Path, entries: list[dict],
++            action: str, make_command: str | None) -> int:
++    """Run only explicit, component-owned focused build/test entry points."""
++    if action not in ("build", "test"):
++        raise ValueError("unsupported workspace operation")
++    if not entries:
++        raise ValueError("workspace build/test requires at least one active repository")
++    if status(checkout_dir, entries):
++        raise ValueError("all active checkouts must match the lock before build/test")
++    if action == "test":
++        run_checked([sys.executable, "-m", "unittest", "discover", "-s", "tests",
++                     "-p", "*_test.py", "-v"], root)
++    for entry in entries:
++        target = checkout_dir / entry["checkout"]
++        if entry["id"] == "sagan":
++            make = make_command or ("mingw32-make" if os.name == "nt" else "make")
++            targets = (["bin/sagan", "bin/sagan-lsp"] if action == "build" else
++                       ["bin/package-catalog-test", "bin/package-resolution-test"])
++            run_checked([make, *targets], target)
++            if action == "test":
++                for binary in ("package-catalog-test", "package-resolution-test"):
++                    executable = target / "bin" / binary
++                    if os.name == "nt" and not executable.is_file():
++                        executable = executable.with_suffix(".exe")
++                    if not executable.is_file():
++                        raise ValueError(f"sagan: expected focused test binary is missing: {binary}")
++                    run_checked([str(executable)], target)
++            continue
++        script = target / "scripts" / f"workspace-{action}.sh"
++        if not script.is_file() or script.is_symlink():
++            raise ValueError(f"{entry['id']}: missing safe component-owned {script.name}")
++        run_checked(["bash", str(script)], target)
++    return 0
++
++
+ def editor_workspace(root: Path, checkout_dir: Path, entries: list[dict], force: bool) -> Path:
+     """Generate a VS Code multi-root file from only clean, locked checkouts."""
+     for entry in entries:
+@@ -339,12 +381,13 @@ def restore_lock(checkout_dir: Path, entries: list[dict]) -> int:
+ 
+ def main() -> int:
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("command", choices=("bootstrap", "status", "update", "lock", "restore-lock", "editor-workspace"))
++    parser.add_argument("command", choices=("bootstrap", "status", "update", "lock", "build", "test", "restore-lock", "editor-workspace"))
+     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+     parser.add_argument("--manifest", type=Path)
+     parser.add_argument("--lock", type=Path)
+     parser.add_argument("--force", action="store_true")
+     parser.add_argument("--write", action="store_true")
++    parser.add_argument("--make", dest="make_command")
+     arguments = parser.parse_args()
+     root = arguments.root.resolve()
+     manifest_path = arguments.manifest or root / "workspace.toml"
+@@ -355,6 +398,10 @@ def main() -> int:
+             raise ValueError("--force is only valid for editor-workspace")
+         if arguments.write and arguments.command != "lock":
+             raise ValueError("--write is only valid for lock")
++        if arguments.make_command and arguments.command not in ("build", "test"):
++            raise ValueError("--make is only valid for build/test")
++        if arguments.command in ("build", "test"):
++            return operate(root, checkout_dir, entries, arguments.command, arguments.make_command)
+         if arguments.command in ("update", "lock"):
+             branch = load_toml(manifest_path).get("default_branch")
+             if not isinstance(branch, str) or not SLUG.fullmatch(branch):
+diff --git a/tests/workspace_test.py b/tests/workspace_test.py
+index cea5994..621d2e0 100644
+--- a/tests/workspace_test.py
++++ b/tests/workspace_test.py
+@@ -8,6 +8,7 @@ import subprocess
+ import sys
+ import tempfile
+ import unittest
++from unittest.mock import call, patch
+ 
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+@@ -183,6 +184,45 @@ class WorkspaceTest(unittest.TestCase):
+         with self.assertRaisesRegex(ValueError, "extended fields"):
+             workspace.refresh_lock(checkouts, entries, "dev", self.lock, True)
+ 
++    def test_build_and_test_use_focused_primary_commands(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        with patch.object(workspace, "run_checked") as runner:
++            self.assertEqual(0, workspace.operate(self.root, checkouts, entries, "build", "fixture-make"))
++            runner.assert_called_once_with(
++                ["fixture-make", "bin/sagan", "bin/sagan-lsp"], target
++            )
++
++        (target / ".git" / "info" / "exclude").write_text("bin/\n", encoding="utf-8")
++        binaries = target / "bin"
++        binaries.mkdir()
++        for name in ("package-catalog-test", "package-resolution-test"):
++            (binaries / name).write_text("fixture\n", encoding="utf-8")
++        with patch.object(workspace, "run_checked") as runner:
++            self.assertEqual(0, workspace.operate(self.root, checkouts, entries, "test", "fixture-make"))
++            self.assertEqual([
++                call([sys.executable, "-m", "unittest", "discover", "-s", "tests",
++                      "-p", "*_test.py", "-v"], self.root),
++                call(["fixture-make", "bin/package-catalog-test", "bin/package-resolution-test"], target),
++                call([str(binaries / "package-catalog-test")], target),
++                call([str(binaries / "package-resolution-test")], target),
++            ], runner.call_args_list)
++
++    def test_build_refuses_dirty_or_missing_component_entrypoint(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        (target / "personal.txt").write_text("keep\n", encoding="utf-8")
++        with self.assertRaisesRegex(ValueError, "must match the lock"):
++            workspace.operate(self.root, checkouts, entries, "build", "fixture-make")
++        (target / "personal.txt").unlink()
++        component = [{**entries[0], "id": "sagan-physics"}]
++        with self.assertRaisesRegex(ValueError, "missing safe component-owned workspace-build.sh"):
++            workspace.operate(self.root, checkouts, component, "build", None)
++        with self.assertRaisesRegex(ValueError, "at least one active repository"):
++            workspace.operate(self.root, checkouts, [], "build", None)
++
+     def test_dirty_and_wrong_commit_are_not_overwritten(self) -> None:
+         checkouts, entries = self.load()
+         self.assertEqual(0, workspace.bootstrap(checkouts, entries))
+-- 
+2.51.0.windows.2
+

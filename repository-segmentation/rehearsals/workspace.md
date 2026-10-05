@@ -109,3 +109,14 @@ candidate and fresh replay, tree equality was
 `b961e28053df3cb578ca69dbab42d469a47a7be3`, `git fsck --full`
 passed, and Bash syntax passed. Build/test orchestration and independent
 hosted CI remain unverified.
+
+A seventh patch adds `build` and `test` entry points that refuse unlocked
+or dirty sources and require component-owned scripts for future repos.
+Against the real pinned primary checkout, `bash scripts/build.sh` compiled
+the compiler and language server; `bash scripts/test.sh` passed all twenty-
+three workspace tests and executed the focused package-catalog and package-
+resolution binaries. The child source stayed clean at its lock afterward.
+A fresh patch replay matched tree
+`8f1cc36f3cb38a4d8125cb840062dcfe88b60af9`, passed `git fsck --full`,
+and reran all twenty-three offline tests. Hosted cross-repository CI and
+locked integration with actual split remotes remain unverified.

@@ -5,10 +5,10 @@ It is not a published split, and it must not be applied to the intact Sagan
 repository. The path-only filtered base came from source preparation commit
 `68d55b003709e28b4e96bdcbd22d8341018c2253` and has filtered HEAD
 `47a72ef3a23421248dc2f983ead8d5548a5d473d`. Verify that base before
-applying the six numbered patches with `git am` in a disposable normal clone
+applying the seven numbered patches with `git am` in a disposable normal clone
 of the filtered repository. The expected draft result is commit
-`e282a560de068483d472eb89ca298b02ece8b49f`, tree
-`b961e28053df3cb578ca69dbab42d469a47a7be3`.
+`014d5ca1da62188be2eb9a41489539eb057604eb`, tree
+`8f1cc36f3cb38a4d8125cb840062dcfe88b60af9`.
 
 The first patch moves the proposed workspace manifest to root `workspace.toml`,
 activates only the already-transferred primary repository, and adds
@@ -38,14 +38,18 @@ The sixth patch adds fetch-only `update` and preview-first `lock` commands.
 Lock writes require an explicit flag and a clean checkout at a fetched
 remote `dev` tip descended from the old pin; extended lock fields are
 refused rather than silently discarded.
+The seventh patch adds exact-lock build and focused-test orchestration. The
+currently active primary builds compiler/LSP and runs only workspace
+contracts plus package-catalog/resolution tests. Future components must
+provide their own reviewed build/test scripts; none are silently skipped.
 
 The first two patches' offline Python suite passed ten cases on Windows; the
 third raised the total to fifteen. A real GitHub clone
 into the ignored candidate `checkouts/sagan` passed at the locked SHA, and
 `bash scripts/status.sh` and `bash scripts/restore-lock.sh` reported the
 expected clean pin. Bash syntax and `git diff --check` passed. A fresh normal
-clone of the filtered base replayed all six patches with `git am`, matched
-the expected tree, passed `git fsck --full`, and reran all twenty-one tests. No split
+clone of the filtered base replayed all seven patches with `git am`, matched
+the expected tree, passed `git fsck --full`, and reran all twenty-three tests. No split
 GitHub repository was created or changed, and no CI ran in a
 new destination. The candidate still contains monorepo-preparation audit
 scripts and archived manifests that require curation; this patch by itself
@@ -53,7 +57,7 @@ does not complete independent workspace extraction.
 
 Before publication, re-filter the then-current reviewed `dev`, recompute or
 rebase these patches, verify the exact ownership set and history, add the
-remaining workspace build/test and hosted integration functions,
+remaining locked integration and hosted cross-repository functions,
 run Linux/macOS/Windows clean-machine checks, complete the owner handoff and
 governance drills, and refresh the lock to reviewed tested commits. The
 current release and `main` promotion hold remains in force.
