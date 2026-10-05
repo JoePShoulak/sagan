@@ -29,6 +29,7 @@ repository-segmentation/ownership-rules.toml
 repository-segmentation/primary-repository-transfer.md
 repository-segmentation/primary-transfer.toml
 repository-segmentation/readiness.toml
+repository-segmentation/rehearsals/primary-backup.md
 repository-segmentation/rehearsals/vscode.md
 repository-segmentation/schemas/chat-map.schema.json
 repository-segmentation/schemas/component-manifest.schema.json

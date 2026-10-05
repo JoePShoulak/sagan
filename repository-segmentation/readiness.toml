@@ -17,6 +17,8 @@ vscode_local_extraction_rehearsal = "passed-2026-10-05"
 vscode_shared_file_import = "not-rehearsed"
 vscode_live_host_rehearsal = "unverified-after-host-exit"
 primary_repository_transfer = "required-before-split-repository-creation"
+primary_remote_backup_rehearsal = "passed-2026-10-05"
+primary_release_inventory = "metadata-validated-2026-10-05; assets-not-downloaded"
 
 [[decisions]]
 id = "repository-names"
@@ -56,7 +58,7 @@ evidence = "primary-transfer.toml and primary-repository-transfer.md define the 
 [[decisions]]
 id = "history-and-rollback"
 status = "provisional"
-evidence = "The VS Code subtree rehearsal passed and is recorded in rehearsals/vscode.md; approved tooling, backup, exact shared-file import, and rollback rehearsals remain."
+evidence = "The VS Code subtree rehearsal and remote mirror restore rehearsal passed (rehearsals/vscode.md and rehearsals/primary-backup.md). Release metadata was inventoried, but durable backup, asset download verification, approved extraction tooling, shared-file import, and rollback drills remain."
 
 [[decisions]]
 id = "space-game-seed"

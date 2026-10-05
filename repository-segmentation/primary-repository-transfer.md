@@ -29,6 +29,10 @@ Before scheduling the transfer:
 
 The inventory in `primary-transfer.toml` names repository settings and files;
 it deliberately contains no secret values.
+Use `bash scripts/rehearse_primary_backup.sh` to exercise a temporary remote
+mirror and independent restore before the transfer window. That rehearsal is
+recorded in `rehearsals/primary-backup.md`; it is not the durable transfer
+backup described below and does not include GitHub release assets.
 
 ## Read-only preflight
 
@@ -59,12 +63,19 @@ mkdir -p "$backup_root"
 git clone --mirror https://github.com/JoePShoulak/sagan.git "$backup_root/sagan.git"
 git -C "$backup_root/sagan.git" show-ref > "$backup_root/refs.txt"
 git -C "$backup_root/sagan.git" fsck --full
-sha256sum "$backup_root/refs.txt" > "$backup_root/SHA256SUMS"
+(cd "$backup_root" && sha256sum refs.txt > SHA256SUMS)
+mkdir "$backup_root/release-assets"
+bash scripts/primary_release_backup.sh download "$backup_root/release-assets"
 ```
 
 Record the backup path, ref-inventory hash, source `dev` commit, source `main`
 commit, tags, release inventory, and transfer operator in the transfer record.
 Restore a disposable clone from the mirror before treating it as recoverable.
+The release-asset backup verifies each downloaded file against the digest and
+size reported by GitHub. It currently requires simple tag and asset names; if
+GitHub returns a name outside that safe set, stop and review the target path
+before downloading. Copy the mirror, release assets, inventories, checksums,
+and restore evidence to approved off-machine storage.
 
 ## Transfer window
 

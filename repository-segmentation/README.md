@@ -66,6 +66,8 @@ git ls-files
 bash scripts/docs.sh check-structure
 bash scripts/repository_segmentation_check.sh
 bash scripts/primary_repository_transfer_audit.sh
+bash scripts/rehearse_primary_backup.sh
+bash scripts/primary_release_backup.sh inventory
 ```
 
 Run executable documentation examples only when examples or their supporting

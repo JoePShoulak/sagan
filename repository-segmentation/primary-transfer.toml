@@ -69,6 +69,14 @@ purpose = "rendered release navigation"
 path = "scripts/release_metadata.sh"
 purpose = "SBOM namespace"
 
+[[legacy_references]]
+path = "scripts/primary_release_backup.sh"
+purpose = "pre-transfer release source; retire or update after cutover"
+
+[[legacy_references]]
+path = "scripts/rehearse_primary_backup.sh"
+purpose = "pre-transfer mirror source; retire or update after cutover"
+
 [[external_integrations]]
 id = "github-actions"
 verification = "All required checks run on dev and protected settings match the recorded policy."
