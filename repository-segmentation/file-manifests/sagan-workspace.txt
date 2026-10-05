@@ -32,6 +32,7 @@ repository-segmentation/inventory.tsv
 repository-segmentation/merge-readiness.md
 repository-segmentation/owner-transfer-start-drill.md
 repository-segmentation/ownership-rules.toml
+repository-segmentation/patches/.gitattributes
 repository-segmentation/patches/vscode/.gitattributes
 repository-segmentation/patches/vscode/0001-Prepare-independent-extension-CI-with-pinned-Sagan-s.patch
 repository-segmentation/patches/vscode/0002-Normalize-cross-platform-compiler-source-pin.patch
@@ -39,6 +40,8 @@ repository-segmentation/patches/vscode/0003-Keep-extension-CI-focused-on-runtime
 repository-segmentation/patches/vscode/0004-Add-standalone-extension-maintainer-and-chat-guides.patch
 repository-segmentation/patches/vscode/0005-Relink-extension-documentation-for-independent-owner.patch
 repository-segmentation/patches/vscode/README.md
+repository-segmentation/patches/workspace/0001-Add-exact-lock-workspace-bootstrap-and-maintainer-gu.patch
+repository-segmentation/patches/workspace/README.md
 repository-segmentation/primary-repository-transfer.md
 repository-segmentation/primary-transfer.toml
 repository-segmentation/readiness.toml

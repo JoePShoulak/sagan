@@ -32,3 +32,22 @@ publication, rewrite and test those contracts against separately
 versioned component checkouts, add specialized maintainer/technology/chat
 guides, complete the owner recovery drill, and rerun the extraction from
 the final reviewed `dev` commit.
+
+## Exact-lock bootstrap candidate
+
+A later, separate local candidate on that same filtered base is captured as
+the replayable patch in `../patches/workspace/`. It moves `workspace.toml` to
+the root, activates only the transferred primary repository, and adds an exact
+`workspace.lock`, Bash bootstrap/status entry points, offline safety tests,
+and draft root maintainer/technology/chat guides. The seven offline tests
+passed on Windows. `bash scripts/bootstrap.sh` cloned the public primary
+repository into an ignored child checkout at the pinned commit, and
+`bash scripts/status.sh` reported it clean. A fresh-clone `git am` replay
+matched candidate tree `793efd2316744e0ed7a935084437cf76344fe2db`,
+passed `git fsck --full`, and reran all seven tests.
+
+This is **partial functionality**, not destination readiness. The candidate
+still contains monorepo-only audit scripts and archived manifest paths;
+update/build/test/lock/restore, multi-root editor generation, package-index
+generation, cross-repository demos, independent CI, Linux/macOS checks, and
+the owner clean-machine drill remain. No split remote was created or pushed.

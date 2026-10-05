@@ -1,0 +1,670 @@
+From f80e3fc0de9bb94e89cc24e0c88b53a67370a392 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 02:51:35 -0500
+Subject: [PATCH] Add exact-lock workspace bootstrap and maintainer guides
+
+---
+ .gitignore                                    |   5 +
+ AGENTS.md                                     |  11 ++
+ CODEX_START.md                                |  30 +++
+ MAINTAINERS.md                                |  87 +++++++++
+ README.md                                     |  28 +++
+ TECHNOLOGY.md                                 |  45 +++++
+ scripts/bootstrap.sh                          |  12 ++
+ scripts/status.sh                             |  12 ++
+ scripts/workspace.py                          | 178 ++++++++++++++++++
+ tests/workspace_test.py                       | 139 ++++++++++++++
+ workspace.lock                                |   6 +
+ .../workspace.toml => workspace.toml          |   2 +-
+ 12 files changed, 554 insertions(+), 1 deletion(-)
+ create mode 100644 .gitignore
+ create mode 100644 AGENTS.md
+ create mode 100644 CODEX_START.md
+ create mode 100644 MAINTAINERS.md
+ create mode 100644 README.md
+ create mode 100644 TECHNOLOGY.md
+ create mode 100644 scripts/bootstrap.sh
+ create mode 100644 scripts/status.sh
+ create mode 100644 scripts/workspace.py
+ create mode 100644 tests/workspace_test.py
+ create mode 100644 workspace.lock
+ rename repository-segmentation/workspace.toml => workspace.toml (94%)
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..88d3c1d
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,5 @@
++/checkouts/
++/build/
++/.generated/
++__pycache__/
++.venv/
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..00fe3df
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,11 @@
++# Workspace agent rules
++
++Read `CODEX_START.md`, `TECHNOLOGY.md`, and `MAINTAINERS.md` before making a
++change. Treat `workspace.toml` and `workspace.lock` as
++paired contracts. Do not activate planned remotes or overwrite child work.
++
++Use Bash commands in instructions to the owner; never give PowerShell.
++Preserve unrelated files and concurrent changes. Follow the branch, focused
++test, `dev` integration, full-suite-on-`main`, documentation review reset, and
++release-hold rules in `MAINTAINERS.md`. The user prefers to be taught what to
++write; implement only on explicit request.
+diff --git a/CODEX_START.md b/CODEX_START.md
+new file mode 100644
+index 0000000..6e8b43f
+--- /dev/null
++++ b/CODEX_START.md
+@@ -0,0 +1,30 @@
++# Starting a new Sagan workspace chat
++
++Read `AGENTS.md`, `TECHNOLOGY.md`, `MAINTAINERS.md`, `README.md`,
++`workspace.toml`, `workspace.lock`, the fracture
++roadmap, and the versioned ecosystem and chat maps. Start read-only: inspect
++branch, HEAD, status, staged paths, concurrent work, and the exact checked-out
++dependencies. Summarize what belongs to this workspace and what belongs to
++each component repository. Ask before broadening scope or changing remote
++state. The current checkout is a local candidate, not a published split.
++
++Prefer teaching me what to code through small steps, examples, pseudocode,
++review, and verification. Do not implement unless explicitly requested.
++Rendering, physics, and game code likewise require an explicit request.
++Never assume the language is secure.
++
++For authorized changes, create a `codex/<request>` branch from current `dev`.
++Test the affected work and refine until it passes. Stage only intended paths,
++merge into `dev`, and rerun relevant tests against concurrent integration.
++Reserve the full suite for `dev`-to-`main` promotion or release. The release and
++`main` promotion hold remains in effect until the owner explicitly lifts it.
++Documentation edits must set the affected page to `review-needed`,
++`publication_ready: false`, and clear verification metadata. Do not run
++unrelated documentation examples for a structural-only edit.
++
++Use the versioned chat map to identify the owning specialized chat. For work
++outside this repository, recommend that chat and provide a self-contained
++ready-to-paste prompt with goal, evidence, constraints, dependency versions,
++and verification. Do not assume another chat has this history. Use Bash, never
++PowerShell. Preserve unrelated work; do not push, publish, release, deploy,
++transfer, or change remote settings without current authorization.
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+new file mode 100644
+index 0000000..6e00ea4
+--- /dev/null
++++ b/MAINTAINERS.md
+@@ -0,0 +1,87 @@
++---
++title: Maintaining the Sagan workspace
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Maintaining the Sagan workspace
++
++This is a local split candidate. Before publication, validate it from a clean
++filtered checkout, specialize the remaining integration commands, and verify
++organization governance and CI. The current lock contains only the primary
++`sagan` source pin. No split-repository URL should be activated until that
++repository exists, is backed up, and passes its extraction gate.
++
++## Prerequisites and exact commands
++
++Use Git Bash, Git, and Python 3.11 or newer. From the workspace repository root:
++
++```bash
++bash scripts/bootstrap.sh
++bash scripts/status.sh
++python -m unittest discover -s tests -p workspace_test.py -v
++bash -n scripts/bootstrap.sh scripts/status.sh
++```
++
++`bootstrap.sh` and `status.sh` accept `--root`, `--manifest`, and `--lock` for
++isolated test fixtures. Normal use needs no arguments. A zero status means
++every active checkout is clean, has the manifest's exact origin URL, and is at
++its locked commit. A missing, dirty, wrong-origin, or wrong-commit checkout
++returns nonzero. No command here pushes, tags, changes a remote, or deletes a
++checkout.
++
++The root manifest is `workspace.toml`; the tested
++source lock is `workspace.lock`; child repositories live under gitignored
++`checkouts/`. Change `state` to `active` only alongside an exact, reviewed
++lock entry. The checker rejects a missing or extra active lock entry. Record
++why a lock SHA changed and which focused compatibility checks established it.
++Do not hand-edit the checked-out child to make status green.
++
++## Change and test workflow
++
++Inspect `git status --short --branch`, `git rev-parse HEAD`, and staged paths
++before changing anything. Start each authorized request from current `dev` on
++a fresh `codex/<request>` branch. Preserve unrelated work. Implement only the
++requested scope, run the relevant tests, refine until they pass, commit only
++intended paths, merge into `dev`, and rerun those relevant tests on integrated
++`dev`. For a bootstrap/lock change, the focused commands above and a clean
++checkout bootstrap rehearsal are relevant. For future demo or cross-repo
++changes, add the exact affected build/test commands here. Do not run unrelated
++executable documentation examples for a structural-only documentation edit;
++run affected examples when their content or supporting behavior changes.
++
++Reserve the complete suite for a reviewed `dev`-to-`main` promotion or release.
++The project-wide release and `main` promotion hold remains in force until the
++owner explicitly reopens it and decides publication/signing policy. A passing
++suite is not authorization to publish.
++
++## Failure and recovery
++
++- `missing`: `bash scripts/bootstrap.sh` may clone it. Confirm URL and SHA
++  before doing so; the command requires network for public remotes.
++- `dirty`: inspect the child with `git -C checkouts/<name> status --short`.
++  Commit, stash, or otherwise preserve your work in that child by deliberate
++  choice. Bootstrap never discards it.
++- `origin URL differs`: inspect `git -C checkouts/<name> remote -v` and the
++  manifest. Correct the intended owner deliberately; do not auto-retarget.
++- `HEAD differs`: inspect `git -C checkouts/<name> log -1 --oneline` and the
++  lock. Preserve any work; choose whether to update the lock after integration
++  verification or explicitly checkout the pinned commit in that child.
++- `clone` or `checkout` failed: inspect the reported partial directory and
++  network/credentials. Do not overwrite it automatically. If it contains
++  useful state, back it up before a manual recovery.
++
++The current local-only primary backup cannot survive loss of this computer
++and cannot recreate GitHub settings, secrets, issues, or PR history. The
++workspace lock is not a backup. Follow the primary repository's transfer and
++backup runbook before any further remote migration. Generated checkouts can be
++recreated from the remotes if those remotes and commit objects remain available,
++but their unpushed user work cannot be recreated by this script.
++
++The eventual maintainer guide must add exact package-index/editor generation,
++workspace build/test/update/lock/restore syntax, clean-machine drills,
++platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
++without their values. Those capabilities are not implemented in this candidate.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..0760f44
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,28 @@
++# Sagan workspace (local split candidate)
++
++This checkout is a local rehearsal of the future `sagan-workspace` repository.
++It is not an independently published repository yet. It coordinates ordinary
++sibling Git checkouts at exact commits; it does not own their product code.
++
++The current lock activates only the transferred primary `sagan` repository.
++Other entries in `workspace.toml` are planned names,
++not a claim that their GitHub repositories already exist. The source SHA is a
++rehearsal pin, not an automatically updated branch tip.
++
++From Git Bash, with Python 3.11+ and Git installed:
++
++```bash
++bash scripts/bootstrap.sh
++bash scripts/status.sh
++python -m unittest discover -s tests -p workspace_test.py -v
++```
++
++Bootstrap clones into gitignored `checkouts/` and detaches each active
++checkout at its pinned commit. It never deletes an existing checkout or
++overwrites a dirty, wrong-origin, or wrong-commit checkout. Status is
++read-only and returns nonzero until all active checkouts match the lock.
++
++Read [MAINTAINERS.md](MAINTAINERS.md) for the exact operating and recovery
++workflow, [TECHNOLOGY.md](TECHNOLOGY.md) for the conceptual model, and
++[CODEX_START.md](CODEX_START.md) to orient a new chat. The broader sequence
++remains in [the fracture roadmap](docs/contributing/repository-fracturing-roadmap.md).
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+new file mode 100644
+index 0000000..1ee46ab
+--- /dev/null
++++ b/TECHNOLOGY.md
+@@ -0,0 +1,45 @@
++---
++title: Workspace technology overview
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Workspace technology overview
++
++The workspace is an integration coordinator, not a package manager or a
++replacement for the component repositories. Each child in `checkouts/` is a
++normal Git repository. Development, versioning, and release ownership remain
++with that child. The workspace records which exact revisions have been tested
++together and hosts cross-repository examples and compatibility evidence.
++
++`workspace.toml` maps stable component IDs to owner
++URLs, local checkout names, and lifecycle states. Only `active` entries are
++bootstrapped. `planned` entries are proposals; `existing-outside-organization`
++and `archived` entries are also excluded. `workspace.lock` must contain one
++matching URL and full commit SHA for every active entry, and no others.
++There is no implicit fallback to `dev` or the latest release.
++
++`scripts/workspace.py` validates that pair before touching a checkout.
++Bootstrap clones a missing active repository and detaches at the lock SHA;
++status compares its origin, working-tree cleanliness, and HEAD. The strict
++origin check prevents a coincidentally matching commit from silently standing
++in for a different owner. An existing checkout is treated as user work and is
++never auto-reset or auto-deleted. A clone or checkout failure leaves any
++partial directory for inspection. The Bash entry points are thin wrappers so
++Windows, Linux, and macOS share the same rules.
++
++The dependency direction is outward: the workspace consumes language,
++extension, docs, physics, rendering, and game checkouts. Those repositories
++must not import source code from this workspace to build their own products.
++The current candidate has only exact checkout bootstrap/status; package-index
++generation, editor workspace generation, lock refresh, build, focused tests,
++full integration tests, and lock restoration remain later milestones in
++[the roadmap](docs/contributing/repository-fracturing-roadmap.md).
++
++The lock is about source compatibility. Release manifests and Sagan package
++locks retain their own meaning; a workspace lock does not declare a public
++release, upload an artifact, or override the current release pause. The
++operational commands and recovery paths live in [MAINTAINERS.md](MAINTAINERS.md).
+diff --git a/scripts/bootstrap.sh b/scripts/bootstrap.sh
+new file mode 100644
+index 0000000..2d5b23f
+--- /dev/null
++++ b/scripts/bootstrap.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py bootstrap "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/status.sh b/scripts/status.sh
+new file mode 100644
+index 0000000..7c74a8e
+--- /dev/null
++++ b/scripts/status.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py status "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/workspace.py b/scripts/workspace.py
+new file mode 100644
+index 0000000..e0dc482
+--- /dev/null
++++ b/scripts/workspace.py
+@@ -0,0 +1,178 @@
++"""Bootstrap and inspect exact-commit Sagan workspace checkouts."""
++
++from __future__ import annotations
++
++import argparse
++from pathlib import Path
++import re
++import subprocess
++import sys
++import tomllib
++
++
++DEFAULT_ROOT = Path(__file__).resolve().parent.parent
++COMMIT = re.compile(r"[0-9a-f]{40}\Z")
++SLUG = re.compile(r"[a-z0-9][a-z0-9-]*\Z")
++
++
++def git(*args: str, cwd: Path | None = None) -> str:
++    result = subprocess.run(
++        ["git", *args], cwd=cwd, text=True, capture_output=True, check=False
++    )
++    if result.returncode:
++        detail = (result.stderr or result.stdout).strip()
++        raise RuntimeError(f"git {' '.join(args)} failed: {detail}")
++    return result.stdout.strip()
++
++
++def load_toml(path: Path) -> dict:
++    with path.open("rb") as stream:
++        return tomllib.load(stream)
++
++
++def load_contract(root: Path, manifest_path: Path, lock_path: Path) -> tuple[Path, list[dict]]:
++    manifest = load_toml(manifest_path)
++    lock = load_toml(lock_path)
++    if manifest.get("schema_version") != 1 or lock.get("schema_version") != 1:
++        raise ValueError("workspace manifest and lock must use schema_version = 1")
++
++    checkout_root = manifest.get("checkout_root")
++    if not isinstance(checkout_root, str):
++        raise ValueError("checkout_root must be a relative directory")
++    if not SLUG.fullmatch(checkout_root):
++        raise ValueError("checkout_root must be a single safe directory name")
++    checkout_dir = root / checkout_root
++    if checkout_dir.is_symlink():
++        raise ValueError("checkout_root must not be a symlink")
++
++    manifest_entries = manifest.get("repositories")
++    lock_entries = lock.get("repositories")
++    if not isinstance(manifest_entries, list) or not isinstance(lock_entries, list):
++        raise ValueError("both files must contain repositories arrays")
++    active: dict[str, dict] = {}
++    all_ids: set[str] = set()
++    all_paths: set[str] = set()
++    for entry in manifest_entries:
++        if not isinstance(entry, dict):
++            raise ValueError("repository entries must be tables")
++        identifier = entry.get("id")
++        checkout = entry.get("checkout")
++        if not isinstance(identifier, str) or not SLUG.fullmatch(identifier):
++            raise ValueError(f"invalid repository id: {identifier!r}")
++        if not isinstance(checkout, str) or not SLUG.fullmatch(checkout):
++            raise ValueError(f"invalid checkout directory for {identifier}")
++        if not isinstance(entry.get("url"), str) or not entry["url"].strip():
++            raise ValueError(f"repository URL is required for {identifier}")
++        if identifier in all_ids or checkout in all_paths:
++            raise ValueError("repository IDs and checkout directories must be unique")
++        all_ids.add(identifier)
++        all_paths.add(checkout)
++        if entry.get("state") == "active":
++            active[identifier] = entry
++        elif entry.get("state") not in ("planned", "existing-outside-organization", "archived"):
++            raise ValueError(f"unsupported state for {identifier}: {entry.get('state')!r}")
++
++    locked: dict[str, dict] = {}
++    for entry in lock_entries:
++        if not isinstance(entry, dict):
++            raise ValueError("lock entries must be tables")
++        identifier = entry.get("id")
++        if identifier in locked:
++            raise ValueError(f"duplicate lock entry: {identifier}")
++        if identifier not in active:
++            raise ValueError(f"lock contains a non-active repository: {identifier}")
++        if entry.get("url") != active[identifier].get("url"):
++            raise ValueError(f"lock URL differs from manifest for {identifier}")
++        if not isinstance(entry.get("commit"), str) or not COMMIT.fullmatch(entry["commit"]):
++            raise ValueError(f"lock requires a full lowercase commit SHA for {identifier}")
++        locked[identifier] = entry
++    if set(locked) != set(active):
++        missing = sorted(set(active) - set(locked))
++        raise ValueError(f"active repositories missing from lock: {', '.join(missing)}")
++    return checkout_dir, [
++        {**active[identifier], "commit": locked[identifier]["commit"]}
++        for identifier in sorted(active)
++    ]
++
++
++def inspect(target: Path, entry: dict) -> tuple[bool, str]:
++    if not target.exists():
++        return False, "missing"
++    if target.is_symlink() or not target.is_dir():
++        return False, "unsafe or non-directory checkout"
++    try:
++        inside = git("-C", str(target), "rev-parse", "--show-toplevel")
++        if Path(inside).resolve() != target.resolve():
++            return False, "directory is inside another Git checkout"
++        origin = git("-C", str(target), "remote", "get-url", "origin")
++        if origin != entry["url"]:
++            return False, "origin URL differs from the workspace manifest"
++        head = git("-C", str(target), "rev-parse", "HEAD")
++        dirty = bool(git("-C", str(target), "status", "--porcelain"))
++    except RuntimeError as error:
++        return False, str(error)
++    if dirty:
++        return False, f"dirty at {head[:12]}"
++    if head != entry["commit"]:
++        return False, f"HEAD {head[:12]} differs from lock {entry['commit'][:12]}"
++    return True, f"clean at locked commit {head[:12]}"
++
++
++def bootstrap(checkout_dir: Path, entries: list[dict]) -> int:
++    checkout_dir.mkdir(parents=True, exist_ok=True)
++    for entry in entries:
++        target = checkout_dir / entry["checkout"]
++        if target.exists() or target.is_symlink():
++            good, message = inspect(target, entry)
++            print(f"{entry['id']}: {message}")
++            if not good:
++                return 1
++            continue
++        print(f"{entry['id']}: cloning {entry['url']} at {entry['commit'][:12]}", flush=True)
++        try:
++            git("clone", "--no-checkout", entry["url"], str(target))
++            git("-C", str(target), "checkout", "--detach", entry["commit"])
++        except RuntimeError as error:
++            raise RuntimeError(
++                f"{error}. Preserve the partial checkout at {target} for inspection; "
++                "do not overwrite it automatically."
++            ) from error
++        good, message = inspect(target, entry)
++        print(f"{entry['id']}: {message}")
++        if not good:
++            return 1
++    return 0
++
++
++def status(checkout_dir: Path, entries: list[dict]) -> int:
++    result = 0
++    for entry in entries:
++        good, message = inspect(checkout_dir / entry["checkout"], entry)
++        print(f"{entry['id']}: {message}")
++        if not good:
++            result = 1
++    return result
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("command", choices=("bootstrap", "status"))
++    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
++    parser.add_argument("--manifest", type=Path)
++    parser.add_argument("--lock", type=Path)
++    arguments = parser.parse_args()
++    root = arguments.root.resolve()
++    manifest_path = arguments.manifest or root / "workspace.toml"
++    lock_path = arguments.lock or root / "workspace.lock"
++    try:
++        checkout_dir, entries = load_contract(root, manifest_path, lock_path)
++        if arguments.command == "bootstrap":
++            return bootstrap(checkout_dir, entries)
++        return status(checkout_dir, entries)
++    except (OSError, RuntimeError, ValueError, tomllib.TOMLDecodeError) as error:
++        print(f"Workspace {arguments.command} failed: {error}", file=sys.stderr)
++        return 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/workspace_test.py b/tests/workspace_test.py
+new file mode 100644
+index 0000000..0ad2491
+--- /dev/null
++++ b/tests/workspace_test.py
+@@ -0,0 +1,139 @@
++"""Offline tests for the exact-commit workspace bootstrap contract."""
++
++from __future__ import annotations
++
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
++import workspace  # noqa: E402
++
++
++def run(*arguments: str, cwd: Path) -> str:
++    result = subprocess.run(
++        ["git", *arguments], cwd=cwd, text=True, capture_output=True, check=True
++    )
++    return result.stdout.strip()
++
++
++class WorkspaceTest(unittest.TestCase):
++    def test_checked_in_manifest_matches_lock(self) -> None:
++        root = Path(__file__).resolve().parents[1]
++        checkouts, entries = workspace.load_contract(
++            root, root / "workspace.toml", root / "workspace.lock"
++        )
++        self.assertEqual(root / "checkouts", checkouts)
++        self.assertEqual(["sagan"], [entry["id"] for entry in entries])
++        self.assertEqual(40, len(entries[0]["commit"]))
++
++    def setUp(self) -> None:
++        self.temporary = tempfile.TemporaryDirectory(prefix="sagan-workspace-test-")
++        self.addCleanup(self.temporary.cleanup)
++        self.root = Path(self.temporary.name)
++        self.source = self.root / "source"
++        self.source.mkdir()
++        run("init", "-b", "dev", cwd=self.source)
++        (self.source / "example.txt").write_text("first revision\n", encoding="utf-8")
++        run("add", "example.txt", cwd=self.source)
++        run("-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test", "-c", "user.email=test@example.invalid",
++            "commit", "-m", "Fixture", cwd=self.source)
++        self.commit = run("rev-parse", "HEAD", cwd=self.source)
++        self.manifest = self.root / "workspace.toml"
++        self.lock = self.root / "workspace.lock"
++        self.write_contract()
++
++    def write_contract(self, *, state: str = "active", checkout_root: str = "checkouts",
++                       commit: str | None = None, lock_url: str | None = None) -> None:
++        source = self.source.as_posix()
++        self.manifest.write_text(
++            'schema_version = 1\n'
++            f'checkout_root = "{checkout_root}"\n'
++            '[[repositories]]\n'
++            'id = "sagan"\n'
++            f'url = "{source}"\n'
++            'checkout = "sagan"\n'
++            f'state = "{state}"\n',
++            encoding="utf-8",
++        )
++        self.lock.write_text(
++            'schema_version = 1\n'
++            '[[repositories]]\n'
++            'id = "sagan"\n'
++            f'url = "{lock_url or source}"\n'
++            f'commit = "{commit or self.commit}"\n',
++            encoding="utf-8",
++        )
++
++    def load(self) -> tuple[Path, list[dict]]:
++        return workspace.load_contract(self.root, self.manifest, self.lock)
++
++    def test_bootstrap_exact_commit_is_idempotent(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(1, workspace.status(checkouts, entries))
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        self.assertEqual(0, workspace.status(checkouts, entries))
++        target = checkouts / "sagan"
++        self.assertEqual(self.commit, run("rev-parse", "HEAD", cwd=target))
++        self.assertEqual("", run("branch", "--show-current", cwd=target))
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++
++    def test_dirty_and_wrong_commit_are_not_overwritten(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        (target / "personal.txt").write_text("do not discard\n", encoding="utf-8")
++        self.assertEqual(1, workspace.bootstrap(checkouts, entries))
++        self.assertEqual("do not discard\n", (target / "personal.txt").read_text(encoding="utf-8"))
++        (target / "personal.txt").unlink()
++
++        (self.source / "example.txt").write_text("second revision\n", encoding="utf-8")
++        run("add", "example.txt", cwd=self.source)
++        run("-c", "commit.gpgsign=false", "-c", "user.name=Sagan Test", "-c", "user.email=test@example.invalid",
++            "commit", "-m", "Second fixture", cwd=self.source)
++        second = run("rev-parse", "HEAD", cwd=self.source)
++        self.write_contract(commit=second)
++        checkouts, entries = self.load()
++        self.assertEqual(1, workspace.bootstrap(checkouts, entries))
++        self.assertEqual(self.commit, run("rev-parse", "HEAD", cwd=target))
++
++    def test_existing_checkout_must_have_matching_origin(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        target = checkouts / "sagan"
++        run("remote", "set-url", "origin", "https://example.invalid/other.git", cwd=target)
++        self.assertEqual(1, workspace.status(checkouts, entries))
++        self.assertEqual(1, workspace.bootstrap(checkouts, entries))
++        self.assertEqual(self.commit, run("rev-parse", "HEAD", cwd=target))
++
++    def test_lock_must_match_active_manifest(self) -> None:
++        self.write_contract(lock_url="https://example.invalid/other.git")
++        with self.assertRaisesRegex(ValueError, "lock URL differs"):
++            self.load()
++        self.write_contract(commit="123")
++        with self.assertRaisesRegex(ValueError, "full lowercase commit SHA"):
++            self.load()
++
++    def test_nonactive_repository_is_not_bootstrapped(self) -> None:
++        for state in ("planned", "existing-outside-organization", "archived"):
++            with self.subTest(state=state):
++                self.write_contract(state=state)
++                self.lock.write_text("schema_version = 1\nrepositories = []\n", encoding="utf-8")
++                checkouts, entries = self.load()
++                self.assertEqual([], entries)
++                self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++                self.assertFalse((checkouts / "sagan").exists())
++
++    def test_checkout_root_rejects_traversal_and_drive_paths(self) -> None:
++        for path in ("../outside", "nested/path", r"C:\\outside", ".git", ""):
++            with self.subTest(path=path):
++                self.write_contract(checkout_root=path)
++                with self.assertRaisesRegex(ValueError, "single safe directory"):
++                    self.load()
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/workspace.lock b/workspace.lock
+new file mode 100644
+index 0000000..33441fe
+--- /dev/null
++++ b/workspace.lock
+@@ -0,0 +1,6 @@
++schema_version = 1
++
++[[repositories]]
++id = "sagan"
++url = "https://github.com/Sagan-Shoulak/sagan.git"
++commit = "4132c8c37f99dc5f89c7141f5780b583b64d192e"
+diff --git a/repository-segmentation/workspace.toml b/workspace.toml
+similarity index 94%
+rename from repository-segmentation/workspace.toml
+rename to workspace.toml
+index 52d31ef..0732779 100644
+--- a/repository-segmentation/workspace.toml
++++ b/workspace.toml
+@@ -8,7 +8,7 @@ lock_file = "workspace.lock"
+ id = "sagan"
+ url = "https://github.com/Sagan-Shoulak/sagan.git"
+ checkout = "sagan"
+-state = "transfer-required-before-split-repository-creation"
++state = "active"
+ 
+ [[repositories]]
+ id = "sagan-vscode"
+-- 
+2.51.0.windows.2
+
