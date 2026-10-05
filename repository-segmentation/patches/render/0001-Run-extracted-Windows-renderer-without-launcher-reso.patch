@@ -1,0 +1,341 @@
+From 99a8b97d2f9ef4dfc3412e4a4baeab7d8b9d9b3e Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 03:35:28 -0500
+Subject: [PATCH] Run extracted Windows renderer without launcher resource
+
+---
+ .gitignore                                |  1 +
+ AGENTS.md                                 | 11 +++
+ CODEX_START.md                            | 26 +++++++
+ MAINTAINERS.md                            | 84 +++++++++++++++++++++++
+ README.md                                 | 16 +++++
+ TECHNOLOGY.md                             | 41 +++++++++++
+ libraries/index.tsv                       |  2 +
+ libraries/render/native/window_bridge.cpp |  8 ++-
+ scripts/shape_text_demo.sh                | 17 +----
+ scripts/window_demo.sh                    | 16 +----
+ 10 files changed, 193 insertions(+), 29 deletions(-)
+ create mode 100644 .gitignore
+ create mode 100644 AGENTS.md
+ create mode 100644 CODEX_START.md
+ create mode 100644 MAINTAINERS.md
+ create mode 100644 README.md
+ create mode 100644 TECHNOLOGY.md
+ create mode 100644 libraries/index.tsv
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..84c048a
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++/build/
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..5c3106d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,11 @@
++# Rendering repository agent rules
++
++Read `CODEX_START.md`, `TECHNOLOGY.md`, and `MAINTAINERS.md` before making a
++change. Keep renderer APIs and native bridges here; consume language/math
++and physics packages without copying their implementations. Make backend
++and platform limitations explicit.
++
++Use Bash commands for the owner, never PowerShell. Preserve unrelated work.
++Follow the branch, focused-test, `dev` integration, full-suite-on-`main`,
++documentation-review reset, and release-hold rules in `MAINTAINERS.md`.
++The owner prefers to be taught what to write; implement only when asked.
+diff --git a/CODEX_START.md b/CODEX_START.md
+new file mode 100644
+index 0000000..0fbba86
+--- /dev/null
++++ b/CODEX_START.md
+@@ -0,0 +1,26 @@
++# Starting a new Sagan rendering chat
++
++Begin read-only. Read `AGENTS.md`, `TECHNOLOGY.md`, `MAINTAINERS.md`,
++`README.md`, `libraries/render/sagan.toml`, the rendering technical page,
++the bridge source, examples/tests, and the versioned ecosystem/chat maps
++from the primary repository. Inspect branch, HEAD, status, staged paths,
++compiler version, native toolchain, package catalog, platform, and concurrent
++work. State that this is a local split candidate with a Windows-only backend,
++not an independently released package.
++
++Prefer teaching me what to code through small steps, API sketches, examples,
++backend tradeoffs, review, and verification. Implement rendering code only
++when I explicitly request it. For authorized changes, use a fresh
++`codex/<request>` branch from current `dev`, test affected work until it
++passes, commit only intended paths, merge to `dev`, and rerun relevant tests.
++Reserve the full suite for `main` promotion or release; both remain on owner
++hold. Do not run unrelated documentation examples for a structural-only
++edit. Reset every edited documentation page to `review-needed`,
++`publication_ready: false`, and null verification metadata.
++
++Use the chat map to recommend the language, physics, game, workspace, or
++official-docs chat for work they own. Supply a self-contained ready-to-paste
++handoff with goal, evidence, constraints, dependency pins, and verification;
++do not assume shared chat history. Use Bash, never PowerShell. Preserve
++unrelated work and do not push, publish, release, transfer, or change remote
++settings without current authorization.
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+new file mode 100644
+index 0000000..15bbb2a
+--- /dev/null
++++ b/MAINTAINERS.md
+@@ -0,0 +1,84 @@
++---
++title: Maintaining Sagan rendering
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Maintaining Sagan rendering
++
++This is a local split candidate, not a published package repository.
++`libraries/render/sagan.toml` currently declares `sagan-render` version
++`0.5.1`. Its candidate-local `libraries/index.tsv` points to that manifest
++and declares compiler compatibility `^4.0.0`. The source package remains
++under `libraries/render/`; final root relocation is not yet complete.
++
++## Exact focused Windows checks
++
++Install or build compatible Sagan, MSYS2 UCRT64 g++, and a Windows desktop
++session. From the candidate root in Git Bash on the current development
++machine:
++
++```bash
++export SAGAN_EXECUTABLE=/c/Users/joeps/coding/sagan/bin/sagan.exe
++bash tests/integration/window_bridge_test.sh
++bash tests/integration/shape_text_test.sh
++```
++
++The first test opens and closes its own window after roughly 100 ms. The
++second closes after roughly 150 ms and checks that its own generated BMP is
++960×540. Both passed with the extracted package, current Sagan 4.9.5
++development executable, and no monorepo launcher resource object. If Sagan
++is correctly installed on PATH, omit `SAGAN_EXECUTABLE`; scripts default to
++`sagan`. Set `SAGAN_PACKAGE_INDEX` explicitly only for a reviewed alternate
++catalog; otherwise the candidate-local index is used. The scripts create
++build output only under ignored `build/`. Do not kill another user-controlled
++demo window while testing.
++
++The corresponding manual demos are:
++
++```bash
++bash scripts/window_demo.sh
++bash scripts/shape_text_demo.sh
++```
++
++These open native windows. The tests set `SAGAN_RENDER_AUTOCLOSE_MS` to avoid
++leaving them open. The bridge uses an embedded custom icon if available and
++a Windows stock icon otherwise. The latter is a compatibility fallback, not
++a decision about final product branding. The current non-Windows backend
++throws an explicit unsupported-platform error; do not claim Linux/macOS
++rendering based on a passing Windows test.
++
++## Branches and documentation
++
++Inspect branch, HEAD, status, staged paths, compiler and native-toolchain
++versions, and relevant history first. Every authorized request starts from
++current `dev` on a fresh `codex/<request>` branch. Test the affected work,
++refine until it works, commit only intended paths, merge into `dev`, and
++rerun relevant tests after integration. Reserve the full suite for reviewed
++`dev` to `main` promotion or release. Both promotion and releases are on
++owner hold until explicitly reopened with publication/signing policy.
++
++Structural-only documentation edits need not run unrelated executable
++examples. Run affected examples when their content or supporting behavior
++changes. Any edited documentation page resets to `status: review-needed`,
++`publication_ready: false`, and null verification fields pending human audit.
++
++## Extraction and recovery
++
++The local pinned filter-repo rehearsal retained exactly 21 owned files and
++19 relevant commits. Re-filter from final reviewed `dev`, verify exact paths
++and `git fsck --full`, then publish only reviewed `dev` and `main` heads
++without inherited Sagan language release tags. The independent package
++root, platform CI, artifact packaging, official-docs aggregation, version
++compatibility, and owner clean-machine drill remain incomplete. No split
++remote was created or pushed in this rehearsal.
++
++If a native build fails, distinguish compiler emission, package lookup,
++resource loading, g++/linking, and runtime/display failures. A missing
++custom icon must not make an otherwise valid window unusable, but a missing
++or unsupported display backend is a real limitation. The current local-only
++transfer backup cannot survive loss of this machine or recreate GitHub
++settings, secrets, issues, or PR history.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..03ca299
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,16 @@
++# Sagan rendering (local split candidate)
++
++This is a local history-preserving rehearsal of `sagan-render`, not a
++published independent repository. It contains the current Sagan rendering
++package, native Windows bridge, two window demonstrations, focused tests,
++and its technical page. The package remains under `libraries/render/` in
++this first candidate; final root relocation and hosted CI are still open.
++
++The candidate-local `libraries/index.tsv` resolves this extracted package.
++The demo scripts accept `SAGAN_EXECUTABLE` or installed `sagan` and no longer
++need the monorepo's launcher resource object. A bundled custom icon is used
++when present; otherwise the bridge uses the Windows stock application icon.
++
++Read [MAINTAINERS.md](MAINTAINERS.md) for exact Bash commands and recovery,
++[TECHNOLOGY.md](TECHNOLOGY.md) for the architecture boundary, and
++[CODEX_START.md](CODEX_START.md) for a new rendering chat.
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+new file mode 100644
+index 0000000..60a09b9
+--- /dev/null
++++ b/TECHNOLOGY.md
+@@ -0,0 +1,41 @@
++---
++title: Sagan rendering technology overview
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Sagan rendering technology overview
++
++This repository owns rendering APIs and native platform bridges, not Sagan
++syntax, orbital physics, or game rules. The Sagan package under
++`libraries/render/` exposes window and canvas operations. The Windows bridge
++in `libraries/render/native/window_bridge.cpp` connects generated native
++code to Win32 window creation, drawing, event polling, text, and optional
++frame capture. The two current demonstrations exercise a basic window and a
++static shape/text composition.
++
++`libraries/render/sagan.toml` declares package identity and version.
++`libraries/index.tsv` is a candidate-local catalog for testing this source
++without accidentally loading the monorepo copy. The scripts ask an
++installed or explicitly selected Sagan compiler to emit package-linked C++
++for each demo, then compile it with the bridge. A custom icon resource is
++used when the executable bundles one; the bridge falls back to a stock
++application icon when it does not. This removes a hidden dependency on the
++language repository's launcher resource object while preserving branding
++where available.
++
++The current native backend supports Windows only. The non-Windows path
++reports that limitation rather than silently claiming a window backend.
++Linux and macOS backend design, display-server integration, packaging,
++headless test strategy, and release compatibility remain separate work.
++The dependency direction is rendering to Sagan's language/math/toolchain;
++physics and the Space Game may consume rendering but do not own its native
++bridge. The future workspace exact lock coordinates tested versions.
++
++The local Windows extraction tests passed the short auto-closing window
++check and the shape/text BMP capture check without the monorepo resource
++object. This is focused evidence for the candidate's current Win32 path,
++not proof of all backends or display environments. See [MAINTAINERS.md](MAINTAINERS.md).
+diff --git a/libraries/index.tsv b/libraries/index.tsv
+new file mode 100644
+index 0000000..1fc79fa
+--- /dev/null
++++ b/libraries/index.tsv
+@@ -0,0 +1,2 @@
++sagan-package-index-v1
++sagan-render	0.5.1	^4.0.0	installed	render/sagan.toml
+diff --git a/libraries/render/native/window_bridge.cpp b/libraries/render/native/window_bridge.cpp
+index 9838349..6fcd779 100644
+--- a/libraries/render/native/window_bridge.cpp
++++ b/libraries/render/native/window_bridge.cpp
+@@ -368,8 +368,12 @@ auto sagan_5f5f72656e6465725f77696e646f775f6f70656e(
+   descriptor.hIconSm = static_cast<HICON>(LoadImageW(window.instance, MAKEINTRESOURCEW(1), IMAGE_ICON,
+                                                     GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                                                     LR_SHARED));
+-  if (!descriptor.hIcon || !descriptor.hIconSm)
+-    throw std::runtime_error("Sagan window icon resource is missing from the executable");
++  if (!descriptor.hIcon)
++    descriptor.hIcon = LoadIconW(nullptr, MAKEINTRESOURCEW(32512));
++  if (!descriptor.hIconSm)
++    descriptor.hIconSm = descriptor.hIcon;
++  if (!descriptor.hIcon)
++    throw std::runtime_error("Could not load a native window icon");
+   if (!RegisterClassExW(&descriptor))
+     throw std::runtime_error("Could not register the native window class");
+   window.class_registered = true;
+diff --git a/scripts/shape_text_demo.sh b/scripts/shape_text_demo.sh
+index 26d8549..e09757f 100644
+--- a/scripts/shape_text_demo.sh
++++ b/scripts/shape_text_demo.sh
+@@ -8,20 +8,10 @@ cd "$repo_root"
+ 
+ mkdir -p build/shape-text-demo build/tmp
+ 
+-package_index="$repo_root/libraries/index.tsv"
+-if [[ "$(bin/sagan --version)" == *"0.0.0+gunknown"* ]]; then
+-  catalog_root="$repo_root/build/shape-text-demo/source-checkout-catalog"
+-  package_index="$catalog_root/index.tsv"
+-  mkdir -p "$catalog_root/render/src"
+-  cp libraries/render/sagan.toml "$catalog_root/render/sagan.toml"
+-  cp libraries/render/src/window.sagan "$catalog_root/render/src/window.sagan"
+-  cp libraries/render/src/canvas.sagan "$catalog_root/render/src/canvas.sagan"
+-  awk 'BEGIN { OFS="\t" } NR == 2 { $3="^0.0.0" } { print }' \
+-    libraries/index.tsv > "$package_index"
+-fi
+-export SAGAN_PACKAGE_INDEX="$package_index"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+-bin/sagan --emit-cpp-package examples/shape_text_demo build/shape-text-demo/program.cpp
++"$sagan_executable" --emit-cpp-package examples/shape_text_demo build/shape-text-demo/program.cpp
+ 
+ native_output="build/shape-text-demo/shape-text-demo"
+ if [[ "${OS:-}" == "Windows_NT" ]]; then
+@@ -37,7 +27,6 @@ TMPDIR="$native_tmp" TMP="$native_tmp" TEMP="$native_tmp" \
+   g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror \
+   -include "$repo_root/libraries/render/native/window_bridge.hpp" \
+   build/shape-text-demo/program.cpp libraries/render/native/window_bridge.cpp \
+-  "$repo_root/obj/launcher/sagan-resource.o" \
+   -o "$native_output" -static -static-libgcc -static-libstdc++ -lgdi32 -luser32
+ 
+ "$native_output"
+diff --git a/scripts/window_demo.sh b/scripts/window_demo.sh
+index 05bbbfc..978901b 100644
+--- a/scripts/window_demo.sh
++++ b/scripts/window_demo.sh
+@@ -8,19 +8,10 @@ cd "$repo_root"
+ 
+ mkdir -p build/window-demo build/tmp
+ 
+-package_index="$repo_root/libraries/index.tsv"
+-if [[ "$(bin/sagan --version)" == *"0.0.0+gunknown"* ]]; then
+-  catalog_root="$repo_root/build/window-demo/source-checkout-catalog"
+-  package_index="$catalog_root/index.tsv"
+-  mkdir -p "$catalog_root/render/src"
+-  cp libraries/render/sagan.toml "$catalog_root/render/sagan.toml"
+-  cp libraries/render/src/window.sagan "$catalog_root/render/src/window.sagan"
+-  awk 'BEGIN { OFS="\t" } NR == 2 { $3="^0.0.0" } { print }' \
+-    libraries/index.tsv > "$package_index"
+-fi
+-export SAGAN_PACKAGE_INDEX="$package_index"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+-bin/sagan --emit-cpp-package examples/window_demo build/window-demo/program.cpp
++"$sagan_executable" --emit-cpp-package examples/window_demo build/window-demo/program.cpp
+ 
+ native_output="build/window-demo/window-demo"
+ if [[ "${OS:-}" == "Windows_NT" ]]; then
+@@ -36,7 +27,6 @@ TMPDIR="$native_tmp" TMP="$native_tmp" TEMP="$native_tmp" \
+   g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror \
+   -include "$repo_root/libraries/render/native/window_bridge.hpp" \
+   build/window-demo/program.cpp libraries/render/native/window_bridge.cpp \
+-  "$repo_root/obj/launcher/sagan-resource.o" \
+   -o "$native_output" -static -static-libgcc -static-libstdc++ -lgdi32 -luser32
+ 
+ "$native_output"
+-- 
+2.51.0.windows.2
+

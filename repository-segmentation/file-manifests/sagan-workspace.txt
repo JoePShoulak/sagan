@@ -38,6 +38,8 @@ repository-segmentation/patches/docs/0001-Assemble-official-docs-from-pinned-Sag
 repository-segmentation/patches/docs/README.md
 repository-segmentation/patches/physics/0001-Run-extracted-physics-demos-with-local-package-catal.patch
 repository-segmentation/patches/physics/README.md
+repository-segmentation/patches/render/0001-Run-extracted-Windows-renderer-without-launcher-reso.patch
+repository-segmentation/patches/render/README.md
 repository-segmentation/patches/space-game/0001-Import-preserved-current-sandbox-seed.patch
 repository-segmentation/patches/space-game/0002-Add-standalone-game-maintainer-and-chat-guides.patch
 repository-segmentation/patches/space-game/README.md

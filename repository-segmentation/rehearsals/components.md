@@ -41,6 +41,16 @@ and `git fsck --full` passed. The package and native bridge remain in
 monorepo-relative directories; no independent window/backend build or
 platform CI has run. This is path/history evidence only.
 
+A separate local patch at `../patches/render/` added a candidate-local
+package index, removed hardcoded `bin/sagan` and launcher-resource-object
+assumptions from the two Windows demo scripts, and made a missing custom
+icon fall back to the stock Windows application icon. Both short auto-closing
+window and shape/text capture tests passed with the extracted source and
+existing Sagan 4.9.5 executable. A fresh normal clone replayed the patch
+with `git am`, matched tree `f3bee08e2c9a6fea6138fb508ce507068c9c0a`,
+passed `git fsck --full`, and reran both tests. Linux/macOS backends remain
+explicitly unsupported; no independent hosted CI or release has run.
+
 ## Space Game
 
 The default exact-path filter retained **4** owned files and **7** commits
