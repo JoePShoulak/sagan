@@ -55,6 +55,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
+          # The signed-binary host intermittently rejects TLS handshakes on
+          # ubuntu-26.04. Keep upload mandatory via the maintained PyPI CLI.
+          use_pypi: true
           use_oidc: true
           files: ./build/coverage.info
           disable_search: true
