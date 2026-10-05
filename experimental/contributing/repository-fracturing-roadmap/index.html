@@ -5082,6 +5082,15 @@ replace it.</p>
 must have independent ownership, history, versioning, tests, CI, documentation,
 maintainer instructions, new-chat onboarding, and a verified place in the
 locked Sagan ecosystem.</p>
+<p>The creation and independence gates are deliberately separate. Before a new
+public repository is created, its locally runnable candidate, exact history
+and ownership map, focused checks, initial governance, recovery path, and
+owner-reviewed public material must be ready. The new repository is then
+created and populated with only reviewed <code>dev</code> and <code>main</code> refs. Hosted CI,
+actual organization permissions, component documentation aggregation, and
+owner drills are verified <em>there</em> before the repository is called independent.
+The monorepo copy and live documentation remain in service until a later
+reviewed cutover. Hosted CI cannot be a pre-creation condition.</p>
 <h2 id="target-organization-and-repositories">Target organization and repositories</h2>
 <p>Move the intact existing language repository into <code>Sagan-Shoulak</code> first, after
 the transfer gate passes and before creating any split repository. This puts
