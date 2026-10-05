@@ -129,3 +129,11 @@ and fresh replay, tree equality was
 `2be43a9c05bcc52a24eed972d5fdf738324f2f9a`, and `git fsck --full`
 passed. The historical material remains recoverable without misleading an
 operator into treating a stale monorepo audit as current CI.
+
+A ninth patch removed the inherited primary-repository integration workflow:
+it called `scripts/version.sh`, which does not belong in the standalone
+workspace. The workspace-specific offline workflow remains. The maintainer
+guide no longer prescribes a local user's candidate paths. Twenty-four
+offline tests passed, a fresh patch application matched candidate tree
+`46841551868eadbd7ab119685e8004b8ddcbae6e`, and `git fsck --full`
+passed. Hosted CI is still a post-creation gate, not a claimed result.

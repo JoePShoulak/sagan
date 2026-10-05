@@ -1,0 +1,128 @@
+From c6b5e582df08385feba63976c9d6d3af9dc7dec9 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 13:03:27 -0500
+Subject: [PATCH 9/9] Drop inherited monorepo CI from workspace
+
+---
+ .github/workflows/integration.yml | 58 -------------------------------
+ MAINTAINERS.md                    | 35 +++++++------------
+ 2 files changed, 12 insertions(+), 81 deletions(-)
+ delete mode 100644 .github/workflows/integration.yml
+
+diff --git a/.github/workflows/integration.yml b/.github/workflows/integration.yml
+deleted file mode 100644
+index 5ea5ee0..0000000
+--- a/.github/workflows/integration.yml
++++ /dev/null
+@@ -1,58 +0,0 @@
+-name: Integrated development
+-
+-on:
+-  push:
+-    branches:
+-      - main
+-  pull_request:
+-    branches:
+-      - main
+-  workflow_dispatch:
+-
+-permissions:
+-  contents: read
+-
+-concurrency:
+-  group: sagan-integrated-${{ github.ref }}
+-  cancel-in-progress: false
+-
+-jobs:
+-  compiler-and-cli:
+-    name: Complete compiler and CLI suite
+-    runs-on: windows-latest
+-    steps:
+-      - name: Check out complete history
+-        uses: actions/checkout@v7
+-        with:
+-          fetch-depth: 0
+-
+-      - name: Set up MSYS2 UCRT64
+-        uses: msys2/setup-msys2@v2
+-        with:
+-          msystem: UCRT64
+-          update: true
+-          install: >-
+-            diffutils
+-            git
+-            make
+-            python
+-            mingw-w64-ucrt-x86_64-binutils
+-            mingw-w64-ucrt-x86_64-cc-libs
+-            mingw-w64-ucrt-x86_64-crt
+-            mingw-w64-ucrt-x86_64-gcc
+-            mingw-w64-ucrt-x86_64-gcc-libs
+-            mingw-w64-ucrt-x86_64-headers
+-            mingw-w64-ucrt-x86_64-libgcc
+-            mingw-w64-ucrt-x86_64-libstdc++
+-            mingw-w64-ucrt-x86_64-libwinpthread
+-            mingw-w64-ucrt-x86_64-winpthreads
+-            zip
+-            unzip
+-
+-      - name: Verify version identity
+-        shell: msys2 {0}
+-        run: bash scripts/version.sh check-badge
+-
+-      - name: Run the complete compiler and CLI suite
+-        shell: msys2 {0}
+-        run: bash scripts/test.sh
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index 1326daa..f36818f 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -169,26 +169,14 @@ export SAGAN_PACKAGE_INDEX="$(pwd)/.sagan-package-index.tsv"
+ ```
+ 
+ Today, `--from-lock` deliberately fails because neither split package repo
+-is active. Do not activate an uncreated remote to make it pass. For the
+-extracted **local candidates only**, put their checkout directories under
+-one common parent and provide that parent explicitly. For example, when
+-the candidate directories are siblings of this workspace candidate under
+-the Sagan monorepo's ignored `build/`:
+-
+-```bash
+-candidate_root="$(cd .. && pwd)"
+-physics_dir="$candidate_root/segmentation-physics-functional-20261005"
+-render_dir="$candidate_root/segmentation-render-functional-20261005"
+-game_dir="$candidate_root/segmentation-game-functional-20261005"
+-python scripts/package_index.py --root "$candidate_root" \
+-  --output segmentation-package-index.tsv \
+-  --component sagan-physics="${physics_dir##*/}" \
+-  --component sagan-render="${render_dir##*/}"
+-bash scripts/integrated-package-smoke.sh \
+-  "$candidate_root/segmentation-package-index.tsv" \
+-  /c/Users/joeps/coding/sagan/bin/sagan.exe \
+-  "$physics_dir" "$render_dir" "$game_dir"
+-```
++is active. Do not activate an uncreated remote to make it pass. The local
++candidate integration rehearsal and its machine-specific paths are recorded
++in the intact primary repository's segmentation evidence, not prescribed as
++standalone workspace operating commands. Once the component repositories
++exist and are locked, replace this provisional procedure with one that
++derives the compiler and package paths from the active lock. Until then,
++pass explicit local candidate paths to `package_index.py` and
++`integrated-package-smoke.sh` only for an isolated rehearsal.
+ 
+ The generator refuses a differing existing output unless `--force` is
+ specified, checks package manifest names/versions and path containment,
+@@ -209,6 +197,7 @@ bash -n scripts/bootstrap.sh scripts/status.sh scripts/update.sh scripts/build.s
+ The eventual maintainer guide must add clean-machine drills,
+ platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
+ without their values. Those capabilities are not implemented in this candidate.
+-The draft `.github/workflows/workspace-checks.yml` runs the offline contract
+-tests on Linux, Windows, and macOS without fetching planned split remotes;
+-it remains locally reviewed only, not a successful hosted CI run.
++The draft `.github/workflows/workspace-checks.yml` is the only workflow
++carried into the standalone candidate. It runs the offline contract tests
++on Linux, Windows, and macOS without fetching planned split remotes; it
++remains locally reviewed only, not a successful hosted CI run.
+-- 
+2.51.0.windows.2
+

@@ -5,10 +5,10 @@ It is not a published split, and it must not be applied to the intact Sagan
 repository. The path-only filtered base came from source preparation commit
 `68d55b003709e28b4e96bdcbd22d8341018c2253` and has filtered HEAD
 `47a72ef3a23421248dc2f983ead8d5548a5d473d`. Verify that base before
-applying the eight numbered patches with `git am` in a disposable normal clone
+applying the nine numbered patches with `git am` in a disposable normal clone
 of the filtered repository. The expected draft result is commit
-`51029bb71cbded23889387ed87156443e410daa7`, tree
-`2be43a9c05bcc52a24eed972d5fdf738324f2f9a`.
+`c6b5e582df08385feba63976c9d6d3af9dc7dec9`, tree
+`46841551868eadbd7ab119685e8004b8ddcbae6e`.
 
 The first patch moves the proposed workspace manifest to root `workspace.toml`,
 activates only the already-transferred primary repository, and adds
@@ -45,13 +45,16 @@ provide their own reviewed build/test scripts; none are silently skipped.
 The eighth patch marks retained monorepo transfer inventories as historical
 and makes their old checker refuse to report success in the standalone
 workspace. The root workspace commands remain the operational contract.
+The ninth patch removes an inherited monorepo CI workflow that would fail in
+the standalone repository and removes machine-specific candidate paths from
+the public maintainer guide.
 
 The first two patches' offline Python suite passed ten cases on Windows; the
 third raised the total to fifteen. A real GitHub clone
 into the ignored candidate `checkouts/sagan` passed at the locked SHA, and
 `bash scripts/status.sh` and `bash scripts/restore-lock.sh` reported the
 expected clean pin. Bash syntax and `git diff --check` passed. A fresh normal
-clone of the filtered base replayed all eight patches with `git am`, matched
+clone of the filtered base replayed all nine patches with `git am`, matched
 the expected tree, passed `git fsck --full`, and reran all twenty-four tests. No split
 GitHub repository was created or changed, and no CI ran in a
 new destination. The candidate retains monorepo-preparation records for
