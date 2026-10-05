@@ -14,6 +14,7 @@ examples/two_body_demo/src/main.sagan
 repository-segmentation/README.md
 repository-segmentation/audits/github-transfer-2026-10-05.md
 repository-segmentation/audits/local-backup-2026-10-05.md
+repository-segmentation/audits/owner-transfer-drill-2026-10-05.md
 repository-segmentation/chat-map.toml
 repository-segmentation/components.toml
 repository-segmentation/ecosystem.toml

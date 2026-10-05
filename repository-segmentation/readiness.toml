@@ -7,7 +7,7 @@ initial_preparation_commit = "c8fa3a1"
 remote_dev_observed_2026_10_05 = "1e1675037ca5273c1381588e6a8dadd395813bb6"
 backup_reference = "local-rehearsal:/c/Users/joeps/coding/sagan-pretransfer-script-rehearsal-2026-10-05; refresh-after-dev-freeze"
 full_suite = "required-only-for-main-promotion-or-release"
-owner_recovery_drill = "not-run"
+owner_recovery_drill = "owner-reported-passed-2026-10-05; checkout-abbabe9; see-audits/owner-transfer-drill-2026-10-05.md"
 release_policy = "paused; signing abandoned for now"
 
 [tooling]
@@ -23,7 +23,7 @@ primary_release_inventory = "metadata-and-33-assets-verified-in-local-rehearsal-
 primary_release_backup_test = "mock-download-and-corruption-rejection-passed-2026-10-05"
 primary_local_backup_rehearsal = "21-refs-and-33-assets-verified-with-restore-2026-10-05"
 primary_local_backup_creator = "end-to-end-passed-2026-10-05; 21-refs-33-assets-and-restore"
-agent_clean_checkout_rehearsal = "passed-2026-10-05; owner-drill-still-not-run"
+agent_clean_checkout_rehearsal = "passed-2026-10-05; owner-drill-reported-passed-separately"
 primary_parity_source_rehearsal = "passed-2026-10-05; destination-and-redirects-unverified"
 
 [[decisions]]

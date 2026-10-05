@@ -1,10 +1,11 @@
 # Preparation branch merge gate
 
 This gate controls when the repository-segmentation **preparation branch** may
-merge into `dev`. It is **not yet passed**. Merging it does not itself transfer
-the primary repository, create a split repository, move code, change GitHub
-settings, or promote `dev` to `main`. The transfer and each extraction retain
-their separate execution gates in `primary-repository-transfer.md` and
+merge into `dev`. The owner transfer-start drill has passed; final branch and
+integration checks remain before the merge is complete. Merging it does not
+itself transfer the primary repository, create a split repository, move code,
+change GitHub settings, or promote `dev` to `main`. Transfer and extraction
+retain separate execution gates in `primary-repository-transfer.md` and
 `history-extraction.md`.
 
 The owner confirmed on October 5, 2026 that preparation should merge before
@@ -41,14 +42,17 @@ permission to skip those dynamic checks.
   the intended changes. The bundle and Extension Host checks required normal
   filesystem access because the restricted Codex sandbox denied esbuild a
   parent-directory read; they passed with that access.
+- The owner completed the separate clean-checkout transfer-start drill and
+  confirmed the recovery limits after the guide was clarified. See
+  `audits/owner-transfer-drill-2026-10-05.md` for the checkout and outputs.
 
 ## Before merging this branch
 
 1. Close the primary-transfer start gate: preserve observed access and branch
    protection through transfer, identify the stable-release reviewer, keep all
    releases paused and signing deferred, verify the owner-approved local
-   backup location and restoration, and complete the owner recovery drill in
-   `owner-transfer-start-drill.md` from a committed, clean checkout.
+   backup location and restoration, and confirm the recorded owner recovery
+   drill in `owner-transfer-start-drill.md` remains valid.
    The local-only backup cannot protect against loss of this computer.
    Confirm source and destination access, visibility, redirect safety, and a
    realistic freeze procedure. Record any intentionally deferred component

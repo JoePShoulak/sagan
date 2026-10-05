@@ -6,6 +6,28 @@ fresh checkout of the committed preparation branch. It verifies that the
 instructions and local backup can be used without this chat or its workspace
 state. Do not run it against an uncommitted branch.
 
+## What this backup actually protects
+
+The local backup is two things: a Git mirror containing repository history,
+branches, and tags, and copies of the existing GitHub release assets with
+checksums. If GitHub transfer damages one of those **and this computer is
+still available**, we can compare with the backup and use it to recover the
+missing Git data or release files.
+
+It is **not a copy of GitHub or of this computer**:
+
+| If this is lost | Can this local backup restore it? | Why |
+| --- | --- | --- |
+| Git commits, branches, or tags on GitHub | Yes, if this computer and backup survive | The mirror contains them. Restoration still requires working GitHub access. |
+| Existing release asset files | Yes, if this computer and backup survive | The downloaded files and checksums are in the backup. Restoring them still requires GitHub access. |
+| This computer or its storage | No | The only approved backup is on that same storage. |
+| GitHub account access, organization permissions, repository settings, Actions secrets, issues, or pull-request discussions | No | These are GitHub-managed state, not part of a Git mirror or release-asset download. |
+
+The settings audit records some *names and policy*, not secret values. It is
+evidence for checking transfer parity, not a way to recreate credentials or
+recover an inaccessible GitHub account. This is the accepted local-only
+transfer risk, not a complete disaster-recovery plan.
+
 ## Fresh checkout and focused checks
 
 Choose a unique temporary directory and clone from the current local checkout.
@@ -49,9 +71,9 @@ values. Do **not** run the live transfer or any release workflow.
 
 Tell the preparation chat the clean-checkout HEAD, whether the focused checks
 and backup verifier passed, and the path of the restored checkout it printed.
-State in your own words what the local backup cannot recover (including loss
-of this computer and GitHub settings/secrets) and which decision is still
-needed before releases resume. The chat records that evidence in a dated
+After reading the table above, state in your own words what the local backup
+cannot recover and which decision is still needed before releases resume.
+The chat records that evidence in a dated
 audit. If any command or instruction fails, keep the branch unmerged and fix
 the guide or tooling, then repeat the drill.
 

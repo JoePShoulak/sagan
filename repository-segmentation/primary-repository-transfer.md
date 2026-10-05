@@ -27,6 +27,9 @@ Before scheduling the transfer:
    independent restore outside this checkout. The owner chose a backup on this
    machine only. This protects against a transfer mistake but **not** against
    loss of this computer or its storage; do not call it an off-machine backup.
+   The mirror and assets also do not contain account access, repository
+   settings, organization permissions, Actions secrets, issues, or pull-request
+   discussions. See `owner-transfer-start-drill.md` for the recovery matrix.
 6. Freeze all releases, documentation deployment, mirror synchronization,
    branch changes, and repository administration for the transfer window.
    Signing is abandoned for now, and release publication remains paused until

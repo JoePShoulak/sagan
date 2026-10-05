@@ -139,6 +139,8 @@ is unavailable, stop publication and keep the last known-good artifact. The
 [hosting guide](docs/contributing/hosting.md) and release lifecycle describe
 the parts currently automated. Exact credential recovery and an owner-performed
 clean-machine drill remain open handoff work, not assumptions.
+The [transfer-start recovery matrix](repository-segmentation/owner-transfer-start-drill.md)
+explains precisely what the approved local-only backup can and cannot restore.
 
 ## Handoff status
 
