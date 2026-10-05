@@ -61,6 +61,7 @@ repository-segmentation/patches/workspace/0004-Add-offline-multi-platform-worksp
 repository-segmentation/patches/workspace/0005-Generate-editor-workspace-from-exact-source-lock.patch
 repository-segmentation/patches/workspace/0006-Add-fetch-only-update-and-reviewed-lock-refresh.patch
 repository-segmentation/patches/workspace/0007-Build-and-test-exact-lock-workspace-components.patch
+repository-segmentation/patches/workspace/0008-Mark-monorepo-audit-as-historical-in-workspace.patch
 repository-segmentation/patches/workspace/README.md
 repository-segmentation/primary-repository-transfer.md
 repository-segmentation/primary-transfer.toml

@@ -1,0 +1,105 @@
+From 51029bb71cbded23889387ed87156443e410daa7 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 12:57:47 -0500
+Subject: [PATCH] Mark monorepo audit as historical in workspace
+
+---
+ MAINTAINERS.md                           | 6 ++++++
+ TECHNOLOGY.md                            | 6 ++++++
+ repository-segmentation/README.md        | 9 +++++++++
+ scripts/repository_segmentation_check.py | 5 +++++
+ tests/workspace_test.py                  | 9 +++++++++
+ 5 files changed, 35 insertions(+)
+
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index 1ee7bd7..1326daa 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -15,6 +15,12 @@ organization governance and CI. The current lock contains only the primary
+ `sagan` source pin. No split-repository URL should be activated until that
+ repository exists, is backed up, and passes its extraction gate.
+ 
++The carried `repository-segmentation/` inventories and old monorepo checker
++are historical transfer evidence, not current workspace validation. That
++checker fails explicitly in this standalone candidate. Use the focused
++commands below and its own CI for current operation; retain the historical
++records for audit and recovery context.
++
+ ## Prerequisites and exact commands
+ 
+ Use Git Bash, Git, and Python 3.11 or newer. From the workspace repository root:
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 5e18c20..1919dd7 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -15,6 +15,12 @@ normal Git repository. Development, versioning, and release ownership remain
+ with that child. The workspace records which exact revisions have been tested
+ together and hosts cross-repository examples and compatibility evidence.
+ 
++The carried `repository-segmentation/` tree is a provenance record from the
++intact monorepo transfer and extraction rehearsals. Its old path manifests
++and transfer audit do not describe the live standalone workspace. The active
++contracts are the root manifest/lock and the focused workspace commands;
++the historical segmentation checker refuses to pass in this candidate.
++
+ `workspace.toml` maps stable component IDs to owner
+ URLs, local checkout names, and lifecycle states. Only `active` entries are
+ bootstrapped. `planned` entries are proposals; `existing-outside-organization`
+diff --git a/repository-segmentation/README.md b/repository-segmentation/README.md
+index 594c420..6ec9103 100644
+--- a/repository-segmentation/README.md
++++ b/repository-segmentation/README.md
+@@ -1,5 +1,14 @@
+ # Repository segmentation preparation
+ 
++> This directory is a transition record in the local `sagan-workspace`
++> candidate. Its transfer inventories, old ownership manifests, and
++> `repository_segmentation_check` script describe the **intact** Sagan
++> monorepo and are not live standalone-workspace checks. Use the root
++> `MAINTAINERS.md`, `workspace.toml`, `workspace.lock`, and the focused
++> `scripts/workspace.py` commands for current workspace operation. Preserve
++> these records for provenance; do not mistake a historical audit result for
++> a current split-repository CI pass.
++
+ This directory contains preparation and primary-transfer evidence for separating
+ the Sagan monorepo. The intact primary repository moved to
+ `Sagan-Shoulak/sagan` on October 5, 2026; no split repository has been created
+diff --git a/scripts/repository_segmentation_check.py b/scripts/repository_segmentation_check.py
+index 51ae778..40ca778 100644
+--- a/scripts/repository_segmentation_check.py
++++ b/scripts/repository_segmentation_check.py
+@@ -310,6 +310,11 @@ def check_file_manifests() -> None:
+ 
+ def main() -> int:
+     try:
++        if not (ROOT / "src" / "parser" / "parser.cpp").is_file() or not (ROOT / "makefile").is_file():
++            raise ValueError(
++                "this is a historical intact-Sagan audit, not a standalone "
++                "workspace check; use scripts/workspace.py and its tests here"
++            )
+         check_ecosystem()
+         check_chat_map()
+         check_inventory()
+diff --git a/tests/workspace_test.py b/tests/workspace_test.py
+index 621d2e0..2a2f9d7 100644
+--- a/tests/workspace_test.py
++++ b/tests/workspace_test.py
+@@ -23,6 +23,15 @@ def run(*arguments: str, cwd: Path) -> str:
+ 
+ 
+ class WorkspaceTest(unittest.TestCase):
++    def test_historical_monorepo_audit_refuses_standalone_checkout(self) -> None:
++        root = Path(__file__).resolve().parents[1]
++        result = subprocess.run(
++            [sys.executable, "scripts/repository_segmentation_check.py"],
++            cwd=root, text=True, capture_output=True, check=False,
++        )
++        self.assertEqual(1, result.returncode)
++        self.assertIn("historical intact-Sagan audit", result.stderr)
++
+     def test_checked_in_manifest_matches_lock(self) -> None:
+         root = Path(__file__).resolve().parents[1]
+         checkouts, entries = workspace.load_contract(
+-- 
+2.51.0.windows.2
+

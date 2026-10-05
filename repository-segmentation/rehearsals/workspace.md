@@ -120,3 +120,12 @@ A fresh patch replay matched tree
 `8f1cc36f3cb38a4d8125cb840062dcfe88b60af9`, passed `git fsck --full`,
 and reran all twenty-three offline tests. Hosted cross-repository CI and
 locked integration with actual split remotes remain unverified.
+
+An eighth patch labels the carried monorepo transfer manifests and audits
+as historical evidence, not live workspace validation. Their old checker
+returns a clear failure in the standalone candidate; a focused regression
+test protects that boundary. Twenty-four offline tests passed in candidate
+and fresh replay, tree equality was
+`2be43a9c05bcc52a24eed972d5fdf738324f2f9a`, and `git fsck --full`
+passed. The historical material remains recoverable without misleading an
+operator into treating a stale monorepo audit as current CI.
