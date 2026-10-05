@@ -68,3 +68,10 @@ tree `6a4bc68abcf6eeadae6d0e2130796415a6c1b84f`, passed `git fsck
 ownership and lock checks. It does not prove hosted CI, component-PR preview,
 publication review, version selection, deployment, or HP1 rollback. No
 split remote was created or pushed.
+
+A third patch adds a draft three-platform offline-test and primary-source
+strict-build workflow. Its candidate and replay trees both equal
+`cb43889503119e49cb454fd3d0334def3c9123e0`; `git fsck --full`
+passed. The workflow is not a hosted CI pass and intentionally fails closed
+if component mounts become active before its source-checkout step is
+extended. No workflow was dispatched in a split destination.
