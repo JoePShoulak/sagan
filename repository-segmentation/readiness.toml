@@ -22,6 +22,7 @@ primary_remote_backup_rehearsal = "passed-2026-10-05"
 primary_release_inventory = "metadata-and-33-assets-verified-in-local-rehearsal-2026-10-05"
 primary_release_backup_test = "mock-download-and-corruption-rejection-passed-2026-10-05"
 primary_local_backup_rehearsal = "21-refs-and-33-assets-verified-with-restore-2026-10-05"
+agent_clean_checkout_rehearsal = "passed-2026-10-05; owner-drill-still-not-run"
 
 [[decisions]]
 id = "repository-names"

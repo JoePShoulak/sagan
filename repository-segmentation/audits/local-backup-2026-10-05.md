@@ -37,3 +37,15 @@ or corruption of this computer's storage. The owner accepted that limitation
 for this transfer. GitHub issues, settings, and secrets are not contained in
 the Git mirror or release-asset files; the separate settings audit and
 post-transfer parity checks remain required.
+
+## Clean-checkout technical rehearsal
+
+An independent disposable clone of preparation commit `05ddb39` passed the
+segmentation contract, documentation-structure check after running the
+documented `bash scripts/docs.sh setup` prerequisite, and the local-backup
+verifier. Read-only GitHub authentication and source repository identity
+checks passed with the owner's account. The sandbox initially blocked Python
+package downloads and then permitted the setup in an isolated elevated run;
+this was a sandbox network restriction, not a project test failure. The
+owner-performed comprehension and recovery drill remains **not run**, and the
+backup still predates the final frozen `dev` baseline.

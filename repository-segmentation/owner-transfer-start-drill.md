@@ -18,6 +18,7 @@ cd "$drill_root/sagan"
 git status --short --branch
 git rev-parse HEAD
 bash scripts/repository_segmentation_check.sh
+bash scripts/docs.sh setup
 bash scripts/docs.sh check-structure
 ```
 
