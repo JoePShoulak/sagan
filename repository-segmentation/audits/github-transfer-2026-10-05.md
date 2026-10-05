@@ -15,6 +15,10 @@ No secret values were read or recorded.
 - A later read-only organization listing returned no repositories, and the
   source fork listing returned no forks. Recheck both at the freeze; these
   observations are not a reservation of the destination name.
+- A later Actions query found no queued or in-progress runs. The most recent
+  listed release, mirror, and `main` workflows were completed, but this is
+  only a momentary observation; check again after the `dev` merge and before
+  transfer.
 - Remote `dev` was `1e1675037ca5273c1381588e6a8dadd395813bb6`;
   local `dev` was `c8fa3a17b8017d39d5d5e4cb1f929ab179471d6a`.
   A transfer baseline has not been selected.

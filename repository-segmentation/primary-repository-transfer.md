@@ -35,6 +35,14 @@ Before scheduling the transfer:
    manual dispatch. Do not do either, and wait for any in-flight workflow to
    finish before transferring.
 
+At the actual freeze, confirm that neither query lists a run; repeat if any
+work was dispatched after the first check:
+
+```bash
+gh run list --repo JoePShoulak/sagan --status in_progress --limit 100
+gh run list --repo JoePShoulak/sagan --status queued --limit 100
+```
+
 The inventory in `primary-transfer.toml` names repository settings and files;
 it deliberately contains no secret values.
 Use `bash scripts/rehearse_primary_backup.sh` to exercise a temporary remote
