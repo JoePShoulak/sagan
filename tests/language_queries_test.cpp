@@ -614,14 +614,17 @@ auto main() -> int
   const auto collision_items = collision_query.completions(
       at(std::string(collision_source.value->text()), "return 0"));
   require(collision_items.value.has_value(), "collision completion did not return candidates");
+  const auto collision_text = std::string(collision_source.value->text());
+  const auto collision_eol = collision_text.find("\r\n") != std::string::npos ? "\r\n" : "\n";
   std::vector<std::string> answer_modules;
   for (const auto &item : *collision_items.value)
     if (item.label == "answer" && item.additional_import_edits.size() == 1)
     {
       answer_modules.push_back(item.source_module);
-      require(item.additional_import_edits.front().replacement_utf8 ==
-                  "import answer from " + item.source_module + "\n",
-              "colliding export used an ambiguous import edit");
+      const auto &import_text = item.additional_import_edits.front().replacement_utf8;
+      if (import_text != "import answer from " + item.source_module + collision_eol)
+        throw std::runtime_error("colliding export used an ambiguous import edit: module '" +
+                                 item.source_module + "', edit '" + import_text + "'");
     }
   require(answer_modules == std::vector<std::string>{"alpha", "beta"},
           "colliding exports did not remain distinct and deterministic");
