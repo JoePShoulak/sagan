@@ -1,12 +1,13 @@
 # Preparation branch merge gate
 
-This gate controls when the repository-segmentation **preparation branch** may
-merge into `dev`. The owner transfer-start drill has passed; final branch and
-integration checks remain before the merge is complete. Merging it does not
-itself transfer the primary repository, create a split repository, move code,
-change GitHub settings, or promote `dev` to `main`. Transfer and extraction
-retain separate execution gates in `primary-repository-transfer.md` and
-`history-extraction.md`.
+This gate controlled when the repository-segmentation **preparation branch**
+could merge into `dev`. It passed on October 5, 2026, and the branch was
+fast-forwarded into local `dev` without switching the dirty shared checkout.
+The relevant checks passed again on the integrated commit. This merge does
+not itself transfer the primary repository, create a split repository, move
+code, change GitHub settings, or promote `dev` to `main`. Transfer and
+extraction retain separate execution gates in
+`primary-repository-transfer.md` and `history-extraction.md`.
 
 The owner confirmed on October 5, 2026 that preparation should merge before
 the intact primary repository is transferred, then clarified that the branch
@@ -45,8 +46,15 @@ permission to skip those dynamic checks.
 - The owner completed the separate clean-checkout transfer-start drill and
   confirmed the recovery limits after the guide was clarified. See
   `audits/owner-transfer-drill-2026-10-05.md` for the checkout and outputs.
+- Local `dev` was fast-forwarded atomically from `c8fa3a1` to the tested
+  preparation commit `a9e2848`; the shared checkout's unrelated
+  `sandbox/src/main.sagan` edit was not staged or touched. In a clean checkout
+  of integrated `dev`, the segmentation contract, documentation structure,
+  and mock release-backup tests passed. The extension unit, bundle, and live
+  Extension Host checks passed again on the same commit. No full suite was run
+  for this `dev` integration.
 
-## Before merging this branch
+## Merge procedure and checks
 
 1. Close the primary-transfer start gate: preserve observed access and branch
    protection through transfer, identify the stable-release reviewer, keep all
