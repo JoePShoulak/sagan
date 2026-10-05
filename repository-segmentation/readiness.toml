@@ -12,6 +12,8 @@ git_filter_repo = "missing"
 github_cli_authentication = "invalid"
 destination_repository_access = "unverified"
 vscode_local_extraction_rehearsal = "passed-2026-10-05"
+vscode_shared_file_import = "not-rehearsed"
+vscode_live_host_rehearsal = "unverified-after-host-exit"
 primary_repository_transfer = "required-before-split-repository-creation"
 
 [[decisions]]

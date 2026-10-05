@@ -30,6 +30,13 @@ are set. A direct monorepo live-host attempt on October 5 exited with code 1
 after the host started, without a test assertion in its output; the live gate
 remains open.
 
+The updated subtree extraction passed again on October 5 from source commit
+`871927a44fd0fc873a186200c478077d07bd3250` (extracted commit
+`2676765c64731551d52672970a885e78809a9f02`). It preserved 43 extension
+commits and 52 files. `git fsck --full`, `npm ci`, `npm test`, and
+`npm run test:bundle` passed. The supplied `bin/sagan.exe` reported a complete
+diagnostic-free result for `examples/demo.sagan` inside the extracted tree.
+
 ## Remaining gates
 
 This rehearsal intentionally covered only the extension subtree. The exact
