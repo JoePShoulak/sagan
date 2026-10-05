@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 from pygments import lex
-from pygments.token import Comment, Keyword, Number, String
+from pygments.token import Comment, Keyword, Name, Number, Operator, String
 
 from docs_sagan_lexer import SaganLexer
 
@@ -26,6 +26,30 @@ def main() -> int:
     if missing:
         raise AssertionError(f"Sagan lexer did not produce expected token types: {missing}")
 
+    composition = "class GunShip is Ship, Aircraft, has Weapons, Navigable {\n}\n"
+    composition_tokens = [
+        (token_type, value)
+        for token_type, value in lex(composition, SaganLexer())
+        if value.strip()
+    ]
+    expected_type_names = {"GunShip", "Ship", "Aircraft", "Weapons", "Navigable"}
+    actual_type_names = {
+        value for token_type, value in composition_tokens if token_type is Name.Class
+    }
+    if actual_type_names != expected_type_names:
+        raise AssertionError(
+            "Sagan inheritance/composition names do not share type highlighting: "
+            f"expected {expected_type_names}, received {actual_type_names}"
+        )
+    type_operators = {
+        value for token_type, value in composition_tokens if token_type is Operator.Word
+    }
+    if type_operators != {"is", "has"}:
+        raise AssertionError(
+            "Sagan inheritance/composition operators are not highlighted consistently: "
+            f"{type_operators}"
+        )
+
     rendered = "\n".join(
         path.read_text(encoding="utf-8") for path in site.rglob("*.html")
     )
@@ -34,6 +58,10 @@ def main() -> int:
         'class="kd"',
         'class="s2"',
         'class="mi"',
+        '<span class="nc">Ship</span>',
+        '<span class="nc">Aircraft</span>',
+        '<span class="nc">Weapons</span>',
+        '<span class="nc">Navigable</span>',
     )
     absent = [fragment for fragment in required_fragments if fragment not in rendered]
     if absent:

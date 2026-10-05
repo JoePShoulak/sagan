@@ -1,0 +1,10 @@
+class Ship {
+  fun speed(): Int => 4
+}
+
+class Aircraft {
+  fun speed(): Int => 8
+}
+
+class GunShip is Ship, Aircraft {
+}

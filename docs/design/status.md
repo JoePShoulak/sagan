@@ -97,7 +97,11 @@ across normal completion, exception paths, and early returns. Successful source 
 expression, collection, control-flow, matching, exception, and
 unterminated-block errors are demonstrated. Classes execute with typed fields,
 checked `new(...)` constructors, default construction, `self`, private field access/mutation, and
-ordinary or `!`-suffixed methods. `is` and `has` composition require every face
+ordinary or `!`-suffixed methods. Multiple class parents, parent-constructor
+forwarding, qualified `super.Parent.method()` calls, and trailing default
+parameters on constructors, functions, methods, and lambdas execute. Faces may
+promise typed fields that provide storage to adopting classes; constructors
+initialize that storage. `is` and `has` composition require every face
 signature to have an exact class implementation or an unambiguous default. Simple
 nominal enums now execute with `Type.member` selection, equality, matching,
 interpolation, and readable printing. Face defaults execute, may call other face
@@ -147,7 +151,7 @@ with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with `is`. Method-specific face generics, package installation
 and distribution, and the concrete math, physics, and rendering APIs remain
-post-1.0 work. Implementation inheritance, parallelism, unsafe escape
+post-1.0 work. Parallelism, unsafe escape
 hatches, registries, and remote dependency retrieval are also explicitly
 deferred. Exact lockfiles and offline installed-package resolution are now
 implemented. Math's automatic availability and the explicit-import

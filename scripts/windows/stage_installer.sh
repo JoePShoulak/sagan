@@ -22,9 +22,14 @@ rm -rf "$stage_dir"
 mkdir -p "$stage_dir/bin" "$stage_dir/toolchain/ucrt64" "$stage_dir/assets" \
   "$stage_dir/licenses" "$stage_dir/libraries" "$stage_dir/examples"
 
-make -C "$repo_root" all bin/sagan-lsp windows-launcher OS=Windows_NT SAGAN_VERSION="$version"
+stage_lsp=build/tmp/sagan-lsp-release-stage
+stage_dap=build/tmp/sagan-dap-release-stage
+make -C "$repo_root" all "$stage_lsp" "$stage_dap" windows-launcher \
+  LANGUAGE_SERVER="$stage_lsp" DEBUG_ADAPTER="$stage_dap" \
+  OS=Windows_NT SAGAN_VERSION="$version"
 cp "$repo_root/bin/sagan" "$stage_dir/bin/sagan.exe"
-cp "$repo_root/bin/sagan-lsp" "$stage_dir/bin/sagan-lsp.exe"
+cp "$repo_root/$stage_lsp" "$stage_dir/bin/sagan-lsp.exe"
+cp "$repo_root/$stage_dap" "$stage_dir/bin/sagan-dap.exe"
 cp "$repo_root/bin/sagan-launch.exe" "$stage_dir/bin/sagan-launch.exe"
 cp "$repo_root/packaging/windows/sagan.ico" "$stage_dir/assets/sagan.ico"
 cp "$repo_root/obj/launcher/sagan-resource.o" "$stage_dir/assets/sagan-resource.o"
@@ -129,6 +134,15 @@ if find "$staged_toolchain" -type f \( -iname 'python*.exe' -o -iname 'gdb*.exe'
   echo "The staged compiler unexpectedly contains an unrelated Python or GDB executable." >&2
   exit 1
 fi
+
+bash "$repo_root/scripts/windows/stage_debugger.sh" "$toolchain_root" "$staged_toolchain"
+mkdir -p "$stage_dir/licenses/debugger"
+gpl_text="$toolchain_root/share/licenses/gcc-libs/COPYING3"
+[[ -f "$gpl_text" ]] || { echo "Missing debugger GPLv3 license text: $gpl_text" >&2; exit 1; }
+cp "$gpl_text" "$stage_dir/licenses/debugger/GDB-GPL-3.0.txt"
+for debugger_license in expat python3.12 readline xxhash xz; do
+  copy_toolchain_license "$debugger_license"
+done
 
 printf '%s\n' "$version" > "$stage_dir/VERSION"
 

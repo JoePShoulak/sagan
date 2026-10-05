@@ -19,6 +19,7 @@ tests=(
   payload_enum_test.sh
   generic_sum_test.sh
   generic_class_test.sh
+  class_inheritance_test.sh
   closure_test.sh
   constants_test.sh
   orbit_math_test.sh

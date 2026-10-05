@@ -1,9 +1,11 @@
 #include "gdb_process.hpp"
 #include "framing.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
 #ifndef _WIN32
+#include <chrono>
 #include <cerrno>
 #include <csignal>
 #include <sys/wait.h>
@@ -63,7 +65,8 @@ namespace sagan::dap
         !SetHandleInformation(parent_input, HANDLE_FLAG_INHERIT, 0) ||
         !SetHandleInformation(parent_output, HANDLE_FLAG_INHERIT, 0))
     { cleanup(); throw std::runtime_error("Could not create GDB DAP pipes"); }
-    std::wstring command = L"\"" + gdb.wstring() + L"\" --interpreter=dap --quiet";
+    std::wstring command = L"\"" + gdb.wstring() +
+                           L"\" --interpreter=dap --quiet -iex \"set charset UTF-8\"";
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESTDHANDLES;
@@ -105,11 +108,13 @@ namespace sagan::dap
 #else
     if (running()) throw std::runtime_error("GDB DAP process is already running");
     if (!std::filesystem::is_regular_file(gdb)) throw std::runtime_error("GDB executable is missing");
-    int child_input[2]{-1, -1}, child_output[2]{-1, -1};
-    if (::pipe(child_input) != 0 || ::pipe(child_output) != 0)
+    int child_input[2]{-1, -1}, child_output[2]{-1, -1}, child_stderr[2]{-1, -1};
+    if (::pipe(child_input) != 0 || ::pipe(child_output) != 0 ||
+        ::pipe(child_stderr) != 0)
     {
       for (auto &fd : child_input) close_fd(fd);
       for (auto &fd : child_output) close_fd(fd);
+      for (auto &fd : child_stderr) close_fd(fd);
       throw std::runtime_error("Could not create GDB DAP pipes");
     }
     const auto child = ::fork();
@@ -117,6 +122,7 @@ namespace sagan::dap
     {
       for (auto &fd : child_input) close_fd(fd);
       for (auto &fd : child_output) close_fd(fd);
+      for (auto &fd : child_stderr) close_fd(fd);
       throw std::runtime_error("Could not fork GDB DAP");
     }
     if (child == 0)
@@ -124,18 +130,57 @@ namespace sagan::dap
       ::setpgid(0, 0);
       ::dup2(child_input[0], STDIN_FILENO);
       ::dup2(child_output[1], STDOUT_FILENO);
+      ::dup2(child_stderr[1], STDERR_FILENO);
       for (auto &fd : child_input) close_fd(fd);
       for (auto &fd : child_output) close_fd(fd);
-      ::execl(gdb.c_str(), gdb.c_str(), "--interpreter=dap", "--quiet", nullptr);
+      for (auto &fd : child_stderr) close_fd(fd);
+      ::execl(gdb.c_str(), gdb.c_str(), "--interpreter=dap", "--quiet",
+              "-iex", "set charset UTF-8", nullptr);
       ::_exit(127);
     }
     ::setpgid(child, child);
     close_fd(child_input[0]);
     close_fd(child_output[1]);
+    close_fd(child_stderr[1]);
     process_ = child;
     input_ = child_input[1];
     output_ = child_output[0];
+    stderr_ = child_stderr[0];
+    stderr_reader_ = std::thread([this]
+    {
+      char buffer[4096];
+      while (true)
+      {
+        const auto count = ::read(stderr_, buffer, sizeof(buffer));
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) break;
+        {
+          std::scoped_lock lock(stderr_mutex_);
+          if (captured_stderr_.size() < 65536)
+            captured_stderr_.append(buffer, std::min<std::size_t>(
+                static_cast<std::size_t>(count), 65536 - captured_stderr_.size()));
+        }
+        stderr_ready_.notify_all();
+      }
+      stderr_ready_.notify_all();
+    });
     std::signal(SIGPIPE, SIG_IGN);
+#endif
+  }
+
+  auto gdb_process::captured_stderr() -> std::string
+  {
+#ifdef _WIN32
+    return {};
+#else
+    std::unique_lock lock(stderr_mutex_);
+    stderr_ready_.wait_for(lock, std::chrono::milliseconds(500), [this]
+    {
+      const auto marker = captured_stderr_.find("SAGAN_RUNTIME_ERROR\t");
+      return marker != std::string::npos &&
+             captured_stderr_.find('\n', marker) != std::string::npos;
+    });
+    return captured_stderr_;
 #endif
   }
 
@@ -260,6 +305,8 @@ namespace sagan::dap
       process_ = -1;
     }
     close_fd(output_);
+    if (stderr_reader_.joinable()) stderr_reader_.join();
+    close_fd(stderr_);
 #endif
   }
 

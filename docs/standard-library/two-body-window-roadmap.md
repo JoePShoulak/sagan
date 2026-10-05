@@ -205,8 +205,11 @@ operations and expected numeric results, including one rejected unit mismatch.
 Document rounding/precision limits and each actual public symbol.
 
 **Status: implemented at `779c281` and locally verified on 2026-10-01.**
-The automatically available M0 surface is `sqrt`, `squared_length`, `length`,
-`dot`, `normalized`, and `display_coordinates`. The checked
+The automatically available M0 surface now has `sqrt`, `dot`, and
+`display_coordinates` as functions, plus `vector.length()`,
+`vector.squared_length()`, `vector.normalized()`, and unitless-only
+`vector.normalized!()` as core Vector methods. The former standalone vector
+forms were removed in development version 4.0.0. The checked
 `make orbit-math-demo` source preserves measured point/vector distinctions,
 produces the expected 3-4-5 results, and uses an explicit physical display
 scale. Focused tests reject a mismatched time scale, zero-length normalization,

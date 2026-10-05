@@ -69,6 +69,14 @@ parameterless function returning `Int`. Typed lambdas can be stored, passed,
 returned, called immediately, or called through variables and parameters.
 Their arguments and results use the same lossless-conversion rules as named
 functions.
+When a lambda has trailing default parameters, a direct call or call through
+an inferred binding may omit them. The compiler supplies those defaults at
+each call site before invoking the stored function. A separately annotated
+plain function type does not carry a default-argument promise.
+
+Inside a class method, `super.Parent.method(arguments)` calls the named direct
+parent implementation without dispatching back to an override. It is a method
+call, not a general-purpose parent object or field-access expression.
 
 Closures capture surrounding local variables and parameters by shared
 reference. Captured storage remains alive while any closure refers to it, so an
@@ -231,7 +239,7 @@ From highest to lowest:
 3. prefix `++`, `--`, `!`, `not`, `...`, unary `+`, and unary `-`;
 4. `*`, `/`, `%`;
 5. `+`, `-`;
-6. `<`, `<=`, `>`, `>=`, `is`;
+6. `<`, `<=`, `>`, `>=`, `is`, `has`;
 7. `==`, `!=`;
 8. `and`;
 9. `or`;
@@ -240,6 +248,14 @@ From highest to lowest:
 
 Exponentiation binds more tightly than unary minus. Chained comparisons are a
 syntax error and must be written as separate comparisons joined with `and`.
+
+`is` and `has` in expressions inspect declared type relationships. For
+example, `GunShip is Ship`, `GunShip has Weapons`, and
+`Assault has Weapons` return `Bool`. Both operands must be declared class or
+face names, with class/class operands for `is` and a face on the right of
+`has`. These are not runtime object-instance tests.
+Generic type-relationship expressions require a future specialization syntax;
+the current form accepts non-generic declared names only.
 
 Postfix forms chain from left to right. For example,
 `fleet[index]?.navigator.course(origin).magnitude()` first indexes `fleet`,

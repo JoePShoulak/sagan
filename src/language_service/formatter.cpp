@@ -129,6 +129,9 @@ namespace sagan::language_service
           right == tokens::RBRACKET || left == tokens::LPAREN || left == tokens::LBRACKET)
         return "";
       if (left == tokens::COMMA || left == tokens::COLON) return " ";
+      if (right == tokens::DOT &&
+          (left == tokens::KWD_LET || left == tokens::KWD_CONST || left == tokens::KWD_FUN))
+        return " ";
       if (left == tokens::DOT || left == tokens::SAFE_DOT || right == tokens::DOT ||
           right == tokens::SAFE_DOT) return "";
       if (right == tokens::LPAREN &&

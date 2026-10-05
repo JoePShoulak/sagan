@@ -21,8 +21,8 @@ namespace sagan::language_service
 
   auto source_edit_capabilities() -> std::vector<source_edit_capability>;
 
-  // Rename a proven local binding, private member, or non-exported,
-  // non-overloaded function in one document. Workspace rename separately
+  // Rename a proven local binding, unexported type or enum case, private member, or
+  // non-exported, non-overloaded function in one document. Workspace rename separately
   // handles exported identities and exact imported public-member receivers.
   auto rename_local(const source::document_snapshot &document, const semantic::semantic_index &index,
                     source::byte_offset position, std::string_view new_name) -> edit_plan;

@@ -3,6 +3,11 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#ifndef _WIN32
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+#endif
 
 #ifdef _WIN32
 #include <windows.h>
@@ -25,6 +30,11 @@ namespace sagan::dap
     pid_t process_{-1};
     int input_{-1};
     int output_{-1};
+    int stderr_{-1};
+    std::thread stderr_reader_;
+    std::mutex stderr_mutex_;
+    std::condition_variable stderr_ready_;
+    std::string captured_stderr_;
 #endif
 
   public:
@@ -36,6 +46,9 @@ namespace sagan::dap
     auto start(const std::filesystem::path &gdb) -> void;
     auto send(std::string_view json) -> void;
     auto receive() -> std::string;
+    // GDB's POSIX inferior inherits GDB's stderr instead of emitting a DAP
+    // output event. Capture that stream separately from framed protocol stdout.
+    auto captured_stderr() -> std::string;
     auto stop() -> void;
     auto running() const -> bool;
   };

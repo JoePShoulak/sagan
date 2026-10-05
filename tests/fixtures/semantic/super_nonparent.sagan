@@ -1,0 +1,4 @@
+class Base { fun score(): Int => 1 }
+class Other { fun score(): Int => 2 }
+class Child is Base { fun score(): Int => super.Other.score() }
+print(Child().score())

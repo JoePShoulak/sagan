@@ -1,0 +1,11 @@
+face Massive {
+  fun mass(): Int => 42
+}
+
+face Gravity has Massive {}
+face Physics has Massive {}
+
+class NaturalBody has Gravity, Physics {}
+
+let body = NaturalBody()
+assert(body.mass() == 42)

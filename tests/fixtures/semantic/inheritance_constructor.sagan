@@ -1,0 +1,10 @@
+class Ship {
+  let name: String
+
+  new(name: String) {
+    self.name = name
+  }
+}
+
+class GunShip is Ship {
+}

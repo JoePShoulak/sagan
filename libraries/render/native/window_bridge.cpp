@@ -494,6 +494,20 @@ auto sagan_5f5f72656e6465725f7365745f76696577(
   window.pixels_per_unit = pixels_per_unit;
 }
 
+auto sagan_5f5f72656e6465725f69735f76697369626c65(
+    const double x, const double y, const double radius) -> bool
+{
+  if (!std::isfinite(radius) || radius <= 0.0)
+    throw std::runtime_error("Visibility radius must be finite and positive");
+  auto &window = state();
+  ensure_surface();
+  const auto center = world_to_screen(x, y);
+  const int screen_radius = std::max(1, checked_int(radius * window.pixels_per_unit,
+                                                    "Visibility radius"));
+  return center.x + screen_radius >= 0 && center.x - screen_radius < window.surface_width &&
+         center.y + screen_radius >= 0 && center.y - screen_radius < window.surface_height;
+}
+
 auto sagan_5f5f72656e6465725f70726573656e74() -> void
 {
   auto &window = state();
@@ -602,6 +616,8 @@ auto sagan_5f5f72656e6465725f656c61707365645f7365636f6e6473() -> double { unsupp
 auto sagan_5f5f72656e6465725f6b65795f70726573736564(const std::string &) -> bool { unsupported(); }
 auto sagan_5f5f72656e6465725f7363726f6c6c5f79() -> double { unsupported(); }
 auto sagan_5f5f72656e6465725f7365745f76696577(double, double, double) -> void { unsupported(); }
+auto sagan_5f5f72656e6465725f69735f76697369626c65(
+    double, double, double) -> bool { unsupported(); }
 auto sagan_5f5f72656e6465725f70726573656e74() -> void { unsupported(); }
 auto sagan_5f5f72656e6465725f636972636c65(
     double, double, double, std::int64_t, std::int64_t, std::int64_t) -> void { unsupported(); }

@@ -1,0 +1,2 @@
+let fn = fun(value = 2) => value
+print(fn())

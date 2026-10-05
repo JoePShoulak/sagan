@@ -44,5 +44,13 @@ expect_failure tests/fixtures/runtime/orbit_math_non_finite.sagan \
   "length requires finite components"
 expect_failure tests/fixtures/runtime/orbit_math_sqrt_domain.sagan \
   "sqrt requires a non-negative value"
+expect_failure tests/fixtures/semantic/vector_normalized_unit_mutation.sagan \
+  "normalized! cannot change a unit-typed Vector"
+expect_failure tests/fixtures/semantic/vector_normalized_const_mutation.sagan \
+  "cannot be mutated"
+expect_failure tests/fixtures/semantic/vector_legacy_builtin.sagan \
+  "Undefined name 'length'"
+expect_failure tests/fixtures/semantic/vector_method_arguments.sagan \
+  "Vector.length expects no arguments"
 
 echo "Orbit math test passed: checked orbital primitives preserve units and reject invalid inputs."

@@ -100,7 +100,7 @@ nav:
           - Values and variables: tour/values-and-variables.md
           - Functions: tour/functions.md
           - Control flow: tour/control-flow.md
-          - Classes and interfaces: tour/classes-and-interfaces.md
+          - Classes, faces, composition, and inheritance: tour/classes-and-interfaces.md
           - Errors: tour/errors.md
       - Runnable examples: examples/index.md
       - Why Sagan works this way:
@@ -117,7 +117,7 @@ nav:
       - Expressions: reference/expressions.md
       - Statements: reference/statements.md
       - Type system: reference/type-system.md
-      - Classes, interfaces, and composition: reference/classes-interfaces-composition.md
+      - Classes, interfaces, composition, and inheritance: reference/classes-interfaces-composition.md
       - Exceptions: reference/exceptions.md
       - Modules: reference/modules.md
       - Memory model: reference/memory-model.md
@@ -171,6 +171,8 @@ nav:
       - Contributing:
           - Overview: contributing/index.md
           - Active development roadmap: contributing/active-roadmap.md
+          - Multi-repository fracture roadmap: contributing/repository-fracturing-roadmap.md
+          - Maintainer handoff and project survivability: contributing/maintainer-handoff-roadmap.md
           - Development setup: contributing/development-setup.md
           - Change and publication lifecycle: contributing/change-lifecycle.md
           - Versioning: contributing/versioning.md

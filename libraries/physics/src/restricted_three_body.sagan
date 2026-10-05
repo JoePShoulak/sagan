@@ -17,8 +17,8 @@ class LagrangeBodySeed {
   new(identity: String, position: Point2<Float64, meter>,
       velocity: Vector2<Float64, meter / second>,
       reference_x: Float64, reference_y: Float64) {
-    let checked_position = squared_length(position - (0.0, 0.0) meter)
-    let checked_velocity = squared_length(velocity)
+    let checked_position = (position - (0.0, 0.0) meter).squared_length()
+    let checked_velocity = velocity.squared_length()
     assert(reference_x - reference_x == 0.0 and reference_y - reference_y == 0.0,
            "tertiary rotating-frame references must be finite")
     self.identity_value = identity
@@ -106,6 +106,7 @@ class LagrangeBodyState {
   let .reference_x_value: Float64
   let .reference_y_value: Float64
   let .escaped_value: Bool
+  let .stopped_value: Bool
 
   new(seed: LagrangeBodySeed) {
     self.identity_value = seed.identity()
@@ -114,6 +115,12 @@ class LagrangeBodyState {
     self.reference_x_value = seed.reference_x()
     self.reference_y_value = seed.reference_y()
     self.escaped_value = false
+    self.stopped_value = false
+  }
+
+  fun stop!(): Void {
+    assert(self.escaped_value, "only an escaped tertiary may be stopped")
+    self.stopped_value = true
   }
 
   fun .acceleration(position: Point2<Float64, meter>,
@@ -121,18 +128,18 @@ class LagrangeBodyState {
                     secondary: BodySnapshot): Vector2<Float64, meter / second^2> {
     let primary_displacement = primary.position() - position
     let secondary_displacement = secondary.position() - position
-    let primary_distance_squared = squared_length(primary_displacement)
-    let secondary_distance_squared = squared_length(secondary_displacement)
+    let primary_distance_squared = primary_displacement.squared_length()
+    let secondary_distance_squared = secondary_displacement.squared_length()
     assert(primary_distance_squared > 0.0 meter^2,
            "a tertiary body must not overlap the primary")
     assert(secondary_distance_squared > 0.0 meter^2,
            "a tertiary body must not overlap the secondary")
     let primary_acceleration =
-      (normalized(primary_displacement) *
+      (primary_displacement.normalized() *
        (6.67430e-11 (meter^3 / kilogram / second^2) * primary.mass() /
         primary_distance_squared)) as (meter / second^2)
     let secondary_acceleration =
-      (normalized(secondary_displacement) *
+      (secondary_displacement.normalized() *
        (6.67430e-11 (meter^3 / kilogram / second^2) * secondary.mass() /
         secondary_distance_squared)) as (meter / second^2)
     return primary_acceleration + secondary_acceleration
@@ -141,6 +148,7 @@ class LagrangeBodyState {
   fun advance!(old_primary: BodySnapshot, old_secondary: BodySnapshot,
                new_primary: BodySnapshot, new_secondary: BodySnapshot,
                step_duration: Float64<second>): Void {
+    if self.stopped_value { return }
     let old_acceleration = self.acceleration(self.position_value,
                                              old_primary, old_secondary)
     let half_step_squared = 0.5 * step_duration * step_duration
@@ -170,16 +178,16 @@ class LagrangeBodyState {
         secondary.velocity() * secondary.mass()) / total_mass) as (meter / second)
     let displacement = self.position_value - barycenter
     let relative_velocity = self.velocity_value - barycenter_velocity
-    let separation = length(secondary.position() - primary.position())
+    let separation = (secondary.position() - primary.position()).length()
     let outside_boundary =
-      length(displacement) > ESCAPE_BOUNDARY_SCALE * separation
+      displacement.length() > ESCAPE_BOUNDARY_SCALE * separation
     let radial_motion = displacement.x * relative_velocity.x +
       displacement.y * relative_velocity.y
     let moving_outward = radial_motion > 0.0 (meter^2 / second)
-    let primary_distance = length(self.position_value - primary.position())
-    let secondary_distance = length(self.position_value - secondary.position())
+    let primary_distance = (self.position_value - primary.position()).length()
+    let secondary_distance = (self.position_value - secondary.position()).length()
     let specific_energy =
-      0.5 * squared_length(relative_velocity) -
+      0.5 * relative_velocity.squared_length() -
       6.67430e-11 (meter^3 / kilogram / second^2) * primary.mass() /
         primary_distance -
       6.67430e-11 (meter^3 / kilogram / second^2) * secondary.mass() /
@@ -192,8 +200,8 @@ class LagrangeBodyState {
     let primary = primary_system.first()
     let secondary = primary_system.second()
     let separation_vector = secondary.position() - primary.position()
-    let separation = length(separation_vector)
-    let axis = normalized(separation_vector)
+    let separation = separation_vector.length()
+    let axis = separation_vector.normalized()
     let perpendicular = <-axis.y, axis.x>
     let target = primary_system.barycenter() +
       axis * (self.reference_x_value * separation) +
@@ -202,7 +210,7 @@ class LagrangeBodyState {
                             self.position_value, self.velocity_value)
     return LagrangeBodySnapshot(body, self.reference_x_value,
                                 self.reference_y_value,
-                                length(self.position_value - target),
+                                (self.position_value - target).length(),
                                 self.escaped_value)
   }
 }
@@ -244,6 +252,32 @@ class RestrictedThreeBodySolver {
 
   fun snapshot(): RestrictedThreeBodySnapshot =>
     self.snapshot_for(self.primary_solver.snapshot())
+
+  /// Permanently stop integrating one escaped tertiary body.
+  fun stop_tertiary!(index: Int64): Void {
+    if index == 0 {
+      self.first.stop!()
+      return
+    }
+    if index == 1 {
+      self.second.stop!()
+      return
+    }
+    if index == 2 {
+      self.third.stop!()
+      return
+    }
+    if index == 3 {
+      self.fourth.stop!()
+      return
+    }
+    if index == 4 {
+      self.fifth.stop!()
+      return
+    }
+    assert(index == 5, "tertiary index must be between 0 and 5")
+    self.sixth.stop!()
+  }
 
   fun step!(): RestrictedThreeBodySnapshot {
     let old_primary_system = self.primary_solver.snapshot()

@@ -71,6 +71,25 @@ expect_runtime_error() {
   echo "Confirmed runtime error: $expected_message"
 }
 
+expect_runtime_success() {
+  local source_file="$1"
+  local stem
+  stem="$(basename "$source_file" .sagan)"
+  local generated="build/${stem}.cpp"
+  local executable="build/${stem}"
+  if [[ "${OS:-}" == "Windows_NT" ]]; then
+    executable="${executable}.exe"
+  fi
+
+  bin/sagan --emit-cpp "$source_file" "$generated" >/dev/null
+  g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror "$generated" -o "$executable"
+  "$executable"
+  echo "Confirmed runtime success: $source_file"
+}
+
+expect_runtime_success tests/fixtures/runtime/weak_assignment.sagan
+expect_runtime_success tests/fixtures/runtime/face_default_diamond.sagan
+
 expect_runtime_error tests/fixtures/runtime/execution_exponent_zero_error.sagan \
   "Sagan exponentiation does not define 0 ^ 0"
 expect_runtime_error tests/fixtures/runtime/execution_exponent_negative_error.sagan \

@@ -1,4 +1,5 @@
 #include "queries.hpp"
+#include "refactor.hpp"
 #include "../parser/lex.hpp"
 #include "../parser/tokens.hpp"
 #include "../parser/unicode.hpp"
@@ -40,6 +41,7 @@ namespace sagan::language_service
     {
       source::source_range selection;
       semantic::builtin_member member;
+      semantic::symbol_id id;
     };
 
     auto builtin_member_at(const source::document_snapshot &document,
@@ -54,10 +56,15 @@ namespace sagan::language_service
         if (type == index.types().end()) continue;
         auto builtin = semantic::integer_builtin_member(type->display, record.member);
         if (!builtin) builtin = semantic::integer_builtin_static_method(type->display, record.member);
+        if (!builtin) builtin = semantic::vector_builtin_method(type->display, record.member);
         if (!builtin) continue;
         if (const auto selection = name_range(document, tokens, record.use, builtin->name, true);
             selection && contains(selection->bytes, offset))
-          return builtin_member_use{*selection, *builtin};
+          return builtin_member_use{*selection, *builtin,
+              {type->display.starts_with("Vector")
+                   ? "sagan-core-member:Vector." + std::string(builtin->name)
+                   : builtin->callable ? "sagan-core-member:Int.round"
+                                              : "sagan-core-member:Int.times"}};
       }
       return {};
     }
@@ -92,6 +99,7 @@ namespace sagan::language_service
     auto analyzed = syntax::analyze(document);
     if (analyzed.value)
     {
+      strict_syntax_ = static_cast<bool>(analyzed.value->strict_ast);
       tokens_ = std::move(analyzed.value->tokens);
       trailing_trivia_ = std::move(analyzed.value->trailing_trivia);
       tree_ = analyzed.value->strict_ast ? std::move(analyzed.value->strict_ast)
@@ -243,6 +251,15 @@ namespace sagan::language_service
       for (const auto &type : index_.types())
         if (type.id == best->type)
           return result<std::string>(document_.version(), diagnostics::result_state::complete, type.display);
+    if (workspace_)
+    {
+      for (const auto &module : workspace_->modules())
+        if (module.index.document().id == document_.identity().id &&
+            module.index.version() == document_.version())
+          if (const auto *binding = module.index.symbol_at(offset))
+            if (const auto type = workspace_->declared_type(binding->id))
+              return result<std::string>(document_.version(), diagnostics::result_state::complete, *type);
+    }
     return result<std::string>(document_.version(), diagnostics::result_state::complete);
   }
 
@@ -256,10 +273,8 @@ namespace sagan::language_service
     {
       if (const auto builtin = builtin_member_at(document_, tokens_, index_, offset))
       {
-        const semantic::symbol_id id{builtin->member.callable ? "sagan-core-member:Int.round"
-                                                            : "sagan-core-member:Int.times"};
         return result<hover_information>(document_.version(), selected.state,
-            hover_information{{id, builtin->member.callable ? semantic::symbol_kind::method
+            hover_information{{builtin->id, builtin->member.callable ? semantic::symbol_kind::method
                                                            : semantic::symbol_kind::field,
                                semantic::symbol_origin::builtin,
                                builtin->selection, builtin->selection, std::string(builtin->member.name)},
@@ -370,9 +385,7 @@ namespace sagan::language_service
     }
     for (const auto &record : index_.member_resolutions())
       if (const auto builtin = builtin_member_at(document_, tokens_, index_, record.use.bytes.end - 1))
-        values.push_back(semantic_classification{{builtin->member.callable
-                                                      ? "sagan-core-member:Int.round"
-                                                      : "sagan-core-member:Int.times"},
+        values.push_back(semantic_classification{builtin->id,
                                                   builtin->member.callable ? semantic::symbol_kind::method
                                                                            : semantic::symbol_kind::field,
                                                   builtin->selection,
@@ -527,15 +540,23 @@ namespace sagan::language_service
           if (imported.binding == receiver.value->id && imported.whole_module)
             for (const auto &module : workspace_->modules())
               if (module.name == imported.source_module)
-                for (const auto &symbol : module.index.symbols())
-                  if (symbol.origin == semantic::symbol_origin::source && symbol.scope_id == 0 &&
-                      symbol.visibility == semantic::symbol_visibility::public_access &&
-                      symbol.name.starts_with(prefix) &&
-                      !workspace_->exported(module.name, symbol.name).empty())
-                    values.push_back(completion_item{symbol.name, symbol.id, symbol.kind, replacement,
-                                                     symbol.name, std::string(semantic::name(symbol.kind)),
-                                                     symbol.documentation, module.name, symbol.name,
-                                                     symbol.name, false, {}});
+                for (const auto &exported : workspace_->exported_symbols())
+                  if (exported.module == module.name && exported.public_name.starts_with(prefix))
+                    for (const auto &target : exported.targets)
+                      if (const auto *symbol = module.index.find(target);
+                          symbol && symbol->visibility == semantic::symbol_visibility::public_access)
+                      {
+                        const auto signature = semantic::callable_signature(module.index, target);
+                        values.push_back(completion_item{exported.public_name, symbol->id,
+                                                         symbol->kind, replacement,
+                                                         exported.public_name,
+                                                         signature.empty() ?
+                                                             std::string(semantic::name(symbol->kind)) :
+                                                             signature,
+                                                         symbol->documentation, module.name,
+                                                         exported.public_name, exported.public_name,
+                                                         false, {}});
+                      }
       }
       else
       {
@@ -545,6 +566,7 @@ namespace sagan::language_service
           type_name = receiver.value->name;
         if (receiver.value && receiver.value->kind == semantic::symbol_kind::builtin_type)
           type_name = receiver.value->name;
+        const std::string receiver_type = type_name;
         type_name = type_name.substr(0, type_name.find_first_of("< (["));
         if (receiver.value && receiver.value->kind == semantic::symbol_kind::builtin_type)
           if (const auto builtin = semantic::integer_builtin_static_method(type_name, "round");
@@ -562,6 +584,24 @@ namespace sagan::language_service
                                            std::string(builtin->name), std::string(builtin->result_type),
                                            {std::string(builtin->documentation)}, "sagan/core",
                                            std::string(builtin->name), std::string(builtin->name), false, {}});
+        if (!receiver_type.empty() &&
+            (!receiver.value || receiver.value->kind != semantic::symbol_kind::builtin_type))
+          for (const std::string_view name : {"length", "squared_length", "normalized", "normalized!"})
+            if (const auto builtin = semantic::vector_builtin_method(receiver_type, name);
+                builtin && builtin->name.starts_with(prefix))
+            {
+              const auto open = receiver_type.find('<');
+              const bool measured = open != std::string::npos &&
+                                    receiver_type.find('<', open + 1) != std::string::npos;
+              if (measured && name == "normalized!") continue;
+              values.push_back(completion_item{std::string(builtin->name),
+                                               {"sagan-core-member:Vector." + std::string(builtin->name)},
+                                               semantic::symbol_kind::method, replacement,
+                                               std::string(builtin->name) + "(",
+                                               "() => " + std::string(builtin->result_type),
+                                               {std::string(builtin->documentation)}, "sagan/core",
+                                               std::string(builtin->name), std::string(builtin->name), false, {}});
+            }
         const auto inside_owner = [&]()
         {
           for (const auto &symbol : index_.symbols())
@@ -582,9 +622,13 @@ namespace sagan::language_service
                  symbol.kind == semantic::symbol_kind::enum_case) &&
                 (symbol.visibility == semantic::symbol_visibility::public_access || same_type) &&
                 provided.insert(symbol.name).second)
+            {
+              const auto signature = semantic::callable_signature(index, symbol.id);
               values.push_back(completion_item{symbol.name, symbol.id, symbol.kind, replacement,
-                                               symbol.name, std::string(semantic::name(symbol.kind)),
+                                               symbol.name, signature.empty() ?
+                                                   std::string(semantic::name(symbol.kind)) : signature,
                                                symbol.documentation, module, symbol.name, symbol.name, false, {}});
+            }
         };
         if (!type_name.empty())
         {
@@ -644,7 +688,7 @@ namespace sagan::language_service
         return left.id.value < right.id.value;
       });
       values.erase(std::unique(values.begin(), values.end(), [](const auto &left, const auto &right)
-      { return left.id == right.id; }), values.end());
+      { return left.id == right.id && left.label == right.label; }), values.end());
       return result<std::vector<completion_item>>(document_.version(), diagnostics::result_state::complete,
                                                   std::move(values));
     }
@@ -695,43 +739,74 @@ namespace sagan::language_service
       if (scope_id == 0) break;
       scope_id = scope.parent;
     }
-    if (workspace_ && tree_)
+    if (workspace_ && tree_ && strict_syntax_)
     {
       std::string current_module;
-      source::byte_offset import_offset = 0;
-      for (const auto &statement : tree_->statements)
-        if (const auto *module = dynamic_cast<const parser::module_declaration *>(statement.get()))
-        {
-          current_module = module->name;
-          const auto newline = document_.text().find('\n', static_cast<std::size_t>(module->range.end));
-          import_offset = newline == std::string_view::npos ?
-                              static_cast<source::byte_offset>(document_.text().size()) :
-                              static_cast<source::byte_offset>(newline + 1);
-          break;
-        }
-      for (const auto &exported : workspace_->exported_symbols())
+      if (!tree_->statements.empty())
       {
-        if (exported.module == current_module || exported.targets.empty() ||
-            !exported.public_name.starts_with(prefix) || seen.contains(exported.public_name)) continue;
-        const bool imported = std::any_of(workspace_->imports().begin(), workspace_->imports().end(),
-                                          [&](const auto &link)
-                                          {
-                                            if (!index_.find(link.binding)) return false;
-                                            return std::any_of(exported.targets.begin(), exported.targets.end(),
-                                                               [&](const auto &target)
-                                                               { return std::find(link.targets.begin(),
-                                                                                  link.targets.end(), target) !=
-                                                                        link.targets.end(); });
-                                          });
-        if (imported) continue;
-        const auto *target = workspace_->find(exported.targets.front());
-        if (!target) continue;
-        source::text_edit edit{{document_.identity().id, {import_offset, import_offset}},
-                               "import " + exported.public_name + " from " + exported.module + "\n"};
-        values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
-                                         exported.public_name, std::string(semantic::name(target->kind)),
-                                         target->documentation, exported.module, exported.public_name,
-                                         exported.public_name, false, {std::move(edit)}});
+        if (const auto *module = dynamic_cast<const parser::module_declaration *>(
+                tree_->statements.front().get()))
+          current_module = module->name;
+      }
+      if (!current_module.empty())
+      {
+        std::size_t auto_import_count = 0;
+        for (const auto &exported : workspace_->exported_symbols())
+        {
+          if (auto_import_count >= 128) break;
+          if (exported.module == current_module || exported.targets.empty() ||
+              !exported.public_name.starts_with(prefix) || seen.contains(exported.public_name)) continue;
+          if (std::any_of(index_.symbols().begin(), index_.symbols().end(), [&](const auto &symbol)
+                          { return symbol.name == exported.public_name; })) continue;
+          const bool imported = std::any_of(workspace_->imports().begin(), workspace_->imports().end(),
+                                            [&](const auto &link)
+                                            {
+                                              if (link.whole_module || !index_.find(link.binding)) return false;
+                                              return std::any_of(exported.targets.begin(), exported.targets.end(),
+                                                                 [&](const auto &target)
+                                                                 { return std::find(link.targets.begin(),
+                                                                                    link.targets.end(), target) !=
+                                                                          link.targets.end(); });
+                                            });
+          if (imported) continue;
+          const auto *target = workspace_->find(exported.targets.front());
+          if (!target) continue;
+          std::string detail(semantic::name(target->kind));
+          for (const auto &module : workspace_->modules())
+            if (module.name == exported.module)
+            {
+              std::vector<std::string> signatures;
+              for (const auto &overload : exported.targets)
+              {
+                const auto signature = semantic::callable_signature(module.index, overload);
+                if (!signature.empty() &&
+                    std::find(signatures.begin(), signatures.end(), signature) == signatures.end())
+                  signatures.push_back(signature);
+              }
+              if (!signatures.empty())
+              {
+                detail.clear();
+                for (const auto &signature : signatures)
+                {
+                  if (!detail.empty()) detail += " | ";
+                  detail += signature;
+                }
+              }
+              break;
+            }
+          const auto plan = add_missing_import(document_, *workspace_, target->id);
+          if (plan.state != edit_state::ready || plan.edits.documents.size() != 1 ||
+              plan.edits.documents.front().uri != document_.identity().uri ||
+              plan.edits.documents.front().expected_version != document_.version() ||
+              plan.edits.documents.front().edits.size() != 1) continue;
+          const auto &edit = plan.edits.documents.front().edits.front();
+          values.push_back(completion_item{exported.public_name, target->id, target->kind, replacement,
+                                           exported.public_name, std::move(detail),
+                                           target->documentation, exported.module, exported.public_name,
+                                           exported.public_name + ":" + exported.module, false,
+                                           {edit}});
+          ++auto_import_count;
+        }
       }
     }
     if (previous && (previous->kind == tokens::KWD_IS || previous->kind == tokens::KWD_HAS))

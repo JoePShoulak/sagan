@@ -17,7 +17,8 @@ for expected in \
   "off_point_control_error" \
   "primary_back_reaction_error" \
   "secondary_back_reaction_error" \
-  "escape_detection escaped"
+  "escape_detection escaped" \
+  "stopped_escape_position"
 do
   if [[ "$output" != *"$expected"* ]]; then
     echo "Missing Lagrange output: $expected" >&2

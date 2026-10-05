@@ -1,0 +1,10 @@
+class Ship {
+  let name: String = "ship"
+}
+
+class Aircraft {
+  let name: String = "aircraft"
+}
+
+class GunShip is Ship, Aircraft {
+}

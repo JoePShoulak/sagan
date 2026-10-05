@@ -10,6 +10,7 @@
 #include <functional>
 #include <optional>
 #include <stdexcept>
+#include <system_error>
 #include <unordered_map>
 #include <utility>
 
@@ -151,16 +152,24 @@ namespace semantic
       std::vector<indexed_module> modules, std::vector<import_link> imports,
       std::unordered_map<std::string, std::vector<symbol_id>> exports,
       std::vector<exported_symbol> exported_symbols,
-      std::vector<external_reference> external_references)
+      std::vector<external_reference> external_references,
+      std::unordered_map<std::string, std::string> binding_types)
       : modules_(std::move(modules)), imports_(std::move(imports)), exports_(std::move(exports)),
         exported_symbols_(std::move(exported_symbols)),
-        external_references_(std::move(external_references)) {}
+        external_references_(std::move(external_references)), binding_types_(std::move(binding_types)) {}
 
   auto workspace_semantic_index::modules() const -> const std::vector<indexed_module> & { return modules_; }
   auto workspace_semantic_index::imports() const -> const std::vector<import_link> & { return imports_; }
   auto workspace_semantic_index::external_references() const -> const std::vector<external_reference> &
   {
     return external_references_;
+  }
+
+  auto workspace_semantic_index::declared_type(const symbol_id &binding) const -> std::optional<std::string>
+  {
+    const auto found = binding_types_.find(binding.value);
+    if (found == binding_types_.end()) return {};
+    return found->second;
   }
 
   auto workspace_semantic_index::find(const symbol_id &id) const -> const indexed_symbol *
@@ -238,7 +247,11 @@ namespace semantic
       if (!document) throw std::runtime_error(document.error ? document.error->message : "Could not read module");
       const auto tree = parse(*document.value);
       const auto model = analyze(tree, analysis_identity{package, module.name});
-      indexed.push_back(indexed_module{module.name, build_index(*document.value, model)});
+      std::error_code relative_error;
+      const auto relative = std::filesystem::relative(module.path, graph.source_root, relative_error);
+      const bool external = relative_error || relative.empty() ||
+          *relative.begin() == std::filesystem::path{".."};
+      indexed.push_back(indexed_module{module.name, build_index(*document.value, model), external});
     }
 
     std::unordered_map<std::string, std::vector<symbol_id>> exports;
@@ -306,12 +319,14 @@ namespace semantic
                         static_cast<sagan::source::byte_offset>(std::max(member.use.end, member.use.begin))}},
               member.kind});
       }
+    std::unordered_map<std::string, std::string> binding_types;
     for (const auto &module : indexed)
     {
       const auto document = source.read(module.index.document().uri);
       if (!document) continue;
       const auto tree = parse(*document.value);
-      const auto binding_types = declared_binding_types(tree, module.index, imports, indexed);
+      const auto module_binding_types = declared_binding_types(tree, module.index, imports, indexed);
+      binding_types.insert(module_binding_types.begin(), module_binding_types.end());
       const auto source_tokens = tokens(*document.value);
       for (std::size_t token_index = 0; token_index + 2 < source_tokens.size(); ++token_index)
       {
@@ -434,6 +449,6 @@ namespace semantic
         { return left.target == right.target && left.location == right.location; }), external_references.end());
     return workspace_semantic_index(std::move(indexed), std::move(imports), std::move(exports),
                                     std::move(exported_symbols),
-                                    std::move(external_references));
+                                    std::move(external_references), std::move(binding_types));
   }
 }

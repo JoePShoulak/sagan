@@ -28,6 +28,7 @@ below are deliberate limits, not work for the extension to invent locally.
 | References/highlights | Identity-based workspace reference index | **LSP available** |
 | Signature help | Resolved overload/signature query | **LSP available; ambiguous incomplete calls remain conservative** |
 | Completion | Parser context, semantic scope/type state, module/catalog metadata | **LSP available for compiler-known candidates; installed imports and unfinished module-path imports work, but full external-package completion/auto-import is blocked** |
+| `sagan.toml` editing | Compiler-owned manifest parser over versioned overlays | **Unsaved-buffer diagnostics, section/key, application-mode, and installed-dependency-key completion, section/key hover and outline, entry/dependency navigation, and conservative document/range formatting available; on-type formatting and safe fixes remain blocked** |
 | Semantic highlighting | Stable classification vocabulary and ranges | **Full-document LSP semantic tokens available** |
 | Document symbols | Hierarchical declaration index | **LSP available** |
 | Workspace symbols | Workspace semantic index | **LSP available for package roots and open module graphs** |
@@ -35,22 +36,27 @@ below are deliberate limits, not work for the extension to invent locally.
 | Selection ranges | Syntax parent chains with precise ranges | **LSP available** |
 | Document links | Resolved import/module targets | **LSP available** |
 | Inlay hints | Resolved types/parameters with suppression rules | **LSP available** |
-| Rename | Versioned identity-based safe workspace edits | **LSP available for proven local, private-member, exported-symbol, and imported public-member identities; ambiguous identities are refused** |
+| Rename | Versioned identity-based safe workspace edits | **LSP available for proven local, unexported class/face/enum and enum-case, private-member, exported-symbol, and imported public-member identities; ambiguous identities are refused** |
 | Quick fixes/code actions | Structured fixes and proven refactoring actions | **LSP quick fixes and organize imports available; other unsafe actions disabled** |
 | Formatting | Lossless deterministic formatter API | **LSP document/range/on-type available; recovered source formats only proven complete lines and refuses uncertain edits** |
 | Type hierarchy | Type/conformance semantic index | **LSP available for indexed conformances** |
 | Call hierarchy | Resolved callable/call-site index | **LSP available for resolved calls** |
 | Check/build/run tasks | Structured cancellable operations | **Versioned document/project operations and `sagan/operation` transport are available; the extension provides commands and generated document/project tasks with cancellation and output** |
 | Test Explorer | Authoritative Sagan test discovery and execution model | **The extension provides document/project discovery and selected or all execution through granular compiler capabilities; Run results include duration, output, and pass/fail/error/skipped state** |
-| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, filters basic variables, and has source-level step-over/in/out probes including imported modules; reliable values, exceptions, release packaging, and capability advertisement remain blocked** |
+| Debugger | Source maps/runtime metadata, then a separate DAP implementation | **Experimental `sagan-dap` launches on Windows and an isolated Linux test host, maps breakpoints/stacks, displays proven scalar and UTF-8 String locals/parameters, and has source-level stop-on-entry and step-over/in/out probes. The extracted Windows portable ZIP now passes its checksum, isolated CLI, bundled-GDB DAP, String-value, and windowed-orbit checks after packaging libstdc++'s pretty-printers. Collections/nested values, exception stops, installer validation, dependency/license review, and capability advertisement remain blocked.** |
 | Lexical TextMate coloring | Existing extension grammar | **Already available, outside this task** |
+
+The experimental adapter also emits Sagan-mapped runtime failure output using
+the CLI's structured diagnostic parser. It does not yet pause on exceptions
+or advertise debugger support.
 
 The remaining compiler-side milestones, in dependency order, are:
 
-1. Finish operation stress tests and cancellation checkpoints inside strict
-   parsing, type analysis, code generation, and module linking. The current
-   transport can cancel queued/active requests and child processes, but those
-   compiler loops still have some phase-boundary-only checkpoints.
+1. Finish operation stress tests and cancellation checkpoints inside type
+   analysis, code generation, and module linking. Strict parsing now checks
+   cancellation as it consumes tokens; the transport can cancel queued/active
+   requests and child processes, but the remaining compiler loops still have
+   some phase-boundary-only checkpoints.
 2. **Project test-runner and VS Code client implemented:** imported tests execute from
    linked programs, package-root runs retain package identity, and overlays,
    selection, cancellation, stale runs, and LSP framing have focused tests.
@@ -66,6 +72,15 @@ The remaining compiler-side milestones, in dependency order, are:
    missing-source documentation targets, and multi-root collision behavior
    still need implementation and focused tests. No unfinished package
    capability is advertised.
+   Imported package-owned value members now have a focused library and LSP
+   completion regression, including callable signatures; that is one tested
+   slice, not the complete package-completion capability.
+   Proven auto-import edits now accept exported overload sets and list their
+   distinct signatures; this still does not cover every completion context.
+   `sagan.toml` entry-module values now navigate to existing local source
+   modules from the active manifest snapshot. Locked dependency aliases and
+   inline-table package names navigate to installed manifests. Dependency
+   value completion and safe manifest edits remain open.
 4. Finish the experimental Windows DAP executable using GDB native DAP,
    source maps, and debug metadata. It already has a live launch/breakpoint/
    stack and step-over/in/out probes; verify all source contexts, Sagan scopes

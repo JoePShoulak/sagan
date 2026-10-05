@@ -66,6 +66,8 @@ The `render.canvas` module exports:
 
 - `set_view(center_x, center_y, pixels_per_unit)` for a centered orthographic
   world-to-screen transform;
+- `is_visible(x, y, radius)` for a deterministic test of whether the same
+  world-space circle would intersect the current drawable client viewport;
 - `circle(x, y, radius, red, green, blue)` for filled world-space circles;
 - `line(start_x, start_y, end_x, end_y, width, red, green, blue)` for
   world-space line segments;
@@ -95,7 +97,26 @@ make window-demo
 make shape-text-demo
 make two-body-demo
 make lagrange-demo
+make solar-lagrange-demo
 ```
+
+Each of the three simulation demo targets rebuilds its executable and then
+launches it. The executable remains in its demo build directory after the
+window closes. Building and running can also be requested independently:
+
+```bash
+make two-body-demo-build
+make two-body-demo-run
+make lagrange-demo-build
+make lagrange-demo-run
+make solar-lagrange-demo-build
+make solar-lagrange-demo-run
+```
+
+The stable outputs are `build/two-body-demo/two-body-demo.exe`,
+`build/lagrange-demo/lagrange-demo.exe`, and
+`build/solar-lagrange-demo/solar-lagrange-demo.exe`. A run-only target reports
+the missing executable and exits instead of rebuilding it implicitly.
 
 For the animated project, `make two-body-demo` now invokes the normal compiler
 path. You can run that same manifest-backed project directly:
@@ -121,7 +142,9 @@ presentation with two bodies, axes, line segments, world labels, and a screen
 legend. `make shape-text-demo-test` captures and validates the same frame as a
 960 by 540 top-down BMP. `make two-body-demo` consumes immutable snapshots from
 `sagan-physics` 0.3.0 and animates the real two-body solution. Space pauses,
-Up/Down change playback speed, and Escape or the close button exits cleanly.
+Up/Down change playback speed up to 40 simulated days per real second, and
+Escape or the close button exits cleanly. Forty days per second is the highest
+rate these demos currently sustain without visible lag.
 The demo caps a single real-time frame contribution at 0.25 seconds to avoid a
 large simulation catch-up after a debugger stop or window stall.
 
@@ -145,6 +168,22 @@ massive primaries, L1 through L5, and an off-point control as eight distinctly
 colored bodies. Every body has an eight-sample matching-color trail recorded
 at six-hour simulation intervals, and each tracer has a matching numeric
 rotating-frame error.
+
+When a tertiary's five-pixel marker no longer intersects the actual client
+viewport, its error readout appends a single Unicode arrow. `←` means its
+barycenter-relative distance is decreasing; `→` means that distance is
+increasing. The demos use `is_visible` after applying the active view, so a
+partially visible marker remains on-screen and receives no arrow. The indicator
+uses relative radial motion, so the solar demo does not confuse the Earth-Moon
+group's heliocentric motion with a tertiary moving toward or away from the
+local view.
+
+An escaped tertiary is also checked against the widest 20,000-kilometer-per-
+pixel view. Once its marker no longer intersects even that viewport, the demo
+calls the physics solver's explicit stop operation and that tertiary is no
+longer integrated. Escape detection itself remains a physics decision; the
+renderer only supplies the deterministic presentation boundary.
+
 The demo opens paused at five simulated days per real second. Space toggles
 playback, Up/Down change the rate up to 40 simulated days per real second, and
 the mouse wheel changes the orthographic
@@ -196,10 +235,9 @@ its GCC/C++
 runtime support, so the resulting executable does not require MSYS2 runtime
 directories on `PATH`. It has no SDL or GPU dependency yet.
 Text uses Windows' Segoe UI system font; no separate font file is bundled.
-The catalog declares compiler compatibility `^2.0.0`. A shallow development
-checkout whose unavailable version baseline makes the compiler identify itself
-as `0.0.0+gunknown` receives a demo-local compatibility index only; released
-package metadata retains the declared 2.x range.
+The installed first-party catalog declares compiler compatibility `^4.0.0` for
+the current development language. This range is catalog metadata; the renderer
+retains its independent package version, 0.5.1.
 
 ## Relationship to math and physics
 

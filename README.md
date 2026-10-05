@@ -4,7 +4,7 @@
 
 # Sagan
 
-[![Development version 2.11.1](https://img.shields.io/badge/development-2.11.1-2563eb)](docs/contributing/versioning.md)
+[![Development version 4.9.5](https://img.shields.io/badge/development-4.9.5-2563eb)](docs/contributing/versioning.md)
 [![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
@@ -75,14 +75,25 @@ const STANDARD_GRAVITY: Float64<meter / second^2> = 9.80665 (meter / second^2)
 
 ### Composition comes first
 
-Sagan calls interfaces `face`s. Classes build behavior from small faces and
-their defaults instead of growing deep inheritance trees.
+Sagan calls interfaces `face`s. Classes can inherit from multiple parent
+classes with `is`, compose multiple faces with `has`, or use both. Faces let
+code depend on behavior without depending on a particular class.
 
 ```sagan
 face Named {
   fun name(): String
   fun greeting(): String => "Hello, ${self.name()}"
 }
+
+class Ship {
+  fun name(): String => "Ship"
+}
+
+class GunShip is Ship, has Named {
+  fun name(): String => "GunShip"
+}
+
+print(GunShip().greeting())
 ```
 
 ### Absence and failure are explicit

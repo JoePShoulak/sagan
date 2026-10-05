@@ -19,6 +19,27 @@ face Countable is Readable {
   fun next(): Int => self.current() + 1
 }
 
+face Armed {
+  fun attack(): String
+}
+
+class Vessel {
+  let vessel_name: String
+  new(name: String) { self.vessel_name = name }
+  fun name(): String => self.vessel_name
+}
+
+class Patrol {
+  let patrol_number: Int = 3
+  fun number(): Int => self.patrol_number
+}
+
+class GunShip is Vessel, Patrol, has Armed {
+  new(name: String = "Aurora") is Vessel(name), Patrol() { }
+  fun name(): String => super.Vessel.name()
+  fun attack(): String => "ready"
+}
+
 enum LaunchStatus {
   waiting
   ready
@@ -26,7 +47,7 @@ enum LaunchStatus {
 }
 
 /** A mutable counter composed through the Countable interface. */
-class LaunchCounter is Countable {
+class LaunchCounter has Countable {
   let .value: Int
 
   new(start: Int) {

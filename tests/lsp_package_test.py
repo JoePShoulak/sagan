@@ -14,21 +14,25 @@ def run():
     entry = project / "src" / "main.sagan"
     installed = ROOT / "tests" / "fixtures" / "catalog" / "orbit-tools" / "src" / "main.sagan"
     environment = os.environ.copy()
-    environment["SAGAN_PACKAGE_INDEX"] = str(ROOT / "tests" / "fixtures" / "catalog" / "current-index.tsv")
+    environment["SAGAN_PACKAGE_INDEX"] = str(ROOT / "tests" / "fixtures" / "catalog" / "current-compiler-index.tsv")
     process = subprocess.Popen([str(SERVER)], cwd=ROOT, env=environment,
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
     received = Queue()
     Thread(target=read_frames, args=(process.stdout, received), daemon=True).start()
 
-    def answer(request_id):
+    def reply(request_id):
         while True:
             item = received.get(timeout=30)
             if isinstance(item, BaseException):
                 raise item
             if item.get("id") == request_id:
-                assert "error" not in item, item
-                return item["result"]
+                return item
+
+    def answer(request_id):
+        item = reply(request_id)
+        assert "error" not in item, item
+        return item["result"]
 
     uri = server_file_uri(entry)
     try:
@@ -61,6 +65,22 @@ def run():
                        }}})
         import_target = answer(10)
         assert import_target and import_target[0]["uri"] == server_file_uri(installed), import_target
+        send(process, {"jsonrpc": "2.0", "id": 27, "method": "textDocument/prepareRename",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": import_line,
+                           "character": lines[import_line].index("orbit_answer") + 2,
+                       }}})
+        refused_package_rename = reply(27)
+        assert refused_package_rename.get("error", {}).get("code") == -32803 and \
+            "Installed package" in refused_package_rename["error"]["message"], refused_package_rename
+        send(process, {"jsonrpc": "2.0", "id": 28, "method": "textDocument/rename",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": import_line,
+                           "character": lines[import_line].index("orbit_answer") + 2,
+                       }, "newName": "new_answer"}})
+        refused_package_edit = reply(28)
+        assert refused_package_edit.get("error", {}).get("code") == -32803 and \
+            "Installed package" in refused_package_edit["error"]["message"], refused_package_edit
         member_line = next(i for i, line in enumerate(lines) if "package_tools.orbit_answer" in line)
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "textDocument/completion",
                        "params": {"textDocument": {"uri": uri}, "position": {
@@ -69,6 +89,26 @@ def run():
                        }}})
         completion = answer(4)
         assert any(item["label"] == "orbit_answer" for item in completion), completion
+        probe_line = next(i for i, line in enumerate(lines) if "probe.sample(41)" in line)
+        type_line = next(i for i, line in enumerate(lines) if "probe: OrbitProbe" in line)
+        send(process, {"jsonrpc": "2.0", "id": 16, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": type_line, "character": lines[type_line].index("OrbitProbe") + 2,
+                       }}})
+        assert answer(16), "Imported class did not resolve in LSP"
+        send(process, {"jsonrpc": "2.0", "id": 17, "method": "textDocument/typeDefinition",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": probe_line, "character": lines[probe_line].index("probe.sample") + 2,
+                       }}})
+        assert answer(17), "Imported receiver type did not resolve in LSP"
+        send(process, {"jsonrpc": "2.0", "id": 15, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": probe_line,
+                           "character": lines[probe_line].index("probe.sample") + len("probe.") + 2,
+                       }}})
+        probe_completion = answer(15)
+        assert any(item["label"] == "sample" and item["detail"] == "(value: Int): Int"
+                   for item in probe_completion), probe_completion
         partial = source + "import orbit_t"
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 2},
@@ -79,7 +119,8 @@ def run():
                            "line": len(lines), "character": len("import orbit_t"),
                        }}})
         imports = answer(6)
-        assert any(item["label"] == "orbit_tools.main" for item in imports), imports
+        assert not imports["isIncomplete"] and any(
+            item["label"] == "orbit_tools.main" for item in imports["items"]), imports
         dotted = source + "import orbit_answer from orbit_tools."
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 3},
@@ -91,7 +132,8 @@ def run():
                            "character": len("import orbit_answer from orbit_tools."),
                        }}})
         qualified = answer(7)
-        assert any(item["label"] == "orbit_tools.main" for item in qualified), qualified
+        assert not qualified["isIncomplete"] and any(
+            item["label"] == "orbit_tools.main" for item in qualified["items"]), qualified
         selective = source + "import orbit_a from orbit_tools.main\n"
         send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 4},
@@ -158,6 +200,166 @@ def run():
         emoji_target = answer(14)
         assert emoji_target and emoji_target[0]["uri"] == server_file_uri(installed)
         assert emoji_target[0]["range"]["start"]["line"] == 1
+        unavailable_import = source + "import missing_package.main\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": uri, "version": 9},
+            "contentChanges": [{"text": unavailable_import}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 15, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": len(lines), "character": len("import missing_")}}})
+        assert answer(15) == [], "Unavailable package import produced a broken navigation target"
+        unavailable_export = source + "import missing from missing_package.main\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": uri, "version": 10},
+            "contentChanges": [{"text": unavailable_export}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 16, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": uri}, "position": {
+                           "line": len(lines), "character": len("import miss")}}})
+        unavailable_items = answer(16)
+        assert unavailable_items == {"isIncomplete": False, "items": []}, (
+            "Unavailable package exports produced a completion protocol error")
+        scratch_uri = server_file_uri(project / "src" / "scratch.sagan")
+        scratch = "module scratch\nimport orbit_tools.main as package_tools\nfun probe(): Int { return 0 }\n"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": scratch_uri, "languageId": "sagan", "version": 1,
+                             "text": scratch},
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 17, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": scratch_uri}, "position": {
+                           "line": 2, "character": len("fun probe(): Int { ")}}})
+        auto_imports = answer(17)
+        rocket = next((item for item in auto_imports if item["label"] == "🚀"), None)
+        assert rocket and rocket["additionalTextEdits"] == [{
+            "range": {"start": {"line": 1, "character": 0},
+                      "end": {"line": 1, "character": 0}},
+            "newText": "import 🚀 from orbit_tools.main\n",
+        }], auto_imports
+        manifest_path = project / "sagan.toml"
+        manifest_uri = server_file_uri(manifest_path)
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        invalid_manifest = manifest_text.replace("[dependencies]", "mystery = \"value\"\n[dependencies]")
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": manifest_uri, "languageId": "toml", "version": 1,
+                             "text": invalid_manifest},
+        }})
+        while True:
+            publication = received.get(timeout=30)
+            if isinstance(publication, BaseException):
+                raise publication
+            if publication.get("method") == "textDocument/publishDiagnostics" and (
+                    publication["params"]["uri"] == manifest_uri):
+                break
+        issues = publication["params"]["diagnostics"]
+        assert len(issues) == 1 and "mystery" in issues[0]["message"], publication
+        assert issues[0]["range"]["start"]["line"] == invalid_manifest.splitlines().index(
+            'mystery = "value"'), publication
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 2},
+            "contentChanges": [{"text": manifest_text}],
+        }})
+        while True:
+            publication = received.get(timeout=30)
+            if isinstance(publication, BaseException):
+                raise publication
+            if publication.get("method") == "textDocument/publishDiagnostics" and (
+                    publication["params"]["uri"] == manifest_uri and
+                    publication["params"].get("version") == 2):
+                break
+        assert publication["params"]["diagnostics"] == [], publication
+        entry_line = next(i for i, line in enumerate(manifest_text.splitlines())
+                          if line == 'entry = "main"')
+        send(process, {"jsonrpc": "2.0", "id": 22, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": entry_line, "character": len('entry = "ma')}}})
+        assert answer(22)[0]["uri"] == uri, "Manifest entry did not navigate to the open source"
+        dependency_line = next(i for i, line in enumerate(manifest_text.splitlines())
+                               if line.startswith("orbit_tools ="))
+        send(process, {"jsonrpc": "2.0", "id": 23, "method": "textDocument/definition",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": dependency_line, "character": 2}}})
+        dependency_definition = answer(23)
+        assert dependency_definition and dependency_definition[0]["uri"] == server_file_uri(
+            installed.parent.parent / "sagan.toml"), dependency_definition
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 3},
+            "contentChanges": [{"text": "[package]\nna"}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 18, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 2}}})
+        manifest_candidates = answer(18)
+        assert manifest_candidates == [{
+            "label": "name", "kind": 14,
+            "textEdit": {"range": {"start": {"line": 1, "character": 0},
+                                   "end": {"line": 1, "character": 2}},
+                         "newText": 'name = ""'},
+        }], manifest_candidates
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 4},
+            "contentChanges": [{"text": '[application]\nmode = "wi"'}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 19, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 10}}})
+        mode_candidates = answer(19)
+        assert mode_candidates == [{
+            "label": "windowed", "kind": 14,
+            "textEdit": {"range": {"start": {"line": 1, "character": 7},
+                                   "end": {"line": 1, "character": 11}},
+                         "newText": '"windowed"'},
+        }], mode_candidates
+        send(process, {"jsonrpc": "2.0", "id": 20, "method": "textDocument/hover",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 2}}})
+        mode_hover = answer(20)
+        assert "windowed" in mode_hover["contents"]["value"], mode_hover
+        assert mode_hover["range"] == {"start": {"line": 1, "character": 0},
+                                        "end": {"line": 1, "character": 4}}, mode_hover
+        send(process, {"jsonrpc": "2.0", "id": 21, "method": "textDocument/documentSymbol",
+                       "params": {"textDocument": {"uri": manifest_uri}}})
+        manifest_outline = answer(21)
+        assert len(manifest_outline) == 1 and manifest_outline[0]["name"] == "application", (
+            manifest_outline)
+        assert manifest_outline[0]["children"][0]["name"] == "mode", manifest_outline
+        assert manifest_outline[0]["children"][0]["selectionRange"] == {
+            "start": {"line": 1, "character": 0}, "end": {"line": 1, "character": 4}}, (
+                manifest_outline)
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 5},
+            "contentChanges": [{"text": "[dependencies]\norbit_"}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 24, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1, "character": 6}}})
+        dependency_candidates = answer(24)
+        assert any(item["label"] == "orbit_tools" and item["textEdit"]["newText"] ==
+                   'orbit_tools = { package = "orbit-tools", version = "^0.1.0" }'
+                   for item in dependency_candidates), dependency_candidates
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 6},
+            "contentChanges": [{"text": '[dependencies]\norbit-tools = "^0."'}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 25, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1,
+                                               "character": len('orbit-tools = "^0.')}}})
+        dependency_versions = answer(25)
+        assert any(item["label"] == "^0.1.0" and item["textEdit"]["newText"] == '"^0.1.0"'
+                   for item in dependency_versions), dependency_versions
+        alias_requirement = 'orbit_tools = { package = "orbit-tools", version = "^0." }'
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
+            "textDocument": {"uri": manifest_uri, "version": 7},
+            "contentChanges": [{"text": '[dependencies]\n' + alias_requirement}],
+        }})
+        send(process, {"jsonrpc": "2.0", "id": 26, "method": "textDocument/completion",
+                       "params": {"textDocument": {"uri": manifest_uri},
+                                  "position": {"line": 1,
+                                               "character": alias_requirement.find('^0.') + 3}}})
+        alias_versions = answer(26)
+        assert any(item["label"] == "^0.1.0" and item["textEdit"]["newText"] == '"^0.1.0"'
+                   for item in alias_versions), alias_versions
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": {}})
         answer(5)
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})

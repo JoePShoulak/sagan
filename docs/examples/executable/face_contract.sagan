@@ -1,0 +1,25 @@
+face Named {
+  fun name(): String
+}
+
+class Probe has Named {
+  let .probe_name: String
+
+  new(probe_name: String) {
+    self.probe_name = probe_name
+  }
+
+  fun name(): String => self.probe_name
+}
+
+fun report_name(value: Named): Void {
+  print("tracking ${value.name()}")
+}
+
+fun main(): Int {
+  let probe = Probe("Voyager")
+  report_name(probe)
+  return 0
+}
+
+exit(main())

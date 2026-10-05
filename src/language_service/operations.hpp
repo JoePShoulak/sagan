@@ -186,4 +186,8 @@ namespace sagan::language_service
                             const std::string &compiler_stderr,
                             const source::source_provider *provider = nullptr)
     -> std::vector<diagnostics::diagnostic>;
+  auto map_runtime_failure(const source::document_snapshot &document,
+                           const std::string &runtime_stderr,
+                           const source::source_provider *provider = nullptr)
+    -> std::optional<diagnostics::diagnostic>;
 }

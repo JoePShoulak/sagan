@@ -3,7 +3,7 @@ face Readable<T> {
   fun describe(): String => "Readable value: ${self.get()}"
 }
 
-class Box<T> is Readable<T> {
+class Box<T> has Readable<T> {
   let value: T
 
   new(value: T) {

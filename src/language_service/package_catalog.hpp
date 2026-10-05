@@ -5,6 +5,7 @@
 #include "../modules/resolver.hpp"
 #include "../source/source.hpp"
 #include "../source/provider.hpp"
+#include "formatter.hpp"
 
 #include <filesystem>
 #include <optional>
@@ -15,6 +16,68 @@
 namespace sagan::language_service
 {
   inline constexpr std::string_view package_catalog_schema = "sagan-package-catalog-v1";
+
+  auto analyze_manifest_document(const source::document_snapshot &document,
+                                 diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<modules::package_manifest>;
+
+  // Normalize only proven complete manifest lines. Incomplete documents and
+  // commented lines are left untouched rather than guessed at.
+  auto format_manifest_document(const source::document_snapshot &document) -> format_result;
+  // Restrict the same proven-valid line edits to a requested source range.
+  auto format_manifest_range(const source::document_snapshot &document,
+                             source::byte_range range) -> format_result;
+
+  struct manifest_completion_candidate
+  {
+    std::string label;
+    source::text_edit edit;
+  };
+  auto complete_manifest_document(const source::document_snapshot &document,
+                                  source::byte_offset offset,
+                                  diagnostics::cancellation_token cancellation = {},
+                                  const modules::package_resolution_options &options = {})
+    -> diagnostics::analysis_result<std::vector<manifest_completion_candidate>>;
+
+  struct manifest_hover_information
+  {
+    source::source_range selection;
+    std::string markdown;
+  };
+  auto hover_manifest_document(const source::document_snapshot &document,
+                               source::byte_offset offset,
+                               diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<manifest_hover_information>;
+
+  struct manifest_document_symbol
+  {
+    std::string name;
+    source::source_range range;
+    source::source_range selection;
+    std::vector<manifest_document_symbol> children;
+  };
+  auto manifest_document_symbols(const source::document_snapshot &document,
+                                 diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<std::vector<manifest_document_symbol>>;
+
+  struct manifest_entry_target
+  {
+    source::source_range selection;
+    source::document_uri uri;
+    source::utf16_position start;
+    source::utf16_position end;
+  };
+  auto query_manifest_entry_target(const source::document_snapshot &document,
+                                   source::byte_offset offset,
+                                   const source::source_provider &provider,
+                                   diagnostics::cancellation_token cancellation = {})
+    -> diagnostics::analysis_result<manifest_entry_target>;
+  auto query_manifest_dependency_target(const source::document_snapshot &document,
+                                        source::byte_offset offset,
+                                        const source::source_provider &provider,
+                                        diagnostics::cancellation_token cancellation = {},
+                                        const modules::package_resolution_options &options = {})
+    -> diagnostics::analysis_result<manifest_entry_target>;
 
   struct catalog_export
   {
@@ -68,6 +131,7 @@ namespace sagan::language_service
   {
     bool applicable{};
     bool cancelled{};
+    bool incomplete{};
     std::string error;
     std::vector<import_module_candidate> candidates;
   };

@@ -4,18 +4,38 @@
   <img src="images/sagan-logo.png" alt="Sagan logo: a slice of pie filled with a spiral galaxy" width="180">
 </p>
 
-VS Code language support for Sagan. Version 0.3.5 connects to the compiler's tested language server and enables every editor feature it advertises.
+VS Code language support for Sagan. Version 0.3.6 connects to the compiler's tested language server and enables every editor feature it advertises.
 
 The extension associates `.sagan` files with Sagan and provides TextMate highlighting derived from the repository's current tokenizer. It covers declarations, keywords, types, literals, operators, punctuation, comments, documentation comments, strings, interpolation, Unicode identifiers, private members, and mutating method names.
+
+Class headers now distinguish parent classes after `is` from adopted faces
+after `has`, including multiple names in each clause, for example
+`class GunShip is Ship, Aircraft, has Weapons, Navigable { ... }`. Its
+constructor can forward arguments with `new(name: String) is Ship(name),
+Aircraft() { ... }`.
+The compiler and language server validate inheritance, face composition,
+overrides, and type-relationship checks such as `GunShip is Ship` and
+`GunShip has Weapons`. They also validate `super.Parent.method()` calls and
+trailing default parameters on functions, methods, constructors, and lambdas.
+
+Faces may now promise typed storage with `let .mass: Float64<kilogram>` and
+private helper methods with `fun .helper(): Int`. Adopting classes receive
+mutable face-declared fields unless they explicitly declare compatible
+storage; constructors still initialize fields without defaults. The grammar
+already colors these declarations, and diagnostics/navigation come from the
+matching compiler language server. The extension does not implement mixin
+semantics independently.
 
 The Sagan galaxy-pie logo is registered as the default `.sagan` language icon. VS Code uses it when the active file-icon theme permits language-provided icons and does not define its own `.sagan` icon.
 
 The extension also recognizes `sagan.toml` as a **Sagan Manifest** and provides
 schema-aware highlighting for the compiler's current `[package]`,
-`[application]`, and `[dependencies]` sections. Manifest diagnostics,
-completion, hover, navigation, and quick fixes remain compiler/LSP-owned and
-will be enabled only after the running server advertises a manifest-document
-contract; the extension does not duplicate manifest validation in TypeScript.
+`[application]`, and `[dependencies]` sections. The language client now sends
+manifest documents to `sagan-lsp`, enabling compiler-owned diagnostics,
+completion, hover, document symbols, entry/dependency navigation, and
+whole-document formatting. Manifest range/on-type formatting and quick fixes
+are not yet supported; the extension does not duplicate manifest validation in
+TypeScript.
 
 The extension provides TextMate highlighting plus live diagnostics, hover,
 navigation, references, completion, signature help, symbols, semantic tokens,
@@ -56,6 +76,12 @@ longer requires a `main` function.
 Run **Sagan: Show Tooling Status** from the Command Palette to inspect the compiler found for the current workspace. If discovery does not find it, set `sagan.compiler.path` to the compiler executable.
 
 The extension locates `sagan-lsp` beside the configured compiler, in the workspace `bin` directory, or on `PATH`. Set `sagan.server.path` to override discovery. Changes to server, compiler, or trace settings restart the client automatically; **Sagan: Restart Language Server** remains available for manual recovery. Optional sanitized protocol-method tracing is controlled by `sagan.server.trace`.
+
+The compiler and server must be rebuilt after local language changes. An
+installed VSIX does not contain `sagan-lsp`; reinstalling the extension alone
+cannot refresh stale semantic diagnostics. Use **Sagan: Show Tooling Status** to
+check the executable paths, then restart the server or reload the editor after
+rebuilding. On Windows, close VS Code before replacing an in-use server binary.
 
 Installed packages and locked dependencies already have compiler-backed import
 suggestions and some navigation and hover support. Complete package completion

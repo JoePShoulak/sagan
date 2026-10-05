@@ -1,5 +1,5 @@
 ---
-title: Classes, interfaces, and composition
+title: Classes, interfaces, composition, and inheritance
 status: work-in-progress
 publication_ready: false
 verified_in: null
@@ -7,22 +7,27 @@ verified_on: null
 verified_by: null
 ---
 
-# Classes, interfaces, and composition
+# Classes, interfaces, composition, and inheritance
 
 Sagan separates stored objects from behavioral contracts:
 
 - a `class` defines storage, construction, and implementation;
 - a `face` defines behavior that other code may depend on; and
-- `is` or `has` explicitly declares composition and conformance.
+- `is` lists parent classes on a class, while `has` lists adopted faces;
+  faces continue to use `is` or `has` for face composition.
 
-This is the primary reuse and polymorphism model. There is no class inheritance,
-superclass state, superclass constructor, or implicit conformance based only on
-matching method names.
+Class inheritance and face conformance are separate, explicit relationships.
+Inheritance shares superclass state and methods. Conformance promises behavior
+without implicit adoption based only on matching method names.
+
+For a guided introduction using only complete, runnable programs, begin with
+the [Classes and faces tour](../tour/classes-and-interfaces.md). This page is the
+compact rules reference.
 
 ## The basic model
 
 `face` and `class` are top-level declarations. A face contains required method
-signatures and optional default implementations. A class contains fields,
+signatures, optional default implementations, and explicit field promises. A class contains fields,
 constructors, and implemented methods. `self` refers to the receiving object.
 
 ```sagan
@@ -31,7 +36,7 @@ face Named {
   fun description(): String => "Object: ${self.name()}"
 }
 
-class Probe is Named {
+class Probe has Named {
   let name_value: String
 
   new(name: String) {
@@ -46,10 +51,52 @@ class Probe is Named {
 the requirement, and it receives the unambiguous `description()` default. That
 default dispatches `self.name()` to `Probe.name()`.
 
+A face default may also use a field or helper method supplied by the adopting
+class. Declare that dependency in the face: an undeclared `self.member` is not
+implicitly inferred from the default body.
+
+```sagan
+face Massive {
+  let .mass: Float64<kilogram>
+  fun getMass(): Float64<kilogram> => self.mass
+}
+
+class Planet has Massive {
+  new(mass: Float64<kilogram>) { self.mass = mass }
+}
+
+let earth = Planet(5.97e24 kilogram)
+assert(earth.getMass() > 0.0 kilogram)
+```
+
+The `let .mass` line is a typed storage promise. Adopting `Massive` adds
+one private `mass` field to `Planet`, so the class does not repeat its
+declaration. The constructor must still initialize it. A class may explicitly
+declare the same field with the same type when it needs a declaration-site
+initializer. Compatible promises from multiple faces share one field; differing
+required types are rejected. A private face field can be read by its defaults,
+but callers through the face cannot access it directly. Public face fields
+produce public storage. `const .NAME: String` promises read-only access and
+still needs an explicit class field with an initializer, because face fields
+do not have inherited initializers. `let` promises mutable access. A class
+override of `getMass()` does not remove the field promise. A face can
+similarly declare a private required helper such as `fun .compute(): Int`
+and call `self.compute()` from a default.
+
 ## Declaring composition
 
-`is` and `has` have identical language semantics. Either may introduce a
-comma-separated list of faces on a class or another face:
+On a class, `is` introduces a comma-separated list of parent classes and
+`has` introduces a comma-separated list of faces. When both appear, `is` comes
+first and the clauses are separated by a comma:
+
+```sagan
+class GunShip is Ship, Aircraft, has Weapons, Navigable {
+  // members
+}
+```
+
+Either clause may appear alone. A class may have multiple parent classes and
+multiple faces. A face may still compose other faces with either `is` or `has`:
 
 ```sagan
 face Identified {
@@ -61,14 +108,18 @@ face Reportable is Identified, Named {
 }
 
 class Probe has Reportable {
-  -- implementations
+  // implementations
 }
 ```
 
-The two spellings let authors express intent in prose, but choosing one does not
-change storage, ownership, dispatch, or substitutability. Composition is
-transitive: `Probe` must satisfy `Reportable`, `Identified`, and `Named`, and it
-may be used through any of those declared faces.
+Face composition is transitive: `Probe` must satisfy `Reportable`, `Identified`,
+and `Named`, and it may be used through any of those declared faces.
+
+These relationships are queryable in conditions. `GunShip is Ship` checks
+class ancestry; `GunShip has Weapons` checks transitive face conformance; and
+`Assault has Weapons` checks transitive face composition. The operands here are
+declared type names, not object values. These checks yield `Bool`; object
+instance type tests are a separate feature.
 
 Conformance is both explicit and checked. A class that merely happens to have
 the right methods is not a value of that face. Conversely, declaring a face
@@ -82,12 +133,28 @@ default. The compiler resolves each required signature as follows:
 1. An exact class method wins and overrides a face default.
 2. Otherwise, one unambiguous default is composed into the class.
 3. If no implementation or default exists, conformance fails.
-4. If multiple composed faces provide competing defaults with the same
-   signature, the class must write an explicit override.
+4. If the same default declaration arrives through multiple composition paths,
+   as in a diamond, those paths collapse to one inherited default.
+5. If different declarations provide competing defaults with the same
+   signature, the class must write an explicit override. Textually identical
+   bodies are still different declarations.
 
-Private class methods cannot satisfy public face requirements. Parameter and
+Default resolution uses declaration identity rather than composition order.
+It never silently chooses whichever path was visited first. For example, if
+`Gravity` and `Physics` both compose `Massive`, a class composing both receives
+the single `Massive` default once. Defaults declared independently by `Gravity`
+and `Physics` remain an explicit conflict.
+
+Private class methods cannot satisfy public face requirements, but they can
+satisfy private face helper requirements. Parameter and
 return types are part of the required signature; an approximately compatible
 method is not an override.
+
+Field promises are checked by name, exact type, visibility, and mutability.
+Uninitialized or conflicting promises are compile-time errors. Composed faces
+may share a field promise only when its required type is the same; the class
+gets one suitable field. Face defaults access that field through the face
+contract, including calls made through face-typed values.
 
 A composing face may redeclare an inherited signature, with or without a new
 default. Cyclic face composition is rejected, so the transitive contract always
@@ -100,7 +167,7 @@ matching `new(...)` overload using the same lossless argument-compatibility
 rules as function calls:
 
 ```sagan
-class Probe is Named {
+class Probe has Named {
   let name_value: String
   let samples: Int = 0
 
@@ -158,8 +225,9 @@ implementation. Mutating the object through one reference is visible through
 the other. Face conversion does not copy, slice, or wrap the object as an
 independent value.
 
-The runnable [composition example](../examples/executable/composition.sagan)
-demonstrates default dispatch and shared identity, and its expected output is
+The runnable [classes-and-faces examples](../examples/index.md#executable-documentation-examples)
+separate class storage, basic conformance, transitive composition, default
+dispatch, and shared identity into focused programs. Their expected output is
 checked during every documentation build.
 
 ## Generic classes and faces
@@ -171,7 +239,7 @@ face Readable<T> {
   fun get(): T
 }
 
-class Box<T> is Readable<T> {
+class Box<T> has Readable<T> {
   let value: T
 
   new(value: T) {
@@ -213,11 +281,55 @@ a live target is `Some(target)` and an expired target is `None`. See the
 [memory model](memory-model.md) for safe access, coalescing, closure capture,
 and deferred ownership features.
 
+## Class inheritance
+
+Class inheritance and face composition solve different problems. A child class
+uses `is` to inherit concrete storage and implementation from one or more parent
+classes. A class uses `has` to adopt faces: checked contracts that can contribute
+field promises and default methods. A child can therefore inherit parent classes
+and adopt faces in the same declaration.
+
+An instance of a child class may be used through a parent-class reference.
+Calls through that reference dynamically dispatch to an exact override on the
+child. This is distinct from a face-typed reference, which exposes only the
+contract declared by that face.
+
+Parent classes are constructed before the child body. A child constructor can
+pass arguments to each parent in inheritance-list order:
+
+```sagan
+new(name: String, altitude: Int) is Ship(name), Aircraft(altitude) {
+  // initialize this class's own fields here
+}
+```
+
+An omitted parent must be default-constructible. A class with no explicit
+constructor needs default-constructible parents. Parent initializer arguments
+may use constructor parameters but not `self`, which does not exist until the
+parents have been built. A child inherits fields and methods, and a method
+with the exact same signature overrides a
+parent method with dynamic dispatch through a parent-typed reference. Multiple
+paths through the same ancestor share its state (a diamond is not duplicated).
+An override may invoke a named direct parent's implementation with
+`super.Parent.method(arguments)`. This qualified call bypasses virtual
+dispatch; ordinary `self.method()` and calls through parent-typed values remain
+dynamic. Naming the parent is required because there may be more than one.
+Parent construction instead uses the `new(...) is Parent(...)` forwarding list.
+Different parents may not contribute ambiguous fields. If they contribute the
+same method from different implementations, the child must implement one
+exact-signature override. Constructors are
+not inherited. Generic classes may be used as parents, but generic
+methods do not participate in virtual dispatch.
+
+Because multiple-inheritance diamonds share one virtual ancestor, an indirect
+ancestor must currently be default-constructible when it appears above an
+intermediate parent. Sagan diagnoses this rather than emitting native code that
+would fail to build. Direct parents can receive arguments through the `new`
+forwarding list above.
+
 ## What composition deliberately does not provide
 
-- no implementation or storage inheritance between classes;
 - no implicit conformance from method shape alone;
-- no superclass calls or constructor chaining;
 - no automatic resolution of competing defaults;
 - no borrowing, user-visible retain/release operations, or cycle collector;
 - no variance between generic specializations; and

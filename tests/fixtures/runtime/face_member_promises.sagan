@@ -1,0 +1,131 @@
+face Named {
+  let .name: String
+  fun getName(): String => self.name
+}
+
+face Counted {
+  let .count: Int
+  fun getCount(): Int => self.count
+  fun increment!(): Void { self.count += 1 }
+}
+
+face Labeled has Named, Counted {
+  fun label(): String => self.getName()
+}
+
+face Calculated {
+  fun .base(): Int
+  fun doubled(): Int => self.base() * 2
+}
+
+face Tagged {
+  const .TAG: String
+  fun tag(): String => self.TAG
+}
+
+face Observable {
+  let value: Int
+  fun next!(): Void { self.value += 1 }
+}
+
+class Counter has Observable {
+  new() { self.value = 3 }
+}
+
+class AdvancedCounter is Counter, has Observable {
+  new() is Counter() { }
+}
+
+face Stored<T> {
+  let .value: T
+  fun read(): T => self.value
+}
+
+class Box<T> has Stored<T> {
+  new(value: T) { self.value = value }
+}
+
+face FirstValue {
+  let .value: Int
+  fun first(): Int => self.value
+}
+
+face SecondValue {
+  let .value: Int
+  fun second(): Int => self.value
+}
+
+class SharedValue has FirstValue, SecondValue {
+  new() { self.value = 7 }
+}
+
+const SCALE: Float = 2.0
+
+face Scaled {
+  fun scaled(other: LaterValue): Float => SCALE * other.value()
+}
+
+class LaterValue has Scaled {
+  let .stored: Float
+  new(value: Float) { self.stored = value }
+  fun value(): Float => self.stored
+}
+
+class Geometry {
+  let .position: Point3<Float, kilometer>
+  let .velocity: Vector3<Float, kilometer / second>
+  new(position: Point3<Float, kilometer>, velocity: Vector3<Float, kilometer / second>) {
+    self.position = position
+    self.velocity = velocity
+  }
+  fun x(): Float<kilometer> => self.position.x
+}
+
+class Probe has Labeled, Calculated, Tagged {
+  const .TAG: String = "planet"
+
+  new(name: String) {
+    self.name = name
+    self.count = 0
+  }
+
+  fun .base(): Int => 21
+}
+
+let probe = Probe("Earth")
+assert(probe.getName() == "Earth")
+assert(probe.label() == "Earth")
+probe.increment!()
+assert(probe.getCount() == 1)
+
+let named: Named = probe
+assert(named.getName() == "Earth")
+let counted: Counted = probe
+counted.increment!()
+assert(probe.getCount() == 2)
+assert(probe.doubled() == 42)
+assert(probe.tag() == "planet")
+let calculated: Calculated = probe
+assert(calculated.doubled() == 42)
+let counter = Counter()
+let observed: Observable = counter
+assert(observed.value == 3)
+observed.next!()
+assert(counter.value == 4)
+observed.value = 5
+assert(counter.value == 5)
+let advanced = AdvancedCounter()
+assert(advanced.value == 3)
+let possible: Optional<Observable> = Some(observed)
+assert((possible?.value ?? 0) == 5)
+let stored: Stored<Int> = Box<Int>(42)
+assert(stored.read() == 42)
+let shared = SharedValue()
+assert(shared.first() == 7)
+assert(shared.second() == 7)
+let later = LaterValue(3.0)
+assert(later.scaled(later) == 6.0)
+let scaled: Scaled = later
+assert(scaled.scaled(later) == 6.0)
+let geometry = Geometry((2, 0, 0) kilometer, <0, 0, 0> (kilometer / second))
+assert(geometry.x() == 2 kilometer)

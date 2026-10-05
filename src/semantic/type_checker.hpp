@@ -44,6 +44,7 @@ namespace semantic
     int callee_end{};
     std::vector<std::string> parameter_types;
     std::string result_type;
+    std::vector<std::optional<parser::span>> default_spans = {};
   };
 
   struct type_model

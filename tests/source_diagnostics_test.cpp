@@ -2,6 +2,7 @@
 #include "../src/language_service/language_service.hpp"
 #include "../src/language_service/workspace.hpp"
 #include "../src/modules/resolver.hpp"
+#include "../src/parser/parser.hpp"
 #include "../src/semantic/semantic_error.hpp"
 #include "../src/semantic/units.hpp"
 #include "../src/source/provider.hpp"
@@ -53,6 +54,15 @@ auto main() -> int
   diagnostics::cancellation_source cancellation;
   passed &= check(!cancellation.token().is_cancelled(), "cancellation begins clear");
   cancellation.cancel();
+  bool parser_cancelled = false;
+  try
+  {
+    parser::syntax_parser strict({}, cancellation.token());
+    static_cast<void>(strict.parse());
+  }
+  catch (const parser::parse_cancelled &)
+  { parser_cancelled = true; }
+  passed &= check(parser_cancelled, "strict parser honors a cancellation token");
   passed &= check(cancellation.token().is_cancelled(), "cancellation propagates");
 
   diagnostics::diagnostic value{
@@ -102,6 +112,41 @@ auto main() -> int
                       invalid.diagnostics.size() == 1 && invalid.diagnostics.front().code == "SAG-TYP-0001" &&
                       invalid.analyzed_version == 10,
                   "service returns structured type diagnostic");
+
+  source::document_snapshot equivalent_units_document(
+      source::document_identity{source::document_id{11}, source::document_uri{"file:///equivalent-units.sagan"}, {}},
+      1,
+      "fun accept(value: Vector3<Float64, kilometer / second^2>): Void {}\n"
+      "fun apply(force: Vector3<Float, newton>, mass: Float<kilogram>): Void { accept(force / mass) }\n");
+  const auto equivalent_units = language_service::check_document(equivalent_units_document);
+  passed &= check(equivalent_units.state == diagnostics::result_state::complete &&
+                      equivalent_units.value.has_value() && equivalent_units.diagnostics.empty(),
+                  "derived equivalent units normalize default Float aliases");
+
+  source::document_snapshot dimensionless_ratio_document(
+      source::document_identity{source::document_id{12}, source::document_uri{"file:///dimensionless-ratio.sagan"}, {}},
+      1,
+      "fun sphere(mass: Float<kilogram>, parent: Float<kilogram>): Float<kilometer> {\n"
+      "  let ratio: Float = mass / parent\n"
+      "  return 1 kilometer * (ratio ^ (2.0 / 5.0))\n"
+      "}\n");
+  const auto dimensionless_ratio = language_service::check_document(dimensionless_ratio_document);
+  passed &= check(dimensionless_ratio.state == diagnostics::result_state::complete &&
+                      dimensionless_ratio.value.has_value() && dimensionless_ratio.diagnostics.empty(),
+                  "equal measured units cancel to a dimensionless scalar");
+
+  source::document_snapshot vector_scalar_document(
+      source::document_identity{source::document_id{13}, source::document_uri{"file:///vector-scalar.sagan"}, {}},
+      1,
+      "fun scale(direction: Vector3<Float, kilometer>, ratio: Float): Vector3<Float, kilometer> {\n"
+      "  let forward = direction * ratio\n"
+      "  let reverse = ratio * direction\n"
+      "  return (forward + reverse) / ratio\n"
+      "}\n");
+  const auto vector_scalar = language_service::check_document(vector_scalar_document);
+  passed &= check(vector_scalar.state == diagnostics::result_state::complete &&
+                      vector_scalar.value.has_value() && vector_scalar.diagnostics.empty(),
+                  "dimensionless scalars scale measured vectors in both orders");
 
   diagnostics::cancellation_source pre_cancelled;
   pre_cancelled.cancel();

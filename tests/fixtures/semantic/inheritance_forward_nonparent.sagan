@@ -1,0 +1,5 @@
+class Parent { }
+class Other { }
+class Child is Parent {
+  new() is Other() { }
+}

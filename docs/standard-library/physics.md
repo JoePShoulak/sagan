@@ -117,6 +117,12 @@ body's Hill sphere. Presentations should display `escaped` instead of the
 stability-error number after the flag becomes true; the numeric error remains
 available for diagnostics.
 
+`stop_tertiary!(index)` is an explicit, idempotent performance boundary for a
+tertiary whose `escaped()` flag is already true. Stopping freezes that
+tertiary's position and velocity while the massive system and other tertiaries
+continue stepping. The solver rejects attempts to stop a body before escape;
+it does not import rendering state or choose a viewport cutoff itself.
+
 Run the checked fixture with:
 
 ```bash

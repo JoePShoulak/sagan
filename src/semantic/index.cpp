@@ -7,6 +7,24 @@
 
 namespace semantic
 {
+  auto callable_signature(const semantic_index &index, const symbol_id &id) -> std::string
+  {
+    for (const auto &call : index.parameters())
+    {
+      if (call.callable != id) continue;
+      std::string text{"("};
+      for (std::size_t i = 0; i < call.types.size(); ++i)
+      {
+        if (i) text += ", ";
+        if (i < call.names.size()) text += call.names[i] + ": ";
+        text += call.types[i];
+      }
+      text += ")";
+      if (!call.result_type.empty()) text += ": " + call.result_type;
+      return text;
+    }
+    return {};
+  }
   namespace
   {
     auto source_range(const sagan::source::document_id document, const parser::span range)

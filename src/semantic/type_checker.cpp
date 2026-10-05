@@ -9,6 +9,7 @@
 #include <charconv>
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -29,7 +30,48 @@ namespace semantic
       std::string result;
       std::vector<std::string> type_parameters;
       std::vector<std::optional<std::string>> type_constraints;
+      std::size_t required_parameters = std::numeric_limits<std::size_t>::max();
+      std::vector<std::optional<parser::span>> default_spans = {};
     };
+
+    auto required_arguments(const callable_signature &signature) -> std::size_t
+    {
+      return signature.required_parameters == std::numeric_limits<std::size_t>::max()
+          ? signature.parameters.size() : signature.required_parameters;
+    }
+
+    auto accepts_arguments(const callable_signature &signature, const std::size_t count) -> bool
+    {
+      return count >= required_arguments(signature) && count <= signature.parameters.size();
+    }
+
+    auto constant_default(const parser::expression &value) -> bool
+    {
+      if (dynamic_cast<const parser::literal_expression *>(&value)) return true;
+      if (const auto *name = dynamic_cast<const parser::identifier_expression *>(&value))
+        return name->name == "None";
+      if (const auto *string = dynamic_cast<const parser::string_expression *>(&value))
+        return std::all_of(string->parts.begin(), string->parts.end(),
+                           [](const auto &part) { return !part.interpolation; });
+      if (const auto *group = dynamic_cast<const parser::grouping_expression *>(&value))
+        return constant_default(*group->value);
+      if (const auto *unary = dynamic_cast<const parser::unary_expression *>(&value))
+        return !unary->postfix && constant_default(*unary->operand);
+      if (const auto *binary = dynamic_cast<const parser::binary_expression *>(&value))
+        return constant_default(*binary->left) && constant_default(*binary->right);
+      if (const auto *conditional = dynamic_cast<const parser::conditional_expression *>(&value))
+        return constant_default(*conditional->condition) && constant_default(*conditional->when_true) &&
+               constant_default(*conditional->when_false);
+      if (const auto *measured = dynamic_cast<const parser::measured_expression *>(&value))
+        return constant_default(*measured->value);
+      if (const auto *collection = dynamic_cast<const parser::collection_expression *>(&value))
+        return std::all_of(collection->elements.begin(), collection->elements.end(),
+                           [](const auto &element) { return constant_default(*element); });
+      if (const auto *dictionary = dynamic_cast<const parser::dictionary_expression *>(&value))
+        return std::all_of(dictionary->entries.begin(), dictionary->entries.end(), [](const auto &entry)
+        { return (!entry.key || constant_default(*entry.key)) && constant_default(*entry.value); });
+      return false;
+    }
 
     struct binding
     {
@@ -51,14 +93,19 @@ namespace semantic
       std::vector<std::string> type_parameters;
       std::vector<std::optional<std::string>> type_constraints;
       std::unordered_map<std::string, std::string> fields;
+      std::unordered_map<std::string, std::string> field_owners;
       std::unordered_set<std::string> private_fields;
+      std::unordered_map<std::string, std::string> private_field_owners;
       std::unordered_set<std::string> weak_fields;
       std::unordered_set<std::string> constant_fields;
       std::unordered_set<std::string> defaulted_fields;
       std::vector<callable_signature> constructors;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
+      std::unordered_map<std::string, std::string> method_owners;
       std::unordered_set<std::string> private_methods;
+      std::unordered_map<std::string, std::string> private_method_owners;
       std::vector<std::string> faces;
+      std::vector<std::string> bases;
     };
 
     struct enum_case_type
@@ -280,12 +327,22 @@ namespace semantic
       return -static_cast<std::int64_t>(magnitude);
     }
 
+    struct default_candidate
+    {
+      callable_signature signature;
+      const parser::function_declaration *origin{};
+    };
+
     struct interface_type
     {
       std::vector<std::string> type_parameters;
       std::vector<std::optional<std::string>> type_constraints;
+      std::unordered_map<std::string, std::string> fields;
+      std::unordered_set<std::string> private_fields;
+      std::unordered_set<std::string> constant_fields;
       std::unordered_map<std::string, std::vector<callable_signature>> methods;
-      std::unordered_map<std::string, std::vector<callable_signature>> defaults;
+      std::unordered_set<std::string> private_methods;
+      std::unordered_map<std::string, std::vector<default_candidate>> defaults;
       std::vector<std::string> faces;
     };
 
@@ -409,6 +466,8 @@ namespace semantic
       std::unordered_map<std::string, std::vector<std::string>> generic_enums;
       std::optional<std::string> expected_expression;
       std::optional<std::string> active_class;
+      std::optional<std::string> active_face;
+      bool in_class_function = false;
       std::optional<std::filesystem::path> active_source;
       units::registry unit_registry;
 
@@ -478,7 +537,7 @@ namespace semantic
 
       auto require(const bool condition, const std::string &message, const parser::span range) const -> void
       {
-        if (!condition) throw semantic_error(message, range);
+        if (!condition) throw semantic_error(message, range, active_source);
       }
 
       auto compatible(const std::string_view expected, const std::string_view actual) const -> bool
@@ -497,6 +556,22 @@ namespace semantic
           return actual_value && compatible(*expected_value, *actual_value);
         }
         const auto expected_instance = generic_instance(expected);
+        if (objects.contains(expected_instance.base))
+        {
+          std::vector<std::string> pending{std::string(actual)};
+          std::unordered_set<std::string> visited;
+          while (!pending.empty())
+          {
+            const auto current = std::move(pending.back());
+            pending.pop_back();
+            if (current == expected) return true;
+            if (!visited.insert(current).second) continue;
+            const auto instance = generic_instance(current);
+            if (const auto found = objects.find(instance.base); found != objects.end())
+              for (const auto &base : found->second.bases)
+                pending.push_back(substitute_type(base, found->second.type_parameters, instance.arguments));
+          }
+        }
         if (interfaces.contains(expected_instance.base))
         {
           const auto actual_instance = generic_instance(actual);
@@ -504,8 +579,20 @@ namespace semantic
           if (object != objects.end())
           {
             std::vector<std::string> pending;
-            for (const auto &face : object->second.faces)
-              pending.push_back(substitute_type(face, object->second.type_parameters, actual_instance.arguments));
+            std::vector<std::string> classes{std::string(actual)};
+            std::unordered_set<std::string> seen_classes;
+            while (!classes.empty())
+            {
+              const auto current = std::move(classes.back());
+              classes.pop_back();
+              if (!seen_classes.insert(current).second) continue;
+              const auto class_instance = generic_instance(current);
+              const auto &class_type = objects.at(class_instance.base);
+              for (const auto &face : class_type.faces)
+                pending.push_back(substitute_type(face, class_type.type_parameters, class_instance.arguments));
+              for (const auto &base : class_type.bases)
+                classes.push_back(substitute_type(base, class_type.type_parameters, class_instance.arguments));
+            }
             std::unordered_set<std::string> visited;
             while (!pending.empty())
             {
@@ -688,7 +775,7 @@ namespace semantic
 
         if (operation == "*" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
           return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
-                 common_type(left_dimensioned->component, right, range, "Vector scalar operands") + ">";
+                 arithmetic_type(operation, left_dimensioned->component, right, range) + ">";
         if ((operation == "*" || operation == "/") && left_dimensioned &&
             left_dimensioned->family == "Vector" &&
             units::parse_measured_type(right, unit_registry, range))
@@ -700,10 +787,10 @@ namespace semantic
                  arithmetic_type(operation, left, right_dimensioned->component, range) + ">";
         if (operation == "*" && right_dimensioned && right_dimensioned->family == "Vector" && is_numeric(left))
           return "Vector" + std::to_string(right_dimensioned->dimensions) + "<" +
-                 common_type(left, right_dimensioned->component, range, "Vector scalar operands") + ">";
+                 arithmetic_type(operation, left, right_dimensioned->component, range) + ">";
         if (operation == "/" && left_dimensioned && left_dimensioned->family == "Vector" && is_numeric(right))
           return "Vector" + std::to_string(left_dimensioned->dimensions) + "<" +
-                 common_type(left_dimensioned->component, right, range, "Vector scalar operands") + ">";
+                 arithmetic_type(operation, left_dimensioned->component, right, range) + ">";
 
         require(false, "Operator '" + operation + "' is not defined for " + left + " and " + right, range);
         return std::string(unknown_type);
@@ -762,6 +849,9 @@ namespace semantic
         }
         if (*name == "Int") return "Int64";
         if (*name == "Float") return "Float64";
+        if (const auto measured = units::parse_measured_type(*name, unit_registry, {}))
+          return units::format_type(
+              fixed_annotation(std::optional<std::string>{measured->numeric}), measured->unit);
         if (const auto contained = optional_element(*name))
           return "Optional<" + fixed_annotation(std::optional<std::string>{*contained}) + ">";
         const auto generic = generic_instance(*name);
@@ -789,7 +879,14 @@ namespace semantic
       auto signature(const parser::function_declaration &function) const -> callable_signature
       {
         callable_signature result;
-        for (const auto &parameter : function.parameters) result.parameters.push_back(fixed_annotation(parameter.type_name));
+        result.required_parameters = 0;
+        for (const auto &parameter : function.parameters)
+        {
+          result.parameters.push_back(fixed_annotation(parameter.type_name));
+          result.default_spans.push_back(parameter.default_value
+              ? std::optional<parser::span>{parameter.default_value->range} : std::nullopt);
+          if (!parameter.default_value) ++result.required_parameters;
+        }
         result.result = fixed_annotation(function.return_type);
         result.type_parameters = function.type_parameters;
         result.type_constraints = function.type_constraints;
@@ -836,12 +933,18 @@ namespace semantic
         object.type_parameters = type.type_parameters;
         object.type_constraints = type.type_constraints;
         object.faces = type.composed_interfaces;
+        object.bases = type.base_classes;
         for (const auto &member : type.members)
         {
           if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
           {
             object.fields.emplace(field->name, fixed_annotation(field->type_name));
-            if (field->private_member) object.private_fields.insert(field->name);
+            object.field_owners.emplace(field->name, type.name);
+            if (field->private_member)
+            {
+              object.private_fields.insert(field->name);
+              object.private_field_owners.emplace(field->name, type.name);
+            }
             if (field->weak_member) object.weak_fields.insert(field->name);
             if (dynamic_cast<const parser::const_declaration *>(field))
               object.constant_fields.insert(field->name);
@@ -855,10 +958,189 @@ namespace semantic
               continue;
             }
             object.methods[method->name].push_back(signature(*method));
-            if (method->private_member) object.private_methods.insert(method->name);
+            object.method_owners.emplace(method->name, type.name);
+            if (method->private_member)
+            {
+              object.private_methods.insert(method->name);
+              object.private_method_owners.emplace(method->name, type.name);
+            }
           }
         }
         objects.emplace(type.name, std::move(object));
+      }
+
+      auto resolve_object(const std::string &name, const parser::span range,
+                          std::unordered_map<std::string, int> &states) -> void
+      {
+        require(states[name] != 1, "Cyclic class inheritance involving '" + name + "'", range);
+        if (states[name] == 2) return;
+        states[name] = 1;
+        object_type resolved = objects.at(name);
+        std::unordered_set<std::string> inherited_names;
+        std::unordered_set<std::string> direct_base_names;
+        std::unordered_set<std::string> declared_methods;
+        for (const auto &[method_name, unused] : resolved.methods)
+        {
+          static_cast<void>(unused);
+          declared_methods.insert(method_name);
+        }
+        for (const auto &base_name : resolved.bases)
+        {
+          const auto base_instance = generic_instance(base_name);
+          require(direct_base_names.insert(base_instance.base).second,
+                  "Class '" + name + "' lists parent '" + base_instance.base + "' more than once", range);
+          require(objects.contains(base_instance.base),
+                  "Class '" + name + "' inherits unknown class '" + base_name + "'", range);
+          require(base_instance.base != name, "Cyclic class inheritance involving '" + name + "'", range);
+          resolve_object(base_instance.base, range, states);
+          const auto &base = objects.at(base_instance.base);
+          std::vector<std::string> inherited_ancestors = base.bases;
+          std::unordered_set<std::string> checked_ancestors;
+          while (!inherited_ancestors.empty())
+          {
+            const auto ancestor_name = generic_instance(inherited_ancestors.back()).base;
+            inherited_ancestors.pop_back();
+            if (!checked_ancestors.insert(ancestor_name).second) continue;
+            require(default_constructible(ancestor_name),
+                    "Virtual ancestor '" + ancestor_name + "' must be default-constructible when '" + name +
+                        "' inherits through '" + base_instance.base + "'", range);
+            const auto &ancestor = objects.at(ancestor_name);
+            inherited_ancestors.insert(inherited_ancestors.end(), ancestor.bases.begin(), ancestor.bases.end());
+          }
+          require(base_instance.arguments.size() == base.type_parameters.size(),
+                  "Class '" + base_instance.base + "' expects " +
+                      std::to_string(base.type_parameters.size()) + " type argument(s)", range);
+          for (const auto &[field_name, field_type] : base.fields)
+          {
+            const auto field_owner = base.field_owners.at(field_name);
+            if (!inherited_names.insert(field_name).second)
+            {
+              require(resolved.fields.contains(field_name) &&
+                          resolved.field_owners.at(field_name) == field_owner &&
+                          resolved.fields.at(field_name) ==
+                              substitute_type(field_type, base.type_parameters, base_instance.arguments),
+                      "Class '" + name + "' inherits ambiguous field '" + field_name + "'", range);
+              continue;
+            }
+            require(!resolved.fields.contains(field_name) && !resolved.methods.contains(field_name),
+                    "Class '" + name + "' inherits ambiguous field '" + field_name + "'", range);
+            resolved.fields.emplace(field_name,
+                                    substitute_type(field_type, base.type_parameters, base_instance.arguments));
+            resolved.field_owners.emplace(field_name, field_owner);
+            resolved.defaulted_fields.insert(field_name);
+            if (base.private_fields.contains(field_name))
+            {
+              resolved.private_fields.insert(field_name);
+              resolved.private_field_owners[field_name] = base.private_field_owners.at(field_name);
+            }
+            if (base.weak_fields.contains(field_name)) resolved.weak_fields.insert(field_name);
+            if (base.constant_fields.contains(field_name)) resolved.constant_fields.insert(field_name);
+          }
+          for (const auto &[method_name, signatures] : base.methods)
+          {
+            const bool declared_here = declared_methods.contains(method_name);
+            const auto method_owner = base.method_owners.at(method_name);
+            if (inherited_names.contains(method_name) && !declared_here)
+            {
+              require(resolved.methods.contains(method_name) &&
+                          resolved.method_owners.at(method_name) == method_owner,
+                      "Class '" + name + "' inherits ambiguous method '" + method_name + "'", range);
+            }
+            require(!resolved.fields.contains(method_name),
+                    "Class '" + name + "' inherits ambiguous method '" + method_name + "'", range);
+            inherited_names.insert(method_name);
+            auto &target = resolved.methods[method_name];
+            require(target.empty() || target.size() == signatures.size(),
+                    "Class '" + name + "' must override every inherited overload of '" + method_name + "'", range);
+            if (target.empty())
+              for (auto signature : signatures)
+              {
+                for (auto &parameter : signature.parameters)
+                  parameter = substitute_type(parameter, base.type_parameters, base_instance.arguments);
+                signature.result = substitute_type(signature.result, base.type_parameters, base_instance.arguments);
+                target.push_back(std::move(signature));
+              }
+            else
+              for (const auto &signature : signatures)
+              {
+                auto inherited = signature;
+                for (auto &parameter : inherited.parameters)
+                  parameter = substitute_type(parameter, base.type_parameters, base_instance.arguments);
+                inherited.result = substitute_type(inherited.result, base.type_parameters, base_instance.arguments);
+                require(!declared_here || inherited.type_parameters.empty(),
+                        "Generic inherited method '" + method_name + "' cannot be overridden", range);
+                require(std::any_of(target.begin(), target.end(), [&](const auto &candidate)
+                        { return same_signature(candidate, inherited); }),
+                        "Class '" + name + "' overrides '" + method_name + "' with an incompatible signature", range);
+              }
+            if (!declared_here) resolved.method_owners[method_name] = method_owner;
+            if (base.private_methods.contains(method_name) && !declared_here)
+            {
+              resolved.private_methods.insert(method_name);
+              resolved.private_method_owners[method_name] = base.private_method_owners.at(method_name);
+            }
+          }
+        }
+        struct synthesized_field
+        {
+          std::string type;
+          bool private_only = true;
+          bool read_only = true;
+          std::string face;
+        };
+        std::map<std::string, synthesized_field> synthesized;
+        for (const auto &face_name : resolved.faces)
+        {
+          const auto instance = generic_instance(face_name);
+          const auto found = interfaces.find(instance.base);
+          require(found != interfaces.end(), "Unknown face '" + face_name + "'", range);
+          const auto &face = found->second;
+          require(instance.arguments.size() == face.type_parameters.size(),
+                  "Face '" + instance.base + "' expects " +
+                      std::to_string(face.type_parameters.size()) + " type argument(s)", range);
+          for (const auto &[field_name, field_type] : face.fields)
+          {
+            const std::string concrete = substitute_type(field_type, face.type_parameters,
+                                                         instance.arguments);
+            auto [entry, inserted] = synthesized.try_emplace(field_name,
+                synthesized_field{concrete, true, true, face_name});
+            require(inserted || entry->second.type == concrete,
+                    "Faces '" + entry->second.face + "' and '" + face_name +
+                        "' require incompatible types for field '" + field_name + "'", range);
+            entry->second.private_only &= face.private_fields.contains(field_name);
+            entry->second.read_only &= face.constant_fields.contains(field_name);
+          }
+        }
+        for (const auto &[field_name, field] : synthesized)
+        {
+          if (resolved.fields.contains(field_name)) continue;
+          require(!resolved.methods.contains(field_name),
+                  "Face field '" + field_name + "' conflicts with a class method", range);
+          require(!field.read_only,
+                  "Read-only face field '" + field_name +
+                      "' needs an explicit class field with an initializer", range);
+          resolved.fields.emplace(field_name, field.type);
+          resolved.field_owners.emplace(field_name, name);
+          if (field.private_only)
+          {
+            resolved.private_fields.insert(field_name);
+            resolved.private_field_owners.emplace(field_name, name);
+          }
+        }
+        validate_composition(name, resolved, range);
+        objects[name] = std::move(resolved);
+        states[name] = 2;
+      }
+
+      auto default_constructible(const std::string &name) const -> bool
+      {
+        const auto &object = objects.at(name);
+        if (!object.constructors.empty())
+          return std::any_of(object.constructors.begin(), object.constructors.end(),
+                             [](const auto &constructor) { return constructor.parameters.empty(); });
+        if (object.defaulted_fields.size() != object.fields.size()) return false;
+        return std::all_of(object.bases.begin(), object.bases.end(), [&](const auto &base)
+        { return default_constructible(generic_instance(base).base); });
       }
 
       struct ownership_edge
@@ -887,20 +1169,29 @@ namespace semantic
           if (!type || type->type_kind != parser::type_declaration::kind::class_type) continue;
           class_order.push_back(type->name);
           const auto &object = objects.at(type->name);
-          for (const auto &member : type->members)
+          const std::map<std::string, std::string> fields(object.fields.begin(), object.fields.end());
+          for (const auto &[field_name, field_type] : fields)
           {
-            const auto *field = dynamic_cast<const parser::let_declaration *>(member.get());
-            if (!field || field->weak_member) continue;
+            if (object.field_owners.at(field_name) != type->name ||
+                object.weak_fields.contains(field_name)) continue;
+            parser::span field_range = type->range;
+            for (const auto &member : type->members)
+              if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get());
+                  field && field->name == field_name)
+              {
+                field_range = field->range;
+                break;
+              }
             std::vector<std::string> targets;
-            reference_targets(object.fields.at(field->name), targets);
+            reference_targets(field_type, targets);
             for (const auto &target : targets)
             {
               require(!interfaces.contains(target),
-                      "Strong field '" + type->name + "." + field->name +
+                      "Strong field '" + type->name + "." + field_name +
                           "' cannot use dynamic face type '" + target + "'; declare it with weak let",
-                      field->range);
+                      field_range);
               if (objects.contains(target))
-                graph[type->name].push_back(ownership_edge{type->name, field->name, target, field->range});
+                graph[type->name].push_back(ownership_edge{type->name, field_name, target, field_range});
             }
           }
         }
@@ -949,11 +1240,27 @@ namespace semantic
         interface.faces = type.composed_interfaces;
         for (const auto &member : type.members)
         {
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
+          {
+            require(field->type_name && !field->initializer && !field->weak_member,
+                    "Face field '" + field->name + "' needs a type and no initializer", field->range);
+            require(!interface.fields.contains(field->name) && !interface.methods.contains(field->name),
+                    "Face '" + type.name + "' declares '" + field->name + "' more than once", field->range);
+            interface.fields.emplace(field->name, fixed_annotation(field->type_name));
+            if (field->private_member) interface.private_fields.insert(field->name);
+            if (dynamic_cast<const parser::const_declaration *>(field))
+              interface.constant_fields.insert(field->name);
+            continue;
+          }
           const auto *method = dynamic_cast<const parser::function_declaration *>(member.get());
           if (!method) continue;
+          require(!interface.fields.contains(method->name),
+                  "Face '" + type.name + "' declares '" + method->name + "' as both field and method",
+                  method->range);
           interface.methods[method->name].push_back(signature(*method));
+          if (method->private_member) interface.private_methods.insert(method->name);
           if (method->body || method->expression_body)
-            interface.defaults[method->name].push_back(signature(*method));
+            interface.defaults[method->name].push_back(default_candidate{signature(*method), method});
         }
         interfaces.emplace(type.name, std::move(interface));
         interface_ranges.emplace(type.name, type.range);
@@ -993,7 +1300,32 @@ namespace semantic
                   "Face '" + parent_instance.base + "' expects " +
                       std::to_string(parent.type_parameters.size()) + " type argument(s)",
                   interface_ranges.at(name));
+          for (const auto &[field_name, field_type] : parent.fields)
+          {
+            const auto substituted = substitute_type(field_type, parent.type_parameters,
+                                                     parent_instance.arguments);
+            if (const auto found = resolved.fields.find(field_name); found != resolved.fields.end())
+              require(found->second == substituted,
+                      "Face '" + name + "' inherits conflicting field promise '" + field_name + "'",
+                      interface_ranges.at(name));
+            else
+            {
+              require(!resolved.methods.contains(field_name),
+                      "Face '" + name + "' inherits field/method conflict '" + field_name + "'",
+                      interface_ranges.at(name));
+              resolved.fields.emplace(field_name, substituted);
+              resolved.private_fields.insert(field_name);
+              resolved.constant_fields.insert(field_name);
+            }
+            if (!parent.private_fields.contains(field_name)) resolved.private_fields.erase(field_name);
+            if (!parent.constant_fields.contains(field_name)) resolved.constant_fields.erase(field_name);
+          }
           for (const auto &[method_name, signatures] : parent.methods)
+          {
+            require(!resolved.fields.contains(method_name),
+                    "Face '" + name + "' inherits field/method conflict '" + method_name + "'",
+                    interface_ranges.at(name));
+            const bool first_method = !resolved.methods.contains(method_name);
             for (auto candidate : signatures)
             {
               for (auto &parameter : candidate.parameters)
@@ -1001,29 +1333,72 @@ namespace semantic
               candidate.result = substitute_type(candidate.result, parent.type_parameters, parent_instance.arguments);
               add_signature(resolved.methods[method_name], candidate);
             }
+            if (first_method && parent.private_methods.contains(method_name))
+              resolved.private_methods.insert(method_name);
+            if (!parent.private_methods.contains(method_name)) resolved.private_methods.erase(method_name);
+          }
           for (const auto &[method_name, defaults] : parent.defaults)
             for (auto candidate : defaults)
             {
-              for (auto &parameter : candidate.parameters)
+              for (auto &parameter : candidate.signature.parameters)
                 parameter = substitute_type(parameter, parent.type_parameters, parent_instance.arguments);
-              candidate.result = substitute_type(candidate.result, parent.type_parameters, parent_instance.arguments);
-              resolved.defaults[method_name].push_back(std::move(candidate));
+              candidate.signature.result = substitute_type(candidate.signature.result,
+                                                           parent.type_parameters,
+                                                           parent_instance.arguments);
+              auto &resolved_defaults = resolved.defaults[method_name];
+              if (std::none_of(resolved_defaults.begin(), resolved_defaults.end(),
+                               [&](const default_candidate &existing)
+              {
+                return existing.origin == candidate.origin &&
+                       same_signature(existing.signature, candidate.signature);
+              }))
+                resolved_defaults.push_back(std::move(candidate));
             }
+        }
+        for (const auto &[field_name, field_type] : direct.fields)
+        {
+          require(!resolved.methods.contains(field_name),
+                  "Face '" + name + "' declares field/method conflict '" + field_name + "'",
+                  interface_ranges.at(name));
+          if (const auto found = resolved.fields.find(field_name); found != resolved.fields.end())
+          {
+            require(found->second == field_type &&
+                        (resolved.constant_fields.contains(field_name) ||
+                         !direct.constant_fields.contains(field_name)) &&
+                        (resolved.private_fields.contains(field_name) ||
+                         !direct.private_fields.contains(field_name)),
+                    "Face '" + name + "' redeclares incompatible field promise '" + field_name + "'",
+                    interface_ranges.at(name));
+          }
+          else
+          {
+            if (direct.private_fields.contains(field_name)) resolved.private_fields.insert(field_name);
+            if (direct.constant_fields.contains(field_name)) resolved.constant_fields.insert(field_name);
+          }
+          resolved.fields[field_name] = field_type;
+          if (!direct.private_fields.contains(field_name)) resolved.private_fields.erase(field_name);
+          if (!direct.constant_fields.contains(field_name)) resolved.constant_fields.erase(field_name);
         }
         for (const auto &[method_name, signatures] : direct.methods)
         {
+          require(!resolved.fields.contains(method_name),
+                  "Face '" + name + "' declares field/method conflict '" + method_name + "'",
+                  interface_ranges.at(name));
+          if (!resolved.methods.contains(method_name) && direct.private_methods.contains(method_name))
+            resolved.private_methods.insert(method_name);
+          if (!direct.private_methods.contains(method_name)) resolved.private_methods.erase(method_name);
           for (const auto &candidate : signatures)
           {
             add_signature(resolved.methods[method_name], candidate);
             auto &defaults = resolved.defaults[method_name];
-            std::erase_if(defaults, [&](const callable_signature &existing)
+            std::erase_if(defaults, [&](const default_candidate &existing)
             {
-              return same_signature(existing, candidate);
+              return same_signature(existing.signature, candidate);
             });
             const auto own_defaults = direct.defaults.find(method_name);
             if (own_defaults != direct.defaults.end())
               for (const auto &own_default : own_defaults->second)
-                if (same_signature(own_default, candidate)) defaults.push_back(own_default);
+                if (same_signature(own_default.signature, candidate)) defaults.push_back(own_default);
           }
         }
         interfaces[name] = std::move(resolved);
@@ -1084,7 +1459,8 @@ namespace semantic
       auto validate_composition(const std::string &class_name, object_type &object,
                                 const parser::span range) -> void
       {
-        std::unordered_map<std::string, std::vector<callable_signature>> inherited_defaults;
+        std::unordered_map<std::string, std::vector<default_candidate>> inherited_defaults;
+        std::map<std::string, std::pair<std::string, std::string>> required_fields;
         for (const auto &face_name : object.faces)
         {
           const auto face_instance = generic_instance(face_name);
@@ -1094,6 +1470,41 @@ namespace semantic
           require(face_instance.arguments.size() == face->second.type_parameters.size(),
                   "Face '" + face_instance.base + "' expects " +
                       std::to_string(face->second.type_parameters.size()) + " type argument(s)", range);
+          std::vector<std::string> field_names;
+          for (const auto &[field_name, unused] : face->second.fields)
+          {
+            static_cast<void>(unused);
+            field_names.push_back(field_name);
+          }
+          std::sort(field_names.begin(), field_names.end());
+          for (const auto &field_name : field_names)
+          {
+            const auto required = substitute_type(face->second.fields.at(field_name),
+                                                  face->second.type_parameters, face_instance.arguments);
+            if (const auto previous = required_fields.find(field_name); previous != required_fields.end())
+              require(previous->second.first == required,
+                      "Faces '" + previous->second.second + "' and '" + face_name +
+                          "' require incompatible types for field '" + field_name + "'", range);
+            else required_fields.emplace(field_name, std::pair{required, face_name});
+            const auto provided = object.fields.find(field_name);
+            require(provided != object.fields.end(),
+                    "Class '" + class_name + "' is missing field '" + field_name +
+                        "' promised by face '" + face_name + "'", range);
+            require(provided->second == required,
+                    "Class '" + class_name + "' field '" + field_name + "' has type " + provided->second +
+                        ", but face '" + face_name + "' requires " + required, range);
+            require(face->second.constant_fields.contains(field_name) ||
+                        !object.constant_fields.contains(field_name),
+                    "Face '" + face_name + "' requires mutable field '" + field_name + "'", range);
+            require(face->second.private_fields.contains(field_name) ||
+                        !object.private_fields.contains(field_name),
+                    "Class '" + class_name + "' cannot satisfy public face field '" + field_name +
+                        "' with a private field", range);
+            require(!object.private_fields.contains(field_name) ||
+                        object.private_field_owners.at(field_name) == class_name,
+                    "Class '" + class_name + "' cannot expose inherited private field '" + field_name +
+                        "' to face '" + face_name + "'", range);
+          }
           for (const auto &[method_name, required_signatures] : face->second.methods)
           {
             const auto provided = object.methods.find(method_name);
@@ -1112,14 +1523,15 @@ namespace semantic
               const auto defaults = face->second.defaults.find(method_name);
               const std::size_t default_count = defaults == face->second.defaults.end() ? 0U :
                   static_cast<std::size_t>(std::count_if(defaults->second.begin(), defaults->second.end(),
-                                                         [&](const callable_signature &candidate)
+                                                         [&](const default_candidate &candidate)
               {
-                return same_signature(required, candidate);
+                return same_signature(required, candidate.signature);
               }));
               const bool has_default = default_count != 0;
               if (provided_match)
               {
-                require(!object.private_methods.contains(method_name),
+                require(face->second.private_methods.contains(method_name) ||
+                            !object.private_methods.contains(method_name),
                         "Class '" + class_name + "' cannot satisfy face '" + face_name +
                             "' with private method '" + method_name + "'",
                         range);
@@ -1132,8 +1544,18 @@ namespace semantic
                                 method_name + "' required by face '" + face_name + "'",
                       range);
               if (!provided_match)
-                for (std::size_t index = 0; index < default_count; ++index)
-                  inherited_defaults[method_name].push_back(required);
+                for (const auto &candidate : defaults->second)
+                  if (same_signature(required, candidate.signature))
+                  {
+                    auto &inherited = inherited_defaults[method_name];
+                    if (std::none_of(inherited.begin(), inherited.end(),
+                                     [&](const default_candidate &existing)
+                    {
+                      return existing.origin == candidate.origin &&
+                             same_signature(existing.signature, candidate.signature);
+                    }))
+                      inherited.push_back(candidate);
+                  }
             }
           }
         }
@@ -1142,9 +1564,9 @@ namespace semantic
           for (std::size_t index = 0; index < defaults.size(); ++index)
           {
             const std::size_t matches = static_cast<std::size_t>(std::count_if(
-                defaults.begin(), defaults.end(), [&](const callable_signature &candidate)
+                defaults.begin(), defaults.end(), [&](const default_candidate &candidate)
             {
-              return same_signature(defaults[index], candidate);
+              return same_signature(defaults[index].signature, candidate.signature);
             }));
             require(matches == 1,
                     "Class '" + class_name + "' inherits conflicting defaults for method '" + method_name +
@@ -1153,9 +1575,12 @@ namespace semantic
             auto &methods = object.methods[method_name];
             if (std::none_of(methods.begin(), methods.end(), [&](const callable_signature &candidate)
                 {
-                  return same_signature(defaults[index], candidate);
+                  return same_signature(defaults[index].signature, candidate);
                 }))
-              methods.push_back(defaults[index]);
+            {
+              methods.push_back(defaults[index].signature);
+              object.method_owners.try_emplace(method_name, class_name);
+            }
           }
         }
       }
@@ -1263,6 +1688,29 @@ namespace semantic
         {
           const std::string left = expression(*binary->left);
           const std::string right = expression(*binary->right);
+          if (binary->operator_text == "is" || binary->operator_text == "has")
+          {
+            const auto *source = dynamic_cast<const parser::identifier_expression *>(binary->left.get());
+            const auto *target = dynamic_cast<const parser::identifier_expression *>(binary->right.get());
+            require(source && target && left == "Type" && right == "Type",
+                    "Type relationship checks require declared class or face names", value.range);
+            if (binary->operator_text == "is")
+              require(objects.contains(source->name) && objects.contains(target->name),
+                      "'is' checks class inheritance; use 'has' for face composition", value.range);
+            else
+              require((objects.contains(source->name) || interfaces.contains(source->name)) &&
+                          interfaces.contains(target->name),
+                      "'has' checks whether a class or face composes another face", value.range);
+            const auto parameter_count = [&](const std::string &name) -> std::size_t
+            {
+              if (const auto object = objects.find(name); object != objects.end())
+                return object->second.type_parameters.size();
+              return interfaces.at(name).type_parameters.size();
+            };
+            require(parameter_count(source->name) == 0 && parameter_count(target->name) == 0,
+                    "Type relationship checks currently require non-generic class or face names", value.range);
+            return record(value, "Bool");
+          }
           if (binary->operator_text == "??")
           {
             const auto contained = optional_element(left);
@@ -1321,6 +1769,78 @@ namespace semantic
           for (const auto &argument : call->arguments) arguments.push_back(expression(*argument));
           if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get()))
           {
+            if (member->member_name == "length" || member->member_name == "squared_length" ||
+                member->member_name == "normalized" || member->member_name == "normalized!")
+            {
+              const std::string receiver_type = expression(*member->target);
+              if (const auto shaped = dimensioned(receiver_type);
+                  shaped && shaped->family == "Vector")
+              {
+                require(!member->safe, "Safe access is not defined for Vector methods", member->range);
+                require(arguments.empty(), "Vector." + member->member_name + " expects no arguments", value.range);
+                const auto measured = units::parse_measured_type(shaped->component, unit_registry, member->range);
+                const std::string numeric = measured ? measured->numeric : shaped->component;
+                require(float_width(numeric) > 0,
+                        "Vector." + member->member_name + " requires Float32 or Float64 components",
+                        member->range);
+                if (member->member_name == "normalized!")
+                {
+                  require_mutable_root(*member->target);
+                  require(!measured, "normalized! cannot change a unit-typed Vector into a unitless Vector; "
+                                     "use normalized() instead", member->range);
+                }
+                const std::string result = member->member_name == "squared_length"
+                    ? arithmetic_type("*", shaped->component, shaped->component, value.range)
+                    : member->member_name == "length" ? shaped->component
+                    : "Vector" + std::to_string(shaped->dimensions) + "<" + numeric + ">";
+                static_cast<void>(record(*call->callee, "Function"));
+                model.members.push_back(resolved_member{member->range, receiver_type, member->member_name});
+                model.calls.push_back(resolved_call{value.range, call->callee->range.end, {}, result});
+                return record(value, result);
+              }
+            }
+            if (const auto *parent_member = dynamic_cast<const parser::member_expression *>(member->target.get()))
+              if (const auto *super = dynamic_cast<const parser::identifier_expression *>(parent_member->target.get());
+                  super && super->name == "super")
+              {
+                require(active_class && in_class_function,
+                        "'super' is only valid inside a class method or constructor", value.range);
+                require(!member->safe && !parent_member->safe,
+                        "Safe access is not supported on a parent implementation", value.range);
+                const auto &owner = objects.at(*active_class);
+                const auto base = std::find_if(owner.bases.begin(), owner.bases.end(), [&](const auto &candidate)
+                { return generic_instance(candidate).base == parent_member->member_name; });
+                require(base != owner.bases.end(), "'" + parent_member->member_name +
+                        "' is not a direct parent of '" + *active_class + "'", parent_member->range);
+                const auto instance = generic_instance(*base);
+                const auto &parent = objects.at(instance.base);
+                require(!parent.private_methods.contains(member->member_name),
+                        "Private parent method '" + member->member_name + "' is not accessible here", member->range);
+                const auto methods = parent.methods.find(member->member_name);
+                require(methods != parent.methods.end(), "Parent '" + instance.base +
+                        "' has no method '" + member->member_name + "'", member->range);
+                std::vector<callable_signature> viable;
+                for (auto candidate : methods->second)
+                {
+                  if (!accepts_arguments(candidate, arguments.size())) continue;
+                  for (auto &parameter : candidate.parameters)
+                    parameter = substitute_type(parameter, parent.type_parameters, instance.arguments);
+                  candidate.result = substitute_type(candidate.result, parent.type_parameters, instance.arguments);
+                  bool matches = true;
+                  for (std::size_t index = 0; index < arguments.size(); ++index)
+                    matches &= compatible(candidate.parameters[index], arguments[index]);
+                  if (matches) viable.push_back(std::move(candidate));
+                }
+                require(!viable.empty(), "No matching parent method '" + instance.base + "." +
+                        member->member_name + "'", value.range);
+                require(viable.size() == 1, "Ambiguous parent method '" + instance.base + "." +
+                        member->member_name + "'", value.range);
+                static_cast<void>(record(*call->callee, "Function"));
+                model.members.push_back(resolved_member{member->range, instance.base, member->member_name});
+                model.calls.push_back(resolved_call{value.range, call->callee->range.end,
+                                                    viable.front().parameters, viable.front().result});
+                return record(value, viable.front().result);
+              }
             if (member->member_name.ends_with('!')) require_mutable_root(*member->target);
             if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get()))
             {
@@ -1383,32 +1903,6 @@ namespace semantic
               model.calls.push_back(resolved_call{value.range, call->callee->range.end,
                                                   arguments, arguments.front()});
               return record(value, arguments.front());
-            }
-            if (identifier->name == "squared_length" || identifier->name == "length" ||
-                identifier->name == "normalized")
-            {
-              require(arguments.size() == 1, identifier->name + " expects exactly one Vector", value.range);
-              const auto shaped = dimensioned(arguments.front());
-              require(shaped && shaped->family == "Vector",
-                      identifier->name + " requires a Vector, but received " + arguments.front(),
-                      call->arguments.front()->range);
-              const auto measured = units::parse_measured_type(shaped->component, unit_registry,
-                                                               call->arguments.front()->range);
-              const std::string numeric = measured ? measured->numeric : shaped->component;
-              require(float_width(numeric) > 0,
-                      identifier->name + " requires Float32 or Float64 vector components, but received " +
-                          shaped->component,
-                      call->arguments.front()->range);
-              std::string result;
-              if (identifier->name == "squared_length")
-                result = arithmetic_type("*", shaped->component, shaped->component, value.range);
-              else if (identifier->name == "length") result = shaped->component;
-              else
-                result = "Vector" + std::to_string(shaped->dimensions) + "<" + numeric + ">";
-              static_cast<void>(record(*call->callee, "Function"));
-              model.calls.push_back(resolved_call{value.range, call->callee->range.end,
-                                                  arguments, result});
-              return record(value, result);
             }
             if (identifier->name == "dot")
             {
@@ -1560,7 +2054,7 @@ namespace semantic
                 std::vector<std::pair<callable_signature, std::vector<std::string>>> viable;
                 for (const auto &candidate : object.constructors)
                 {
-                  if (candidate.parameters.size() != arguments.size()) continue;
+                  if (!accepts_arguments(candidate, arguments.size())) continue;
                   auto inferred = type_arguments;
                   bool matches = true;
                   if (std::any_of(inferred.begin(), inferred.end(), [](const auto &type)
@@ -1611,7 +2105,7 @@ namespace semantic
             std::vector<callable_signature> viable;
             for (const auto &candidate : *matches)
             {
-              if (!candidate.callable || candidate.callable->parameters.size() != arguments.size()) continue;
+              if (!candidate.callable || !accepts_arguments(*candidate.callable, arguments.size())) continue;
               callable_signature instantiated = *candidate.callable;
               if (!instantiated.type_parameters.empty())
               {
@@ -1657,16 +2151,18 @@ namespace semantic
             require(viable.size() == 1, "Ambiguous overload for '" + requested.base + "'", value.range);
             static_cast<void>(record(*call->callee, "Function"));
             model.calls.push_back(resolved_call{value.range, call->callee->range.end,
-                                                viable.front().parameters, viable.front().result});
+                                                viable.front().parameters, viable.front().result,
+                                                viable.front().default_spans});
             return record(value, viable.front().result);
           }
           static_cast<void>(expression(*call->callee));
           const auto callable = callables.find(call->callee.get());
           require(callable != callables.end(), "Called expression is not callable", call->callee->range);
           callable_signature instantiated = callable->second;
-          require(instantiated.parameters.size() == arguments.size(),
-                  "Callable expects " + std::to_string(instantiated.parameters.size()) +
-                      " arguments, but received " + std::to_string(arguments.size()),
+          require(accepts_arguments(instantiated, arguments.size()),
+                  "Callable expects " + std::to_string(required_arguments(instantiated)) + " to " +
+                      std::to_string(instantiated.parameters.size()) + " arguments, but received " +
+                      std::to_string(arguments.size()),
                   value.range);
           if (!instantiated.type_parameters.empty())
           {
@@ -1703,7 +2199,8 @@ namespace semantic
             require_compatible(instantiated.parameters[index], arguments[index], call->arguments[index]->range,
                                "Callable argument");
           model.calls.push_back(resolved_call{value.range, call->callee->range.end,
-                                              instantiated.parameters, instantiated.result});
+                                              instantiated.parameters, instantiated.result,
+                                              instantiated.default_spans});
           return record(value, instantiated.result);
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
@@ -1788,7 +2285,8 @@ namespace semantic
               model.members.push_back(resolved_member{member->range, instantiated_target.base,
                                                        member->member_name});
               require(!object->second.private_fields.contains(member->member_name) ||
-                          (active_class && *active_class == instantiated_target.base),
+                          (active_class && *active_class ==
+                              object->second.private_field_owners.at(member->member_name)),
                       "Private field '" + member->member_name + "' of class '" + accessed_target +
                           "' is not accessible here",
                       value.range);
@@ -1804,7 +2302,8 @@ namespace semantic
               model.members.push_back(resolved_member{member->range, instantiated_target.base,
                                                        requested_member.base});
               require(!object->second.private_methods.contains(member->member_name) ||
-                          (active_class && *active_class == instantiated_target.base),
+                          (active_class && *active_class ==
+                              object->second.private_method_owners.at(member->member_name)),
                       "Private method '" + member->member_name + "' of class '" + accessed_target +
                           "' is not accessible here",
                       value.range);
@@ -1826,9 +2325,24 @@ namespace semantic
           if (const auto interface = interfaces.find(instantiated_interface.base); interface != interfaces.end())
           {
             const auto requested_member = generic_instance(member->member_name);
+            if (const auto field = interface->second.fields.find(requested_member.base);
+                field != interface->second.fields.end())
+            {
+              require(!interface->second.private_fields.contains(requested_member.base) ||
+                          (active_face && *active_face == instantiated_interface.base),
+                      "Private face field '" + requested_member.base + "' is not accessible here", value.range);
+              model.members.push_back(resolved_member{member->range, instantiated_interface.base,
+                                                       requested_member.base});
+              const std::string field_type = substitute_type(field->second,
+                  interface->second.type_parameters, instantiated_interface.arguments);
+              return record(value, member->safe ? "Optional<" + field_type + ">" : field_type);
+            }
             const auto methods = interface->second.methods.find(requested_member.base);
             require(methods != interface->second.methods.end(),
                     "Face '" + target + "' has no method '" + member->member_name + "'", value.range);
+            require(!interface->second.private_methods.contains(requested_member.base) ||
+                        (active_face && *active_face == instantiated_interface.base),
+                    "Private face method '" + requested_member.base + "' is not accessible here", value.range);
             require(methods->second.size() == 1,
                     "Face method reference '" + member->member_name + "' is overloaded and requires a call",
                     value.range);
@@ -1941,12 +2455,32 @@ namespace semantic
         {
           require(!expression_contains_name(*lambda->body, "self"),
                   "Capturing 'self' in a lambda is not available in Sagan 1.0", value.range);
+          require(!expression_contains_name(*lambda->body, "super"),
+                  "Capturing 'super' in a lambda is not available", value.range);
           callable_signature signature;
+          signature.required_parameters = 0;
           open_scope();
+          bool default_seen = false;
           for (const auto &parameter : lambda->parameters)
           {
+            require(!default_seen || parameter.default_value,
+                    "Required parameters must precede default arguments", value.range);
+            default_seen |= static_cast<bool>(parameter.default_value);
             const std::string parameter_type = fixed_annotation(parameter.type_name);
             signature.parameters.push_back(parameter_type);
+            signature.default_spans.push_back(parameter.default_value
+                ? std::optional<parser::span>{parameter.default_value->range} : std::nullopt);
+            if (parameter.default_value)
+            {
+              require(parameter.type_name.has_value(),
+                      "A default argument requires an explicit parameter type", parameter.default_value->range);
+              require(constant_default(*parameter.default_value),
+                      "Default arguments must be self-contained values", parameter.default_value->range);
+              const std::string fallback = expression(*parameter.default_value);
+              require_compatible(parameter_type, fallback, parameter.default_value->range,
+                                 "Lambda default argument");
+            }
+            else ++signature.required_parameters;
             add_binding(parameter.name, binding{parameter_type, function_signature_type(parameter_type)});
           }
           const std::string body = expression(*lambda->body);
@@ -1990,6 +2524,9 @@ namespace semantic
           if (const auto object = objects.find(receiver.base); object != objects.end())
             require(!object->second.constant_fields.contains(member->member_name),
                     "Constant field '" + member->member_name + "' cannot be mutated", value.range);
+          if (const auto face = interfaces.find(receiver.base); face != interfaces.end())
+            require(!face->second.constant_fields.contains(member->member_name),
+                    "Read-only face field '" + member->member_name + "' cannot be mutated", value.range);
           return;
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
@@ -2019,11 +2556,14 @@ namespace semantic
             {
               require(!member->safe, "Safe-access results are not assignable", value.range);
               require(!object->second.private_fields.contains(member->member_name) ||
-                          (active_class && *active_class == instantiated_target.base),
+                          (active_class && *active_class ==
+                              object->second.private_field_owners.at(member->member_name)),
                       "Private field '" + member->member_name + "' of class '" + target_type +
                           "' is not accessible here",
                       value.range);
-              return substitute_type(field->second, object->second.type_parameters, instantiated_target.arguments);
+              return record(value,
+                            substitute_type(field->second, object->second.type_parameters,
+                                            instantiated_target.arguments));
             }
           }
           return expression(value);
@@ -2046,12 +2586,91 @@ namespace semantic
 
       auto function(const parser::function_declaration &value) -> void
       {
+        const bool previous_class_function = in_class_function;
+        in_class_function = active_class.has_value();
         open_scope();
+        bool default_seen = false;
         for (const auto &parameter : value.parameters)
         {
+          require(!default_seen || parameter.default_value,
+                  "Required parameters must precede default arguments", value.range);
+          default_seen |= static_cast<bool>(parameter.default_value);
           const std::string type = fixed_annotation(parameter.type_name);
+          if (parameter.default_value)
+          {
+            require(parameter.type_name.has_value(),
+                    "A default argument requires an explicit parameter type", parameter.default_value->range);
+            require(constant_default(*parameter.default_value),
+                    "Default arguments must be self-contained values", parameter.default_value->range);
+            const std::string fallback = expression(*parameter.default_value);
+            require_compatible(type, fallback, parameter.default_value->range, "Default argument");
+          }
           add_binding(parameter.name, binding{type, function_signature_type(type)});
           model.declarations.push_back(typed_declaration{value.range, parameter.name, type});
+        }
+        if (value.constructor_member && active_class)
+        {
+          const auto &owner = objects.at(*active_class);
+          std::unordered_set<std::string> initialized;
+          std::size_t previous_index = 0;
+          for (const auto &initializer : value.parent_initializers)
+          {
+            std::size_t index = 0;
+            while (index < owner.bases.size() && generic_instance(owner.bases[index]).base != initializer.name)
+              ++index;
+            require(index < owner.bases.size(),
+                    "'" + initializer.name + "' is not a direct parent of '" + *active_class + "'",
+                    initializer.range);
+            require(initialized.insert(initializer.name).second,
+                    "Parent '" + initializer.name + "' is initialized more than once", initializer.range);
+            require(initialized.size() == 1 || index > previous_index,
+                    "Parent constructors must follow the class inheritance order", initializer.range);
+            previous_index = index;
+            const auto instance = generic_instance(owner.bases[index]);
+            const auto &parent = objects.at(instance.base);
+            std::vector<std::string> argument_types;
+            for (const auto &argument : initializer.arguments)
+            {
+              require(!expression_contains_name(*argument, "self"),
+                      "Parent constructor arguments cannot use 'self' before initialization", argument->range);
+              argument_types.push_back(expression(*argument));
+            }
+            std::vector<std::vector<std::string>> viable;
+            if (parent.constructors.empty())
+            {
+              require(argument_types.empty() && default_constructible(instance.base),
+                      "No matching constructor for parent '" + initializer.name + "'", initializer.range);
+              viable.emplace_back();
+            }
+            else
+              for (const auto &candidate : parent.constructors)
+              {
+                if (!accepts_arguments(candidate, argument_types.size())) continue;
+                std::vector<std::string> expected;
+                bool matches = true;
+                for (std::size_t argument = 0; argument < argument_types.size(); ++argument)
+                {
+                  expected.push_back(substitute_type(candidate.parameters[argument],
+                                                     parent.type_parameters, instance.arguments));
+                  matches &= compatible(expected.back(), argument_types[argument]);
+                }
+                if (matches) viable.push_back(std::move(expected));
+              }
+            require(!viable.empty(), "No matching constructor for parent '" + initializer.name + "'",
+                    initializer.range);
+            require(viable.size() == 1, "Ambiguous constructor for parent '" + initializer.name + "'",
+                    initializer.range);
+            model.calls.push_back(resolved_call{initializer.range, initializer.range.begin,
+                                                 viable.front(), initializer.name});
+          }
+          for (const auto &base : owner.bases)
+          {
+            const auto name = generic_instance(base).base;
+            if (!initialized.contains(name))
+              require(default_constructible(name),
+                      "Parent '" + name + "' needs constructor arguments in 'new(...) is " + name + "(...)'",
+                      value.range);
+          }
         }
         return_types.push_back(fixed_annotation(value.return_type));
         if (value.body) block(*value.body);
@@ -2072,6 +2691,7 @@ namespace semantic
         }
         return_types.pop_back();
         close_scope();
+        in_class_function = previous_class_function;
       }
 
       auto constructor_assigned_fields(const parser::statement &value,
@@ -2565,7 +3185,9 @@ namespace semantic
         else if (const auto *type = dynamic_cast<const parser::type_declaration *>(&value))
         {
           const auto previous_class = active_class;
+          const auto previous_face = active_face;
           if (type->type_kind == parser::type_declaration::kind::class_type) active_class = type->name;
+          if (type->type_kind == parser::type_declaration::kind::interface_type) active_face = type->name;
           open_scope();
           if (type->type_kind == parser::type_declaration::kind::class_type ||
               type->type_kind == parser::type_declaration::kind::interface_type)
@@ -2584,8 +3206,23 @@ namespace semantic
             add_binding("self", binding{std::move(self_type), {}});
           }
           for (const auto &member : type->members) predeclare(*member);
+          if (active_class && objects.at(*active_class).constructors.empty())
+            for (const auto &base : objects.at(*active_class).bases)
+            {
+              const auto name = generic_instance(base).base;
+              require(default_constructible(name),
+                      "Class '" + *active_class + "' needs a constructor to initialize parent '" + name + "'",
+                      type->range);
+            }
           for (const auto &member : type->members)
           {
+            if (type->type_kind == parser::type_declaration::kind::interface_type)
+              if (const auto *field = dynamic_cast<const parser::let_declaration *>(member.get()))
+              {
+                model.declarations.push_back(typed_declaration{field->range, field->name,
+                    interfaces.at(type->name).fields.at(field->name)});
+                continue;
+              }
             if (const auto *function_member = dynamic_cast<const parser::function_declaration *>(member.get());
                 function_member && function_member->constructor_member)
               validate_constructor(*function_member, objects.at(type->name));
@@ -2593,6 +3230,7 @@ namespace semantic
           }
           close_scope();
           active_class = previous_class;
+          active_face = previous_face;
         }
       }
 
@@ -2603,7 +3241,7 @@ namespace semantic
         add_binding("print", binding{"Function", callable_signature{{std::string(unknown_type)}, "Void", {}, {}}});
         add_binding("assert", binding{"Function", callable_signature{{"Bool"}, "Void", {}, {}}});
         add_binding("exit", binding{"Function", callable_signature{{"Int64"}, "Void", {}, {}}});
-        for (const std::string name : {"sqrt", "squared_length", "length", "dot", "normalized",
+        for (const std::string name : {"sqrt", "dot",
                                       "display_coordinates"})
           add_binding(name, binding{"Function", {}});
         // Private native-package bridge used by sagan-render. These names are not
@@ -2619,6 +3257,8 @@ namespace semantic
         add_binding("__render_scroll_y", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
         add_binding("__render_set_view",
                     binding{"Function", callable_signature{{"Float64", "Float64", "Float64"}, "Void", {}, {}}});
+        add_binding("__render_is_visible",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "Float64"}, "Bool", {}, {}}});
         add_binding("__render_present", binding{"Function", callable_signature{{}, "Void", {}, {}}});
         add_binding("__render_circle",
                     binding{"Function", callable_signature{{"Float64", "Float64", "Float64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
@@ -2647,6 +3287,11 @@ namespace semantic
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_enum_type(*type);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get())) collect_object_type(*type);
+        std::unordered_map<std::string, int> object_states;
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
+              type && type->type_kind == parser::type_declaration::kind::class_type)
+            resolve_object(type->name, type->range, object_states);
         validate_ownership(tree);
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
@@ -2668,10 +3313,6 @@ namespace semantic
                         field->range);
               }
           }
-        for (const auto &entry : tree.statements)
-          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get());
-              type && type->type_kind == parser::type_declaration::kind::class_type)
-            validate_composition(type->name, objects.at(type->name), type->range);
         // Root bindings are initialized by the script before a later call can
         // enter a function body. Check those bindings first so functions may
         // refer to them regardless of where the function is declared.

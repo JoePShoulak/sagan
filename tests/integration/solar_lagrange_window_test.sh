@@ -8,12 +8,12 @@ cd "$repo_root"
 capture="build/solar-lagrange-demo/solar-lagrange-window.bmp"
 rm -f "$capture"
 output="$(
-  SAGAN_RENDER_TEST_FRAME_MS=20 \
+  SAGAN_RENDER_TEST_FRAME_MS=100 \
   SAGAN_RENDER_TEST_SPACE_FRAME=1 \
-  SAGAN_RENDER_TEST_SCROLL_FRAME=300 \
+  SAGAN_RENDER_TEST_SCROLL_FRAME=60 \
   SAGAN_RENDER_TEST_SCROLL_DELTA=-3 \
-  SAGAN_RENDER_FRAME_LIMIT=600 \
-  SAGAN_RENDER_CAPTURE_FRAME=600 \
+  SAGAN_RENDER_FRAME_LIMIT=120 \
+  SAGAN_RENDER_CAPTURE_FRAME=120 \
   SAGAN_RENDER_CAPTURE_BMP="$capture" \
   bash scripts/solar_lagrange_demo.sh
 )"
@@ -42,11 +42,17 @@ if [[ "$output" != *"final_L4_error"* || "$output" != *"final_L5_error"* ]]; the
   exit 1
 fi
 if [[ "$output" != *"final_elapsed 60 day"* ||
+      "$output" != *"final_elapsed_display 0 years, 60 days (60 total days)"* ||
       "$output" != *"final_simulation_rate_days_per_real_second 5"* ||
-      "$output" != *"final_L4_error "*" kilometer"* ||
       "$output" == *"meter / meter"* ||
       "$output" == *"second / second"* ]]; then
-  echo "Expected elapsed days, selected simulation rate, and kilometer error readouts, got:" >&2
+  echo "Expected elapsed days, selected simulation rate, and dimensionally clean error readouts, got:" >&2
+  echo "$output" >&2
+  exit 1
+fi
+if ! printf '%s\n' "$output" | grep -Eq \
+    '^final_L4_error [0-9]+([.][0-9]+)? (millimeter|meter|kilometer|megameter|gigameter)$'; then
+  echo "Expected a plain-decimal adaptive L4 error unit, got:" >&2
   echo "$output" >&2
   exit 1
 fi

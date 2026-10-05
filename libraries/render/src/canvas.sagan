@@ -4,6 +4,10 @@ module canvas
 fun set_view(center_x: Float64, center_y: Float64, pixels_per_unit: Float64): Void =>
   __render_set_view(center_x, center_y, pixels_per_unit)
 
+/// Whether a circle intersects the current drawable viewport.
+fun is_visible(x: Float64, y: Float64, radius: Float64): Bool =>
+  __render_is_visible(x, y, radius)
+
 /// Present the completed frame in the window.
 fun present(): Void => __render_present()
 
@@ -28,6 +32,7 @@ fun text_screen(x: Int64, y: Int64, value: String, point_size: Int64,
   __render_text_screen(x, y, value, point_size, red, green, blue)
 
 export set_view
+export is_visible
 export present
 export circle
 export line

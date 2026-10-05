@@ -1,0 +1,6 @@
+module support
+
+fun answer(value: Int): Int => value + 1
+fun answer(value: String): String => value
+
+export answer

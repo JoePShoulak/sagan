@@ -8,7 +8,7 @@ verified_by: null
 ---
 
 # Editor support
-The version 0.3.5 VS Code extension in `editors/vscode-sagan/` associates
+The version 0.3.6 VS Code extension in `editors/vscode-sagan/` associates
 `.sagan` files with the language and provides a tokenizer-aligned Sagan TextMate
 grammar. It covers declarations (including explicit `const` and visibly invalid
 `let ALL_CAPS` names), keywords, types, literals, operators, punctuation,
@@ -44,6 +44,12 @@ position queries, and LSP transport are available. Track the [editor feature rea
 and [language-server capability contract](language-server-capabilities.md).
 The extension must not duplicate Sagan parsing, semantics, project rules, or
 standard-library metadata.
+
+After changing compiler syntax or semantics in a repository checkout, rebuild
+both `sagan` and `sagan-lsp`, then run **Sagan: Restart Language Server** (or
+reload the VS Code window). Reinstalling the VSIX alone does not update the
+native server. Check **Sagan: Show Tooling Status** to confirm which compiler
+and server paths the editor is using.
 
 The [VS Code extension roadmap](vscode-extension-roadmap.md) records remaining
 release validation, distribution, and compiler-blocked integrations.

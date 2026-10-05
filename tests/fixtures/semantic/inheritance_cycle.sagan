@@ -1,0 +1,5 @@
+class Ship is GunShip {
+}
+
+class GunShip is Ship {
+}

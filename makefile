@@ -100,7 +100,7 @@ WINDOWS_ICON_RESOURCE :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test two-body-demo two-body-demo-test lagrange-demo lagrange-demo-test solar-lagrange-demo solar-lagrange-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test lagrange-numeric-demo lagrange-numeric-demo-test solar-lagrange-numeric-demo solar-lagrange-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test two-body-demo two-body-demo-build two-body-demo-run two-body-demo-test lagrange-demo lagrange-demo-build lagrange-demo-run lagrange-demo-test solar-lagrange-demo solar-lagrange-demo-build solar-lagrange-demo-run solar-lagrange-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test lagrange-numeric-demo lagrange-numeric-demo-test solar-lagrange-numeric-demo solar-lagrange-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
@@ -246,8 +246,8 @@ test: $(TARGET) $(LANGUAGE_SERVER) $(DEBUG_ADAPTER) $(SOURCE_DIAGNOSTICS_TEST) $
 	$(NATIVE_OPERATIONS_TEST)
 	$(NATIVE_BRIDGE_TEST)
 	$(LSP_TEST)
-	bash scripts/lsp_protocol_test.sh
-	bash scripts/lsp_reliability_test.sh
+	SAGAN_LSP_BINARY="$(LANGUAGE_SERVER)" bash scripts/lsp_protocol_test.sh
+	SAGAN_LSP_BINARY="$(LANGUAGE_SERVER)" bash scripts/lsp_reliability_test.sh
 	$(CONSTANTS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
@@ -283,17 +283,35 @@ shape-text-demo-test: $(TARGET)
 two-body-demo: $(TARGET)
 	bash scripts/two_body_demo.sh
 
+two-body-demo-build: $(TARGET)
+	bash scripts/two_body_demo.sh build
+
+two-body-demo-run:
+	bash scripts/two_body_demo.sh run
+
 two-body-demo-test: $(TARGET)
 	bash tests/integration/two_body_window_test.sh
 
 lagrange-demo: $(TARGET)
 	bash scripts/lagrange_demo.sh
 
+lagrange-demo-build: $(TARGET)
+	bash scripts/lagrange_demo.sh build
+
+lagrange-demo-run:
+	bash scripts/lagrange_demo.sh run
+
 lagrange-demo-test: $(TARGET)
 	bash tests/integration/lagrange_window_test.sh
 
 solar-lagrange-demo: $(TARGET)
 	bash scripts/solar_lagrange_demo.sh
+
+solar-lagrange-demo-build: $(TARGET)
+	bash scripts/solar_lagrange_demo.sh build
+
+solar-lagrange-demo-run:
+	bash scripts/solar_lagrange_demo.sh run
 
 solar-lagrange-demo-test: $(TARGET)
 	bash tests/integration/solar_lagrange_window_test.sh

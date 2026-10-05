@@ -6,10 +6,12 @@
 #include <algorithm>
 #include <iomanip>
 #include <limits>
+#include <map>
 #include <optional>
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace semantic
@@ -28,6 +30,51 @@ namespace semantic
       std::size_t current_scope = 0;
       std::vector<std::size_t> active_type_scopes;
       std::unordered_map<std::string, std::size_t> type_scopes;
+      std::unordered_map<std::string, std::vector<std::string>> class_bases;
+      std::unordered_map<std::string, const parser::type_declaration *> type_declarations;
+
+      auto face_storage(const std::string &name, std::unordered_set<std::string> &visited,
+                        std::map<std::string,
+                                 std::pair<const parser::let_declaration *, bool>> &fields) const -> void
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return;
+        const auto found = type_declarations.find(base);
+        if (found == type_declarations.end() ||
+            found->second->type_kind != parser::type_declaration::kind::interface_type) return;
+        for (const auto &parent : found->second->composed_interfaces)
+          face_storage(parent, visited, fields);
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
+          {
+            auto [slot, inserted] = fields.try_emplace(field->name, field, field->private_member);
+            if (!inserted) slot->second.second &= field->private_member;
+          }
+      }
+
+      auto class_storage(const std::string &name, const std::string &field_name,
+                         std::unordered_set<std::string> &visited) const -> bool
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return false;
+        const auto found = type_declarations.find(base);
+        if (found == type_declarations.end() ||
+            found->second->type_kind != parser::type_declaration::kind::class_type) return false;
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get());
+              field && field->name == field_name)
+            return true;
+        for (const auto &face : found->second->composed_interfaces)
+        {
+          std::unordered_set<std::string> face_visited;
+          std::map<std::string, std::pair<const parser::let_declaration *, bool>> fields;
+          face_storage(face, face_visited, fields);
+          if (fields.contains(field_name)) return true;
+        }
+        for (const auto &parent : found->second->base_classes)
+          if (class_storage(parent, field_name, visited)) return true;
+        return false;
+      }
 
       static auto documentation(const std::vector<parser::documentation_comment> &comments)
         -> std::vector<std::string>
@@ -131,6 +178,23 @@ namespace semantic
 
       auto resolve_member(const parser::member_expression &member, const reference_kind kind) -> void
       {
+        const auto inherited = [&](const auto &self, const std::string &owner,
+                                   std::unordered_set<std::string> &visited) -> const symbol *
+        {
+          if (!visited.insert(owner).second) return nullptr;
+          const auto parents = class_bases.find(owner);
+          if (parents == class_bases.end()) return nullptr;
+          for (const auto &parent_annotation : parents->second)
+          {
+            const auto parent = parent_annotation.substr(0, parent_annotation.find('<'));
+            if (const auto scope = type_scopes.find(parent); scope != type_scopes.end())
+              if (const auto found = names[scope->second].find(member.member_name);
+                  found != names[scope->second].end())
+                return &model.scopes[scope->second].symbols[found->second.front()];
+            if (const auto *ancestor = self(self, parent, visited)) return ancestor;
+          }
+          return nullptr;
+        };
         const auto *target = dynamic_cast<const parser::identifier_expression *>(member.target.get());
         if (!target) return;
         if (const auto receiver = find(target->name);
@@ -143,22 +207,28 @@ namespace semantic
         if (const auto declared_type = type_scopes.find(target->name); declared_type != type_scopes.end())
         {
           const auto found = names[declared_type->second].find(member.member_name);
-          if (found == names[declared_type->second].end()) return;
-          const auto &declared = model.scopes[declared_type->second].symbols[found->second.front()];
-          model.resolutions.push_back(resolution{member.member_name, member.range, declared.declaration,
-                                                 declared.id, kind});
+          const symbol *declared = found == names[declared_type->second].end()
+              ? nullptr : &model.scopes[declared_type->second].symbols[found->second.front()];
+          std::unordered_set<std::string> visited;
+          if (!declared) declared = inherited(inherited, target->name, visited);
+          if (declared)
+            model.resolutions.push_back(resolution{member.member_name, member.range, declared->declaration,
+                                                   declared->id, kind});
           return;
         }
         if (target->name != "self" || active_type_scopes.empty()) return;
         const auto scope_id = active_type_scopes.back();
         const auto found = names[scope_id].find(member.member_name);
-        // The type checker owns inherited/default face members and produces the
-        // actual validity diagnostic. The lexical analyzer links only members
-        // declared directly in this type scope.
-        if (found == names[scope_id].end()) return;
-        const auto &declared = model.scopes[scope_id].symbols[found->second.front()];
-        model.resolutions.push_back(resolution{member.member_name, member.range, declared.declaration,
-                                               declared.id, kind});
+        // The type checker owns validity diagnostics. Link source-declared
+        // superclass members here as well as members of this type.
+        const symbol *declared = found == names[scope_id].end()
+            ? nullptr : &model.scopes[scope_id].symbols[found->second.front()];
+        std::unordered_set<std::string> visited;
+        if (!declared)
+          declared = inherited(inherited, model.scopes[scope_id].label.substr(5), visited);
+        if (declared)
+          model.resolutions.push_back(resolution{member.member_name, member.range, declared->declaration,
+                                                 declared->id, kind});
       }
 
       auto resolve_type(const std::optional<std::string> &name, const parser::span range,
@@ -391,8 +461,27 @@ namespace semantic
             resolve_explicit_generic(identifier->name, identifier->range);
           else if (const auto *member = dynamic_cast<const parser::member_expression *>(call->callee.get()))
           {
-            expression(*member->target);
-            resolve_member(*member, reference_kind::call);
+            const auto *parent = dynamic_cast<const parser::member_expression *>(member->target.get());
+            const auto *super = parent
+                ? dynamic_cast<const parser::identifier_expression *>(parent->target.get()) : nullptr;
+            if (super && super->name == "super" && !active_type_scopes.empty())
+            {
+              const parser::span parent_name{parent->range.end -
+                  static_cast<int>(parent->member_name.size()), parent->range.end};
+              resolve_type(std::optional<std::string>{parent->member_name}, parent_name);
+              const parser::span method_name{member->range.end -
+                  static_cast<int>(member->member_name.size()), member->range.end};
+              parser::member_expression parent_call(
+                  method_name,
+                  std::make_unique<parser::identifier_expression>(parent_name, parent->member_name),
+                  member->member_name, false);
+              resolve_member(parent_call, reference_kind::call);
+            }
+            else
+            {
+              expression(*member->target);
+              resolve_member(*member, reference_kind::call);
+            }
             if (member->member_name.find('<') != std::string::npos)
               resolve_explicit_generic(member->member_name, member->range, false);
           }
@@ -438,6 +527,7 @@ namespace semantic
           for (const auto &parameter : lambda->parameters)
           {
             resolve_type(parameter.type_name, lambda->range);
+            if (parameter.default_value) expression(*parameter.default_value);
             declare(parameter.name, symbol_kind::parameter, lambda->range);
           }
           resolve_type(lambda->return_type, lambda->range);
@@ -487,9 +577,15 @@ namespace semantic
         for (const auto &parameter : value.parameters)
         {
           resolve_type(parameter.type_name, value.range);
+          if (parameter.default_value) expression(*parameter.default_value);
           declare(parameter.name, symbol_kind::parameter, value.range);
         }
         resolve_type(value.return_type, value.range);
+        for (const auto &parent_initializer : value.parent_initializers)
+        {
+          resolve_type(std::optional<std::string>{parent_initializer.name}, parent_initializer.range);
+          for (const auto &argument : parent_initializer.arguments) expression(*argument);
+        }
         if (value.body) block(*value.body, "function body");
         if (value.expression_body) expression(*value.expression_body);
         close_scope(parent);
@@ -499,10 +595,13 @@ namespace semantic
       {
         const std::size_t parent = open_scope("type " + value.name, value.range);
         type_scopes.insert_or_assign(value.name, current_scope);
+        class_bases.insert_or_assign(value.name, value.base_classes);
         active_type_scopes.push_back(current_scope);
         for (const auto &parameter : value.type_parameters)
           declare(parameter, symbol_kind::type_parameter, value.range);
         for (const auto &constraint : value.type_constraints) resolve_type(constraint, value.range);
+        for (const auto &base_name : value.base_classes)
+          resolve_type(std::optional<std::string>{base_name}, value.range, reference_kind::conformance);
         for (const auto &interface_name : value.composed_interfaces)
         {
           resolve_type(std::optional<std::string>{interface_name}, value.range, reference_kind::conformance);
@@ -514,6 +613,32 @@ namespace semantic
                   symbol_origin::generated);
         }
         for (const auto &member : value.members) predeclare(*member);
+        if (value.type_kind == parser::type_declaration::kind::class_type)
+        {
+          std::map<std::string, std::pair<const parser::let_declaration *, bool>> storage;
+          for (const auto &face : value.composed_interfaces)
+          {
+            std::unordered_set<std::string> visited;
+            face_storage(face, visited, storage);
+          }
+          for (const auto &[name, requirement] : storage)
+            if (!names[current_scope].contains(name))
+            {
+              bool inherited = false;
+              for (const auto &parent : value.base_classes)
+              {
+                std::unordered_set<std::string> visited;
+                inherited |= class_storage(parent, name, visited);
+              }
+              if (inherited) continue;
+              declare(name, dynamic_cast<const parser::const_declaration *>(requirement.first)
+                                ? symbol_kind::constant_field : symbol_kind::field,
+                      requirement.first->range,
+                      requirement.second ? symbol_visibility::private_access
+                                         : symbol_visibility::public_access,
+                      symbol_origin::generated, documentation(requirement.first->documentation));
+            }
+        }
         for (const auto &member : value.enum_members)
         {
           declare(member.name, symbol_kind::enum_case, member.range, symbol_visibility::public_access,
@@ -687,14 +812,8 @@ namespace semantic
         declare("sqrt", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Returns the non-negative square root of a finite Float.",
                                          "@param value A finite, non-negative Float."});
-        declare("squared_length", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin, {"Returns a Vector's squared displacement length."});
-        declare("length", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin, {"Returns a finite Float Vector's displacement length."});
         declare("dot", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
                 symbol_origin::builtin, {"Returns the dot product of equal-dimension Vectors."});
-        declare("normalized", symbol_kind::function, parser::span{0, 0}, symbol_visibility::public_access,
-                symbol_origin::builtin, {"Returns the unitless direction of a nonzero finite Vector."});
         declare("display_coordinates", symbol_kind::function, parser::span{0, 0},
                 symbol_visibility::public_access, symbol_origin::builtin,
                 {"Converts a physical Point to dimensionless display coordinates using an origin and scale."});
@@ -702,7 +821,8 @@ namespace semantic
                                               "__render_window_clear", "__render_window_close",
                                               "__render_elapsed_seconds", "__render_key_pressed",
                                               "__render_scroll_y",
-                                              "__render_set_view", "__render_present",
+                                              "__render_set_view", "__render_is_visible",
+                                              "__render_present",
                                               "__render_circle", "__render_line", "__render_text",
                                               "__render_text_screen"})
           declare(std::string(bridge), symbol_kind::function, parser::span{0, 0},
@@ -718,6 +838,9 @@ namespace semantic
       auto run(const parser::program &tree) -> semantic_model
       {
         model.scopes.front().range = tree.range;
+        for (const auto &entry : tree.statements)
+          if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
+            type_declarations.emplace(type->name, type);
         for (const auto &entry : tree.statements) predeclare(*entry);
         for (const auto &entry : tree.statements) statement(*entry, true);
         return std::move(model);

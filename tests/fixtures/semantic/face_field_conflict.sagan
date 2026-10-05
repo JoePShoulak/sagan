@@ -1,0 +1,11 @@
+face Massive {
+  let .value: Float<kilogram>
+}
+
+face Positioned {
+  let .value: Float<meter>
+}
+
+class Body has Massive, Positioned {
+  let .value: Float<kilogram> = 1.0 kilogram
+}

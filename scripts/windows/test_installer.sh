@@ -28,6 +28,7 @@ if [[ -z "$objdump" || ! -x "$objdump" ]]; then
   exit 1
 fi
 for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-lsp.exe" \
+                  "$install_dir/bin/sagan-dap.exe" \
                   "$install_dir/bin/sagan-launch.exe"; do
   imports="$("$objdump" -p "$executable" | grep 'DLL Name')"
   if printf '%s\n' "$imports" | grep -Eiq 'lib(gcc|stdc\+\+|winpthread)'; then
@@ -35,7 +36,12 @@ for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-lsp.exe" 
     exit 1
   fi
 done
-for packaged in assets/sagan-resource.o libraries/index.tsv libraries/render/sagan.toml \
+for packaged in assets/sagan-resource.o licenses/debugger/GDB-GPL-3.0.txt \
+                toolchain/ucrt64/bin/gdb.exe toolchain/ucrt64/bin/libpython3.12.dll \
+                toolchain/ucrt64/lib/python3.12/asyncio/__init__.py \
+                toolchain/ucrt64/share/gdb/python/gdb/dap/__init__.py \
+                toolchain/ucrt64/etc/gdbinit \
+                libraries/index.tsv libraries/render/sagan.toml \
                 libraries/render/src/window.sagan libraries/render/src/canvas.sagan \
                 libraries/render/native/window_bridge.hpp libraries/render/native/window_bridge.cpp \
                 libraries/physics/sagan.toml libraries/physics/src/two_body.sagan \
@@ -43,6 +49,11 @@ for packaged in assets/sagan-resource.o libraries/index.tsv libraries/render/sag
                 examples/two_body_demo/src/main.sagan; do
   [[ -f "$install_dir/$packaged" ]] || { echo "Installer omitted $packaged" >&2; exit 1; }
 done
+compiler_version="$("$install_dir/toolchain/ucrt64/bin/g++.exe" -dumpfullversion)"
+[[ -f "$install_dir/toolchain/ucrt64/share/gcc-$compiler_version/python/libstdcxx/v6/printers.py" ]] || {
+  echo "Installer omitted libstdc++ GDB pretty-printers." >&2
+  exit 1
+}
 
 # Run installed executables without any MinGW/MSYS2 compiler-runtime directory.
 # This catches accidental dependencies on libgcc_s_seh-1.dll,
@@ -57,6 +68,7 @@ case "$runtime_isolated_path" in
 esac
 
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
+PATH="$runtime_isolated_path" "$install_dir/toolchain/ucrt64/bin/gdb.exe" --version
 unset SAGAN_PACKAGE_INDEX
 # This invokes the bundled compiler and then executes the generated program,
 # proving Sagan can add only the child toolchain environment it actually needs.
@@ -100,6 +112,10 @@ if [[ -e "$install_dir/bin/sagan.exe" ]]; then
 fi
 if [[ -e "$install_dir/bin/sagan-lsp.exe" ]]; then
   echo "The installer smoke test could not remove the installed language server." >&2
+  exit 1
+fi
+if [[ -e "$install_dir/bin/sagan-dap.exe" ]]; then
+  echo "The installer smoke test could not remove the installed debug adapter." >&2
   exit 1
 fi
 

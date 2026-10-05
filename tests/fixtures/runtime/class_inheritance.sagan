@@ -1,0 +1,165 @@
+face Weapons {
+  fun fire(): String
+}
+
+face Assault has Weapons {
+}
+
+face Navigation {
+  fun heading(): String
+}
+
+face Named {
+  fun identify(): String
+}
+
+class Ship has Named {
+  let name: String = "Ship"
+
+  fun identify(): String => self.name
+  fun kind(): String => "ship"
+  fun maneuver(): Int => 1
+}
+
+class Aircraft {
+  let altitude: Int = 7
+
+  fun height(offset: Int = 0): Int => self.altitude + offset
+  fun maneuver(): Int => 2
+}
+
+class GunShip is Ship, Aircraft, has Assault, Navigation {
+  fun fire(): String => "pew"
+  fun heading(): String => "north"
+  fun kind(): String {
+    assert(super.Ship.kind() == "ship")
+    return "gunship"
+  }
+  fun maneuver(): Int => super.Ship.maneuver() + super.Aircraft.maneuver()
+}
+
+class Marker<T> {
+  fun identity(value: T): T => value
+}
+
+class Tagged<T> is Marker<T> {
+  fun identity(value: T): T => super.Marker.identity(value)
+}
+
+class Vessel {
+  let name: String
+
+  new(name: String = "Unnamed") {
+    self.name = name
+  }
+
+  fun label(): String => self.name
+}
+
+class Instrument {
+  let level: Int
+
+  new(level: Int = 4) {
+    self.level = level
+  }
+
+  fun reading(): Int => self.level
+}
+
+class ConfiguredShip is Vessel, Instrument {
+  new(name: String = "Explorer", level: Int = 7) is Vessel(name), Instrument(level + 1) {
+  }
+}
+
+class Holder<T> {
+  let value: T
+
+  new(value: T) {
+    self.value = value
+  }
+
+  fun get(): T => self.value
+}
+
+class IntHolder is Holder<Int> {
+  new(value: Int) is Holder(value) {
+  }
+}
+
+class DefaultChild is Instrument {
+  new() is Instrument() {
+  }
+}
+
+class Root {
+  let value: Int = 5
+  fun value_of(): Int => self.value
+}
+
+class Left is Root { }
+class Right is Root { }
+class Diamond is Left, Right { }
+
+fun greet(name: String = "friend"): String => name
+let double = fun(value: Int, factor: Int = 2): Int => value * factor
+
+let gunship = GunShip()
+let ship: Ship = gunship
+let aircraft: Aircraft = gunship
+let weapon: Weapons = gunship
+let named: Named = gunship
+let tagged: Marker<Int> = Tagged<Int>()
+let configured = ConfiguredShip("Explorer", 7)
+let held = IntHolder(42)
+let diamond = Diamond()
+let root: Root = diamond
+assert(GunShip is Ship)
+assert(GunShip is Aircraft)
+assert(!(Ship is GunShip))
+assert(GunShip has Assault)
+assert(GunShip has Weapons)
+assert(GunShip has Navigation)
+assert(Assault has Weapons)
+assert(!(Weapons has Navigation))
+if GunShip is Ship {
+} else {
+  exit(1)
+}
+if GunShip has Weapons {
+} else {
+  exit(2)
+}
+if Assault has Weapons {
+} else {
+  exit(3)
+}
+assert(gunship.identify() == "Ship")
+assert(gunship.height() == 7)
+assert(ship.kind() == "gunship")
+assert(aircraft.height() == 7)
+assert(aircraft.height(2) == 9)
+assert(ship.maneuver() == 3)
+assert(aircraft.maneuver() == 3)
+assert(weapon.fire() == "pew")
+assert(named.identify() == "Ship")
+assert(tagged.identity(42) == 42)
+assert(configured.label() == "Explorer")
+assert(configured.reading() == 8)
+assert(ConfiguredShip().label() == "Explorer")
+assert(Vessel().label() == "Unnamed")
+assert(Instrument().reading() == 4)
+assert(greet() == "friend")
+assert(greet("pilot") == "pilot")
+let greet_alias = greet
+assert(greet_alias() == "friend")
+assert(double(3) == 6)
+assert(double(3, 4) == 12)
+let alias = double
+assert(alias(4) == 8)
+assert(DefaultChild().reading() == 4)
+assert(held.get() == 42)
+assert(diamond.value_of() == 5)
+assert(root.value_of() == 5)
+assert(Diamond is Root)
+assert(gunship.heading() == "north")
+print("class inheritance passed")

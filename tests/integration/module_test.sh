@@ -72,6 +72,19 @@ fi
 echo "Confirmed linked type error: imported function rejects String"
 
 set +e
+located_type_output="$(bin/sagan tests/fixtures/modules/module_type_error/main.sagan 2>&1)"
+located_type_status=$?
+set -e
+if [[ "$located_type_status" -eq 0 ||
+      "$located_type_output" != *"No matching overload for 'guidance__calculate'"* ||
+      "$located_type_output" != *"main.sagan:5:"* ]]; then
+  echo "Expected project type diagnostic at its source line." >&2
+  echo "$located_type_output" >&2
+  exit 1
+fi
+echo "Confirmed project type diagnostic retains its source line"
+
+set +e
 namespace_output="$(bin/sagan --emit-cpp-modules tests/fixtures/modules/module_namespace_error/main.sagan 2>&1)"
 namespace_status=$?
 set -e

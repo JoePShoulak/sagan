@@ -52,8 +52,10 @@ namespace sagan::language_service
     std::string generated_name;
     std::string type;
     std::size_t scope_id{};
+    source::source_range declaration;
     source::source_range lifetime;
     std::optional<std::filesystem::path> source_path;
+    bool parameter{};
     debug_value_representation representation{debug_value_representation::unavailable};
     bool available_in_optimized{};
   };

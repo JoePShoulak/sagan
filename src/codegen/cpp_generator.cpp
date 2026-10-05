@@ -7,6 +7,7 @@
 #include <array>
 #include <cctype>
 #include <iomanip>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
@@ -33,6 +34,9 @@ namespace codegen
       std::unordered_map<std::string, const parser::type_declaration *> enum_declarations;
       std::unordered_set<std::string> payload_enums;
       std::unordered_set<std::string> class_types;
+      std::unordered_map<std::string, const parser::type_declaration *> class_declarations;
+      std::unordered_map<std::string, const parser::expression *> default_expressions;
+      std::unordered_set<std::string> emitted_classes;
       std::unordered_map<std::string, const parser::type_declaration *> face_types;
       std::unordered_map<std::string, std::unordered_set<std::string>> weak_fields;
       std::unordered_set<std::string> emitted_faces;
@@ -42,7 +46,10 @@ namespace codegen
       std::vector<std::string> active_return_types;
       std::vector<std::unordered_set<std::string>> boxed_scopes;
       std::vector<std::unordered_set<std::string>> unboxed_scopes;
+      std::unordered_set<std::string> initializer_parameters;
+      bool in_parent_initializer = false;
       bool in_method = false;
+      std::string active_class_name;
       bool map_enabled = false;
       std::optional<std::filesystem::path> default_source;
       std::optional<std::string> selected_test;
@@ -304,13 +311,17 @@ namespace codegen
           const auto source_component = component(source_type);
           const auto target_component = component(target_type);
           if (!source_component || !target_component) return value;
+          if (source_type.substr(0, source_type.find('<')) !=
+              target_type.substr(0, target_type.find('<'))) return value;
           const auto source_unit = semantic::units::parse_measured_type(*source_component, unit_registry, range);
           const auto target_unit = semantic::units::parse_measured_type(*target_component, unit_registry, range);
-          if (!source_unit || !target_unit || source_unit->unit.name == target_unit->unit.name) return value;
-          const auto factor = semantic::units::divide(source_unit->unit.scale, target_unit->unit.scale);
-          const auto source_open = source_type.find('<');
-          const std::string converted_type = source_type.substr(0, source_open + 1) + *target_component + '>';
-          return "sagan_multiply<" + type_name(converted_type, range) + ">(" + value + ", " + ratio(factor) + ")";
+          if (source_type == target_type) return value;
+          const std::string factor = source_unit && target_unit &&
+              source_unit->unit.name != target_unit->unit.name
+                  ? ratio(semantic::units::divide(source_unit->unit.scale, target_unit->unit.scale))
+                  : "1.0";
+          return "sagan_convert_geometry<" + type_name(target_type, range) + ">(" + value + ", " +
+                 factor + ")";
         }
         if (source->unit.name == target->unit.name) return value;
         const bool affine = source->unit.kind == semantic::units::category::affine_point;
@@ -332,6 +343,28 @@ namespace codegen
       {
         for (auto entry = types.calls.rbegin(); entry != types.calls.rend(); ++entry)
           if (entry->range.begin == value.range.begin && entry->range.end == value.range.end)
+            return &entry->parameter_types;
+        return nullptr;
+      }
+
+      auto call_defaults(const parser::call_expression &value) const
+          -> const std::vector<std::optional<parser::span>> *
+      {
+        for (auto entry = types.calls.rbegin(); entry != types.calls.rend(); ++entry)
+          if (entry->range.begin == value.range.begin && entry->range.end == value.range.end)
+            return &entry->default_spans;
+        return nullptr;
+      }
+
+      static auto default_key(const parser::span range) -> std::string
+      {
+        return std::to_string(range.begin) + ":" + std::to_string(range.end);
+      }
+
+      auto call_parameters(const parser::span range) const -> const std::vector<std::string> *
+      {
+        for (auto entry = types.calls.rbegin(); entry != types.calls.rend(); ++entry)
+          if (entry->range.begin == range.begin && entry->range.end == range.end)
             return &entry->parameter_types;
         return nullptr;
       }
@@ -365,6 +398,29 @@ namespace codegen
         return fields != weak_fields.end() && fields->second.contains(value.member_name);
       }
 
+      auto face_field_owner(const std::string &face_name, const std::string &field_name,
+                            std::unordered_set<std::string> &visited) const
+          -> const parser::type_declaration *
+      {
+        const std::string base = face_name.substr(0, face_name.find('<'));
+        if (!visited.insert(base).second) return nullptr;
+        const auto found = face_types.find(base);
+        if (found == face_types.end()) return nullptr;
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get());
+              field && field->name == field_name)
+            return found->second;
+        for (const auto &parent : found->second->composed_interfaces)
+          if (const auto *owner = face_field_owner(parent, field_name, visited)) return owner;
+        return nullptr;
+      }
+
+      auto face_field_accessor(const parser::type_declaration &owner,
+                               const std::string &field_name) const -> std::string
+      {
+        return "sagan_face_field_" + identifier(owner.name) + "_" + identifier(field_name);
+      }
+
       auto raw_member(const parser::member_expression &value) -> std::string
       {
         const std::string target_type = expression_type(*value.target);
@@ -372,6 +428,13 @@ namespace codegen
         const auto *self = dynamic_cast<const parser::identifier_expression *>(value.target.get());
         const bool reference = (class_types.contains(target_base) || face_types.contains(target_base)) &&
                                !(self && self->name == "self");
+        if (face_types.contains(target_base))
+        {
+          std::unordered_set<std::string> visited;
+          if (const auto *owner = face_field_owner(target_type, value.member_name, visited))
+            return expression(*value.target) + (reference ? "->" : ".") +
+                   face_field_accessor(*owner, value.member_name) + "()";
+        }
         return expression(*value.target) + (reference ? "->" : ".") +
                generic_identifier(value.member_name, value.range);
       }
@@ -538,6 +601,7 @@ namespace codegen
         {
           if (name->name == "None") return "std::nullopt";
           const std::string generated = generic_identifier(name->name, value.range);
+          if (in_parent_initializer && initializer_parameters.contains(name->name)) return generated + "_value";
           return boxed(name->name) ? "sagan_box_value(" + generated + ")" : generated;
         }
         if (const auto *literal = dynamic_cast<const parser::literal_expression *>(&value))
@@ -593,6 +657,13 @@ namespace codegen
         }
         if (const auto *binary = dynamic_cast<const parser::binary_expression *>(&value))
         {
+          if (binary->operator_text == "is" || binary->operator_text == "has")
+          {
+            const auto &source = static_cast<const parser::identifier_expression &>(*binary->left);
+            const auto &target = static_cast<const parser::identifier_expression &>(*binary->right);
+            return "std::is_base_of_v<" + concrete_user_type(target.name, value.range) + ", " +
+                   concrete_user_type(source.name, value.range) + ">";
+          }
           if (binary->operator_text == "??")
           {
             const std::string temporary = "sagan_optional_" + std::to_string(temporary_index++);
@@ -645,24 +716,50 @@ namespace codegen
                  converted_expression(*assignment->value, expression_type(value)) + ")";
         if (const auto *call = dynamic_cast<const parser::call_expression *>(&value))
         {
+          if (const auto *method = dynamic_cast<const parser::member_expression *>(call->callee.get()))
+            if (const auto *parent = dynamic_cast<const parser::member_expression *>(method->target.get()))
+              if (const auto *super = dynamic_cast<const parser::identifier_expression *>(parent->target.get());
+                  super && super->name == "super")
+              {
+                const auto *owner = class_declarations.at(active_class_name);
+                const auto base = std::find_if(owner->base_classes.begin(), owner->base_classes.end(),
+                    [&](const auto &candidate)
+                    { return candidate.substr(0, candidate.find('<')) == parent->member_name; });
+                std::string result = concrete_user_type(*base, parent->range) + "::" +
+                                     generic_identifier(method->member_name, method->range) + "(";
+                const auto *parameters = call_parameters(*call);
+                for (std::size_t index = 0; index < call->arguments.size(); ++index)
+                {
+                  if (index != 0) result += ", ";
+                  result += parameters && index < parameters->size()
+                      ? converted_expression(*call->arguments[index], parameters->at(index))
+                      : expression(*call->arguments[index]);
+                }
+                return result + ")";
+              }
           const auto *called_name = dynamic_cast<const parser::identifier_expression *>(call->callee.get());
+          if (const auto *vector_method = dynamic_cast<const parser::member_expression *>(call->callee.get());
+              vector_method && std::string_view{expression_type(*vector_method->target)}.starts_with("Vector"))
+          {
+            const std::string receiver = expression(*vector_method->target);
+            const std::string result = type_name(expression_type(value), value.range);
+            if (vector_method->member_name == "squared_length")
+              return "sagan_math_squared_length<" + result + ">(" + receiver + ")";
+            if (vector_method->member_name == "length")
+              return "sagan_math_length<" + result + ">(" + receiver + ")";
+            if (vector_method->member_name == "normalized")
+              return "sagan_math_normalized<" + result + ">(" + receiver + ")";
+            if (vector_method->member_name == "normalized!")
+              return "sagan_math_normalize_in_place<" + result + ">(" + receiver + ")";
+          }
           if (called_name && called_name->name == "print" && call->arguments.size() == 1)
             return "sagan_print(" + displayed_expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "sqrt")
             return "sagan_math_sqrt(" + expression(*call->arguments.front()) + ")";
-          if (called_name && called_name->name == "squared_length")
-            return "sagan_math_squared_length<" + type_name(expression_type(value), value.range) + ">(" +
-                   expression(*call->arguments.front()) + ")";
-          if (called_name && called_name->name == "length")
-            return "sagan_math_length<" + type_name(expression_type(value), value.range) + ">(" +
-                   expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "dot")
             return "sagan_math_dot<" + type_name(expression_type(value), value.range) + ">(" +
                    expression(*call->arguments[0]) + ", " +
                    converted_expression(*call->arguments[1], expression_type(*call->arguments[0])) + ")";
-          if (called_name && called_name->name == "normalized")
-            return "sagan_math_normalized<" + type_name(expression_type(value), value.range) + ">(" +
-                   expression(*call->arguments.front()) + ")";
           if (called_name && called_name->name == "display_coordinates")
             return "sagan_math_display_coordinates<" + type_name(expression_type(value), value.range) + ">(" +
                    expression(*call->arguments[0]) + ", " +
@@ -770,6 +867,18 @@ namespace codegen
                         ? converted_expression(*call->arguments[index], parameters->at(index))
                         : expression(*call->arguments[index]);
           }
+          if (const auto *defaults = call_defaults(*call))
+            for (std::size_t index = call->arguments.size(); index < defaults->size(); ++index)
+            {
+              if (!defaults->at(index)) continue;
+              const auto found = default_expressions.find(default_key(*defaults->at(index)));
+              if (found == default_expressions.end()) fail("Lambda default argument is unavailable", value.range);
+              if (index != 0) result += ", ";
+              const auto *parameters = call_parameters(*call);
+              result += parameters && index < parameters->size()
+                  ? converted_expression(*found->second, parameters->at(index))
+                  : expression(*found->second);
+            }
           return result + ")";
         }
         if (const auto *index = dynamic_cast<const parser::index_expression *>(&value))
@@ -789,9 +898,15 @@ namespace codegen
             const std::string temporary = "sagan_optional_" + std::to_string(temporary_index++);
             const std::string result_type = expression_type(value);
             const std::string element = result_type.substr(9, result_type.size() - 10);
+            const std::string optional_target = expression_type(*member->target);
+            const std::string receiver = optional_target.substr(9, optional_target.size() - 10);
+            std::string member_access = identifier(member->member_name);
+            std::unordered_set<std::string> visited;
+            if (const auto *owner = face_field_owner(receiver, member->member_name, visited))
+              member_access = face_field_accessor(*owner, member->member_name) + "()";
             return "([&]() { auto " + temporary + " = " + expression(*member->target) + "; return " +
                    temporary + " ? std::optional<" + type_name(element, value.range) + ">{(*" + temporary +
-                   ")->" + identifier(member->member_name) + "} : std::nullopt; }())";
+                   ")->" + member_access + "} : std::nullopt; }())";
           }
           if (const auto *target = dynamic_cast<const parser::identifier_expression *>(member->target.get());
               target && enum_types.contains(target->name.substr(0, target->name.find('<'))))
@@ -956,7 +1071,13 @@ namespace codegen
           {
             if (index != 0) result += ", ";
             const auto &parameter = lambda->parameters[index];
+            if (parameter.default_value)
+              default_expressions.insert_or_assign(default_key(parameter.default_value->range),
+                                                   parameter.default_value.get());
             result += type(parameter.type_name, value.range) + " " + identifier(parameter.name) + "_value";
+            if (parameter.default_value)
+              result += " = " + converted_expression(*parameter.default_value,
+                                                        parameter.type_name.value_or("Unknown"));
             box(parameter.name);
           }
           const std::string result_type = lambda->return_type.value_or(expression_type(*lambda->body));
@@ -1288,6 +1409,10 @@ namespace codegen
       auto function(const parser::function_declaration &value) -> void
       {
         map_scope mapped(*this, value.range, false, identifier(value.name));
+        for (const auto &parameter : value.parameters)
+          if (parameter.default_value)
+            default_expressions.insert_or_assign(default_key(parameter.default_value->range),
+                                                 parameter.default_value.get());
         const auto previous_type_parameters = active_type_parameters;
         active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
         if (!value.type_parameters.empty())
@@ -1306,6 +1431,9 @@ namespace codegen
           if (index != 0) output << ", ";
           output << type(value.parameters[index].type_name, value.range) << ' '
                  << identifier(value.parameters[index].name) << "_value";
+          if (value.parameters[index].default_value)
+            output << " = " << converted_expression(*value.parameters[index].default_value,
+                                                    value.parameters[index].type_name.value_or("Unknown"));
         }
         output << ") {\n";
         ++depth;
@@ -1348,11 +1476,17 @@ namespace codegen
       }
 
       auto method(const parser::function_declaration &value, const std::string_view class_name = {},
-                  const bool virtual_method = false) -> void
+                  const bool virtual_method = false, const bool declaration_only = false) -> void
       {
         map_scope mapped(*this, value.range, false,
                          std::string(class_name) + "::" + identifier(value.name));
+        for (const auto &parameter : value.parameters)
+          if (parameter.default_value)
+            default_expressions.insert_or_assign(default_key(parameter.default_value->range),
+                                                 parameter.default_value.get());
         const auto previous_type_parameters = active_type_parameters;
+        const auto previous_class_name = active_class_name;
+        active_class_name = class_name;
         active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
         if (!value.type_parameters.empty())
         {
@@ -1376,16 +1510,56 @@ namespace codegen
           if (index != 0) output << ", ";
           output << type(value.parameters[index].type_name, value.range) << ' '
                  << identifier(value.parameters[index].name) << "_value";
+          if (value.parameters[index].default_value)
+            output << " = " << converted_expression(*value.parameters[index].default_value,
+                                                    value.parameters[index].type_name.value_or("Unknown"));
         }
-        output << ") ";
+        output << ')';
+        if (value.constructor_member && !value.parent_initializers.empty())
+        {
+          initializer_parameters.clear();
+          for (const auto &parameter : value.parameters) initializer_parameters.insert(parameter.name);
+          in_parent_initializer = true;
+          output << " : ";
+          for (std::size_t index = 0; index < value.parent_initializers.size(); ++index)
+          {
+            const auto &parent = value.parent_initializers[index];
+            if (index != 0) output << ", ";
+            const auto *owner = class_declarations.at(std::string(class_name));
+            const auto match = std::find_if(owner->base_classes.begin(), owner->base_classes.end(),
+                [&](const auto &base) { return base.substr(0, base.find('<')) == parent.name; });
+            output << concrete_user_type(*match, parent.range) << '(';
+            const auto *expected = call_parameters(parent.range);
+            for (std::size_t argument = 0; argument < parent.arguments.size(); ++argument)
+            {
+              if (argument != 0) output << ", ";
+              output << (expected && argument < expected->size()
+                  ? converted_expression(*parent.arguments[argument], expected->at(argument))
+                  : expression(*parent.arguments[argument]));
+            }
+            output << ')';
+          }
+          in_parent_initializer = false;
+          initializer_parameters.clear();
+        }
+        output << ' ';
         const bool previous_method = in_method;
         in_method = true;
+        if (declaration_only)
+        {
+          output << "= 0;\n";
+          in_method = previous_method;
+          active_class_name = previous_class_name;
+          active_type_parameters = previous_type_parameters;
+          return;
+        }
         if (!value.expression_body && !value.body)
         {
           if (virtual_method)
           {
             output << "= 0;\n";
             in_method = previous_method;
+            active_class_name = previous_class_name;
             active_type_parameters = previous_type_parameters;
             return;
           }
@@ -1426,6 +1600,7 @@ namespace codegen
         output << indentation() << '}';
         active_return_types.pop_back();
         in_method = previous_method;
+        active_class_name = previous_class_name;
         active_type_parameters = previous_type_parameters;
         output << "\n";
       }
@@ -1466,10 +1641,64 @@ namespace codegen
         return result;
       }
 
+      auto face_fields(const std::string &name, std::unordered_set<std::string> &visited) const
+          -> std::vector<std::pair<const parser::type_declaration *, const parser::let_declaration *>>
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return {};
+        const auto found = face_types.find(base);
+        if (found == face_types.end()) return {};
+        std::vector<std::pair<const parser::type_declaration *, const parser::let_declaration *>> result;
+        for (const auto &parent : found->second->composed_interfaces)
+        {
+          auto inherited = face_fields(parent, visited);
+          result.insert(result.end(), inherited.begin(), inherited.end());
+        }
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
+            result.emplace_back(found->second, field);
+        return result;
+      }
+
+      auto class_has_field(const std::string &name, const std::string &field_name,
+                           std::unordered_set<std::string> &visited,
+                           const bool inherited = false) const -> bool
+      {
+        const std::string base = name.substr(0, name.find('<'));
+        if (!visited.insert(base).second) return false;
+        const auto found = class_declarations.find(base);
+        if (found == class_declarations.end()) return false;
+        for (const auto &entry : found->second->members)
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get());
+              field && field->name == field_name)
+            return true;
+        if (inherited)
+          for (const auto &face : found->second->composed_interfaces)
+          {
+            std::unordered_set<std::string> face_visited;
+            if (face_field_owner(face, field_name, face_visited)) return true;
+          }
+        for (const auto &parent : found->second->base_classes)
+          if (class_has_field(parent, field_name, visited, true)) return true;
+        return false;
+      }
+
       auto object(const parser::type_declaration &value) -> void
       {
         if (value.type_kind != parser::type_declaration::kind::class_type)
           fail("only class declarations are available in the initial native object subset", value.range);
+        if (!emitted_classes.insert(value.name).second) return;
+        for (const auto &base : value.base_classes)
+        {
+          const auto found = class_declarations.find(base.substr(0, base.find('<')));
+          if (found != class_declarations.end())
+          {
+            const auto previous_source = active_source;
+            source_of(*found->second);
+            object(*found->second);
+            active_source = previous_source;
+          }
+        }
         const auto previous_type_parameters = active_type_parameters;
         active_type_parameters.insert(value.type_parameters.begin(), value.type_parameters.end());
         if (!value.type_parameters.empty())
@@ -1483,18 +1712,54 @@ namespace codegen
           output << ">\n";
         }
         output << "struct " << identifier(value.name);
-        if (!value.composed_interfaces.empty())
+        if (!value.base_classes.empty() || !value.composed_interfaces.empty())
         {
           output << " : ";
-          for (std::size_t index = 0; index < value.composed_interfaces.size(); ++index)
+          for (std::size_t index = 0; index < value.base_classes.size(); ++index)
           {
             if (index != 0) output << ", ";
+            output << "public virtual " << concrete_user_type(value.base_classes[index], value.range);
+          }
+          for (std::size_t index = 0; index < value.composed_interfaces.size(); ++index)
+          {
+            if (index != 0 || !value.base_classes.empty()) output << ", ";
             output << "public virtual " << concrete_user_type(value.composed_interfaces[index], value.range);
           }
         }
-        output << "\n{\npublic:\n";
+        output << "\n{\npublic:\n  virtual ~" << identifier(value.name) << "() = default;\n";
         ++depth;
         bool private_access = false;
+        struct mixin_field
+        {
+          std::string type;
+          bool private_only = true;
+        };
+        std::map<std::string, mixin_field> mixin_fields;
+        for (const auto &face_name : value.composed_interfaces)
+        {
+          std::unordered_set<std::string> visited;
+          const std::string concrete_face = concrete_user_type(face_name, value.range);
+          for (const auto &[owner, field] : face_fields(face_name, visited))
+          {
+            std::unordered_set<std::string> class_visited;
+            if (class_has_field(value.name, field->name, class_visited)) continue;
+            const std::string accessor = face_field_accessor(*owner, field->name);
+            auto [slot, inserted] = mixin_fields.try_emplace(field->name,
+                mixin_field{"std::remove_cv_t<std::remove_reference_t<decltype(std::declval<" +
+                    concrete_face + "&>()." + accessor + "())>>", true});
+            static_cast<void>(inserted);
+            slot->second.private_only &= field->private_member;
+          }
+        }
+        for (const auto &[name, field] : mixin_fields)
+        {
+          if (private_access != field.private_only)
+          {
+            private_access = field.private_only;
+            output << (private_access ? "private:\n" : "public:\n");
+          }
+          output << indentation() << field.type << ' ' << identifier(name) << "{};\n";
+        }
         std::unordered_set<std::string> emitted_methods;
         for (const auto &entry : value.members)
         {
@@ -1534,7 +1799,7 @@ namespace codegen
               private_access = member_method->private_member;
               output << (private_access ? "private:\n" : "public:\n");
             }
-            method(*member_method);
+            method(*member_method, value.name, member_method->type_parameters.empty());
           }
           else fail("class member is not available in the initial native object subset", entry->range);
         }
@@ -1547,6 +1812,22 @@ namespace codegen
           for (const auto *default_method : face_defaults(face_name, visiting))
           {
             if (emitted_methods.insert(method_signature(*default_method)).second) method(*default_method);
+          }
+        }
+        std::unordered_set<std::string> emitted_accessors;
+        for (const auto &face_name : value.composed_interfaces)
+        {
+          std::unordered_set<std::string> visited;
+          const std::string concrete_face = concrete_user_type(face_name, value.range);
+          for (const auto &[owner, field] : face_fields(face_name, visited))
+          {
+            const std::string accessor = face_field_accessor(*owner, field->name);
+            if (!emitted_accessors.insert(accessor).second) continue;
+            const bool constant = dynamic_cast<const parser::const_declaration *>(field) != nullptr;
+            output << indentation() << "auto " << accessor << "()";
+            if (constant) output << " const";
+            output << " -> decltype(std::declval<" << concrete_face << "&>()." << accessor
+                   << "()) override { return this->" << identifier(field->name) << "; }\n";
           }
         }
         --depth;
@@ -1588,9 +1869,19 @@ namespace codegen
         ++depth;
         for (const auto &entry : value.members)
         {
+          if (const auto *field = dynamic_cast<const parser::let_declaration *>(entry.get()))
+          {
+            const bool constant = dynamic_cast<const parser::const_declaration *>(field) != nullptr;
+            output << indentation() << "virtual " << (constant ? "const " : "")
+                   << type(field->type_name, field->range) << "& "
+                   << face_field_accessor(value, field->name) << "()";
+            if (constant) output << " const";
+            output << " = 0;\n";
+            continue;
+          }
           const auto *face_method = dynamic_cast<const parser::function_declaration *>(entry.get());
           if (!face_method) fail("face member is not a method", entry->range);
-          method(*face_method, {}, true);
+          method(*face_method, {}, true, value.type_parameters.empty());
         }
         --depth;
         output << "};\n\n";
@@ -1712,10 +2003,22 @@ namespace codegen
         unit_registry.add_program(tree);
         for (const auto &entry : tree.statements)
           if (const auto *function = dynamic_cast<const parser::function_declaration *>(entry.get()))
+          {
             functions.insert_or_assign(function->name, function);
+            for (const auto &parameter : function->parameters)
+              if (parameter.default_value)
+                default_expressions.insert_or_assign(default_key(parameter.default_value->range),
+                                                     parameter.default_value.get());
+          }
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
           {
+            for (const auto &member : type->members)
+              if (const auto *method = dynamic_cast<const parser::function_declaration *>(member.get()))
+                for (const auto &parameter : method->parameters)
+                  if (parameter.default_value)
+                    default_expressions.insert_or_assign(default_key(parameter.default_value->range),
+                                                         parameter.default_value.get());
             user_types.insert(type->name);
             if (type->type_kind == parser::type_declaration::kind::enum_type)
             {
@@ -1731,6 +2034,7 @@ namespace codegen
             if (type->type_kind == parser::type_declaration::kind::class_type)
             {
               class_types.insert(type->name);
+              class_declarations.emplace(type->name, type);
             }
             if (type->type_kind == parser::type_declaration::kind::interface_type)
               face_types.emplace(type->name, type);
@@ -1740,6 +2044,14 @@ namespace codegen
                     field && field->weak_member)
                   weak_fields[type->name].insert(field->name);
           }
+        for (const auto &entry : tree.statements)
+          if (const auto *binding = dynamic_cast<const parser::let_declaration *>(entry.get()))
+            if (const auto *lambda = binding->initializer
+                ? dynamic_cast<const parser::lambda_expression *>(binding->initializer.get()) : nullptr)
+              for (const auto &parameter : lambda->parameters)
+                if (parameter.default_value)
+                  default_expressions.insert_or_assign(default_key(parameter.default_value->range),
+                                                       parameter.default_value.get());
         output << "// Generated by Sagan.\n#include <cstdlib>\n";
         output << "#include <any>\n#include <array>\n#include <cmath>\n#include <cstddef>\n#include <cstdint>\n#include <functional>\n#include <iostream>\n#include <limits>\n#include <memory>\n#include <optional>\n#include <sstream>\n#include <stdexcept>\n#include <string>\n#include <tuple>\n#include <typeindex>\n#include <type_traits>\n#include <unordered_map>\n#include <utility>\n#include <variant>\n#include <vector>\n"
                   "#ifdef _WIN32\n"
@@ -1965,6 +2277,13 @@ namespace codegen
                   "  }\n"
                   "  return result;\n"
                   "}\n\n"
+                  "template <typename Result, typename Vector>\n"
+                  "Result sagan_math_normalize_in_place(Vector &value)\n"
+                  "{\n"
+                  "  Result result = sagan_math_normalized<Result>(value);\n"
+                  "  value = result;\n"
+                  "  return result;\n"
+                  "}\n\n"
                   "template <typename Result, typename Point, typename Scale>\n"
                   "Result sagan_math_display_coordinates(const Point &point, const Point &origin, const Scale scale)\n"
                   "{\n"
@@ -2010,6 +2329,17 @@ namespace codegen
                   "  constexpr std::size_t size() const { return Size; }\n"
                   "  bool operator==(const sagan_spherical_point &) const = default;\n"
                   "};\n\n"
+                  "template <typename Result, typename Source>\n"
+                  "Result sagan_convert_geometry(const Source &source, const double factor)\n"
+                  "{\n"
+                  "  Result result{};\n"
+                  "  using Component = typename decltype(result.components)::value_type;\n"
+                  "  for (std::size_t index = 0; index < result.components.size(); ++index)\n"
+                  "    result.components[index] = factor == 1.0\n"
+                  "        ? static_cast<Component>(source.components[index])\n"
+                  "        : static_cast<Component>(source.components[index] * factor);\n"
+                  "  return result;\n"
+                  "}\n\n"
                   "template <typename Collection, typename Index>\n"
                   "decltype(auto) sagan_index(Collection &&collection, const Index index)\n"
                   "{\n"

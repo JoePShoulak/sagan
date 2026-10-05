@@ -119,6 +119,17 @@ tooling, or documentation corrections; decide those from the evidence and use
 the normal versioning rules for any follow-up release. Published 1.0.0 assets
 and tags remain immutable.
 
+For the exact `v4.9.5` candidate, Joe approved one further disclosed exception:
+the Windows installer may be unsigned and the page-by-page documentation audit
+may remain pending. The release pipeline still requires compiler, library,
+extension, portable/installer, coverage, security-scan, and signed-tag checks.
+The owner also deferred separate clean-machine acceptance for this version;
+the isolated Windows CI installer smoke test still must pass. Its draft notes
+must disclose the unknown-publisher warning, experimental documentation, and
+deferred clean-machine check. No numbered
+`4.9.5` documentation archive is published. This exception does not apply to
+any later version and does not waive owner approval of the stable draft.
+
 After the documentation audit is complete, a later release promotes versioned
 documentation from its matching tag and makes it the `latest`
 documentation version. GitHub Releases is canonical. HP1 mirrors and verifies

@@ -131,6 +131,9 @@ namespace sagan::language_service
     const auto current = documents.find(document.identity().id.value);
     if (current == documents.end())
       return {edit_state::unsupported, "Current document is outside the resolved workspace", {}};
+    if (std::any_of(workspace.modules().begin(), workspace.modules().end(), [&](const auto &module)
+        { return module.external && module.index.document().id == document.identity().id; }))
+      return {edit_state::unsupported, "Installed package source is not editable by workspace rename", {}};
 
     const document_queries queries(document, index, &workspace);
     const auto selected = queries.symbol_at(position);
@@ -232,6 +235,9 @@ namespace sagan::language_service
       }
     }
     if (target.value.empty()) return {edit_state::unsupported, "No renameable workspace symbol was selected", {}};
+    if (std::any_of(workspace.modules().begin(), workspace.modules().end(), [&](const auto &module)
+        { return module.external && module.index.find(target); }))
+      return {edit_state::unsupported, "Installed package declarations cannot be renamed from this workspace", {}};
     if (!exported)
       for (const auto &candidate : workspace.exported_symbols())
         if (contains(candidate.targets, target))

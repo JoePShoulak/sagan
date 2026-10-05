@@ -60,12 +60,17 @@ if [[ "$fast_final" != "$slow_final" ]]; then
   exit 1
 fi
 if [[ "$fast_final" != *"final_elapsed 60 day"* ||
+      "$fast_final" != *"final_elapsed_display 0 years, 60 days (60 total days)"* ||
       "$fast_final" != *"final_simulation_rate_days_per_real_second 5"* ||
-      "$fast_final" != *"final_L4_error "*" kilometer"* ||
       "$fast_final" == *"meter / meter"* ||
       "$fast_final" == *"second / second"* ]]; then
-  printf 'Expected elapsed days, selected simulation rate, and kilometer error readouts, got:\n%s\n' \
+  printf 'Expected elapsed days, selected simulation rate, and dimensionally clean error readouts, got:\n%s\n' \
     "$fast_final" >&2
+  exit 1
+fi
+if ! printf '%s\n' "$fast_final" | grep -Eq \
+    '^final_L4_error [0-9]+([.][0-9]+)? (millimeter|meter|kilometer|megameter|gigameter)$'; then
+  printf 'Expected a plain-decimal adaptive L4 error unit, got:\n%s\n' "$fast_final" >&2
   exit 1
 fi
 if [[ "$reset_output" != *"final_playback_rate 864000"* ]]; then

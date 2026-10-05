@@ -1,0 +1,10 @@
+face Massive {
+  let .mass: Float<kilogram>
+  fun getMass(): Float<kilogram> => self.mass
+}
+
+class Body has Massive {
+  fun getMass(): Float<kilogram> => 1.0 kilogram
+}
+
+let body = Body()

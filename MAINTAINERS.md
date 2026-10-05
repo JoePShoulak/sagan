@@ -1,0 +1,117 @@
+# Maintaining Sagan
+
+This repository currently owns the Sagan compiler, language service, LSP and
+DAP executables, core runtime, first-party math, physics and rendering sources,
+the VS Code extension, documentation sources, tests, and Windows distribution
+machinery. The [repository split roadmap](docs/contributing/repository-fracturing-roadmap.md)
+describes the intended future owners of those components; it has **not** yet
+happened. Do not assume the proposed sibling repositories or their locks exist.
+
+This repository does not own the user's installed toolchain, GitHub secrets,
+the HP1 host, or a signing certificate. Those are external dependencies.
+Downstream consumers include installed Sagan programs, the extension, the
+first-party libraries, and the documentation deployment. The compiler and
+language-service contracts are authoritative; editor code must not duplicate
+Sagan parsing or semantics.
+
+The current known-good source revision is a Git commit, not a handwritten
+version in this file. Inspect `git rev-parse HEAD`, `git status --short`,
+`version.conf`, and `bash scripts/version.sh current` together. Package
+projects use `sagan.toml` and a lockfile as described in the
+[package catalog contract](docs/tooling/package-catalog-contract.md). The
+multi-repository lock described in the split roadmap is future work.
+
+## First safe checkout and verification
+
+On Windows x64, use Git Bash and the MSYS2 UCRT64 toolchain. `git`, `make`,
+`g++` with C++23 support, `cygpath`, and the repository's vendored
+`third_party/uni-algo` must be available. Do not assume a clean macOS or Linux
+bootstrap is equally validated. From a clean checkout:
+
+```bash
+git clone https://github.com/JoePShoulak/sagan.git
+cd sagan
+git switch dev
+bash scripts/test.sh
+bash scripts/docs.sh setup
+bash scripts/docs.sh check
+```
+
+For a smaller compiler build, use `make -j1`; the executables are `bin/sagan`,
+`bin/sagan-lsp`, and `bin/sagan-dap` (with `.exe` on Windows). `make clean`
+removes ignored build outputs; inspect `git status --short` before and after
+using it. The [development setup](docs/contributing/development-setup.md)
+and [testing guide](docs/contributing/testing.md) contain further commands.
+Open the repository in VS Code only after the checkout and local build are
+known-good; editor support is under `editors/vscode-sagan`.
+
+## Where to look
+
+| Question | Canonical starting point |
+| --- | --- |
+| Compiler phases, source-to-C++ flow, and runtime | [Architecture](docs/implementation/architecture.md), [code generation](docs/implementation/code-generation.md) |
+| CLI, LSP, and DAP behavior | [CLI](docs/tooling/command-line.md), [language service](docs/tooling/language-service-contracts.md), [LSP](docs/tooling/language-server-capabilities.md), [DAP](docs/tooling/debug-adapter-contract.md) |
+| Package manifests, indexes, and locks | [Package catalog contract](docs/tooling/package-catalog-contract.md) |
+| Daily Git and release promotion | [Change lifecycle](docs/contributing/change-lifecycle.md), [versioning](docs/contributing/versioning.md), [release lifecycle](docs/contributing/release-lifecycle.md) |
+| Release assets and signing | [Windows installer gate](docs/contributing/windows-installer-release.md), [code signing](docs/contributing/code-signing-policy.md) |
+| Documentation source, status, and hosting | [Documentation workflow](docs/contributing/documentation.md), [hosting](docs/contributing/hosting.md) |
+| Planned repo ownership and compatibility | [Split roadmap](docs/contributing/repository-fracturing-roadmap.md), [ecosystem readiness](docs/contributing/ecosystem-release-readiness.md) |
+| Remaining work and handoff standard | [Active roadmap](docs/contributing/active-roadmap.md), [handoff roadmap](docs/contributing/maintainer-handoff-roadmap.md) |
+
+Major subtrees: `src/` implements the compiler and protocols; `libraries/`
+contains first-party library sources; `editors/` contains editor integration;
+`tests/` and `scripts/` contain validation and maintenance tools; `docs/`
+contains canonical prose; `packaging/` and `deploy/` contain distribution and
+deployment configuration; `.github/workflows/` defines CI; `third_party/`
+contains vendored dependencies. `obj/`, `bin/`, and `build/` are generated
+outputs, not source or release evidence.
+
+## Safe daily change sequence
+
+Inspect `git status --short --branch`, `git log -1 --oneline`, and the diff
+before editing. Concurrent work may be present. Stage only intended paths,
+then inspect `git diff --cached --check` and `git diff --cached --name-only`.
+Routine work targets `dev`; use a temporary branch for isolation or a risky
+change. `main` is publication-only: pushing to it triggers release automation.
+Never use `git reset --hard` or overwrite a shared branch to recover a failed
+check. Preserve the state, inspect the failure, and make a corrective commit.
+
+Version impact comes from Conventional Commit subjects after the baseline in
+`version.conf`: `fix:` is patch, `feat:` is minor, and `!` or a `BREAKING CHANGE:`
+footer is major; `docs:` and `test:` have no numeric impact. For a versioned
+change, run `bash scripts/version.sh prepare patch`,
+`bash scripts/version.sh prepare minor`, or
+`bash scripts/version.sh prepare major` as appropriate before staging the README badge. Verify with
+`bash scripts/version.sh check-badge`. The [change lifecycle](docs/contributing/change-lifecycle.md)
+controls review, promotion, tagging, CI, and rollback; a local commit is not
+a publication approval.
+
+## Current release and recovery boundaries
+
+The local release-policy scripts are `bash scripts/release_policy_test.sh` and
+`bash scripts/main_release_policy_test.sh`. `bash scripts/docs.sh check` checks
+documentation build/examples; `bash scripts/docs.sh release-check` is a
+separate publication gate. Do not mark work-in-progress pages publication-ready
+just to pass it. The post-1.0 Windows signing gate requires protected external
+configuration; source control contains no signing credential. The portable
+Windows artifact can be built and tested with `bash scripts/windows/build_portable.sh`
+and `bash scripts/windows/test_portable.sh`; installer smoke modifies a test
+installation and belongs on an isolated runner unless the owner approves it
+on a workstation. Consult the linked installer and release guides before
+tagging, mirroring, deployment, or recovery.
+
+If a workstation is lost, start by cloning the last reviewed commit, verifying
+its tag and release checksums, then rebuilding; do not reconstruct a release
+from an unverified local `build/` directory. If GitHub, signing, HP1, or a runner
+is unavailable, stop publication and keep the last known-good artifact. The
+[hosting guide](docs/contributing/hosting.md) and release lifecycle describe
+the parts currently automated. Exact credential recovery and an owner-performed
+clean-machine drill remain open handoff work, not assumptions.
+
+## Handoff status
+
+This is the first root entry point, **not** a completed survivability gate.
+The [handoff roadmap](docs/contributing/maintainer-handoff-roadmap.md) still
+requires a complete operations inventory, automated checks of links and
+commands, secret/service recovery procedures, and a recorded owner drill.
+The documentation audit and release-signing verification are separate gates.
