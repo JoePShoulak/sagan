@@ -52,6 +52,7 @@ repository-segmentation/patches/vscode/0005-Relink-extension-documentation-for-i
 repository-segmentation/patches/vscode/README.md
 repository-segmentation/patches/workspace/0001-Add-exact-lock-workspace-bootstrap-and-maintainer-gu.patch
 repository-segmentation/patches/workspace/0002-Restore-clean-workspace-checkouts-to-exact-lock.patch
+repository-segmentation/patches/workspace/0003-Combine-split-package-catalogs-for-integration-rehea.patch
 repository-segmentation/patches/workspace/README.md
 repository-segmentation/primary-repository-transfer.md
 repository-segmentation/primary-transfer.toml

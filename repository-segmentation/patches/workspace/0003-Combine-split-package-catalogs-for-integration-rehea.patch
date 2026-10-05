@@ -1,0 +1,444 @@
+From 711d235d491046e9add6b259217c7706c152c806 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 11:05:52 -0500
+Subject: [PATCH] Combine split package catalogs for integration rehearsals
+
+---
+ .gitignore                          |   1 +
+ MAINTAINERS.md                      |  55 ++++++++++-
+ README.md                           |  11 ++-
+ TECHNOLOGY.md                       |  11 ++-
+ scripts/integrated-package-smoke.sh |  40 ++++++++
+ scripts/package_index.py            | 147 ++++++++++++++++++++++++++++
+ tests/package_index_test.py         |  83 ++++++++++++++++
+ 7 files changed, 342 insertions(+), 6 deletions(-)
+ create mode 100644 scripts/integrated-package-smoke.sh
+ create mode 100644 scripts/package_index.py
+ create mode 100644 tests/package_index_test.py
+
+diff --git a/.gitignore b/.gitignore
+index 88d3c1d..95508b4 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,5 +1,6 @@
+ /checkouts/
+ /build/
+ /.generated/
++/.sagan-package-index.tsv
+ __pycache__/
+ .venv/
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index ff1b083..1b6d78f 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -23,8 +23,8 @@ Use Git Bash, Git, and Python 3.11 or newer. From the workspace repository root:
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
+ bash scripts/restore-lock.sh
+-python -m unittest discover -s tests -p workspace_test.py -v
+-bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh
++python -m unittest discover -s tests -p '*_test.py' -v
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+ ```
+ 
+ `bootstrap.sh` and `status.sh` accept `--root`, `--manifest`, and `--lock` for
+@@ -95,7 +95,56 @@ backup runbook before any further remote migration. Generated checkouts can be
+ recreated from the remotes if those remotes and commit objects remain available,
+ but their unpushed user work cannot be recreated by this script.
+ 
+-The eventual maintainer guide must add exact package-index/editor generation,
++## Combined package catalog and local integration rehearsal
++
++When physics and rendering become active, reviewed entries in both the
++manifest and lock, use this from the workspace root:
++
++```bash
++bash scripts/status.sh
++python scripts/package_index.py --from-lock
++export SAGAN_PACKAGE_INDEX="$(pwd)/.sagan-package-index.tsv"
++```
++
++Today, `--from-lock` deliberately fails because neither split package repo
++is active. Do not activate an uncreated remote to make it pass. For the
++extracted **local candidates only**, put their checkout directories under
++one common parent and provide that parent explicitly. For example, when
++the candidate directories are siblings of this workspace candidate under
++the Sagan monorepo's ignored `build/`:
++
++```bash
++candidate_root="$(cd .. && pwd)"
++physics_dir="$candidate_root/segmentation-physics-functional-20261005"
++render_dir="$candidate_root/segmentation-render-functional-20261005"
++game_dir="$candidate_root/segmentation-game-functional-20261005"
++python scripts/package_index.py --root "$candidate_root" \
++  --output segmentation-package-index.tsv \
++  --component sagan-physics="${physics_dir##*/}" \
++  --component sagan-render="${render_dir##*/}"
++bash scripts/integrated-package-smoke.sh \
++  "$candidate_root/segmentation-package-index.tsv" \
++  /c/Users/joeps/coding/sagan/bin/sagan.exe \
++  "$physics_dir" "$render_dir" "$game_dir"
++```
++
++The generator refuses a differing existing output unless `--force` is
++specified, checks package manifest names/versions and path containment,
++and rejects duplicate package identities. The smoke script runs the game,
++three headless physics checks, and on Windows only, two auto-closing native
++render checks against that one catalog. It creates normal ignored test
++outputs inside the candidate checkouts; inspect those paths before any
++cleanup. This is a local compatibility rehearsal, not independent CI or
++permission to publish split repositories.
++
++Focused verification for a catalog change is:
++
++```bash
++python -m unittest discover -s tests -p '*_test.py' -v
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++```
++
++The eventual maintainer guide must add exact editor generation,
+ workspace build/test/update/lock-refresh syntax, clean-machine drills,
+ platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
+ without their values. Those capabilities are not implemented in this candidate.
+diff --git a/README.md b/README.md
+index fd3bb14..14d25d0 100644
+--- a/README.md
++++ b/README.md
+@@ -15,7 +15,7 @@ From Git Bash, with Python 3.11+ and Git installed:
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
+ bash scripts/restore-lock.sh
+-python -m unittest discover -s tests -p workspace_test.py -v
++python -m unittest discover -s tests -p '*_test.py' -v
+ ```
+ 
+ Bootstrap clones into gitignored `checkouts/` and detaches each active
+@@ -25,6 +25,15 @@ read-only and returns nonzero until all active checkouts match the lock.
+ Restore-lock fetches and detaches a clean, correctly owned checkout at the
+ pin; it refuses dirty work and ignored-file collisions.
+ 
++`scripts/package_index.py` also combines installed package catalogs from
++separately checked-out physics and rendering repos. Its locked mode refuses
++to run until those repos become active, clean, and pinned; the current
++workspace lock intentionally has neither active. A separate explicit
++`--component` mode supports local extraction rehearsals without pretending
++that the planned GitHub repositories exist. The combined catalog is consumed
++through `SAGAN_PACKAGE_INDEX`; see the exact rehearsal command in
++[MAINTAINERS.md](MAINTAINERS.md).
++
+ Read [MAINTAINERS.md](MAINTAINERS.md) for the exact operating and recovery
+ workflow, [TECHNOLOGY.md](TECHNOLOGY.md) for the conceptual model, and
+ [CODEX_START.md](CODEX_START.md) to orient a new chat. The broader sequence
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 1204ff3..6c15965 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -36,8 +36,15 @@ Windows, Linux, and macOS share the same rules.
+ The dependency direction is outward: the workspace consumes language,
+ extension, docs, physics, rendering, and game checkouts. Those repositories
+ must not import source code from this workspace to build their own products.
+-The current candidate has only exact checkout bootstrap/status; package-index
+-generation, editor workspace generation, lock refresh, build, focused tests,
++The current candidate also combines the installed package rows from the
++physics and rendering component catalogs into one generated index. It
++rebases each manifest path under a common root, validates manifest identity,
++and rejects duplicate package versions or paths escaping that root. Locked
++mode requires clean, exact-revision active checkouts; explicit component mode
++is for local extraction rehearsals only. The generated index is not a
++workspace lock or a package release.
++
++Editor workspace generation, lock refresh, build orchestration, hosted CI,
+ and full integration tests remain later milestones in
+ [the roadmap](docs/contributing/repository-fracturing-roadmap.md).
+ 
+diff --git a/scripts/integrated-package-smoke.sh b/scripts/integrated-package-smoke.sh
+new file mode 100644
+index 0000000..4bc402d
+--- /dev/null
++++ b/scripts/integrated-package-smoke.sh
+@@ -0,0 +1,40 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++if [[ "$#" -ne 5 ]]; then
++  echo "Usage: bash scripts/integrated-package-smoke.sh INDEX SAGAN_EXE PHYSICS_DIR RENDER_DIR GAME_DIR" >&2
++  exit 2
++fi
++
++export SAGAN_PACKAGE_INDEX="$1"
++export SAGAN_EXECUTABLE="$2"
++physics_dir="$3"
++render_dir="$4"
++game_dir="$5"
++
++[[ -f "$SAGAN_PACKAGE_INDEX" ]] || { echo "Missing combined package index" >&2; exit 1; }
++[[ -f "$SAGAN_EXECUTABLE" ]] || { echo "Missing Sagan executable" >&2; exit 1; }
++[[ -d "$physics_dir" && -d "$render_dir" && -d "$game_dir" ]] || {
++  echo "Missing candidate checkout" >&2
++  exit 1
++}
++
++export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
++
++echo "Checking game against the combined physics/render catalog..."
++(cd "$game_dir" && "$SAGAN_EXECUTABLE" --run-package .)
++
++echo "Checking headless physics against the combined catalog..."
++(cd "$physics_dir" && bash tests/integration/orbit_numeric_test.sh &&
++  bash tests/integration/lagrange_numeric_test.sh &&
++  bash tests/integration/solar_lagrange_numeric_test.sh)
++
++if [[ "${OS:-}" == "Windows_NT" ]]; then
++  echo "Checking native Windows rendering against the combined catalog..."
++  (cd "$render_dir" && bash tests/integration/window_bridge_test.sh &&
++    bash tests/integration/shape_text_test.sh)
++else
++  echo "Native rendering check skipped: only the Windows backend is supported."
++fi
++
++echo "Integrated package smoke checks passed."
+diff --git a/scripts/package_index.py b/scripts/package_index.py
+new file mode 100644
+index 0000000..12f8ef1
+--- /dev/null
++++ b/scripts/package_index.py
+@@ -0,0 +1,147 @@
++"""Combine installed package catalogs from exact workspace component checkouts."""
++
++from __future__ import annotations
++
++import argparse
++import os
++from pathlib import Path
++import re
++import sys
++import tempfile
++import tomllib
++
++from workspace import DEFAULT_ROOT, inspect, load_contract
++
++
++PACKAGE_OWNERS = {"sagan-physics", "sagan-render"}
++SAFE_NAME = re.compile(r"[A-Za-z0-9._-]+\Z")
++
++
++def child_path(root: Path, relative: str) -> Path:
++    path = Path(relative)
++    if path.is_absolute() or not path.parts or any(part in (".", "..") for part in path.parts):
++        raise ValueError(f"unsafe relative path: {relative!r}")
++    resolved = (root / path).resolve()
++    if not resolved.is_relative_to(root):
++        raise ValueError(f"path escapes catalog root: {relative!r}")
++    return resolved
++
++
++def read_catalog(root: Path, component: Path) -> list[str]:
++    catalog = component / "libraries" / "index.tsv"
++    if not catalog.is_file() or catalog.is_symlink():
++        raise ValueError(f"missing regular package catalog: {catalog}")
++    lines = catalog.read_text(encoding="utf-8").splitlines()
++    if not lines or lines[0] != "sagan-package-index-v1":
++        raise ValueError(f"unsupported package catalog schema: {catalog}")
++    rows = []
++    for number, line in enumerate(lines[1:], start=2):
++        if not line or line.startswith("#"):
++            continue
++        fields = line.split("\t")
++        if len(fields) != 5 or fields[3] != "installed":
++            raise ValueError(f"invalid installed package row {catalog}:{number}")
++        name, version, compiler, _, relative = fields
++        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", name):
++            raise ValueError(f"invalid package name at {catalog}:{number}")
++        if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
++            raise ValueError(f"invalid package version at {catalog}:{number}")
++        if not re.fullmatch(r"\^?[0-9]+\.[0-9]+\.[0-9]+", compiler):
++            raise ValueError(f"invalid compiler requirement at {catalog}:{number}")
++        manifest = child_path(catalog.parent, relative)
++        if not manifest.is_relative_to(component / "libraries") or not manifest.is_file():
++            raise ValueError(f"package manifest escapes component or is missing: {relative}")
++        with manifest.open("rb") as stream:
++            package = tomllib.load(stream).get("package")
++        if not isinstance(package, dict) or package.get("name") != name or package.get("version") != version:
++            raise ValueError(f"indexed package identity differs from {manifest}")
++        rebased = manifest.relative_to(root).as_posix()
++        rows.append("\t".join((name, version, compiler, "installed", rebased)))
++    return rows
++
++
++def components_from_lock(root: Path) -> dict[str, str]:
++    checkout_dir, entries = load_contract(root, root / "workspace.toml", root / "workspace.lock")
++    components = {}
++    for entry in entries:
++        target = checkout_dir / entry["checkout"]
++        good, detail = inspect(target, entry)
++        if not good:
++            raise ValueError(f"{entry['id']}: {detail}; restore the lock before generating")
++        if entry["id"] in PACKAGE_OWNERS:
++            components[entry["id"]] = target.relative_to(root).as_posix()
++    return components
++
++
++def generate(root: Path, components: dict[str, str], output: str, force: bool) -> Path:
++    if not SAFE_NAME.fullmatch(output) or output in (".", ".."):
++        raise ValueError("output must be one safe filename at the catalog root")
++    if not root.is_dir() or root.is_symlink():
++        raise ValueError("catalog root must be an existing regular directory")
++    destination = root / output
++    if destination.is_symlink() or (destination.exists() and not destination.is_file()):
++        raise ValueError(f"refusing unsafe output: {destination}")
++    seen: set[tuple[str, str]] = set()
++    rows = []
++    for identifier, relative in sorted(components.items()):
++        component = child_path(root, relative)
++        if not component.is_dir():
++            raise ValueError(f"missing component checkout {identifier}: {component}")
++        for row in read_catalog(root, component):
++            fields = row.split("\t")
++            identity = (fields[0], fields[1])
++            if identity in seen:
++                raise ValueError(f"duplicate package {identity[0]} {identity[1]}")
++            seen.add(identity)
++            rows.append(row)
++    content = "sagan-package-index-v1\n" + "".join(f"{row}\n" for row in sorted(rows))
++    if destination.exists():
++        if destination.read_text(encoding="utf-8") == content:
++            return destination
++        if not force:
++            raise ValueError(f"existing catalog differs: {destination}; pass --force to replace it")
++    temporary = None
++    try:
++        with tempfile.NamedTemporaryFile("w", encoding="utf-8", newline="\n", dir=root,
++                                         prefix=f".{output}.", delete=False) as stream:
++            temporary = Path(stream.name)
++            stream.write(content)
++        os.replace(temporary, destination)
++    finally:
++        if temporary is not None:
++            temporary.unlink(missing_ok=True)
++    return destination
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
++    parser.add_argument("--output", default=".sagan-package-index.tsv")
++    parser.add_argument("--component", action="append", default=[], metavar="ID=RELATIVE_PATH")
++    parser.add_argument("--from-lock", action="store_true")
++    parser.add_argument("--force", action="store_true")
++    arguments = parser.parse_args()
++    try:
++        if arguments.from_lock and arguments.component:
++            raise ValueError("--from-lock and --component are mutually exclusive")
++        if not arguments.from_lock and not arguments.component:
++            raise ValueError("choose --from-lock or at least one --component")
++        root = arguments.root.resolve()
++        components = components_from_lock(root) if arguments.from_lock else {}
++        if arguments.from_lock and not components:
++            raise ValueError("no active physics/render package repositories in workspace.lock")
++        for item in arguments.component:
++            identifier, separator, relative = item.partition("=")
++            if not separator or not identifier or not relative or identifier in components:
++                raise ValueError(f"invalid or duplicate --component: {item!r}")
++            components[identifier] = relative
++        destination = generate(root, components, arguments.output, arguments.force)
++        print(f"Package catalog: {destination} ({len(destination.read_text(encoding='utf-8').splitlines()) - 1} packages)")
++        return 0
++    except (OSError, RuntimeError, ValueError, tomllib.TOMLDecodeError) as error:
++        print(f"Package catalog generation failed: {error}", file=sys.stderr)
++        return 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/package_index_test.py b/tests/package_index_test.py
+new file mode 100644
+index 0000000..4c3f7a7
+--- /dev/null
++++ b/tests/package_index_test.py
+@@ -0,0 +1,83 @@
++"""Offline tests for combining independently owned Sagan packages."""
++
++from __future__ import annotations
++
++from pathlib import Path
++import sys
++import tempfile
++import unittest
++
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
++import package_index  # noqa: E402
++
++
++class PackageIndexTest(unittest.TestCase):
++    def setUp(self) -> None:
++        temporary = tempfile.TemporaryDirectory(prefix="sagan-package-index-test-")
++        self.addCleanup(temporary.cleanup)
++        self.root = Path(temporary.name)
++
++    def component(self, checkout: str, name: str, *, index_path: str | None = None) -> None:
++        libraries = self.root / checkout / "libraries"
++        manifest = libraries / name / "sagan.toml"
++        manifest.parent.mkdir(parents=True)
++        manifest.write_text(
++            f'[package]\nname = "{name}"\nversion = "1.2.3"\nsource = "src"\n',
++            encoding="utf-8",
++        )
++        relative = index_path or f"{name}/sagan.toml"
++        (libraries / "index.tsv").write_text(
++            f"sagan-package-index-v1\n{name}\t1.2.3\t^4.0.0\tinstalled\t{relative}\n",
++            encoding="utf-8",
++        )
++
++    def test_combines_relative_manifest_paths(self) -> None:
++        self.component("physics", "sagan-physics")
++        self.component("render", "sagan-render")
++        output = package_index.generate(
++            self.root, {"physics": "physics", "render": "render"}, "index.tsv", False
++        )
++        self.assertEqual(
++            "sagan-package-index-v1\n"
++            "sagan-physics\t1.2.3\t^4.0.0\tinstalled\tphysics/libraries/sagan-physics/sagan.toml\n"
++            "sagan-render\t1.2.3\t^4.0.0\tinstalled\trender/libraries/sagan-render/sagan.toml\n",
++            output.read_text(encoding="utf-8"),
++        )
++        self.assertEqual(output, package_index.generate(
++            self.root, {"physics": "physics", "render": "render"}, "index.tsv", False
++        ))
++
++    def test_rejects_component_outside_root(self) -> None:
++        self.component("physics", "sagan-physics")
++        with self.assertRaisesRegex(ValueError, "unsafe relative path"):
++            package_index.generate(self.root, {"physics": "../physics"}, "index.tsv", False)
++        self.assertFalse((self.root / "index.tsv").exists())
++
++    def test_rejects_manifest_traversal(self) -> None:
++        self.component("physics", "sagan-physics", index_path="../../escape/sagan.toml")
++        with self.assertRaisesRegex(ValueError, "unsafe relative path"):
++            package_index.generate(self.root, {"physics": "physics"}, "index.tsv", False)
++        self.assertFalse((self.root / "index.tsv").exists())
++
++    def test_refuses_different_existing_output_without_force(self) -> None:
++        self.component("physics", "sagan-physics")
++        output = self.root / "index.tsv"
++        output.write_text("owner data\n", encoding="utf-8")
++        with self.assertRaisesRegex(ValueError, "existing catalog differs"):
++            package_index.generate(self.root, {"physics": "physics"}, "index.tsv", False)
++        self.assertEqual("owner data\n", output.read_text(encoding="utf-8"))
++        package_index.generate(self.root, {"physics": "physics"}, "index.tsv", True)
++        self.assertTrue(output.read_text(encoding="utf-8").startswith("sagan-package-index-v1\n"))
++
++    def test_rejects_duplicate_identity(self) -> None:
++        self.component("first", "sagan-physics")
++        self.component("second", "sagan-physics")
++        with self.assertRaisesRegex(ValueError, "duplicate package"):
++            package_index.generate(
++                self.root, {"first": "first", "second": "second"}, "index.tsv", False
++            )
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.51.0.windows.2
+

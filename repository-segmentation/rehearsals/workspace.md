@@ -56,8 +56,29 @@ reported that without changing it. A fresh normal clone replayed both patches
 with `git am`, matched tree `7139252cc1351188be94ef0d0548ad0b1bc39d6f`,
 passed `git fsck --full`, and reran all ten offline tests.
 
-This is **partial functionality**, not destination readiness. The candidate
-still contains monorepo-only audit scripts and archived manifest paths;
-update/build/test/lock-refresh, multi-root editor generation, package-index
-generation, cross-repository demos, independent CI, Linux/macOS checks, and
-the owner clean-machine drill remain. No split remote was created or pushed.
+At this two-patch stage, this was **partial functionality**, not destination
+readiness. The candidate still contained monorepo-only audit scripts and
+archived manifest paths; update/build/test/lock-refresh, multi-root editor
+generation, package-index generation, cross-repository demos, independent CI,
+Linux/macOS checks, and the owner clean-machine drill remained. No split
+remote was created or pushed.
+
+## Combined package catalog and cross-repository smoke rehearsal
+
+A third patch on the same local candidate, commit
+`711d235d491046e9add6b259217c7706c152c806`, generated one index from
+the extracted physics and rendering catalogs without activating their
+planned remotes. It validated relative manifest containment, package
+identity, duplicate versions, and safe replacement. Fifteen offline tests
+passed. With the existing Windows development compiler and that combined
+index, the extracted game printed its six-body summaries, all three
+headless physics tests passed, and the two auto-closing Windows native
+render tests passed. This checked package resolution across separate local
+repositories, not hosted destination CI or cross-platform native rendering.
+
+The replay checkout applied the third patch with `git am`; its tree
+`e7257c6364f38a66d03e2992fbaf9e494c6ba766` exactly matched the
+functional candidate, `git fsck --full` passed, and all fifteen offline
+tests passed again. `--from-lock` intentionally refuses the current lock
+because physics/rendering remain planned. The combined index was generated
+under ignored `build/` and is not a public package catalog.
