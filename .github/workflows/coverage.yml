@@ -54,13 +54,16 @@ jobs:
 
       - name: Determine candidate version
         id: candidate
-        run: echo "version=$(bash scripts/version.sh numeric)" >> "$GITHUB_OUTPUT"
+        run: |
+          version="$(bash scripts/version.sh numeric)"
+          echo "Candidate version: $version"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
 
       - name: Upload coverage to Codecov
         id: codecov_upload
         # Owner-approved one-time exception for v4.9.5: measured coverage,
         # artifact preservation, and the 90% floor above remain mandatory.
-        continue-on-error: ${{ steps.candidate.outputs.version == '4.9.5' }}
+        continue-on-error: true
         uses: codecov/codecov-action@v7
         with:
           use_oidc: true
@@ -71,5 +74,11 @@ jobs:
           name: sagan-gcc
 
       - name: Report one-time external upload exception
-        if: steps.codecov_upload.outcome == 'failure'
+        if: always() && steps.codecov_upload.outcome == 'failure' && steps.candidate.outputs.version == '4.9.5'
         run: echo '::warning::Codecov upload failed; only v4.9.5 may proceed with the measured report artifact and coverage floor passing.'
+
+      - name: Require Codecov upload after v4.9.5
+        if: always() && steps.codecov_upload.outcome == 'failure' && steps.candidate.outputs.version != '4.9.5'
+        run: |
+          echo 'Codecov upload must pass after the v4.9.5 exception.' >&2
+          exit 1
