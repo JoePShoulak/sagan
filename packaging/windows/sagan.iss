@@ -47,6 +47,8 @@ Name: fileassociation; Description: "Run .sagan files from File Explorer"; Group
 [Files]
 Source: "{#SourceDir}\bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion{#SaganBinarySignFlag}
 Source: "{#SourceDir}\toolchain\*"; DestDir: "{app}\toolchain"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\libraries\*"; DestDir: "{app}\libraries"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\examples\*"; DestDir: "{app}\examples"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#SourceDir}\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "{#SourceDir}\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#SourceDir}\VERSION"; DestDir: "{app}"; Flags: ignoreversion

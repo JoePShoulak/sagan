@@ -143,7 +143,7 @@ namespace sagan::language_service
 
       active_phase = diagnostics::phase::syntax;
       if (cancellation.is_cancelled()) return cancelled(document);
-      parser::syntax_parser syntax(std::move(tokens));
+      parser::syntax_parser syntax(std::move(tokens), cancellation);
       const auto tree = syntax.parse();
       summary.statement_count = tree.statements.size();
 
@@ -170,6 +170,8 @@ namespace sagan::language_service
       return diagnostics::analysis_result<check_summary>{
           diagnostics::result_state::complete, summary, {}, document.version()};
     }
+    catch (const parser::parse_cancelled &)
+    { return cancelled(document); }
     catch (const parser::parse_error &error)
     {
       return diagnostics::analysis_result<check_summary>{

@@ -1,0 +1,13 @@
+face Massive {
+  let .mass: Float64<kilogram>
+  fun getMass(): Float64<kilogram> => self.mass
+}
+
+class Planet has Massive {
+  new(mass: Float64<kilogram>) {
+    self.mass = mass
+  }
+}
+
+let earth = Planet(5.97e24 kilogram)
+print(earth.getMass())

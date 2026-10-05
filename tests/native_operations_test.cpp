@@ -8,6 +8,10 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace
 {
   auto require(const bool condition, const char *message) -> void
@@ -160,6 +164,13 @@ auto main() -> int
               result.standard_output.find("Phase 7 says hello") != std::string::npos &&
               streamed >= result.standard_output.size() && !result.output_truncated,
           "native operation did not build, run, capture output, and return artifacts");
+#ifdef _WIN32
+  const HMODULE image = LoadLibraryExW(result.executable->c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE);
+  require(image != nullptr, "could not inspect the generated Windows executable");
+  const bool has_icon = FindResourceW(image, MAKEINTRESOURCEW(1), MAKEINTRESOURCEW(14)) != nullptr;
+  FreeLibrary(image);
+  require(has_icon, "generated Windows executable is missing the Sagan icon");
+#endif
   auto asynchronous = language_service::start_run_document(valid, "build/operations-test");
   const auto asynchronous_result = asynchronous.future.get();
   require(asynchronous_result.operation_id == asynchronous.id &&
@@ -220,12 +231,16 @@ auto main() -> int
                              language_service::native_build_profile::optimized})
   {
     const auto failed_run = language_service::run_document(runtime_failure, "build/operations-test", profile);
+    const auto shared_runtime_issue = language_service::map_runtime_failure(
+        runtime_failure, failed_run.standard_error);
     require(failed_run.state == diagnostics::result_state::incomplete &&
                 failed_run.exit_status && *failed_run.exit_status != 0 &&
                 failed_run.diagnostics.size() == 1 &&
                 failed_run.diagnostics.front().owner == diagnostics::phase::runtime &&
                 failed_run.diagnostics.front().message.find("division by zero") != std::string::npos &&
                 failed_run.diagnostics.front().primary.bytes.begin == failure_text.find("print") &&
+                shared_runtime_issue && shared_runtime_issue->code == failed_run.diagnostics.front().code &&
+                shared_runtime_issue->primary == failed_run.diagnostics.front().primary &&
                 failed_run.debug &&
                 std::any_of(failed_run.debug->variables.begin(), failed_run.debug->variables.end(),
                             [](const auto &variable)

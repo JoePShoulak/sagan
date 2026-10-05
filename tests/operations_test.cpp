@@ -128,9 +128,15 @@ auto main() -> int
               dependency_manifest.dependencies.front().requirement == "^1.2.3",
           "approved dependency manifest syntax was not parsed");
   bool unresolved_dependency_rejected = false;
-  try { static_cast<void>(modules::resolve_package("tests/fixtures/modules/package_dependency")); }
+  try
+  {
+    modules::package_resolution_options missing_index;
+    missing_index.index_path = "tests/fixtures/missing-index.tsv";
+    static_cast<void>(modules::resolve_package("tests/fixtures/modules/package_dependency",
+                                               *project_source, {}, missing_index));
+  }
   catch (const std::runtime_error &error)
-  { unresolved_dependency_rejected = std::string(error.what()).find("require SAGAN_PACKAGE_INDEX") != std::string::npos; }
+  { unresolved_dependency_rejected = std::string(error.what()).find("missing-index.tsv") != std::string::npos; }
   require(unresolved_dependency_rejected,
           "unresolved external dependency was silently ignored");
   const auto package_index = modules::query_package_index(
@@ -148,6 +154,12 @@ auto main() -> int
               installed_index.packages.size() == 1 &&
               installed_index.packages.front().install_state == modules::package_install_state::installed,
           "local package index did not validate an installed manifest");
+  sagan::diagnostics::cancellation_source stopped_index;
+  stopped_index.cancel();
+  const auto cancelled_index = modules::query_package_index(
+      "tests/fixtures/package_index/index.tsv", "2.1.0", {}, stopped_index.token());
+  require(cancelled_index.cancelled && cancelled_index.packages.empty(),
+          "Cancelled package-index analysis exposed partial candidates");
   require(modules::query_package_index("tests/fixtures/package_index/absent.tsv", "2.1.0").state ==
               modules::package_index_state::unavailable,
           "missing local package index was not represented explicitly");

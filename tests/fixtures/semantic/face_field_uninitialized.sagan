@@ -1,0 +1,7 @@
+face Massive {
+  let .mass: Float<kilogram>
+}
+
+class Body has Massive {
+  new() { }
+}

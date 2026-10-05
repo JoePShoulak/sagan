@@ -1,0 +1,9 @@
+module main
+
+import TwoBodySolver from physics.two_body
+
+let invalid = TwoBodySolver(
+  "invalid", 0.0 kilogram, (0.0, 0.0) meter, <0.0, 0.0> (meter / second),
+  "valid", 1.0 kilogram, (1.0, 0.0) meter, <0.0, 0.0> (meter / second),
+  1.0 second)
+

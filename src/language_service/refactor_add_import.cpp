@@ -22,7 +22,8 @@ namespace sagan::language_service
     const semantic::exported_symbol *selected = nullptr;
     const auto exports = workspace.exported_symbols();
     for (const auto &candidate : exports)
-      if (candidate.targets.size() == 1 && candidate.targets.front() == target)
+      if (std::find(candidate.targets.begin(), candidate.targets.end(), target) !=
+          candidate.targets.end())
       {
         if (selected) return {edit_state::conflict, "Target has multiple public import names", {}};
         selected = &candidate;

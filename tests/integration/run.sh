@@ -19,8 +19,13 @@ tests=(
   payload_enum_test.sh
   generic_sum_test.sh
   generic_class_test.sh
+  class_inheritance_test.sh
   closure_test.sh
   constants_test.sh
+  orbit_math_test.sh
+  orbit_numeric_test.sh
+  lagrange_numeric_test.sh
+  solar_lagrange_numeric_test.sh
   array_times_parallel_test.sh
   parallel_let_fibonacci_test.sh
   mixed_exponent_test.sh

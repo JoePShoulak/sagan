@@ -1,0 +1,9 @@
+[package]
+name = "invalid-step"
+version = "0.1.0"
+source = "src"
+entry = "main"
+
+[dependencies]
+physics = { package = "sagan-physics", version = "^0.3.0" }
+

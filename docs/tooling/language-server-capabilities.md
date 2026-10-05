@@ -35,6 +35,12 @@ The current server:
   exclusively from reusable Sagan compiler libraries; and
 - produce deterministic answers for identical snapshots and configuration.
 
+Face-declared fields and private helper requirements are analyzed by the same
+compiler path as batch builds. Diagnostics for missing initialization,
+incompatible repeated promises, visibility, mutability, and member types are
+published through ordinary LSP diagnostics; the extension does not need a
+separate face-property schema or semantic implementation.
+
 ## Advertised capabilities
 
 The server advertises synchronization,
@@ -90,6 +96,24 @@ Package completion, package navigation, and package auto-import remain false. Th
 breakpoint mapping library is available, but every live DAP/debugger capability
 remains false until the adapter and release payload pass end-to-end tests.
 
+For an open document named `sagan.toml`, the server now validates the unsaved
+buffer with the same manifest parser used for disk builds and publishes
+versioned project diagnostics. It also offers section, `[package]` and
+`[application]` key completions, plus the compiler-defined `console` and
+`windowed` application-mode values, with replacement edits. Hover describes
+recognized sections and keys from compiler-owned metadata. Document symbols
+show section and key hierarchy, even while the buffer is incomplete. Entry
+paths and locked dependency keys navigate to their compiler-resolved targets.
+Quoted dependency requirements for an installed package, including the
+`{ package, version }` alias form, can complete to the newest compatible
+indexed version. The standard `textDocument/formatting` and
+`textDocument/rangeFormatting` requests also format
+complete, valid `sagan.toml` buffers conservatively: it normalizes section and
+key spacing without changing comments, quoted values, or line endings. Range
+formatting includes only complete edits wholly inside the requested range.
+Invalid or incomplete manifests return no edits. Manifest on-type formatting
+and quick fixes remain unsupported.
+
 Clients must treat missing or false capabilities as unavailable. They must not
 fill a missing compiler capability with duplicated language logic.
 
@@ -106,5 +130,14 @@ server contract; custom test discovery and selected document/project execution
 are available, but DAP is not. Check,
 build, and run LSP requests use the separate versioned `sagan/operation`
 contract. Cross-file rename is available only for compiler-proven identity
-groups; ambiguous identities are deliberately refused.
+groups; ambiguous identities are deliberately refused. Local F2 checks lexical
+scope ancestry, so a name used only in a different function is permitted while
+same-scope and nested collisions remain blocked. Unexported classes, faces,
+and enums (including cases of unexported enums) can be renamed within one document when their constructor, type, and
+conformance references rebind to the same declaration; exported types still
+require workspace proof. Workspace rename refuses to edit installed dependency
+source, including when F2 starts on a selective import of that dependency;
+renaming a binding alias in the local project remains separate. Direct `bin/lsp-test` execution
+includes a native run request and therefore needs the native C++ toolchain on
+`PATH`; the repository test target supplies that environment.
 

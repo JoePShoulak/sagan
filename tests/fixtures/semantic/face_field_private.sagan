@@ -1,0 +1,8 @@
+face Named {
+  let name: String
+  fun getName(): String => self.name
+}
+
+class Body has Named {
+  let .name: String = "Earth"
+}

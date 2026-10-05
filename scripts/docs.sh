@@ -50,14 +50,17 @@ case "${1:-}" in
       echo "Documentation environment is missing. Run: bash scripts/docs.sh setup" >&2
       exit 1
     }
+    "$venv_python" scripts/maintainer_docs_test.py
     bash scripts/docs_examples_test.sh
     "$venv_python" -m mkdocs build --strict --clean
+    "$venv_python" scripts/docs_syntax_test.py build/docs-site
     ;;
   release-check)
     test -x "$venv_python" || {
       echo "Documentation environment is missing. Run: bash scripts/docs.sh setup" >&2
       exit 1
     }
+    "$venv_python" scripts/maintainer_docs_test.py
     "$venv_python" scripts/docs_release_check.py
     ;;
   *)

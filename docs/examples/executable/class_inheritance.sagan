@@ -1,0 +1,43 @@
+face Weapons {
+  fun fire(): String
+}
+
+face Navigable {
+  fun course(): String
+}
+
+class Ship {
+  let callsign: String
+
+  new(callsign: String) {
+    self.callsign = callsign
+  }
+
+  fun call_sign(): String => self.callsign
+  fun kind(): String => "ship"
+}
+
+class Aircraft {
+  fun altitude(): Int => 7
+}
+
+class GunShip is Ship, Aircraft, has Weapons, Navigable {
+  new(callsign: String) is Ship(callsign), Aircraft() {
+  }
+
+  fun kind(): String {
+    assert(super.Ship.kind() == "ship")
+    return "gunship"
+  }
+  fun fire(): String => "ready"
+  fun course(): String => "north"
+}
+
+let gunship = GunShip("Aurora")
+let ship: Ship = gunship
+print(ship.call_sign())
+print(ship.kind())
+print(gunship.altitude())
+print(gunship.fire())
+if GunShip is Ship print("GunShip is a Ship")
+if GunShip has Weapons print("GunShip has Weapons")

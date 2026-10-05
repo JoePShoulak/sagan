@@ -1,0 +1,418 @@
+module solar_lagrange
+
+import BodySnapshot from two_body
+
+const ESCAPE_BOUNDARY_SCALE: Float64 = 2.0
+
+class SolarLagrangeSeed {
+  let .identity_value: String
+  let .position_value: Point2<Float64, meter>
+  let .velocity_value: Vector2<Float64, meter / second>
+  let .reference_x_value: Float64
+  let .reference_y_value: Float64
+
+  new(identity: String, position: Point2<Float64, meter>,
+      velocity: Vector2<Float64, meter / second>,
+      reference_x: Float64, reference_y: Float64) {
+    self.identity_value = identity
+    self.position_value = position
+    self.velocity_value = velocity
+    self.reference_x_value = reference_x
+    self.reference_y_value = reference_y
+  }
+
+  fun identity(): String => self.identity_value
+  fun position(): Point2<Float64, meter> => self.position_value
+  fun velocity(): Vector2<Float64, meter / second> => self.velocity_value
+  fun reference_x(): Float64 => self.reference_x_value
+  fun reference_y(): Float64 => self.reference_y_value
+}
+
+class SolarTertiarySnapshot {
+  let .body_value: BodySnapshot
+  let .reference_x_value: Float64
+  let .reference_y_value: Float64
+  let .stability_error_value: Float64<meter>
+  let .escaped_value: Bool
+
+  new(body: BodySnapshot, reference_x: Float64, reference_y: Float64,
+      stability_error: Float64<meter>, escaped: Bool) {
+    self.body_value = body
+    self.reference_x_value = reference_x
+    self.reference_y_value = reference_y
+    self.stability_error_value = stability_error
+    self.escaped_value = escaped
+  }
+
+  fun identity(): String => self.body_value.identity()
+  fun position(): Point2<Float64, meter> => self.body_value.position()
+  fun velocity(): Vector2<Float64, meter / second> => self.body_value.velocity()
+  fun reference_x(): Float64 => self.reference_x_value
+  fun reference_y(): Float64 => self.reference_y_value
+  fun stability_error(): Float64<meter> => self.stability_error_value
+  fun escaped(): Bool => self.escaped_value
+}
+
+class SolarLagrangeSnapshot {
+  let .time_value: Float64<second>
+  let .sun_value: BodySnapshot
+  let .earth_value: BodySnapshot
+  let .moon_value: BodySnapshot
+  let .first_value: SolarTertiarySnapshot
+  let .second_value: SolarTertiarySnapshot
+  let .third_value: SolarTertiarySnapshot
+  let .fourth_value: SolarTertiarySnapshot
+  let .fifth_value: SolarTertiarySnapshot
+  let .sixth_value: SolarTertiarySnapshot
+
+  new(time: Float64<second>, sun: BodySnapshot, earth: BodySnapshot,
+      moon: BodySnapshot, tracer_one: SolarTertiarySnapshot,
+      tracer_two: SolarTertiarySnapshot, tracer_three: SolarTertiarySnapshot,
+      tracer_four: SolarTertiarySnapshot, tracer_five: SolarTertiarySnapshot,
+      tracer_six: SolarTertiarySnapshot) {
+    self.time_value = time
+    self.sun_value = sun
+    self.earth_value = earth
+    self.moon_value = moon
+    self.first_value = tracer_one
+    self.second_value = tracer_two
+    self.third_value = tracer_three
+    self.fourth_value = tracer_four
+    self.fifth_value = tracer_five
+    self.sixth_value = tracer_six
+  }
+
+  fun time(): Float64<second> => self.time_value
+  fun sun(): BodySnapshot => self.sun_value
+  fun earth(): BodySnapshot => self.earth_value
+  fun moon(): BodySnapshot => self.moon_value
+
+  fun earth_moon_barycenter(): Point2<Float64, meter> {
+    let total_mass = self.earth_value.mass() + self.moon_value.mass()
+    return self.earth_value.position() +
+      (self.moon_value.position() - self.earth_value.position()) *
+      (self.moon_value.mass() / total_mass)
+  }
+
+  fun tertiary(index: Int64): SolarTertiarySnapshot {
+    if index == 0 { return self.first_value }
+    if index == 1 { return self.second_value }
+    if index == 2 { return self.third_value }
+    if index == 3 { return self.fourth_value }
+    if index == 4 { return self.fifth_value }
+    assert(index == 5, "tertiary index must be between 0 and 5")
+    return self.sixth_value
+  }
+}
+
+class MassiveBodyState {
+  let .identity_value: String
+  let .mass_value: Float64<kilogram>
+  let .position_value: Point2<Float64, meter>
+  let .velocity_value: Vector2<Float64, meter / second>
+
+  new(identity: String, mass: Float64<kilogram>,
+      position: Point2<Float64, meter>,
+      velocity: Vector2<Float64, meter / second>) {
+    assert(mass > 0.0 kilogram, "solar Lagrange massive bodies require positive mass")
+    self.identity_value = identity
+    self.mass_value = mass
+    self.position_value = position
+    self.velocity_value = velocity
+  }
+
+  fun snapshot(): BodySnapshot =>
+    BodySnapshot(self.identity_value, self.mass_value,
+                 self.position_value, self.velocity_value)
+
+  fun .acceleration(evaluation_position: Point2<Float64, meter>,
+                    other_one: BodySnapshot,
+                    other_two: BodySnapshot): Vector2<Float64, meter / second^2> {
+    let first_displacement = other_one.position() - evaluation_position
+    let second_displacement = other_two.position() - evaluation_position
+    let first_distance_squared = first_displacement.squared_length()
+    let second_distance_squared = second_displacement.squared_length()
+    assert(first_distance_squared > 0.0 meter^2,
+           "solar Lagrange massive bodies must not overlap")
+    assert(second_distance_squared > 0.0 meter^2,
+           "solar Lagrange massive bodies must not overlap")
+    let first_acceleration =
+      (first_displacement.normalized() *
+       (6.67430e-11 (meter^3 / kilogram / second^2) * other_one.mass() /
+        first_distance_squared)) as (meter / second^2)
+    let second_acceleration =
+      (second_displacement.normalized() *
+       (6.67430e-11 (meter^3 / kilogram / second^2) * other_two.mass() /
+        second_distance_squared)) as (meter / second^2)
+    return first_acceleration + second_acceleration
+  }
+
+  fun predict(other_one: BodySnapshot, other_two: BodySnapshot,
+              solar_step_interval: Float64<second>): Point2<Float64, meter> {
+    let old_acceleration = self.acceleration(self.position_value,
+                                             other_one, other_two)
+    return self.position_value +
+      (self.velocity_value * solar_step_interval) as meter +
+      (old_acceleration *
+       (0.5 * solar_step_interval * solar_step_interval)) as meter
+  }
+
+  fun finish!(old_first: BodySnapshot, old_second: BodySnapshot,
+              new_first: BodySnapshot, new_second: BodySnapshot,
+              next_position: Point2<Float64, meter>,
+              solar_step_interval: Float64<second>): Void {
+    let old_acceleration = self.acceleration(self.position_value,
+                                             old_first, old_second)
+    let next_acceleration = self.acceleration(next_position,
+                                              new_first, new_second)
+    let velocity_change =
+      ((old_acceleration + next_acceleration) *
+       (0.5 * solar_step_interval)) as (meter / second)
+    self.position_value = next_position
+    self.velocity_value = self.velocity_value + velocity_change
+  }
+}
+
+class SolarTertiaryState {
+  let .identity_value: String
+  let .position_value: Point2<Float64, meter>
+  let .velocity_value: Vector2<Float64, meter / second>
+  let .reference_x_value: Float64
+  let .reference_y_value: Float64
+  let .escaped_value: Bool
+  let .stopped_value: Bool
+
+  new(seed: SolarLagrangeSeed) {
+    self.identity_value = seed.identity()
+    self.position_value = seed.position()
+    self.velocity_value = seed.velocity()
+    self.reference_x_value = seed.reference_x()
+    self.reference_y_value = seed.reference_y()
+    self.escaped_value = false
+    self.stopped_value = false
+  }
+
+  fun stop!(): Void {
+    assert(self.escaped_value, "only an escaped tertiary may be stopped")
+    self.stopped_value = true
+  }
+
+  fun .acceleration(evaluation_position: Point2<Float64, meter>, sun: BodySnapshot,
+                    earth: BodySnapshot,
+                    moon: BodySnapshot): Vector2<Float64, meter / second^2> {
+    let sun_displacement = sun.position() - evaluation_position
+    let earth_displacement = earth.position() - evaluation_position
+    let moon_displacement = moon.position() - evaluation_position
+    let sun_distance_squared = sun_displacement.squared_length()
+    let earth_distance_squared = earth_displacement.squared_length()
+    let moon_distance_squared = moon_displacement.squared_length()
+    assert(sun_distance_squared > 0.0 meter^2,
+           "a tertiary body must not overlap the Sun")
+    assert(earth_distance_squared > 0.0 meter^2,
+           "a tertiary body must not overlap Earth")
+    assert(moon_distance_squared > 0.0 meter^2,
+           "a tertiary body must not overlap the Moon")
+    let sun_acceleration =
+      (sun_displacement.normalized() *
+       (6.67430e-11 (meter^3 / kilogram / second^2) * sun.mass() /
+        sun_distance_squared)) as (meter / second^2)
+    let earth_acceleration =
+      (earth_displacement.normalized() *
+       (6.67430e-11 (meter^3 / kilogram / second^2) * earth.mass() /
+        earth_distance_squared)) as (meter / second^2)
+    let moon_acceleration =
+      (moon_displacement.normalized() *
+       (6.67430e-11 (meter^3 / kilogram / second^2) * moon.mass() /
+        moon_distance_squared)) as (meter / second^2)
+    return sun_acceleration + earth_acceleration + moon_acceleration
+  }
+
+  fun advance_under_sun!(old_sun: BodySnapshot, old_earth: BodySnapshot,
+                         old_moon: BodySnapshot, new_sun: BodySnapshot,
+                         new_earth: BodySnapshot, new_moon: BodySnapshot,
+                         solar_step_interval: Float64<second>): Void {
+    if self.stopped_value { return }
+    let old_acceleration = self.acceleration(self.position_value,
+      old_sun, old_earth, old_moon)
+    let next_position = self.position_value +
+      (self.velocity_value * solar_step_interval) as meter +
+      (old_acceleration *
+       (0.5 * solar_step_interval * solar_step_interval)) as meter
+    let next_acceleration = self.acceleration(next_position,
+      new_sun, new_earth, new_moon)
+    self.position_value = next_position
+    self.velocity_value = self.velocity_value +
+      ((old_acceleration + next_acceleration) *
+       (0.5 * solar_step_interval)) as (meter / second)
+    if self.escaped_value == false {
+      self.escaped_value = self.has_escaped(new_earth, new_moon)
+    }
+  }
+
+  fun .has_escaped(earth: BodySnapshot, moon: BodySnapshot): Bool {
+    let total_mass = earth.mass() + moon.mass()
+    let barycenter = earth.position() +
+      (moon.position() - earth.position()) * (moon.mass() / total_mass)
+    let barycenter_velocity =
+      ((earth.velocity() * earth.mass() + moon.velocity() * moon.mass()) /
+       total_mass) as (meter / second)
+    let displacement = self.position_value - barycenter
+    let relative_velocity = self.velocity_value - barycenter_velocity
+    let separation = (moon.position() - earth.position()).length()
+    let radial_velocity = dot(
+      displacement.normalized() * 1.0 (meter / second), relative_velocity)
+    let specific_energy = 0.5 * relative_velocity.squared_length() -
+      6.67430e-11 (meter^3 / kilogram / second^2) * earth.mass() /
+        (self.position_value - earth.position()).length() -
+      6.67430e-11 (meter^3 / kilogram / second^2) * moon.mass() /
+        (self.position_value - moon.position()).length()
+    return displacement.length() > ESCAPE_BOUNDARY_SCALE * separation and
+      radial_velocity > 0.0 (meter^2 / second^2) and
+      specific_energy > 0.0 (meter^2 / second^2)
+  }
+
+  fun snapshot(earth: BodySnapshot, moon: BodySnapshot): SolarTertiarySnapshot {
+    let total_mass = earth.mass() + moon.mass()
+    let barycenter = earth.position() +
+      (moon.position() - earth.position()) * (moon.mass() / total_mass)
+    let separation_vector = moon.position() - earth.position()
+    let separation = separation_vector.length()
+    let axis = separation_vector.normalized()
+    let perpendicular = <-axis.y, axis.x>
+    let target = barycenter + axis * (self.reference_x_value * separation) +
+      perpendicular * (self.reference_y_value * separation)
+    let body = BodySnapshot(self.identity_value, 0.0 kilogram,
+                            self.position_value, self.velocity_value)
+    return SolarTertiarySnapshot(body, self.reference_x_value,
+      self.reference_y_value, (self.position_value - target).length(),
+      self.escaped_value)
+  }
+}
+
+class SolarLagrangeSolver {
+  let .time_value: Float64<second>
+  let .step_duration: Float64<second>
+  let .sun_state: MassiveBodyState
+  let .earth_state: MassiveBodyState
+  let .moon_state: MassiveBodyState
+  let .tracer_one: SolarTertiaryState
+  let .tracer_two: SolarTertiaryState
+  let .tracer_three: SolarTertiaryState
+  let .tracer_four: SolarTertiaryState
+  let .tracer_five: SolarTertiaryState
+  let .tracer_six: SolarTertiaryState
+
+  new(sun_mass: Float64<kilogram>, sun_position: Point2<Float64, meter>,
+      sun_velocity: Vector2<Float64, meter / second>,
+      earth_mass: Float64<kilogram>, earth_position: Point2<Float64, meter>,
+      earth_velocity: Vector2<Float64, meter / second>,
+      moon_mass: Float64<kilogram>, moon_position: Point2<Float64, meter>,
+      moon_velocity: Vector2<Float64, meter / second>,
+      solar_step_interval: Float64<second>,
+      seed_one: SolarLagrangeSeed, seed_two: SolarLagrangeSeed,
+      seed_three: SolarLagrangeSeed, seed_four: SolarLagrangeSeed,
+      seed_five: SolarLagrangeSeed, seed_six: SolarLagrangeSeed) {
+    assert(solar_step_interval > 0.0 second,
+           "solar Lagrange step duration must be positive")
+    self.time_value = 0.0 second
+    self.step_duration = solar_step_interval
+    self.sun_state = MassiveBodyState("Sun", sun_mass,
+                                      sun_position, sun_velocity)
+    self.earth_state = MassiveBodyState("Earth", earth_mass,
+                                        earth_position, earth_velocity)
+    self.moon_state = MassiveBodyState("Moon", moon_mass,
+                                       moon_position, moon_velocity)
+    self.tracer_one = SolarTertiaryState(seed_one)
+    self.tracer_two = SolarTertiaryState(seed_two)
+    self.tracer_three = SolarTertiaryState(seed_three)
+    self.tracer_four = SolarTertiaryState(seed_four)
+    self.tracer_five = SolarTertiaryState(seed_five)
+    self.tracer_six = SolarTertiaryState(seed_six)
+  }
+
+  fun .snapshot_for(sun: BodySnapshot, earth: BodySnapshot,
+                    moon: BodySnapshot): SolarLagrangeSnapshot =>
+    SolarLagrangeSnapshot(self.time_value, sun, earth, moon,
+      self.tracer_one.snapshot(earth, moon),
+      self.tracer_two.snapshot(earth, moon),
+      self.tracer_three.snapshot(earth, moon),
+      self.tracer_four.snapshot(earth, moon),
+      self.tracer_five.snapshot(earth, moon),
+      self.tracer_six.snapshot(earth, moon))
+
+  fun snapshot(): SolarLagrangeSnapshot => self.snapshot_for(
+    self.sun_state.snapshot(), self.earth_state.snapshot(),
+    self.moon_state.snapshot())
+
+  /// Permanently stop integrating one escaped tertiary body.
+  fun stop_tertiary!(index: Int64): Void {
+    if index == 0 {
+      self.tracer_one.stop!()
+      return
+    }
+    if index == 1 {
+      self.tracer_two.stop!()
+      return
+    }
+    if index == 2 {
+      self.tracer_three.stop!()
+      return
+    }
+    if index == 3 {
+      self.tracer_four.stop!()
+      return
+    }
+    if index == 4 {
+      self.tracer_five.stop!()
+      return
+    }
+    assert(index == 5, "tertiary index must be between 0 and 5")
+    self.tracer_six.stop!()
+  }
+
+  fun step!(): SolarLagrangeSnapshot {
+    let old_sun = self.sun_state.snapshot()
+    let old_earth = self.earth_state.snapshot()
+    let old_moon = self.moon_state.snapshot()
+    let next_sun_position = self.sun_state.predict(old_earth, old_moon,
+                                                   self.step_duration)
+    let next_earth_position = self.earth_state.predict(old_sun, old_moon,
+                                                       self.step_duration)
+    let next_moon_position = self.moon_state.predict(old_sun, old_earth,
+                                                      self.step_duration)
+    let next_sun = BodySnapshot("Sun", old_sun.mass(), next_sun_position,
+                                old_sun.velocity())
+    let next_earth = BodySnapshot("Earth", old_earth.mass(),
+                                  next_earth_position, old_earth.velocity())
+    let next_moon = BodySnapshot("Moon", old_moon.mass(), next_moon_position,
+                                 old_moon.velocity())
+    self.sun_state.finish!(old_earth, old_moon, next_earth, next_moon,
+                           next_sun_position, self.step_duration)
+    self.earth_state.finish!(old_sun, old_moon, next_sun, next_moon,
+                             next_earth_position, self.step_duration)
+    self.moon_state.finish!(old_sun, old_earth, next_sun, next_earth,
+                            next_moon_position, self.step_duration)
+    let new_sun = self.sun_state.snapshot()
+    let new_earth = self.earth_state.snapshot()
+    let new_moon = self.moon_state.snapshot()
+    self.tracer_one.advance_under_sun!(old_sun, old_earth, old_moon,
+      new_sun, new_earth, new_moon, self.step_duration)
+    self.tracer_two.advance_under_sun!(old_sun, old_earth, old_moon,
+      new_sun, new_earth, new_moon, self.step_duration)
+    self.tracer_three.advance_under_sun!(old_sun, old_earth, old_moon,
+      new_sun, new_earth, new_moon, self.step_duration)
+    self.tracer_four.advance_under_sun!(old_sun, old_earth, old_moon,
+      new_sun, new_earth, new_moon, self.step_duration)
+    self.tracer_five.advance_under_sun!(old_sun, old_earth, old_moon,
+      new_sun, new_earth, new_moon, self.step_duration)
+    self.tracer_six.advance_under_sun!(old_sun, old_earth, old_moon,
+      new_sun, new_earth, new_moon, self.step_duration)
+    self.time_value = self.time_value + self.step_duration
+    return self.snapshot_for(new_sun, new_earth, new_moon)
+  }
+}
+
+export SolarLagrangeSnapshot
+export SolarLagrangeSolver
+export SolarLagrangeSeed
+export SolarTertiarySnapshot

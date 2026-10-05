@@ -214,8 +214,11 @@ namespace parser
           {
             parameter_label += ": " + *parameter.type_name;
           }
-          result->children.push_back(
-              std::make_unique<visual_node>(visual_node{std::move(parameter_label), "declaration"}));
+          auto parameter_node = std::make_unique<visual_node>(
+              visual_node{std::move(parameter_label), "declaration"});
+          if (parameter.default_value)
+            parameter_node->children.push_back(make_expression_node(*parameter.default_value));
+          result->children.push_back(std::move(parameter_node));
         }
         result->children.push_back(make_expression_node(*lambda->body));
         return result;
@@ -422,8 +425,19 @@ namespace parser
           {
             parameter_label += ": " + *parameter.type_name;
           }
-          node->children.push_back(
-              std::make_unique<visual_node>(visual_node{std::move(parameter_label), "declaration"}));
+          auto parameter_node = std::make_unique<visual_node>(
+              visual_node{std::move(parameter_label), "declaration"});
+          if (parameter.default_value)
+            parameter_node->children.push_back(make_expression_node(*parameter.default_value));
+          node->children.push_back(std::move(parameter_node));
+        }
+        for (const auto &parent : function->parent_initializers)
+        {
+          auto initializer = std::make_unique<visual_node>(
+              visual_node{"Parent initializer\n" + parent.name, "declaration"});
+          for (const auto &argument : parent.arguments)
+            initializer->children.push_back(make_expression_node(*argument));
+          node->children.push_back(std::move(initializer));
         }
         if (function->body)
         {
@@ -448,6 +462,9 @@ namespace parser
                                       : type->type_kind == type_declaration::kind::class_type ? "Class"
                                                                                               : "Enum";
         auto node = std::make_unique<visual_node>(visual_node{kind_name + "\n" + type->name, "declaration"});
+        for (const auto &base : type->base_classes)
+          node->children.push_back(std::make_unique<visual_node>(
+              visual_node{"Superclass\n" + base, "type"}));
         if (type->composition_keyword)
         {
           auto composition = std::make_unique<visual_node>(

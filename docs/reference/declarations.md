@@ -84,6 +84,23 @@ and enums. Functions may use a block body or a short expression body:
 fun double(value: Int): Int => value * 2
 ```
 
+Trailing parameters may provide defaults in functions, methods, constructors,
+and lambdas. A caller may omit those arguments, and the defaults are evaluated
+for that call:
+
+```sagan
+fun greet(name: String = "friend"): String => name
+let double = fun(value: Int, factor: Int = 2): Int => value * factor
+print(greet())
+print(double(21))
+```
+
+Required parameters must come first. A default requires an explicit parameter
+type and currently must be a self-contained value (literals and expressions
+made from them); it cannot capture another parameter, a local variable, or
+`self`. Calls through a separately declared function type do not inherit
+defaults from the original function or lambda.
+
 Faces accept required method signatures and methods with default bodies.
 Classes accept fields, constructors, and methods. Enum members may be plain
 names or may carry typed payloads. A plain enum value is written with its type,
@@ -95,12 +112,16 @@ have default initializers. A class may declare overloaded `new(...)` constructor
 `const` fields require an explicit type and a declaration-site initializer.
 Constructor-only initialization of const fields is deferred; a const field
 cannot be assigned again, even in `new`.
-calling `ClassName(arguments...)` selects exactly one compatible constructor.
+Calling `ClassName(arguments...)` selects exactly one compatible constructor.
 Every field without a declaration-site default must be assigned on every
 constructor path. With no declared constructor, `ClassName()` is available only
 when every field has a default. `new` has no source-level return type and cannot
 use `return`, while
 `init` remains an ordinary identifier for possible separate lifecycle APIs.
+For inherited classes, `new(...) is Parent(args), OtherParent(args)` forwards
+arguments to direct parent constructors in the same order as the class's `is`
+list. Unlisted parents must be default-constructible. Parent initializer
+arguments cannot refer to `self` before construction is complete.
 `self` resolves to the current instance. Fields can be read or mutated,
 and block- or expression-bodied methods execute. A trailing `!` is allowed only
 on methods and conventionally identifies a mutating alternative; it does not by
@@ -123,8 +144,9 @@ type annotations. At least one edge must use `weak let`. A face-typed field must
 be weak because its concrete class target is selected dynamically and cannot be
 proven acyclic. The diagnostic reports the strong field path that forms a cycle.
 
-`is` and `has` are interchangeable and do
-not denote inheritance. A class composing a face must satisfy each required
+On classes, `is` introduces one or more parent classes and `has` introduces
+one or more adopted faces. The `is` clause comes first, followed by `, has`
+when both are present. A class composing a face must satisfy each required
 method with an exact class implementation or unambiguous default. Missing or
 incompatible methods are compile-time errors.
 
@@ -136,7 +158,7 @@ Face composition is transitive: inherited requirements and defaults flow into
 the composing face and ultimately into its classes. Cycles are rejected.
 Face names may be used as value, parameter, and return annotations. A class
 value converts to a face only when its declaration explicitly conforms through
-`is` or `has`, including transitive face composition. Calls through the face
+`has`, including transitive face composition. Calls through the face
 dispatch to the concrete class while retaining shared reference identity.
 
 Enum cases may carry one or more typed payload values, such as
@@ -174,7 +196,7 @@ generic class specialization from constructor arguments, so `Box(42)` produces
 the corresponding `Box<Int8>` under normal literal inference. An expected
 annotation may supply otherwise uninferable parameters. Fields and methods
 substitute the specialization consistently. Composition accepts specialized
-faces, as in `class Box<T> is Readable<T>`, and conversions preserve invariant
+faces, as in `class Box<T> has Readable<T>`, and conversions preserve invariant
 type arguments. A generic face may provide ordinary default methods that use
 its type parameters and dispatch through `self`. Class methods may introduce
 their own inferred parameters, such as `fun echo<U>(value: U): U`, and callers
@@ -183,6 +205,17 @@ explicit specialization with `Box<Int8>(42)`. Generic class parameters may use
 the same `is Face` constraint syntax and are checked when constructed. A face
 method cannot introduce method-specific parameters because virtual generic
 methods are intentionally unsupported.
+
+Faces may declare typed `let` and `const` field promises without initializers.
+Adopting a mutable `let` promise adds one field to the class unless it already
+declares a compatible one. The constructor must initialize a synthesized field;
+face promises do not inherit default values. A read-only `const` promise needs
+an explicit class field with an initializer. A default can use `self.field`
+only when the face (or a composed face) promises that field. A leading dot
+makes the field private. Compatible promises from multiple faces share one
+storage slot. Faces may also declare private helper requirements with
+`fun .helper(...)`; private class methods can satisfy those. Promises remain
+in force if a class overrides a default that uses them.
 
 Duplicate declarations, unresolved names, incompatible overloads, invalid
 visibility access, and module export violations are compile-time errors. Generic

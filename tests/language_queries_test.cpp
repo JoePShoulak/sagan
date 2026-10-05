@@ -1,10 +1,12 @@
 #include "../src/language_service/queries.hpp"
+#include "../src/language_service/refactor.hpp"
 #include "../src/source/provider.hpp"
 #include "../src/modules/resolver.hpp"
 
 #include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -161,6 +163,8 @@ auto main() -> int
       "  let phi = (1 + 5 ^ 0.5) / 2\n"
       "  let raised = phi ^ b\n"
       "  let rounded = Int.round(raised)\n"
+      "  let direction = <3.0, 4.0>\n"
+      "  let heading = direction.normalized()\n"
       "  a, b = b, a + b\n"
       "  return indices[0] + a + b + rounded\n"
       "}\n";
@@ -211,6 +215,17 @@ auto main() -> int
               round_signature.value->result_type == "Int64" &&
               !round_signature.value->documentation.empty(),
           "built-in Int.round signature help omitted compiler metadata");
+  const auto vector_completion = sugar_query.completions(
+      at(sugar_source, "direction.normalized") + std::string("direction.nor").size());
+  require(vector_completion.value &&
+              std::any_of(vector_completion.value->begin(), vector_completion.value->end(),
+                          [](const auto &entry)
+                          { return entry.label == "normalized" && !entry.documentation.empty(); }),
+          "Vector method completion omitted normalized metadata");
+  const auto vector_hover = sugar_query.hover(at(sugar_source, "direction.normalized") + 11);
+  require(vector_hover.value && vector_hover.value->symbol.origin == semantic::symbol_origin::builtin &&
+              !vector_hover.value->documentation.empty(),
+          "Vector method hover omitted compiler-owned documentation");
   require(sugar_query.symbol_at(at(sugar_source, "a, b =")).value.has_value(),
           "parallel reassignment targets were not indexed");
 
@@ -240,7 +255,7 @@ auto main() -> int
 
   const std::string composition =
       "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
-      "class Probe is Readable { fun read(): Int => 1 }\n"
+      "class Probe has Readable { fun read(): Int => 1 }\n"
       "fun main(): Int {\n  let probe = Probe()\n  return probe.read()\n}\n";
   const source::document_snapshot composed(
       source::document_identity{source::document_id{81}, source::document_uri{"untitled:composition"}, {}},
@@ -277,6 +292,59 @@ auto main() -> int
               std::any_of(inherited_completion.value->begin(), inherited_completion.value->end(),
                           [](const auto &item) { return item.label == "describe"; }),
           "member completion omitted a composed face default");
+
+  const std::string inheritance =
+      "face Named { fun name(): String }\n"
+      "class Ship has Named { fun name(): String => \"ship\" }\n"
+      "class Aircraft { fun altitude(): Int => 7 }\n"
+      "class GunShip is Ship, Aircraft { fun inherited(): String => self.name()\n"
+      "  fun label(): String => super.Ship.name() }\n"
+      "let gunship = GunShip()\n"
+      "let named: Named = gunship\n"
+      "print(gunship.altitude())\n";
+  const source::document_snapshot inherited_document(
+      source::document_identity{source::document_id{91}, source::document_uri{"untitled:inheritance"}, {}},
+      1, inheritance);
+  const auto inherited_index = language_service::index_document(inherited_document);
+  require(inherited_index.value && inherited_index.value->types,
+          "class inheritance fixture did not produce typed editor data");
+  const language_service::document_queries inherited_query(
+      inherited_document, inherited_index.value->index, nullptr,
+      &inherited_index.value->model, &*inherited_index.value->types);
+  const auto ship_hierarchy = inherited_query.type_hierarchy(at(inheritance, "class Ship") + 6);
+  require(ship_hierarchy.value && std::any_of(ship_hierarchy.value->subtypes.begin(),
+              ship_hierarchy.value->subtypes.end(), [](const auto &item) { return item.name == "GunShip"; }),
+          "class inheritance did not appear in type hierarchy");
+  const auto inherited_definition = inherited_query.definitions(at(inheritance, "self.name()") + 6);
+  require(inherited_definition.value && inherited_definition.value->size() == 1 &&
+              inherited_definition.value->front().bytes.begin == at(inheritance, "fun name(): String =>") + 4,
+          "inherited method did not navigate to its declaring class");
+  const auto super_definition = inherited_query.definitions(at(inheritance, "super.Ship.name()") + 11);
+  require(super_definition.value && super_definition.value->size() == 1 &&
+              super_definition.value->front().bytes.begin == at(inheritance, "fun name(): String =>") + 4,
+          "qualified parent call did not navigate to its implementation");
+  const auto parent_completion = inherited_query.completions(at(inheritance, "gunship.altitude()") + 10);
+  require(parent_completion.value && std::any_of(parent_completion.value->begin(),
+              parent_completion.value->end(), [](const auto &item) { return item.label == "altitude"; }),
+          "member completion omitted a second parent class");
+
+  const std::string forwarding =
+      "class Parent {\n  let value: Int\n  new(value: Int) { self.value = value }\n}\n"
+      "class Child is Parent {\n  new(value: Int) is Parent(value) { }\n}\n"
+      "let child = Child(7)\n";
+  const source::document_snapshot forwarding_document(
+      source::document_identity{source::document_id{92}, source::document_uri{"untitled:forwarding"}, {}},
+      1, forwarding);
+  const auto forwarding_index = language_service::index_document(forwarding_document);
+  require(forwarding_index.value && forwarding_index.value->types,
+          "constructor forwarding fixture did not produce typed editor data");
+  const language_service::document_queries forwarding_query(
+      forwarding_document, forwarding_index.value->index, nullptr,
+      &forwarding_index.value->model, &*forwarding_index.value->types);
+  const auto forwarded_parent = forwarding_query.definitions(at(forwarding, "is Parent(value)") + 4);
+  require(forwarded_parent.value && forwarded_parent.value->size() == 1 &&
+              forwarded_parent.value->front().bytes.begin == at(forwarding, "class Parent") + 6,
+          "constructor parent initializer did not navigate to its class");
 
   const std::string shadowing =
       "fun main(): Int {\n"
@@ -476,7 +544,8 @@ auto main() -> int
   const auto namespace_completion = workspace_query.completions(at(std::string(source.value->text()),
                                                                  "flight_data.offset()") + 13);
   require(namespace_completion.value && namespace_completion.value->size() == 1 &&
-              namespace_completion.value->front().label == "offset",
+              namespace_completion.value->front().label == "offset" &&
+              namespace_completion.value->front().detail == "(): Int",
           "namespace completion did not use exported members");
   const std::string unimported = "module scratch\n\nfun main(): Int {\n  return 0\n}\n";
   const source::document_snapshot unimported_document(
@@ -498,5 +567,66 @@ auto main() -> int
                                        "import course from guidance\n";
                           }),
           "exported workspace completion did not provide a missing-import edit");
+  const auto overload_graph = modules::resolve(
+      "tests/fixtures/modules/completion_overload/main.sagan", disk);
+  const auto overload_workspace = semantic::build_workspace_index(overload_graph, disk);
+  const source::document_snapshot overload_document(
+      source::document_identity{source::document_id{88}, source::document_uri{"untitled:overload"}, {}},
+      1, unimported);
+  const auto overload_index = language_service::index_document(overload_document);
+  require(overload_index.value.has_value(), "overload auto-import fixture did not index");
+  const language_service::document_queries overload_query(
+      overload_document, overload_index.value->index, &overload_workspace,
+      &overload_index.value->model);
+  const auto overload_items = overload_query.completions(at(unimported, "return 0"));
+  require(overload_items.value &&
+              std::any_of(overload_items.value->begin(), overload_items.value->end(),
+                          [](const auto &item)
+                          {
+                            return item.label == "answer" &&
+                                   item.detail.find("Int") != std::string::npos &&
+                                   item.detail.find("String") != std::string::npos &&
+                                   item.additional_import_edits.size() == 1 &&
+                                   item.additional_import_edits.front().replacement_utf8 ==
+                                       "import answer from support\n";
+                          }),
+          "overloaded export was omitted from safe auto-import completion");
+  const auto overloaded = std::find_if(overload_items.value->begin(), overload_items.value->end(),
+                                      [](const auto &item)
+                                      { return item.label == "answer" &&
+                                               !item.additional_import_edits.empty(); });
+  require(overloaded != overload_items.value->end() &&
+              language_service::add_missing_import(overload_document, overload_workspace,
+                                                    overloaded->id).state ==
+                  language_service::edit_state::ready,
+          "overloaded completion was not accepted by the safe import planner");
+  const auto collision_graph = modules::resolve(
+      "tests/fixtures/modules/completion_collision/main.sagan", disk);
+  const auto collision_workspace = semantic::build_workspace_index(collision_graph, disk);
+  const auto collision_source = disk.read_path(
+      "tests/fixtures/modules/completion_collision/main.sagan");
+  require(collision_source.value.has_value(), "completion collision fixture was not readable");
+  const auto collision_index = language_service::index_document(*collision_source.value);
+  require(collision_index.value.has_value(), "completion collision fixture did not index");
+  const language_service::document_queries collision_query(
+      *collision_source.value, collision_index.value->index, &collision_workspace,
+      &collision_index.value->model);
+  const auto collision_items = collision_query.completions(
+      at(std::string(collision_source.value->text()), "return 0"));
+  require(collision_items.value.has_value(), "collision completion did not return candidates");
+  const auto collision_text = std::string(collision_source.value->text());
+  const auto collision_eol = collision_text.find("\r\n") != std::string::npos ? "\r\n" : "\n";
+  std::vector<std::string> answer_modules;
+  for (const auto &item : *collision_items.value)
+    if (item.label == "answer" && item.additional_import_edits.size() == 1)
+    {
+      answer_modules.push_back(item.source_module);
+      const auto &import_text = item.additional_import_edits.front().replacement_utf8;
+      if (import_text != "import answer from " + item.source_module + collision_eol)
+        throw std::runtime_error("colliding export used an ambiguous import edit: module '" +
+                                 item.source_module + "', edit '" + import_text + "'");
+    }
+  require(answer_modules == std::vector<std::string>{"alpha", "beta"},
+          "colliding exports did not remain distinct and deterministic");
   return 0;
 }

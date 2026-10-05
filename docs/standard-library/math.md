@@ -9,10 +9,10 @@ verified_by: null
 
 # Math library
 
-!!! warning "Planned library"
-    The math library is not implemented. This page records the intended
-    boundary without promising types, functions, module names, or behavior
-    that the repository does not yet provide.
+!!! info "Initial implementation"
+    M0 implements the narrow orbital-math surface documented below. The wider
+    scalar, geometry, matrix, quaternion, and numerical library remains future
+    work and must not be inferred from the intended scope.
 
 Math is the automatically available foundation of Sagan's core-library
 ecosystem. Programs will not need an import to use its eventual public surface.
@@ -21,8 +21,56 @@ defining incompatible alternatives.
 
 This does not mean Sagan currently has no mathematical behavior. Checked
 numeric operations, Cartesian vectors and points, spherical forms, and native
-units are language features today. This page covers the larger automatic math
-library that will be designed after the 1.0 language release.
+units are language features today. M0 adds automatically available operations
+needed by the first two-body solver. Math is part of Sagan's main version and
+does not carry an independent package version.
+
+## Implemented M0 surface
+
+The following names are automatically available without an import:
+
+| Symbol | Implemented contract |
+| --- | --- |
+| `sqrt(value)` | Returns the square root of a finite, non-negative `Float32` or `Float64`. |
+| `dot(left, right)` | Returns the dot product of equal-dimension, unit-compatible floating-point vectors. |
+| `display_coordinates(point, origin, scale)` | Returns dimensionless coordinates `(point - origin) / scale` after checking compatible physical units. |
+
+Floating-point Cartesian vectors provide these built-in methods without an
+import:
+
+| Method | Implemented contract |
+| --- | --- |
+| `vector.squared_length()` | Returns the sum of squared components, with squared physical units. |
+| `vector.length()` | Returns the Euclidean length in the component unit. |
+| `vector.normalized()` | Returns a new dimensionless unit vector; the original is unchanged. |
+| `vector.normalized!()` | Normalizes a mutable, already unitless vector in place and returns the normalized vector. |
+
+The former standalone `length(vector)`, `squared_length(vector)`, and
+`normalized(vector)` spellings are no longer part of Sagan.
+
+M0 accepts fixed-size Cartesian `Vector` and `Point` values whose components
+are `Float32` or `Float64`; measured components retain their native unit
+metadata. `display_coordinates` requires measured points and an explicit
+compatible world-units-per-display-unit scale. It returns a vector rather than
+a point because the result is an offset from the supplied display origin.
+
+All M0 inputs must be finite, and intermediate squared sums and dot products
+must remain finite. `sqrt` rejects negative input with
+`RuntimeError.math_domain`; non-finite input or output uses
+`RuntimeError.non_finite`; both normalization methods reject a zero vector with
+`RuntimeError.zero_length`; and a zero display scale uses the existing
+`RuntimeError.division_by_zero`. Floating results retain ordinary IEEE-754
+rounding and are not promised to be exact or bit-identical across toolchains.
+
+Run the checked example with:
+
+```bash
+make orbit-math-demo
+```
+
+`examples/orbit_math.sagan` demonstrates a measured 3-4-5 displacement, dot
+product, normalization, square root, and conversion from metres to
+dimensionless display coordinates at an explicit kilometre scale.
 
 ## Intended scope
 
@@ -34,8 +82,9 @@ astrodynamics, numerics, and simulation. Candidate subject areas include:
 - points, coordinates, and transformations; and
 - numerical algorithms and utilities needed across the core libraries.
 
-This list describes the intended domain, not an approved API. Exact types,
-operations, precision behavior, naming, and organization remain open.
+Outside the M0 surface above, this list describes intended domain rather than
+an approved API. Exact additional types, operations, precision behavior,
+naming, and organization remain open.
 
 ## Language boundary
 

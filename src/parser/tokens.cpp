@@ -96,6 +96,7 @@ namespace tokens
         "KWD_OR",
         "KWD_NOT",
         "KWD_SELF",
+        "KWD_SUPER",
         "KWD_IS",
         "KWD_HAS",
         "KWD_TRUE",

@@ -1,0 +1,5 @@
+module alpha
+
+/// The alpha answer.
+fun alpha_answer(): Int => 1
+export alpha_answer as answer

@@ -1,0 +1,3 @@
+let baseline = 3
+fun bad(value: Int = baseline): Int => value
+print(bad())

@@ -1,0 +1,5 @@
+module beta
+
+/// The beta answer.
+fun beta_answer(): Int => 2
+export beta_answer as answer

@@ -119,6 +119,12 @@ auto main() -> int
                                *variable.source_path == *root_document.value->identity().canonical_path;
                       }),
           "root-level Sagan bindings were omitted from debugger metadata");
+  require(std::any_of(root_metadata.variables.begin(), root_metadata.variables.end(),
+                      [](const auto &variable)
+                      { return variable.name == "value" && variable.parameter &&
+                               variable.type == "Int64" &&
+                               variable.declaration.bytes.begin == variable.declaration.bytes.end; }),
+          "Sagan parameter value metadata lost its kind or scalar type");
   const auto main_document = disk.read_path("tests/fixtures/modules/module_demo/main.sagan");
   const auto guidance_document = disk.read_path("tests/fixtures/modules/module_demo/guidance.sagan");
   require(main_document && guidance_document, "linked source documents were unavailable");

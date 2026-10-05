@@ -1,0 +1,310 @@
+module restricted_three_body
+
+import BodySnapshot from two_body
+import TwoBodySnapshot from two_body
+import TwoBodySolver from two_body
+
+const ESCAPE_BOUNDARY_SCALE: Float64 = 2.0
+
+/// Immutable initial state for one massless tertiary body.
+class LagrangeBodySeed {
+  let .identity_value: String
+  let .position_value: Point2<Float64, meter>
+  let .velocity_value: Vector2<Float64, meter / second>
+  let .reference_x_value: Float64
+  let .reference_y_value: Float64
+
+  new(identity: String, position: Point2<Float64, meter>,
+      velocity: Vector2<Float64, meter / second>,
+      reference_x: Float64, reference_y: Float64) {
+    let checked_position = (position - (0.0, 0.0) meter).squared_length()
+    let checked_velocity = velocity.squared_length()
+    assert(reference_x - reference_x == 0.0 and reference_y - reference_y == 0.0,
+           "tertiary rotating-frame references must be finite")
+    self.identity_value = identity
+    self.position_value = position
+    self.velocity_value = velocity
+    self.reference_x_value = reference_x
+    self.reference_y_value = reference_y
+  }
+
+  fun identity(): String => self.identity_value
+  fun position(): Point2<Float64, meter> => self.position_value
+  fun velocity(): Vector2<Float64, meter / second> => self.velocity_value
+  fun reference_x(): Float64 => self.reference_x_value
+  fun reference_y(): Float64 => self.reference_y_value
+}
+
+/// Read-only tertiary state and displacement from its rotating-frame reference.
+class LagrangeBodySnapshot {
+  let .body_value: BodySnapshot
+  let .reference_x_value: Float64
+  let .reference_y_value: Float64
+  let .stability_error_value: Float64<meter>
+  let .escaped_value: Bool
+
+  new(body: BodySnapshot, reference_x: Float64, reference_y: Float64,
+      stability_error: Float64<meter>, escaped: Bool) {
+    self.body_value = body
+    self.reference_x_value = reference_x
+    self.reference_y_value = reference_y
+    self.stability_error_value = stability_error
+    self.escaped_value = escaped
+  }
+
+  fun identity(): String => self.body_value.identity()
+  fun position(): Point2<Float64, meter> => self.body_value.position()
+  fun velocity(): Vector2<Float64, meter / second> => self.body_value.velocity()
+  fun reference_x(): Float64 => self.reference_x_value
+  fun reference_y(): Float64 => self.reference_y_value
+  fun stability_error(): Float64<meter> => self.stability_error_value
+  fun escaped(): Bool => self.escaped_value
+}
+
+/// Immutable primary pair plus six massless tertiary presentation snapshots.
+class RestrictedThreeBodySnapshot {
+  let .primary_system_value: TwoBodySnapshot
+  let .first_value: LagrangeBodySnapshot
+  let .second_value: LagrangeBodySnapshot
+  let .third_value: LagrangeBodySnapshot
+  let .fourth_value: LagrangeBodySnapshot
+  let .fifth_value: LagrangeBodySnapshot
+  let .sixth_value: LagrangeBodySnapshot
+
+  new(primary_system: TwoBodySnapshot,
+      first: LagrangeBodySnapshot, second: LagrangeBodySnapshot,
+      third: LagrangeBodySnapshot, fourth: LagrangeBodySnapshot,
+      fifth: LagrangeBodySnapshot, sixth: LagrangeBodySnapshot) {
+    self.primary_system_value = primary_system
+    self.first_value = first
+    self.second_value = second
+    self.third_value = third
+    self.fourth_value = fourth
+    self.fifth_value = fifth
+    self.sixth_value = sixth
+  }
+
+  fun time(): Float64<second> => self.primary_system_value.time()
+  fun primary(): BodySnapshot => self.primary_system_value.first()
+  fun secondary(): BodySnapshot => self.primary_system_value.second()
+  fun primary_system(): TwoBodySnapshot => self.primary_system_value
+  fun tertiary(index: Int64): LagrangeBodySnapshot {
+    if index == 0 { return self.first_value }
+    if index == 1 { return self.second_value }
+    if index == 2 { return self.third_value }
+    if index == 3 { return self.fourth_value }
+    if index == 4 { return self.fifth_value }
+    assert(index == 5, "tertiary index must be between 0 and 5")
+    return self.sixth_value
+  }
+}
+
+class LagrangeBodyState {
+  let .identity_value: String
+  let .position_value: Point2<Float64, meter>
+  let .velocity_value: Vector2<Float64, meter / second>
+  let .reference_x_value: Float64
+  let .reference_y_value: Float64
+  let .escaped_value: Bool
+  let .stopped_value: Bool
+
+  new(seed: LagrangeBodySeed) {
+    self.identity_value = seed.identity()
+    self.position_value = seed.position()
+    self.velocity_value = seed.velocity()
+    self.reference_x_value = seed.reference_x()
+    self.reference_y_value = seed.reference_y()
+    self.escaped_value = false
+    self.stopped_value = false
+  }
+
+  fun stop!(): Void {
+    assert(self.escaped_value, "only an escaped tertiary may be stopped")
+    self.stopped_value = true
+  }
+
+  fun .acceleration(position: Point2<Float64, meter>,
+                    primary: BodySnapshot,
+                    secondary: BodySnapshot): Vector2<Float64, meter / second^2> {
+    let primary_displacement = primary.position() - position
+    let secondary_displacement = secondary.position() - position
+    let primary_distance_squared = primary_displacement.squared_length()
+    let secondary_distance_squared = secondary_displacement.squared_length()
+    assert(primary_distance_squared > 0.0 meter^2,
+           "a tertiary body must not overlap the primary")
+    assert(secondary_distance_squared > 0.0 meter^2,
+           "a tertiary body must not overlap the secondary")
+    let primary_acceleration =
+      (primary_displacement.normalized() *
+       (6.67430e-11 (meter^3 / kilogram / second^2) * primary.mass() /
+        primary_distance_squared)) as (meter / second^2)
+    let secondary_acceleration =
+      (secondary_displacement.normalized() *
+       (6.67430e-11 (meter^3 / kilogram / second^2) * secondary.mass() /
+        secondary_distance_squared)) as (meter / second^2)
+    return primary_acceleration + secondary_acceleration
+  }
+
+  fun advance!(old_primary: BodySnapshot, old_secondary: BodySnapshot,
+               new_primary: BodySnapshot, new_secondary: BodySnapshot,
+               step_duration: Float64<second>): Void {
+    if self.stopped_value { return }
+    let old_acceleration = self.acceleration(self.position_value,
+                                             old_primary, old_secondary)
+    let half_step_squared = 0.5 * step_duration * step_duration
+    let velocity_displacement = (self.velocity_value * step_duration) as meter
+    let acceleration_displacement =
+      (old_acceleration * half_step_squared) as meter
+    let next_position = self.position_value + velocity_displacement +
+      acceleration_displacement
+    let next_acceleration = self.acceleration(next_position,
+                                              new_primary, new_secondary)
+    let velocity_change =
+      ((old_acceleration + next_acceleration) * (0.5 * step_duration)) as (meter / second)
+    self.position_value = next_position
+    self.velocity_value = self.velocity_value + velocity_change
+    if self.escaped_value == false {
+      self.escaped_value = self.has_escaped(new_primary, new_secondary)
+    }
+  }
+
+  fun .has_escaped(primary: BodySnapshot, secondary: BodySnapshot): Bool {
+    let total_mass = primary.mass() + secondary.mass()
+    let barycenter = (primary.position() +
+      (secondary.position() - primary.position()) *
+      (secondary.mass() / total_mass))
+    let barycenter_velocity =
+      ((primary.velocity() * primary.mass() +
+        secondary.velocity() * secondary.mass()) / total_mass) as (meter / second)
+    let displacement = self.position_value - barycenter
+    let relative_velocity = self.velocity_value - barycenter_velocity
+    let separation = (secondary.position() - primary.position()).length()
+    let outside_boundary =
+      displacement.length() > ESCAPE_BOUNDARY_SCALE * separation
+    let radial_motion = displacement.x * relative_velocity.x +
+      displacement.y * relative_velocity.y
+    let moving_outward = radial_motion > 0.0 (meter^2 / second)
+    let primary_distance = (self.position_value - primary.position()).length()
+    let secondary_distance = (self.position_value - secondary.position()).length()
+    let specific_energy =
+      0.5 * relative_velocity.squared_length() -
+      6.67430e-11 (meter^3 / kilogram / second^2) * primary.mass() /
+        primary_distance -
+      6.67430e-11 (meter^3 / kilogram / second^2) * secondary.mass() /
+        secondary_distance
+    let has_escape_energy = specific_energy > 0.0 (meter^2 / second^2)
+    return outside_boundary and moving_outward and has_escape_energy
+  }
+
+  fun snapshot(primary_system: TwoBodySnapshot): LagrangeBodySnapshot {
+    let primary = primary_system.first()
+    let secondary = primary_system.second()
+    let separation_vector = secondary.position() - primary.position()
+    let separation = separation_vector.length()
+    let axis = separation_vector.normalized()
+    let perpendicular = <-axis.y, axis.x>
+    let target = primary_system.barycenter() +
+      axis * (self.reference_x_value * separation) +
+      perpendicular * (self.reference_y_value * separation)
+    let body = BodySnapshot(self.identity_value, 0.0 kilogram,
+                            self.position_value, self.velocity_value)
+    return LagrangeBodySnapshot(body, self.reference_x_value,
+                                self.reference_y_value,
+                                (self.position_value - target).length(),
+                                self.escaped_value)
+  }
+}
+
+/// Circular restricted three-body solver with six independent massless tracers.
+class RestrictedThreeBodySolver {
+  let .primary_solver: TwoBodySolver
+  let .step_duration: Float64<second>
+  let .first: LagrangeBodyState
+  let .second: LagrangeBodyState
+  let .third: LagrangeBodyState
+  let .fourth: LagrangeBodyState
+  let .fifth: LagrangeBodyState
+  let .sixth: LagrangeBodyState
+
+  new(primary_solver: TwoBodySolver, step_duration: Float64<second>,
+      first: LagrangeBodySeed, second: LagrangeBodySeed,
+      third: LagrangeBodySeed, fourth: LagrangeBodySeed,
+      fifth: LagrangeBodySeed, sixth: LagrangeBodySeed) {
+    assert(step_duration - step_duration == 0.0 second,
+           "restricted three-body step duration must be finite")
+    assert(step_duration > 0.0 second,
+           "restricted three-body step duration must be positive")
+    self.primary_solver = primary_solver
+    self.step_duration = step_duration
+    self.first = LagrangeBodyState(first)
+    self.second = LagrangeBodyState(second)
+    self.third = LagrangeBodyState(third)
+    self.fourth = LagrangeBodyState(fourth)
+    self.fifth = LagrangeBodyState(fifth)
+    self.sixth = LagrangeBodyState(sixth)
+  }
+
+  fun .snapshot_for(primary_system: TwoBodySnapshot): RestrictedThreeBodySnapshot =>
+    RestrictedThreeBodySnapshot(primary_system,
+      self.first.snapshot(primary_system), self.second.snapshot(primary_system),
+      self.third.snapshot(primary_system), self.fourth.snapshot(primary_system),
+      self.fifth.snapshot(primary_system), self.sixth.snapshot(primary_system))
+
+  fun snapshot(): RestrictedThreeBodySnapshot =>
+    self.snapshot_for(self.primary_solver.snapshot())
+
+  /// Permanently stop integrating one escaped tertiary body.
+  fun stop_tertiary!(index: Int64): Void {
+    if index == 0 {
+      self.first.stop!()
+      return
+    }
+    if index == 1 {
+      self.second.stop!()
+      return
+    }
+    if index == 2 {
+      self.third.stop!()
+      return
+    }
+    if index == 3 {
+      self.fourth.stop!()
+      return
+    }
+    if index == 4 {
+      self.fifth.stop!()
+      return
+    }
+    assert(index == 5, "tertiary index must be between 0 and 5")
+    self.sixth.stop!()
+  }
+
+  fun step!(): RestrictedThreeBodySnapshot {
+    let old_primary_system = self.primary_solver.snapshot()
+    let new_primary_system = self.primary_solver.step!()
+    self.first.advance!(old_primary_system.first(), old_primary_system.second(),
+                        new_primary_system.first(), new_primary_system.second(),
+                        self.step_duration)
+    self.second.advance!(old_primary_system.first(), old_primary_system.second(),
+                         new_primary_system.first(), new_primary_system.second(),
+                         self.step_duration)
+    self.third.advance!(old_primary_system.first(), old_primary_system.second(),
+                        new_primary_system.first(), new_primary_system.second(),
+                        self.step_duration)
+    self.fourth.advance!(old_primary_system.first(), old_primary_system.second(),
+                         new_primary_system.first(), new_primary_system.second(),
+                         self.step_duration)
+    self.fifth.advance!(old_primary_system.first(), old_primary_system.second(),
+                        new_primary_system.first(), new_primary_system.second(),
+                        self.step_duration)
+    self.sixth.advance!(old_primary_system.first(), old_primary_system.second(),
+                        new_primary_system.first(), new_primary_system.second(),
+                        self.step_duration)
+    return self.snapshot_for(new_primary_system)
+  }
+}
+
+export LagrangeBodySeed
+export LagrangeBodySnapshot
+export RestrictedThreeBodySnapshot
+export RestrictedThreeBodySolver

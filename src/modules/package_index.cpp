@@ -64,9 +64,12 @@ namespace modules
 
   auto query_package_index(const std::filesystem::path &index_path,
                            const std::string_view compiler_version,
-                           const std::string_view name_prefix) -> package_index_result
+                           const std::string_view name_prefix,
+                           const sagan::diagnostics::cancellation_token cancellation)
+    -> package_index_result
   {
     package_index_result result;
+    if (cancellation.is_cancelled()) { result.cancelled = true; return result; }
     std::ifstream input(index_path, std::ios::binary);
     if (!input)
     { result.message = "Local package index is unavailable"; return result; }
@@ -81,6 +84,8 @@ namespace modules
     std::size_t line_number = 1;
     while (std::getline(input, line))
     {
+      if (cancellation.is_cancelled())
+      { result.cancelled = true; result.packages.clear(); return result; }
       ++line_number;
       if (!line.empty() && line.back() == '\r') line.pop_back();
       if (line.empty() || line.front() == '#') continue;
@@ -116,6 +121,8 @@ namespace modules
           version_satisfies(fields[2], compiler_version)};
       if (package.install_state == package_install_state::installed)
       {
+        if (cancellation.is_cancelled())
+        { result.cancelled = true; result.packages.clear(); return result; }
         try
         {
           const auto manifest = load_package(package.manifest_path);
@@ -132,6 +139,8 @@ namespace modules
       }
       result.packages.push_back(std::move(package));
     }
+    if (cancellation.is_cancelled())
+    { result.cancelled = true; result.packages.clear(); return result; }
     std::sort(result.packages.begin(), result.packages.end(), [](const auto &left, const auto &right)
     {
       if (left.name != right.name) return left.name < right.name;
@@ -140,7 +149,7 @@ namespace modules
     return result;
   }
 
-  auto resolve_indexed_dependencies(const std::filesystem::path &project_manifest,
+  auto resolve_indexed_dependencies(const package_manifest &project_manifest,
                                     const std::filesystem::path &index_path,
                                     const std::string_view compiler_version,
                                     const std::filesystem::path &lock_path)
@@ -181,7 +190,6 @@ namespace modules
     std::set<std::string> visiting;
     try
     {
-      const auto root = load_package(project_manifest);
       std::function<void(const std::string &, const std::string &)> select;
       select = [&](const std::string &name, const std::string &requirement)
       {
@@ -229,7 +237,7 @@ namespace modules
         visiting.erase(name);
         selected.emplace(name, *candidate);
       };
-      for (const auto &dependency : root.dependencies)
+      for (const auto &dependency : project_manifest.dependencies)
         select(dependency.name, dependency.requirement);
       if (locked && pinned.size() != selected.size())
       { result.state = dependency_state::invalid_lock; throw std::runtime_error("Lockfile has unused package rows"); }
@@ -249,5 +257,22 @@ namespace modules
       result.lock_text += name + '\t' + package.version + '\n';
     }
     return result;
+  }
+
+  auto resolve_indexed_dependencies(const std::filesystem::path &project_manifest,
+                                    const std::filesystem::path &index_path,
+                                    const std::string_view compiler_version,
+                                    const std::filesystem::path &lock_path)
+    -> dependency_resolution
+  {
+    try
+    {
+      return resolve_indexed_dependencies(load_package(project_manifest), index_path,
+                                          compiler_version, lock_path);
+    }
+    catch (const std::exception &error)
+    {
+      return {dependency_state::invalid_index, error.what(), {}, {}};
+    }
   }
 }

@@ -87,6 +87,30 @@ Then run:
 bash scripts/docs.sh check
 ```
 
+## Sagan syntax highlighting
+
+Use `sagan` on fenced Sagan source examples. The documentation build registers
+the repository-owned lexer in `scripts/docs_sagan_lexer.py`, so these blocks are
+highlighted with the same theme-aware token colors and copy controls as other
+source code:
+
+````markdown
+```sagan
+fun main() {
+  print("Hello from Sagan!")
+}
+```
+````
+
+`bash scripts/docs.sh check` verifies both the lexer token categories and the
+rendered HTML. When Sagan's lexical vocabulary changes, update the compiler,
+the VS Code grammar, and this documentation lexer together.
+
+GitHub README rendering is different: GitHub controls its own language list and
+does not load repository CSS, JavaScript, or local Pygments lexers. Keep README
+examples labeled `sagan` so their language is explicit and so they can gain
+native highlighting if Sagan is added to GitHub Linguist later.
+
 The unreleased documentation channel is named **experimental**. It is useful to
 project contributors and to anyone building from a clone of the live repository.
 The initial 1.0.0 release does not promote unaudited pages into a numbered

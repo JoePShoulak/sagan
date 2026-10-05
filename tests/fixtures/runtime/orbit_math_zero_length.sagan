@@ -1,0 +1,2 @@
+let invalid = <0.0, 0.0>.normalized()
+print(invalid)

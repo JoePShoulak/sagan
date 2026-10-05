@@ -2,6 +2,7 @@
 #include "diagnostics/diagnostic.hpp"
 #include "driver/native_runner.hpp"
 #include "language_service/language_service.hpp"
+#include "language_service/operations.hpp"
 #include "parser/lex.hpp"
 #include "parser/ast_render.hpp"
 #include "parser/parse_error.hpp"
@@ -14,9 +15,12 @@
 #include "semantic/semantic_error.hpp"
 #include "semantic/type_checker.hpp"
 #include "source/source.hpp"
+#include "source/provider.hpp"
+#include "syntax/syntax.hpp"
 #include "version.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 #include <filesystem>
 #include <iomanip>
@@ -1328,7 +1332,10 @@ namespace
         "    EnumMember(running)\n"
         "    EnumMember(complete)\n");
     passed &= expect_syntax_error("top-level function signature", "fun incomplete(value: Float): Float\n");
-    passed &= expect_syntax_error("face field", "face Invalid {\n  let value: Float\n}\n");
+    passed &= expect_ast("face field promise", "face Valid {\n  let .value: Float\n}\n",
+                         "Program\n  Face(Valid)\n    Let(.value: Float)\n");
+    passed &= expect_syntax_error("face field promise initializer",
+                                  "face Invalid {\n  let .value: Float = 1.0\n}\n");
     passed &= expect_syntax_error("class method signature", "class Invalid {\n  fun incomplete()\n}\n");
     passed &= expect_ast(
         "class constructor declaration",
@@ -1538,7 +1545,7 @@ namespace
         "module semantic_demo\n"
         "import External from support as Imported\n"
         "face Capability {\n  fun inspect(value: Float): String\n}\n"
-        "class Worker is Capability {\n"
+        "class Worker has Capability {\n"
         "  let label: String = \"worker\"\n"
         "  fun inspect(value: Float): String => \"${self.label}: ${value}\"\n"
         "}\n"
@@ -1751,7 +1758,7 @@ namespace
     passed &= expect_type_model(
         "default class construction fields self and methods",
         "face Countable {\n  fun increment!(): Int\n  fun current(): Int\n}\n"
-        "class Counter is Countable {\n  let value: Int = 40\n"
+        "class Counter has Countable {\n  let value: Int = 40\n"
         "  fun increment!(): Int {\n    self.value += 1\n    return self.value\n  }\n"
         "  fun current(): Int => self.value\n}\n"
         "fun exercise(): Int {\n  let counter = Counter()\n"
@@ -2004,7 +2011,7 @@ namespace
                                 "Type 'Probe' has no member 'missing'");
     passed &= expect_type_error("class must satisfy composed face",
                                 "face Named {\n  fun name(): String\n}\n"
-                                "class Probe is Named {\n  let value: Int = 0\n}\n",
+                                "class Probe has Named {\n  let value: Int = 0\n}\n",
                                 "does not implement required method 'name'");
     passed &= expect_type_error("class method signature must satisfy face",
                                 "face Measured {\n  fun measure(value: Int): Int\n}\n"
@@ -2012,7 +2019,7 @@ namespace
                                 "  fun measure(value: Bool): Int => 0\n}\n",
                                 "has an incompatible signature for method 'measure'");
     passed &= expect_type_error("class composition requires a face",
-                                "class Probe is Missing {\n}\n",
+                                "class Probe has Missing {\n}\n",
                                 "Undefined type 'Missing'");
     passed &= expect_type_model(
         "private method access inside declaring class",
@@ -2026,7 +2033,7 @@ namespace
         "Private method 'secret' of class 'Vault' is not accessible here");
     passed &= expect_type_error(
         "private method cannot satisfy face",
-        "face Readable {\n  fun read(): Int\n}\nclass Vault is Readable {\n  fun .read(): Int => 42\n}\n",
+        "face Readable {\n  fun read(): Int\n}\nclass Vault has Readable {\n  fun .read(): Int => 42\n}\n",
         "cannot satisfy face 'Readable' with private method 'read'");
     passed &= expect_type_model(
         "private field access inside declaring class",
@@ -2061,7 +2068,7 @@ namespace
         "face typed values and transitive conformance",
         "face Readable {\n  fun current(): Int\n}\n"
         "face Countable is Readable {\n  fun increment!(): Int\n}\n"
-        "class Counter is Countable {\n  let .value: Int = 41\n"
+        "class Counter has Countable {\n  let .value: Int = 41\n"
         "  fun current(): Int => self.value\n"
         "  fun increment!(): Int {\n    self.value += 1\n    return self.value\n  }\n}\n"
         "fun read(value: Readable): Int => value.current()\n"
@@ -2077,26 +2084,34 @@ namespace
     passed &= expect_type_model(
         "face default method calls abstract requirement",
         "face Countable {\n  fun current(): Int\n  fun next(): Int => self.current() + 1\n}\n"
-        "class Counter is Countable {\n  fun current(): Int => 41\n}\n"
+        "class Counter has Countable {\n  fun current(): Int => 41\n}\n"
         "fun valid(): Int {\n  let counter = Counter()\n  return counter.next()\n}\n",
         {"counter: Counter", "Int64 @"});
     passed &= expect_type_model(
         "class method overrides face default",
         "face Named {\n  fun name(): String => \"default\"\n}\n"
-        "class Probe is Named {\n  fun name(): String => \"probe\"\n}\n"
+        "class Probe has Named {\n  fun name(): String => \"probe\"\n}\n"
         "fun valid(): String {\n  let probe = Probe()\n  return probe.name()\n}\n",
         {"probe: Probe", "String @"});
     passed &= expect_type_error(
         "conflicting face defaults require override",
         "face Left {\n  fun value(): Int => 1\n}\n"
         "face Right {\n  fun value(): Int => 2\n}\n"
-        "class Invalid is Left, Right {\n}\n",
+        "class Invalid has Left, Right {\n}\n",
         "inherits conflicting defaults for method 'value'; provide an explicit override");
+    passed &= expect_type_model(
+        "diamond composition deduplicates one default declaration",
+        "face Massive {\n  fun mass(): Int => 42\n}\n"
+        "face Gravity has Massive {}\n"
+        "face Physics has Massive {}\n"
+        "class NaturalBody has Gravity, Physics {}\n"
+        "fun valid(): Int {\n  let body = NaturalBody()\n  return body.mass()\n}\n",
+        {"body: NaturalBody", "Int64 @"});
     passed &= expect_type_model(
         "transitive face requirements and defaults",
         "face Readable {\n  fun current(): Int\n}\n"
         "face Countable is Readable {\n  fun next(): Int => self.current() + 1\n}\n"
-        "class Counter is Countable {\n  fun current(): Int => 41\n}\n"
+        "class Counter has Countable {\n  fun current(): Int => 41\n}\n"
         "fun valid(): Int {\n  let counter = Counter()\n  return counter.next()\n}\n",
         {"counter: Counter", "Int64 @"});
     passed &= expect_type_error(
@@ -2174,6 +2189,64 @@ namespace
         std::string(sagan::diagnostics::default_code(owner)), sagan::diagnostics::severity::error, owner,
         sagan::source::source_range{document.identity().id, sagan::source::byte_range{begin, end}}, message,
         {}, {}, {}};
+  }
+
+  auto run_with_diagnostics(const std::string &path,
+                            const sagan::source::document_snapshot &document,
+                            const bool project) -> int
+  {
+    const auto artifact_root = std::filesystem::current_path() / "build" / "cli-runs";
+    sagan::source::disk_source_provider provider;
+    const auto result = project
+        ? sagan::language_service::run_project(path, provider, artifact_root)
+        : sagan::language_service::run_document(document, artifact_root);
+    std::cout << result.standard_output;
+    if (result.diagnostics.empty() && !result.standard_error.empty())
+      std::cerr << result.standard_error;
+    for (const auto &issue : result.diagnostics)
+    {
+      const sagan::source::document_snapshot *owning = &document;
+      std::optional<sagan::source::document_snapshot> imported;
+      for (const auto &dependency : result.dependencies)
+      {
+        if (issue.primary.document != dependency.document.id) continue;
+        imported.emplace(dependency.document, dependency.version, dependency.text);
+        owning = &*imported;
+        break;
+      }
+      sagan::diagnostics::render_terminal(std::cerr, *owning, issue);
+    }
+    if (result.generated_source && result.executable)
+    {
+      const auto directory = result.generated_source->parent_path();
+      if (directory == result.executable->parent_path() && directory.parent_path() == artifact_root)
+      {
+        std::error_code ignored;
+        std::filesystem::remove_all(directory, ignored);
+      }
+    }
+    return result.exit_status.value_or(1);
+  }
+
+  auto render_cli_diagnostics(const sagan::source::document_snapshot &document,
+                              const std::vector<sagan::diagnostics::diagnostic> &issues) -> void
+  {
+    std::size_t limit = 50;
+    if (const char *setting = std::getenv("SAGAN_MAX_ERRORS"))
+    {
+      char *end = nullptr;
+      const auto requested = std::strtol(setting, &end, 10);
+      if (end != setting && *end == '\0' && requested > 0 && requested <= 1000)
+        limit = static_cast<std::size_t>(requested);
+    }
+    for (std::size_t index = 0; index < std::min(limit, issues.size()); ++index)
+    {
+      if (index != 0) std::cerr << '\n';
+      sagan::diagnostics::render_terminal(std::cerr, document, issues[index]);
+    }
+    if (issues.size() > limit)
+      std::cerr << "... " << issues.size() - limit
+                << " more errors omitted; raise SAGAN_MAX_ERRORS to show more\n";
   }
 }
 
@@ -2368,12 +2441,19 @@ auto main(const int argc, char **argv) -> int
     if (mode == output_mode::emit_cpp_modules || mode == output_mode::emit_cpp_package ||
         mode == output_mode::run_package)
     {
+      if (mode == output_mode::run_package)
+      {
+        sagan::source::disk_source_provider provider;
+        const auto package = modules::resolve_package(path, provider);
+        const auto loaded = provider.read_path(package.entry_path);
+        if (!loaded) throw std::runtime_error(loaded.error->message);
+        return run_with_diagnostics(path, *loaded.value, true);
+      }
       const auto tree = mode == output_mode::emit_cpp_modules ? modules::link(path) : modules::link_package(path);
       static_cast<void>(semantic::analyze(tree));
       const auto types = semantic::check_types(tree);
       semantic::validate_entry_point(tree);
       const std::string generated = codegen::generate_cpp(tree, types);
-      if (mode == output_mode::run_package) return driver::compile_and_run(generated);
       if (output_path.empty()) std::cout << generated;
       else
       {
@@ -2384,6 +2464,15 @@ auto main(const int argc, char **argv) -> int
     }
     const std::string source = read_file(path);
     document.emplace(sagan::source::identity_from_path(sagan::source::document_id{1}, path), 0, source);
+    if (mode == output_mode::run)
+    {
+      const auto analyzed = sagan::syntax::analyze(*document, {.recover = true, .maximum_diagnostics = 64});
+      if (!analyzed.diagnostics.empty())
+      {
+        render_cli_diagnostics(*document, analyzed.diagnostics);
+        return 1;
+      }
+    }
     if (mode == output_mode::diagnostics_json)
     {
       const auto checked = sagan::language_service::analyze_document(*document);
@@ -2447,20 +2536,8 @@ auto main(const int argc, char **argv) -> int
           return dynamic_cast<const parser::import_declaration *>(entry.get()) != nullptr;
         });
         if (has_imports || modules::discover_package(path).has_value())
-        {
-          const auto linked = modules::link(path);
-          static_cast<void>(semantic::analyze(linked));
-          const auto types = semantic::check_types(linked);
-          semantic::validate_entry_point(linked);
-          return driver::compile_and_run(codegen::generate_cpp(linked, types));
-        }
-        active_phase = sagan::diagnostics::phase::semantic;
-        static_cast<void>(semantic::analyze(tree));
-        active_phase = sagan::diagnostics::phase::type;
-        const auto types = semantic::check_types(tree);
-        active_phase = sagan::diagnostics::phase::entry_point;
-        semantic::validate_entry_point(tree);
-        return driver::compile_and_run(codegen::generate_cpp(tree, types));
+          return run_with_diagnostics(path, *document, true);
+        return run_with_diagnostics(path, *document, false);
       }
       else if (mode == output_mode::ast_text)
       {
@@ -2540,7 +2617,8 @@ auto main(const int argc, char **argv) -> int
   }
   catch (const std::exception &error)
   {
-    std::cerr << "error: " << error.what() << '\n';
+    std::cerr << "error[" << sagan::diagnostics::default_code(active_phase) << "]: "
+              << error.what() << '\n';
     return 1;
   }
 

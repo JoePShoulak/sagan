@@ -1,0 +1,5 @@
+fun abort_launch(): Void {
+  scream "launch aborted by guidance"
+}
+
+abort_launch()

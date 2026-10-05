@@ -2,7 +2,7 @@
   "name": "sagan-language",
   "displayName": "Sagan Language",
   "description": "Syntax highlighting and editor support for the Sagan programming language.",
-  "version": "0.3.4",
+  "version": "0.3.6",
   "publisher": "sagan-language",
   "icon": "images/sagan-logo.png",
   "repository": {
@@ -16,6 +16,7 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:sagan",
+    "onLanguage:sagan-manifest",
     "onCommand:sagan.showToolingStatus",
     "onCommand:sagan.restartLanguageServer",
     "onCommand:sagan.check",
@@ -128,6 +129,21 @@
           "light": "./images/sagan-logo.png",
           "dark": "./images/sagan-logo.png"
         }
+      },
+      {
+        "id": "sagan-manifest",
+        "aliases": [
+          "Sagan Manifest",
+          "sagan.toml"
+        ],
+        "filenames": [
+          "sagan.toml"
+        ],
+        "configuration": "./sagan-toml-language-configuration.json",
+        "icon": {
+          "light": "./images/sagan-logo.png",
+          "dark": "./images/sagan-logo.png"
+        }
       }
     ],
     "grammars": [
@@ -135,6 +151,11 @@
         "language": "sagan",
         "scopeName": "source.sagan",
         "path": "./syntaxes/sagan.tmLanguage.json"
+      },
+      {
+        "language": "sagan-manifest",
+        "scopeName": "source.sagan-manifest",
+        "path": "./syntaxes/sagan-toml.tmLanguage.json"
       }
     ]
   },

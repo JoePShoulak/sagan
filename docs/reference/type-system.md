@@ -89,6 +89,15 @@ and affine point/difference category participate in compatibility. Compatible
 values convert at declarations, assignments, arguments, and returns; callable
 signatures can therefore require a specific unit. Unit metadata is compile-time
 only, and the C++ backend stores ordinary native numeric and geometry values.
+Integer-component geometry literals can widen to a compatible floating-point
+geometry parameter; the native representation converts every component.
+
+Floating-point Cartesian vectors have core `length()`, `squared_length()`,
+`normalized()`, and `normalized!()` methods. The first two preserve the
+appropriate component units; `normalized()` returns a new unitless vector.
+Because mutation cannot change a variable's unit type, `normalized!()` accepts
+only a mutable unitless vector and returns the normalized vector after updating
+it. These are methods, not standalone functions.
 
 Generic parameters are invariant: `Box<Child>` is not automatically a
 `Box<Parent>`. Variance, borrowing, user-defined implicit conversions, and a

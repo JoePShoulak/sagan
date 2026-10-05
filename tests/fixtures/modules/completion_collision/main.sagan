@@ -1,0 +1,8 @@
+module main
+
+import alpha as first
+import beta as second
+
+fun main(): Int {
+  return 0
+}

@@ -48,7 +48,7 @@ npm run package
 code --install-extension sagan-language-*.vsix
 ```
 
-The repository's extension version is currently 0.3.4. Its version is
+The repository's extension version is currently 0.3.6. Its version is
 independent of the compiler version.
 
 ## Verify the installation
@@ -86,6 +86,11 @@ experimental adapter has not passed its release and capability gates.
 
 ## Troubleshooting
 
+- If code has changed locally but diagnostics still describe old syntax, rebuild
+  `bin/sagan` and `bin/sagan-lsp` from the checkout. Then run **Sagan: Restart
+  Language Server** or **Developer: Reload Window**. Reinstalling the VSIX
+  alone does not replace the native server. On Windows, close VS Code before
+  rebuilding if its running `sagan-lsp.exe` prevents replacement.
 - Open **View: Output**, choose **Sagan**, and look for the resolved server path
   or the first startup error. **Sagan: Restart Language Server** retries startup.
 - If discovery fails, configure absolute paths for `sagan.compiler.path` and

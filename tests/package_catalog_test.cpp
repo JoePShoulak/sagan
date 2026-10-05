@@ -1,4 +1,5 @@
 #include "../src/language_service/package_catalog.hpp"
+#include <algorithm>
 
 #include <stdexcept>
 
@@ -24,16 +25,20 @@ auto main() -> int
               orbit.packages.front().modules.size() == 1,
           "Installed package source did not enter the catalog");
   const auto &module = orbit.packages.front().modules.front();
-  require(module.name == "main" && module.exports.size() == 2 &&
-              module.exports.front().public_name == "orbit_answer" &&
-              module.exports.front().kind == "function" &&
-              module.exports.front().signature.find("Int") != std::string::npos &&
-              !module.exports.front().symbol_id.empty() &&
-              module.exports.front().source_uri.value.starts_with("file://"),
+  const auto answer = std::find_if(module.exports.begin(), module.exports.end(), [](const auto &item)
+  { return item.public_name == "orbit_answer"; });
+  const auto rocket = std::find_if(module.exports.begin(), module.exports.end(), [](const auto &item)
+  { return item.public_name == "🚀"; });
+  const auto probe = std::find_if(module.exports.begin(), module.exports.end(), [](const auto &item)
+  { return item.public_name == "OrbitProbe"; });
+  require(module.name == "main" && module.exports.size() == 3 &&
+              answer != module.exports.end() && answer->kind == "function" &&
+              answer->signature.find("Int") != std::string::npos &&
+              !answer->symbol_id.empty() && answer->source_uri.value.starts_with("file://") &&
+              probe != module.exports.end() && probe->kind == "type",
           "Installed export lacks authoritative symbol/signature/navigation metadata");
-  require(module.exports.back().public_name == "🚀" &&
-              module.exports.back().start.character == 0 &&
-              module.exports.back().documentation == "Advance by one.",
+  require(rocket != module.exports.end() && rocket->start.character == 0 &&
+              rocket->documentation == "Advance by one.",
           "Unicode export lost its UTF-16 position or source documentation");
   require(query_package_catalog(path, "2.1.0", "orbit", 0).packages.empty(),
           "Catalog query ignored its result bound");

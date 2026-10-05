@@ -2,6 +2,7 @@
 #include "../src/language_service/language_service.hpp"
 #include "../src/language_service/workspace.hpp"
 #include "../src/modules/resolver.hpp"
+#include "../src/parser/parser.hpp"
 #include "../src/semantic/semantic_error.hpp"
 #include "../src/semantic/units.hpp"
 #include "../src/source/provider.hpp"
@@ -53,6 +54,15 @@ auto main() -> int
   diagnostics::cancellation_source cancellation;
   passed &= check(!cancellation.token().is_cancelled(), "cancellation begins clear");
   cancellation.cancel();
+  bool parser_cancelled = false;
+  try
+  {
+    parser::syntax_parser strict({}, cancellation.token());
+    static_cast<void>(strict.parse());
+  }
+  catch (const parser::parse_cancelled &)
+  { parser_cancelled = true; }
+  passed &= check(parser_cancelled, "strict parser honors a cancellation token");
   passed &= check(cancellation.token().is_cancelled(), "cancellation propagates");
 
   diagnostics::diagnostic value{
@@ -72,8 +82,19 @@ auto main() -> int
                   "structured diagnostic JSON");
   std::ostringstream terminal;
   diagnostics::render_terminal(terminal, document, value);
-  passed &= check(terminal.str().contains("syntax error at 1:5 [SAG-SYN-0001]"),
+  passed &= check(terminal.str().contains("error[SAG-SYN-0001]: example \"message\"") &&
+                      terminal.str().contains("--> file:///demo.sagan:1:5") &&
+                      terminal.str().contains("related declaration") &&
+                      terminal.str().contains("note: example note") &&
+                      terminal.str().contains("help: replace example"),
                   "terminal diagnostic presentation");
+  std::ostringstream build_terminal;
+  diagnostics::render_terminal(build_terminal, document,
+      {"SAG-BLD-0001", diagnostics::severity::error, diagnostics::phase::build,
+       {document.identity().id, {}}, "Native compiler unavailable", {}, {}, {}});
+  passed &= check(build_terminal.str().contains("error[SAG-BLD-0001]: Native compiler unavailable") &&
+                      !build_terminal.str().contains(" --> "),
+                  "unmapped build failure does not invent a source location");
 
   source::document_snapshot valid_document(
       source::document_identity{source::document_id{8}, source::document_uri{"file:///valid.sagan"}, {}},
@@ -91,6 +112,41 @@ auto main() -> int
                       invalid.diagnostics.size() == 1 && invalid.diagnostics.front().code == "SAG-TYP-0001" &&
                       invalid.analyzed_version == 10,
                   "service returns structured type diagnostic");
+
+  source::document_snapshot equivalent_units_document(
+      source::document_identity{source::document_id{11}, source::document_uri{"file:///equivalent-units.sagan"}, {}},
+      1,
+      "fun accept(value: Vector3<Float64, kilometer / second^2>): Void {}\n"
+      "fun apply(force: Vector3<Float, newton>, mass: Float<kilogram>): Void { accept(force / mass) }\n");
+  const auto equivalent_units = language_service::check_document(equivalent_units_document);
+  passed &= check(equivalent_units.state == diagnostics::result_state::complete &&
+                      equivalent_units.value.has_value() && equivalent_units.diagnostics.empty(),
+                  "derived equivalent units normalize default Float aliases");
+
+  source::document_snapshot dimensionless_ratio_document(
+      source::document_identity{source::document_id{12}, source::document_uri{"file:///dimensionless-ratio.sagan"}, {}},
+      1,
+      "fun sphere(mass: Float<kilogram>, parent: Float<kilogram>): Float<kilometer> {\n"
+      "  let ratio: Float = mass / parent\n"
+      "  return 1 kilometer * (ratio ^ (2.0 / 5.0))\n"
+      "}\n");
+  const auto dimensionless_ratio = language_service::check_document(dimensionless_ratio_document);
+  passed &= check(dimensionless_ratio.state == diagnostics::result_state::complete &&
+                      dimensionless_ratio.value.has_value() && dimensionless_ratio.diagnostics.empty(),
+                  "equal measured units cancel to a dimensionless scalar");
+
+  source::document_snapshot vector_scalar_document(
+      source::document_identity{source::document_id{13}, source::document_uri{"file:///vector-scalar.sagan"}, {}},
+      1,
+      "fun scale(direction: Vector3<Float, kilometer>, ratio: Float): Vector3<Float, kilometer> {\n"
+      "  let forward = direction * ratio\n"
+      "  let reverse = ratio * direction\n"
+      "  return (forward + reverse) / ratio\n"
+      "}\n");
+  const auto vector_scalar = language_service::check_document(vector_scalar_document);
+  passed &= check(vector_scalar.state == diagnostics::result_state::complete &&
+                      vector_scalar.value.has_value() && vector_scalar.diagnostics.empty(),
+                  "dimensionless scalars scale measured vectors in both orders");
 
   diagnostics::cancellation_source pre_cancelled;
   pre_cancelled.cancel();
@@ -172,6 +228,12 @@ auto main() -> int
   const auto inverse_area = unit_registry.resolve("meter ^ -2", unit_range);
   const auto acceleration = unit_registry.resolve("meter / second^2", unit_range);
   const auto grouped = unit_registry.resolve("(meter * meter) / second", unit_range);
+  const auto compound_divisor = semantic::units::combine(
+      unit_registry.resolve("meter^3", unit_range),
+      unit_registry.resolve("kilogram * second^2", unit_range), '/', unit_registry);
+  const auto reparsed_divisor = unit_registry.resolve(compound_divisor.name, unit_range);
+  const auto newton = unit_registry.resolve("newton", unit_range);
+  const auto watt = unit_registry.resolve("watt", unit_range);
   const auto delta_celsius = unit_registry.resolve("Delta<Celsius>", unit_range);
   passed &= check(kilometer.scale.decimal_exponent == 3 && speed.dimension.size() == 2 &&
                       inverse_area.dimension.at("Length") == -2 && inverse_area.name == "meter^-2" &&
@@ -184,6 +246,12 @@ auto main() -> int
                       unit_registry.quantity_dimensions("Speed") &&
                       !unit_registry.quantity_dimensions("Missing"),
                   "unit registry resolves names prefixes grouping powers and deltas");
+  passed &= check(compound_divisor.name == "meter^3 / (kilogram * second^2)" &&
+                      compound_divisor.dimension == reparsed_divisor.dimension &&
+                      compound_divisor.scale == reparsed_divisor.scale &&
+                      newton.dimension == unit_registry.resolve("kilogram * meter / second^2", unit_range).dimension &&
+                      watt.dimension == unit_registry.resolve("kilogram * meter^2 / second^3", unit_range).dimension,
+                  "compound divisors round-trip and named derived units retain dimensions");
   const auto measured = semantic::units::parse_measured_type("Float64<meter / second>", unit_registry, unit_range);
   passed &= check(measured && measured->numeric == "Float64" &&
                       semantic::units::format_type("Float64", meter) == "Float64<meter>" &&

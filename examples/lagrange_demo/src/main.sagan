@@ -1,0 +1,425 @@
+module main
+
+import TwoBodySolver from physics.two_body
+import LagrangeBodySeed from physics.restricted_three_body
+import LagrangeBodySnapshot from physics.restricted_three_body
+import RestrictedThreeBodySnapshot from physics.restricted_three_body
+import RestrictedThreeBodySolver from physics.restricted_three_body
+import open from render.window
+import poll from render.window
+import clear from render.window
+import close from render.window
+import elapsed_seconds from render.window
+import key_pressed from render.window
+import scroll_y from render.window
+import set_view from render.canvas
+import is_visible from render.canvas
+import present from render.canvas
+import circle from render.canvas
+import line from render.canvas
+import text from render.canvas
+import text_screen from render.canvas
+
+const PRIMARY_MASS: Float64<kilogram> = 5.9722e24 kilogram
+const SECONDARY_MASS: Float64<kilogram> = 7.342e22 kilogram
+const SEPARATION: Float64<meter> = 384400 kilometer
+const STEP: Float64<second> = 300.0 second
+const STEP_SECONDS: Float64 = 300.0
+const PRIMARY_SPEED: Float64<meter / second> = 12.44242780569817 (meter / second)
+const SECONDARY_SPEED: Float64<meter / second> = 1012.1038864231901 (meter / second)
+const ROTATING_SPEED_SCALE: Float64<meter / second> =
+  1024.5463142288881 (meter / second)
+const INITIAL_PLAYBACK_RATE: Float64 = 432000.0
+const MAX_PLAYBACK_RATE: Float64 = 3456000.0
+const MAX_KILOMETERS_PER_PIXEL: Float64 = 20000.0
+const TRAIL_SAMPLE_INTERVAL: Float64<second> = 21600.0 second
+
+class Trail8 {
+  let .one: Vector2<Float64>
+  let .two: Vector2<Float64>
+  let .three: Vector2<Float64>
+  let .four: Vector2<Float64>
+  let .five: Vector2<Float64>
+  let .six: Vector2<Float64>
+  let .seven: Vector2<Float64>
+  let .eight: Vector2<Float64>
+
+  new(point: Vector2<Float64>) {
+    self.one = point
+    self.two = point
+    self.three = point
+    self.four = point
+    self.five = point
+    self.six = point
+    self.seven = point
+    self.eight = point
+  }
+
+  fun record!(point: Vector2<Float64>): Void {
+    self.one = self.two
+    self.two = self.three
+    self.three = self.four
+    self.four = self.five
+    self.five = self.six
+    self.six = self.seven
+    self.seven = self.eight
+    self.eight = point
+  }
+
+  fun point_one(): Vector2<Float64> => self.one
+  fun point_two(): Vector2<Float64> => self.two
+  fun point_three(): Vector2<Float64> => self.three
+  fun point_four(): Vector2<Float64> => self.four
+  fun point_five(): Vector2<Float64> => self.five
+  fun point_six(): Vector2<Float64> => self.six
+  fun point_seven(): Vector2<Float64> => self.seven
+  fun point_eight(): Vector2<Float64> => self.eight
+}
+
+let total_mass = PRIMARY_MASS + SECONDARY_MASS
+let primary_radius = (SEPARATION * SECONDARY_MASS / total_mass) as meter
+let secondary_radius = (SEPARATION * PRIMARY_MASS / total_mass) as meter
+let origin = (0.0, 0.0) meter
+let primary_position = origin + <-1.0, 0.0> * primary_radius
+let secondary_position = origin + <1.0, 0.0> * secondary_radius
+let primary_velocity = <0.0, -1.0> * PRIMARY_SPEED
+let secondary_velocity = <0.0, 1.0> * SECONDARY_SPEED
+
+fun lagrange_seed(identity: String, x: Float64, y: Float64): LagrangeBodySeed {
+  let position = origin + <x, y> * SEPARATION
+  let velocity = <-y, x> * ROTATING_SPEED_SCALE
+  return LagrangeBodySeed(identity, position, velocity, x, y)
+}
+
+fun stability_display(body: LagrangeBodySnapshot): String {
+  if body.escaped() { return "escaped" }
+  let error = body.stability_error()
+  if error < 1.0 meter {
+    return "${error as millimeter}"
+  }
+  if error < 1000.0 meter {
+    return "${error as meter}"
+  }
+  if error < 1000000.0 meter {
+    return "${error as kilometer}"
+  }
+  if error < 1000000000.0 meter {
+    return "${error as megameter}"
+  }
+  return "${error as gigameter}"
+}
+
+fun elapsed_display(elapsed_steps: Int64): String {
+  let total_days = elapsed_steps / 288
+  let years = total_days / 365
+  let days = total_days % 365
+  return "${years} years, ${days} days (${total_days} total days)"
+}
+
+fun motion_arrow(body: LagrangeBodySnapshot,
+                 snapshot: RestrictedThreeBodySnapshot): String {
+  let primary = snapshot.primary()
+  let secondary = snapshot.secondary()
+  let system_velocity =
+    (primary.velocity() * PRIMARY_MASS + secondary.velocity() * SECONDARY_MASS) /
+    total_mass
+  let displacement = body.position() - snapshot.primary_system().barycenter()
+  let relative_velocity = body.velocity() - system_velocity
+  let radial_motion = displacement.x * relative_velocity.x +
+    displacement.y * relative_velocity.y
+  if radial_motion <= 0.0 (meter * meter / second) {
+    return " ←"
+  }
+  return " →"
+}
+
+fun viewport_stability_display(body: LagrangeBodySnapshot,
+                               snapshot: RestrictedThreeBodySnapshot,
+                               point: Vector2<Float64>): String {
+  let display = stability_display(body)
+  if is_visible(point.x, point.y, 5.0) == false {
+    return "${display}${motion_arrow(body, snapshot)}"
+  }
+  return display
+}
+
+fun stop_if_gone(active_solver: RestrictedThreeBodySolver,
+                 snapshot: RestrictedThreeBodySnapshot,
+                 index: Int64): Void {
+  let body = snapshot.tertiary(index)
+  if body.escaped() {
+    let point = display_coordinates(body.position(), origin, 1000 kilometer)
+    if is_visible(point.x, point.y, 5.0) == false {
+      active_solver.stop_tertiary!(index)
+    }
+  }
+}
+
+fun create_solver(): RestrictedThreeBodySolver {
+  let primaries = TwoBodySolver(
+    "Primary", PRIMARY_MASS, primary_position, primary_velocity,
+    "Secondary", SECONDARY_MASS, secondary_position, secondary_velocity,
+    STEP)
+  return RestrictedThreeBodySolver(
+    primaries, STEP,
+    lagrange_seed("L1", 0.8369459145954874, 0.0),
+    lagrange_seed("L2", 1.155658098131319, 0.0),
+    lagrange_seed("L3", -1.0050600391594884, 0.0),
+    lagrange_seed("L4", 0.4878556707169819, 0.8660254037844386),
+    lagrange_seed("L5", 0.4878556707169819, -0.8660254037844386),
+    lagrange_seed("Control", 0.0, 1.0))
+}
+
+fun lagrange_target(snapshot: RestrictedThreeBodySnapshot,
+                    index: Int64): Point2<Float64, meter> {
+  let separation_vector = snapshot.secondary().position() - snapshot.primary().position()
+  let separation = separation_vector.length()
+  let axis = separation_vector.normalized()
+  let perpendicular = <-axis.y, axis.x>
+  let body = snapshot.tertiary(index)
+  return snapshot.primary_system().barycenter() +
+    axis * (body.reference_x() * separation) +
+    perpendicular * (body.reference_y() * separation)
+}
+
+let solver = create_solver()
+let current = solver.snapshot()
+
+let primary_trail = Trail8(display_coordinates(current.primary().position(), origin, 1000 kilometer))
+let secondary_trail = Trail8(display_coordinates(current.secondary().position(), origin, 1000 kilometer))
+let first_trail = Trail8(display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer))
+let second_trail = Trail8(display_coordinates(current.tertiary(1).position(), origin, 1000 kilometer))
+let third_trail = Trail8(display_coordinates(current.tertiary(2).position(), origin, 1000 kilometer))
+let fourth_trail = Trail8(display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer))
+let fifth_trail = Trail8(display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer))
+let control_trail = Trail8(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
+let elapsed_steps: Int64 = 0
+
+if open("Sagan R3: Lagrange Stability", 1180, 720) {
+  let kilometers_per_pixel = 2500.0
+  set_view(-70.0, 0.0, 1000.0 / kilometers_per_pixel)
+  let previous_frame_time = elapsed_seconds()
+  let accumulated_simulation_seconds = 0.0
+  let simulation_seconds_per_real_second = INITIAL_PLAYBACK_RATE
+  let paused = true
+  let last_trail_sample = 0.0 second
+  while poll() {
+    let frame_time = elapsed_seconds()
+    let frame_duration = frame_time - previous_frame_time
+    previous_frame_time = frame_time
+    if frame_duration > 0.25 {
+      frame_duration = 0.25
+    }
+    if key_pressed("space") {
+      if paused { paused = false } else { paused = true }
+    }
+    if key_pressed("up") {
+      simulation_seconds_per_real_second = simulation_seconds_per_real_second * 2.0
+      if simulation_seconds_per_real_second > MAX_PLAYBACK_RATE {
+        simulation_seconds_per_real_second = MAX_PLAYBACK_RATE
+      }
+    }
+    if key_pressed("down") {
+      simulation_seconds_per_real_second = simulation_seconds_per_real_second * 0.5
+    }
+    if key_pressed("r") {
+      solver = create_solver()
+      current = solver.snapshot()
+      accumulated_simulation_seconds = 0.0
+      last_trail_sample = 0.0 second
+      elapsed_steps = 0
+      paused = true
+      primary_trail = Trail8(display_coordinates(current.primary().position(), origin, 1000 kilometer))
+      secondary_trail = Trail8(display_coordinates(current.secondary().position(), origin, 1000 kilometer))
+      first_trail = Trail8(display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer))
+      second_trail = Trail8(display_coordinates(current.tertiary(1).position(), origin, 1000 kilometer))
+      third_trail = Trail8(display_coordinates(current.tertiary(2).position(), origin, 1000 kilometer))
+      fourth_trail = Trail8(display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer))
+      fifth_trail = Trail8(display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer))
+      control_trail = Trail8(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
+    }
+    let scroll = scroll_y()
+    while scroll >= 1.0 {
+      kilometers_per_pixel = kilometers_per_pixel * 0.8
+      scroll = scroll - 1.0
+    }
+    while scroll <= -1.0 {
+      kilometers_per_pixel = kilometers_per_pixel * 1.25
+      scroll = scroll + 1.0
+    }
+    if kilometers_per_pixel < 250.0 {
+      kilometers_per_pixel = 250.0
+    }
+    if kilometers_per_pixel > MAX_KILOMETERS_PER_PIXEL {
+      kilometers_per_pixel = MAX_KILOMETERS_PER_PIXEL
+    }
+    set_view(-70.0, 0.0, 1000.0 / kilometers_per_pixel)
+
+    if paused == false {
+      accumulated_simulation_seconds = accumulated_simulation_seconds +
+        frame_duration * simulation_seconds_per_real_second
+    }
+    while accumulated_simulation_seconds >= 299.999999 {
+      current = solver.step!()
+      elapsed_steps = elapsed_steps + 1
+      accumulated_simulation_seconds = accumulated_simulation_seconds - STEP_SECONDS
+      if current.time() - last_trail_sample >= TRAIL_SAMPLE_INTERVAL {
+        primary_trail.record!(display_coordinates(current.primary().position(), origin, 1000 kilometer))
+        secondary_trail.record!(display_coordinates(current.secondary().position(), origin, 1000 kilometer))
+        first_trail.record!(display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer))
+        second_trail.record!(display_coordinates(current.tertiary(1).position(), origin, 1000 kilometer))
+        third_trail.record!(display_coordinates(current.tertiary(2).position(), origin, 1000 kilometer))
+        fourth_trail.record!(display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer))
+        fifth_trail.record!(display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer))
+        control_trail.record!(display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer))
+        last_trail_sample = current.time()
+      }
+    }
+
+    set_view(-70.0, 0.0, 1000.0 / MAX_KILOMETERS_PER_PIXEL)
+    stop_if_gone(solver, current, 0)
+    stop_if_gone(solver, current, 1)
+    stop_if_gone(solver, current, 2)
+    stop_if_gone(solver, current, 3)
+    stop_if_gone(solver, current, 4)
+    stop_if_gone(solver, current, 5)
+    set_view(-70.0, 0.0, 1000.0 / kilometers_per_pixel)
+
+    let primary = display_coordinates(current.primary().position(), origin, 1000 kilometer)
+    let secondary = display_coordinates(current.secondary().position(), origin, 1000 kilometer)
+    let first = display_coordinates(current.tertiary(0).position(), origin, 1000 kilometer)
+    let second = display_coordinates(current.tertiary(1).position(), origin, 1000 kilometer)
+    let third = display_coordinates(current.tertiary(2).position(), origin, 1000 kilometer)
+    let fourth = display_coordinates(current.tertiary(3).position(), origin, 1000 kilometer)
+    let fifth = display_coordinates(current.tertiary(4).position(), origin, 1000 kilometer)
+    let control = display_coordinates(current.tertiary(5).position(), origin, 1000 kilometer)
+    let first_target = display_coordinates(lagrange_target(current, 0), origin, 1000 kilometer)
+    let second_target = display_coordinates(lagrange_target(current, 1), origin, 1000 kilometer)
+    let third_target = display_coordinates(lagrange_target(current, 2), origin, 1000 kilometer)
+    let fourth_target = display_coordinates(lagrange_target(current, 3), origin, 1000 kilometer)
+    let fifth_target = display_coordinates(lagrange_target(current, 4), origin, 1000 kilometer)
+    clear(7, 13, 25)
+    line(-700.0, 0.0, 700.0, 0.0, 1.0, 37, 52, 71)
+    line(0.0, -500.0, 0.0, 500.0, 1.0, 37, 52, 71)
+
+    // The reference geometry rotates with the primary-secondary axis. The
+    // colored tertiary bodies begin on these vertices, then visibly depart.
+    line(third_target.x, third_target.y, second_target.x, second_target.y, 1.0, 70, 105, 105)
+    line(primary.x, primary.y, fourth_target.x, fourth_target.y, 1.0, 70, 105, 105)
+    line(fourth_target.x, fourth_target.y, secondary.x, secondary.y, 1.0, 70, 105, 105)
+    line(primary.x, primary.y, fifth_target.x, fifth_target.y, 1.0, 70, 105, 105)
+    line(fifth_target.x, fifth_target.y, secondary.x, secondary.y, 1.0, 70, 105, 105)
+    circle(first_target.x, first_target.y, 2.0, 112, 160, 160)
+    circle(second_target.x, second_target.y, 2.0, 112, 160, 160)
+    circle(third_target.x, third_target.y, 2.0, 112, 160, 160)
+    circle(fourth_target.x, fourth_target.y, 2.0, 112, 160, 160)
+    circle(fifth_target.x, fifth_target.y, 2.0, 112, 160, 160)
+
+    line(primary_trail.point_one().x, primary_trail.point_one().y, primary_trail.point_two().x, primary_trail.point_two().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_two().x, primary_trail.point_two().y, primary_trail.point_three().x, primary_trail.point_three().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_three().x, primary_trail.point_three().y, primary_trail.point_four().x, primary_trail.point_four().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_four().x, primary_trail.point_four().y, primary_trail.point_five().x, primary_trail.point_five().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_five().x, primary_trail.point_five().y, primary_trail.point_six().x, primary_trail.point_six().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_six().x, primary_trail.point_six().y, primary_trail.point_seven().x, primary_trail.point_seven().y, 2.0, 250, 204, 21)
+    line(primary_trail.point_seven().x, primary_trail.point_seven().y, primary_trail.point_eight().x, primary_trail.point_eight().y, 2.0, 250, 204, 21)
+
+    line(secondary_trail.point_one().x, secondary_trail.point_one().y, secondary_trail.point_two().x, secondary_trail.point_two().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_two().x, secondary_trail.point_two().y, secondary_trail.point_three().x, secondary_trail.point_three().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_three().x, secondary_trail.point_three().y, secondary_trail.point_four().x, secondary_trail.point_four().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_four().x, secondary_trail.point_four().y, secondary_trail.point_five().x, secondary_trail.point_five().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_five().x, secondary_trail.point_five().y, secondary_trail.point_six().x, secondary_trail.point_six().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_six().x, secondary_trail.point_six().y, secondary_trail.point_seven().x, secondary_trail.point_seven().y, 2.0, 96, 165, 250)
+    line(secondary_trail.point_seven().x, secondary_trail.point_seven().y, secondary_trail.point_eight().x, secondary_trail.point_eight().y, 2.0, 96, 165, 250)
+
+    line(first_trail.point_one().x, first_trail.point_one().y, first_trail.point_two().x, first_trail.point_two().y, 2.0, 244, 114, 182)
+    line(first_trail.point_two().x, first_trail.point_two().y, first_trail.point_three().x, first_trail.point_three().y, 2.0, 244, 114, 182)
+    line(first_trail.point_three().x, first_trail.point_three().y, first_trail.point_four().x, first_trail.point_four().y, 2.0, 244, 114, 182)
+    line(first_trail.point_four().x, first_trail.point_four().y, first_trail.point_five().x, first_trail.point_five().y, 2.0, 244, 114, 182)
+    line(first_trail.point_five().x, first_trail.point_five().y, first_trail.point_six().x, first_trail.point_six().y, 2.0, 244, 114, 182)
+    line(first_trail.point_six().x, first_trail.point_six().y, first_trail.point_seven().x, first_trail.point_seven().y, 2.0, 244, 114, 182)
+    line(first_trail.point_seven().x, first_trail.point_seven().y, first_trail.point_eight().x, first_trail.point_eight().y, 2.0, 244, 114, 182)
+
+    line(second_trail.point_one().x, second_trail.point_one().y, second_trail.point_two().x, second_trail.point_two().y, 2.0, 251, 146, 60)
+    line(second_trail.point_two().x, second_trail.point_two().y, second_trail.point_three().x, second_trail.point_three().y, 2.0, 251, 146, 60)
+    line(second_trail.point_three().x, second_trail.point_three().y, second_trail.point_four().x, second_trail.point_four().y, 2.0, 251, 146, 60)
+    line(second_trail.point_four().x, second_trail.point_four().y, second_trail.point_five().x, second_trail.point_five().y, 2.0, 251, 146, 60)
+    line(second_trail.point_five().x, second_trail.point_five().y, second_trail.point_six().x, second_trail.point_six().y, 2.0, 251, 146, 60)
+    line(second_trail.point_six().x, second_trail.point_six().y, second_trail.point_seven().x, second_trail.point_seven().y, 2.0, 251, 146, 60)
+    line(second_trail.point_seven().x, second_trail.point_seven().y, second_trail.point_eight().x, second_trail.point_eight().y, 2.0, 251, 146, 60)
+
+    line(third_trail.point_one().x, third_trail.point_one().y, third_trail.point_two().x, third_trail.point_two().y, 2.0, 167, 139, 250)
+    line(third_trail.point_two().x, third_trail.point_two().y, third_trail.point_three().x, third_trail.point_three().y, 2.0, 167, 139, 250)
+    line(third_trail.point_three().x, third_trail.point_three().y, third_trail.point_four().x, third_trail.point_four().y, 2.0, 167, 139, 250)
+    line(third_trail.point_four().x, third_trail.point_four().y, third_trail.point_five().x, third_trail.point_five().y, 2.0, 167, 139, 250)
+    line(third_trail.point_five().x, third_trail.point_five().y, third_trail.point_six().x, third_trail.point_six().y, 2.0, 167, 139, 250)
+    line(third_trail.point_six().x, third_trail.point_six().y, third_trail.point_seven().x, third_trail.point_seven().y, 2.0, 167, 139, 250)
+    line(third_trail.point_seven().x, third_trail.point_seven().y, third_trail.point_eight().x, third_trail.point_eight().y, 2.0, 167, 139, 250)
+
+    line(fourth_trail.point_one().x, fourth_trail.point_one().y, fourth_trail.point_two().x, fourth_trail.point_two().y, 2.0, 74, 222, 128)
+    line(fourth_trail.point_two().x, fourth_trail.point_two().y, fourth_trail.point_three().x, fourth_trail.point_three().y, 2.0, 74, 222, 128)
+    line(fourth_trail.point_three().x, fourth_trail.point_three().y, fourth_trail.point_four().x, fourth_trail.point_four().y, 2.0, 74, 222, 128)
+    line(fourth_trail.point_four().x, fourth_trail.point_four().y, fourth_trail.point_five().x, fourth_trail.point_five().y, 2.0, 74, 222, 128)
+    line(fourth_trail.point_five().x, fourth_trail.point_five().y, fourth_trail.point_six().x, fourth_trail.point_six().y, 2.0, 74, 222, 128)
+    line(fourth_trail.point_six().x, fourth_trail.point_six().y, fourth_trail.point_seven().x, fourth_trail.point_seven().y, 2.0, 74, 222, 128)
+    line(fourth_trail.point_seven().x, fourth_trail.point_seven().y, fourth_trail.point_eight().x, fourth_trail.point_eight().y, 2.0, 74, 222, 128)
+
+    line(fifth_trail.point_one().x, fifth_trail.point_one().y, fifth_trail.point_two().x, fifth_trail.point_two().y, 2.0, 34, 211, 238)
+    line(fifth_trail.point_two().x, fifth_trail.point_two().y, fifth_trail.point_three().x, fifth_trail.point_three().y, 2.0, 34, 211, 238)
+    line(fifth_trail.point_three().x, fifth_trail.point_three().y, fifth_trail.point_four().x, fifth_trail.point_four().y, 2.0, 34, 211, 238)
+    line(fifth_trail.point_four().x, fifth_trail.point_four().y, fifth_trail.point_five().x, fifth_trail.point_five().y, 2.0, 34, 211, 238)
+    line(fifth_trail.point_five().x, fifth_trail.point_five().y, fifth_trail.point_six().x, fifth_trail.point_six().y, 2.0, 34, 211, 238)
+    line(fifth_trail.point_six().x, fifth_trail.point_six().y, fifth_trail.point_seven().x, fifth_trail.point_seven().y, 2.0, 34, 211, 238)
+    line(fifth_trail.point_seven().x, fifth_trail.point_seven().y, fifth_trail.point_eight().x, fifth_trail.point_eight().y, 2.0, 34, 211, 238)
+
+    line(control_trail.point_one().x, control_trail.point_one().y, control_trail.point_two().x, control_trail.point_two().y, 2.0, 248, 113, 113)
+    line(control_trail.point_two().x, control_trail.point_two().y, control_trail.point_three().x, control_trail.point_three().y, 2.0, 248, 113, 113)
+    line(control_trail.point_three().x, control_trail.point_three().y, control_trail.point_four().x, control_trail.point_four().y, 2.0, 248, 113, 113)
+    line(control_trail.point_four().x, control_trail.point_four().y, control_trail.point_five().x, control_trail.point_five().y, 2.0, 248, 113, 113)
+    line(control_trail.point_five().x, control_trail.point_five().y, control_trail.point_six().x, control_trail.point_six().y, 2.0, 248, 113, 113)
+    line(control_trail.point_six().x, control_trail.point_six().y, control_trail.point_seven().x, control_trail.point_seven().y, 2.0, 248, 113, 113)
+    line(control_trail.point_seven().x, control_trail.point_seven().y, control_trail.point_eight().x, control_trail.point_eight().y, 2.0, 248, 113, 113)
+    circle(primary.x, primary.y, 14.0, 250, 204, 21)
+    circle(secondary.x, secondary.y, 10.0, 96, 165, 250)
+    circle(first.x, first.y, 5.0, 244, 114, 182)
+    circle(second.x, second.y, 5.0, 251, 146, 60)
+    circle(third.x, third.y, 5.0, 167, 139, 250)
+    circle(fourth.x, fourth.y, 5.0, 74, 222, 128)
+    circle(fifth.x, fifth.y, 5.0, 34, 211, 238)
+    circle(control.x, control.y, 5.0, 248, 113, 113)
+    text(primary.x + 14.0, primary.y - 16.0, "Primary", 12, 250, 204, 21)
+    text(secondary.x + 10.0, secondary.y - 16.0, "Secondary", 12, 96, 165, 250)
+    text(first.x + 8.0, first.y - 14.0, "L1", 11, 244, 114, 182)
+    text(second.x + 8.0, second.y - 14.0, "L2", 11, 251, 146, 60)
+    text(third.x + 8.0, third.y - 14.0, "L3", 11, 167, 139, 250)
+    text(fourth.x + 8.0, fourth.y - 14.0, "L4", 11, 74, 222, 128)
+    text(fifth.x + 8.0, fifth.y - 14.0, "L5", 11, 34, 211, 238)
+    text(control.x + 8.0, control.y - 14.0, "Control", 11, 248, 113, 113)
+
+    text_screen(20, 18, "R3 Lagrange stability — six independent massless tracers", 17, 226, 232, 240)
+    text_screen(20, 45, "Space play/pause | Wheel zoom | Up/Down speed (max 40 days/s) | R reset | Escape close", 12, 148, 163, 184)
+    text_screen(20, 68, "elapsed simulation time: ${elapsed_display(elapsed_steps)}", 12, 148, 210, 189)
+    text_screen(20, 88, "selected simulation rate: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
+    text_screen(20, 108, "zoom: ${kilometers_per_pixel} km / pixel", 12, 148, 210, 189)
+    text_screen(20, 138, "L1 error: ${viewport_stability_display(current.tertiary(0), current, first)}", 11, 244, 114, 182)
+    text_screen(20, 158, "L2 error: ${viewport_stability_display(current.tertiary(1), current, second)}", 11, 251, 146, 60)
+    text_screen(20, 178, "L3 error: ${viewport_stability_display(current.tertiary(2), current, third)}", 11, 167, 139, 250)
+    text_screen(20, 198, "L4 error: ${viewport_stability_display(current.tertiary(3), current, fourth)}", 11, 74, 222, 128)
+    text_screen(20, 218, "L5 error: ${viewport_stability_display(current.tertiary(4), current, fifth)}", 11, 34, 211, 238)
+    text_screen(20, 238, "Control error: ${viewport_stability_display(current.tertiary(5), current, control)}", 11, 248, 113, 113)
+    present()
+  }
+  print("final_playback_rate ${simulation_seconds_per_real_second}")
+  print("final_simulation_rate_days_per_real_second ${simulation_seconds_per_real_second / 86400.0}")
+  print("final_kilometers_per_pixel ${kilometers_per_pixel}")
+  close()
+}
+
+print("final_time_s ${current.time()}")
+print("final_elapsed ${current.time() as day}")
+print("final_elapsed_display ${elapsed_display(elapsed_steps)}")
+print("final_L1_error ${stability_display(current.tertiary(0))}")
+print("final_L2_error ${stability_display(current.tertiary(1))}")
+print("final_L3_error ${stability_display(current.tertiary(2))}")
+print("final_L4_error ${stability_display(current.tertiary(3))}")
+print("final_L5_error ${stability_display(current.tertiary(4))}")
+print("final_control_error ${stability_display(current.tertiary(5))}")

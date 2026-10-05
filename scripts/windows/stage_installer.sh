@@ -12,6 +12,7 @@ if [[ ! -x "$default_toolchain/bin/g++.exe" && -x /c/msys64/ucrt64/bin/g++.exe ]
 fi
 toolchain_root="${SAGAN_TOOLCHAIN_ROOT:-$default_toolchain}"
 version="$(bash "$repo_root/scripts/version.sh" numeric)"
+debugger_python_version="$(bash "$repo_root/scripts/windows/debugger_python_version.sh" "$toolchain_root/bin/gdb.exe")"
 
 if [[ ! -x "$toolchain_root/bin/g++.exe" ]]; then
   echo "The Windows installer requires a UCRT64 toolchain at $toolchain_root." >&2
@@ -19,13 +20,24 @@ if [[ ! -x "$toolchain_root/bin/g++.exe" ]]; then
 fi
 
 rm -rf "$stage_dir"
-mkdir -p "$stage_dir/bin" "$stage_dir/toolchain/ucrt64" "$stage_dir/assets" "$stage_dir/licenses"
+mkdir -p "$stage_dir/bin" "$stage_dir/toolchain/ucrt64" "$stage_dir/assets" \
+  "$stage_dir/licenses" "$stage_dir/libraries" "$stage_dir/examples"
 
-make -C "$repo_root" all bin/sagan-lsp windows-launcher OS=Windows_NT SAGAN_VERSION="$version"
+stage_lsp=build/tmp/sagan-lsp-release-stage
+stage_dap=build/tmp/sagan-dap-release-stage
+make -C "$repo_root" all "$stage_lsp" "$stage_dap" windows-launcher \
+  LANGUAGE_SERVER="$stage_lsp" DEBUG_ADAPTER="$stage_dap" \
+  OS=Windows_NT SAGAN_VERSION="$version"
 cp "$repo_root/bin/sagan" "$stage_dir/bin/sagan.exe"
-cp "$repo_root/bin/sagan-lsp" "$stage_dir/bin/sagan-lsp.exe"
+cp "$repo_root/$stage_lsp" "$stage_dir/bin/sagan-lsp.exe"
+cp "$repo_root/$stage_dap" "$stage_dir/bin/sagan-dap.exe"
 cp "$repo_root/bin/sagan-launch.exe" "$stage_dir/bin/sagan-launch.exe"
 cp "$repo_root/packaging/windows/sagan.ico" "$stage_dir/assets/sagan.ico"
+cp "$repo_root/obj/launcher/sagan-resource.o" "$stage_dir/assets/sagan-resource.o"
+cp "$repo_root/libraries/index.tsv" "$stage_dir/libraries/index.tsv"
+cp -a "$repo_root/libraries/physics" "$stage_dir/libraries/physics"
+cp -a "$repo_root/libraries/render" "$stage_dir/libraries/render"
+cp -a "$repo_root/examples/two_body_demo" "$stage_dir/examples/two_body_demo"
 cp "$repo_root/editors/vscode-sagan/LICENSE.txt" "$stage_dir/licenses/Sagan-GPL-3.0.txt"
 cp "$repo_root/third_party/uni-algo/LICENSE.md" "$stage_dir/licenses/uni-algo-MIT.txt"
 cp "$repo_root/third_party/unicode/LICENSE.txt" "$stage_dir/licenses/Unicode.txt"
@@ -95,7 +107,7 @@ cp -a "$toolchain_root/include/." "$staged_toolchain/include/"
 # The MinGW platform headers share this prefix with optional third-party SDKs.
 # Remove packages that cannot be reached by Sagan's generated standard C++.
 for unrelated_headers in \
-  gdb isl libiberty lzma ncurses ncursesw openssl pkgconf python3.12 \
+  gdb isl libiberty lzma ncurses ncursesw openssl pkgconf "python$debugger_python_version" \
   readline tcl8.6 tk8.6 tre X11; do
   rm -rf "$staged_toolchain/include/$unrelated_headers"
 done
@@ -114,7 +126,7 @@ rm -f \
 for runtime_library in \
   crt2.o default-manifest.o libstdc++.a libstdc++.dll.a libmingw32.a \
   libgcc_s.a libmingwex.a libmsvcrt.a libkernel32.a libpthread.a \
-  libadvapi32.a libshell32.a libuser32.a; do
+  libadvapi32.a libshell32.a libuser32.a libgdi32.a; do
   cp -L "$toolchain_root/lib/$runtime_library" "$staged_toolchain/lib/"
 done
 cp -a "$toolchain_root/$compiler_target/." "$staged_toolchain/$compiler_target/"
@@ -123,6 +135,15 @@ if find "$staged_toolchain" -type f \( -iname 'python*.exe' -o -iname 'gdb*.exe'
   echo "The staged compiler unexpectedly contains an unrelated Python or GDB executable." >&2
   exit 1
 fi
+
+bash "$repo_root/scripts/windows/stage_debugger.sh" "$toolchain_root" "$staged_toolchain"
+mkdir -p "$stage_dir/licenses/debugger"
+gpl_text="$repo_root/packaging/windows/GDB-GPL-3.0.txt"
+[[ -f "$gpl_text" ]] || { echo "Missing debugger GPLv3 license text: $gpl_text" >&2; exit 1; }
+cp "$gpl_text" "$stage_dir/licenses/debugger/GDB-GPL-3.0.txt"
+for debugger_license in expat "python$debugger_python_version" readline xxhash xz; do
+  copy_toolchain_license "$debugger_license"
+done
 
 printf '%s\n' "$version" > "$stage_dir/VERSION"
 

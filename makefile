@@ -81,6 +81,7 @@ PACKAGE_CATALOG_TEST := bin/package-catalog-test
 PACKAGE_RESOLUTION_TEST := bin/package-resolution-test
 PROCESS_TEST := bin/process-test
 NATIVE_OPERATIONS_TEST := bin/native-operations-test
+NATIVE_BRIDGE_TEST := bin/native-bridge-test
 LSP_TEST := bin/lsp-test
 CONSTANTS_TEST := bin/constants-test
 WINDOWS_LAUNCHER := bin/sagan-launch.exe
@@ -91,23 +92,25 @@ WINDOWS_HOST := $(if $(filter Windows_NT,$(OS)),1,$(if $(findstring MINGW,$(HOST
 ifneq ($(WINDOWS_HOST),)
 BUILD_TMP_NATIVE := $(shell cygpath -w "$(CURDIR)/$(BUILD_TMP)")
 WINDOWS_RUNTIME_LDFLAGS := -static -static-libgcc -static-libstdc++
+WINDOWS_ICON_RESOURCE := $(WINDOWS_LAUNCHER_RESOURCE)
 else
 BUILD_TMP_NATIVE := $(CURDIR)/$(BUILD_TMP)
 WINDOWS_RUNTIME_LDFLAGS :=
+WINDOWS_ICON_RESOURCE :=
 endif
 TEMP_ENV := TMPDIR="$(BUILD_TMP_NATIVE)" TMP="$(BUILD_TMP_NATIVE)" TEMP="$(BUILD_TMP_NATIVE)"
 
-.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo run-demo geometry-demo units-demo editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
+.PHONY: all libraries windows-launcher clean test integration-test check-windows-runtime coverage tokenizer-inspect package-demo window-demo window-demo-test shape-text-demo shape-text-demo-test two-body-demo two-body-demo-build two-body-demo-run two-body-demo-test lagrange-demo lagrange-demo-build lagrange-demo-run lagrange-demo-test solar-lagrange-demo solar-lagrange-demo-build solar-lagrange-demo-run solar-lagrange-demo-test run-demo geometry-demo units-demo orbit-math-demo orbit-numeric-demo orbit-numeric-demo-test lagrange-numeric-demo lagrange-numeric-demo-test solar-lagrange-numeric-demo solar-lagrange-numeric-demo-test editor-tooling-demo formatter-demo operations-demo lsp-demo ast-demo get-version FORCE
 
 all: $(TARGET)
 
-$(LANGUAGE_SERVER): src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY)
+$(LANGUAGE_SERVER): src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/lsp/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
-$(DEBUG_ADAPTER): src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY)
+$(DEBUG_ADAPTER): src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) src/dap/main.cpp obj/version.o $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE) -o $@ -pthread $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 libraries: $(COMPILER_LIBRARY)
 
@@ -131,9 +134,9 @@ $(COMPILER_LIBRARY): $(LIBRARY_OBJECTS)
 	@mkdir -p $(dir $@)
 	ar rcs $@ $(LIBRARY_OBJECTS)
 
-$(TARGET): $(CLI_OBJECTS) $(COMPILER_LIBRARY)
+$(TARGET): $(CLI_OBJECTS) $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
-	$(TEMP_ENV) $(CXX) $(CLI_OBJECTS) $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+	$(TEMP_ENV) $(CXX) $(CLI_OBJECTS) $(COMPILER_LIBRARY) $(WINDOWS_ICON_RESOURCE) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
 $(SOURCE_DIAGNOSTICS_TEST): tests/source_diagnostics_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
@@ -187,6 +190,10 @@ $(PROCESS_TEST): tests/process_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
 
+$(NATIVE_BRIDGE_TEST): tests/native_bridge_test.cpp $(COMPILER_LIBRARY)
+	@mkdir -p $(dir $@) $(BUILD_TMP)
+	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
+
 $(NATIVE_OPERATIONS_TEST): tests/native_operations_test.cpp $(COMPILER_LIBRARY)
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) $< $(COMPILER_LIBRARY) -o $@ $(WINDOWS_RUNTIME_LDFLAGS) $(LDFLAGS)
@@ -211,11 +218,11 @@ obj/version.o: obj/version.cpp src/version.hpp
 	@mkdir -p $(dir $@) $(BUILD_TMP)
 	$(TEMP_ENV) $(CXX) $(CXXFLAGS) -c $< -o $@
 
-test: $(TARGET) $(LANGUAGE_SERVER) $(DEBUG_ADAPTER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(DAP_BREAKPOINT_TEST) $(DAP_FRAMING_TEST) $(GDB_PROCESS_TEST) $(PACKAGE_CATALOG_TEST) $(PACKAGE_RESOLUTION_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(LSP_TEST) $(CONSTANTS_TEST)
+test: $(TARGET) $(LANGUAGE_SERVER) $(DEBUG_ADAPTER) $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(DAP_BREAKPOINT_TEST) $(DAP_FRAMING_TEST) $(GDB_PROCESS_TEST) $(PACKAGE_CATALOG_TEST) $(PACKAGE_RESOLUTION_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(NATIVE_BRIDGE_TEST) $(LSP_TEST) $(CONSTANTS_TEST)
 	bash scripts/windows/check_runtime_imports.sh $(TARGET)
 	bash scripts/windows/check_runtime_imports.sh $(LANGUAGE_SERVER)
 	bash scripts/windows/check_runtime_imports.sh $(DEBUG_ADAPTER)
-	@for executable in $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(DAP_BREAKPOINT_TEST) $(DAP_FRAMING_TEST) $(GDB_PROCESS_TEST) $(PACKAGE_CATALOG_TEST) $(PACKAGE_RESOLUTION_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(LSP_TEST) $(CONSTANTS_TEST); do \
+	@for executable in $(SOURCE_DIAGNOSTICS_TEST) $(WORKSPACE_TEST) $(SEMANTIC_INDEX_TEST) $(LANGUAGE_QUERIES_TEST) $(LANGUAGE_EDITS_TEST) $(OPERATIONS_TEST) $(SOURCE_MAP_TEST) $(DAP_BREAKPOINT_TEST) $(DAP_FRAMING_TEST) $(GDB_PROCESS_TEST) $(PACKAGE_CATALOG_TEST) $(PACKAGE_RESOLUTION_TEST) $(PROCESS_TEST) $(NATIVE_OPERATIONS_TEST) $(NATIVE_BRIDGE_TEST) $(LSP_TEST) $(CONSTANTS_TEST); do \
 		bash scripts/windows/check_runtime_imports.sh "$$executable"; \
 	done
 	bash scripts/windows/installer_policy_test.sh
@@ -237,9 +244,10 @@ test: $(TARGET) $(LANGUAGE_SERVER) $(DEBUG_ADAPTER) $(SOURCE_DIAGNOSTICS_TEST) $
 	$(PACKAGE_RESOLUTION_TEST)
 	$(PROCESS_TEST)
 	$(NATIVE_OPERATIONS_TEST)
+	$(NATIVE_BRIDGE_TEST)
 	$(LSP_TEST)
-	bash scripts/lsp_protocol_test.sh
-	bash scripts/lsp_reliability_test.sh
+	SAGAN_LSP_BINARY="$(LANGUAGE_SERVER)" bash scripts/lsp_protocol_test.sh
+	SAGAN_LSP_BINARY="$(LANGUAGE_SERVER)" bash scripts/lsp_reliability_test.sh
 	$(CONSTANTS_TEST)
 	$(TARGET) --self-test
 	bash scripts/cli_test.sh
@@ -260,6 +268,54 @@ tokenizer-inspect: $(TARGET)
 package-demo: $(TARGET)
 	bash scripts/package_demo.sh
 
+window-demo: $(TARGET)
+	bash scripts/window_demo.sh
+
+window-demo-test: $(TARGET)
+	bash tests/integration/window_bridge_test.sh
+
+shape-text-demo: $(TARGET)
+	bash scripts/shape_text_demo.sh
+
+shape-text-demo-test: $(TARGET)
+	bash tests/integration/shape_text_test.sh
+
+two-body-demo: $(TARGET)
+	bash scripts/two_body_demo.sh
+
+two-body-demo-build: $(TARGET)
+	bash scripts/two_body_demo.sh build
+
+two-body-demo-run:
+	bash scripts/two_body_demo.sh run
+
+two-body-demo-test: $(TARGET)
+	bash tests/integration/two_body_window_test.sh
+
+lagrange-demo: $(TARGET)
+	bash scripts/lagrange_demo.sh
+
+lagrange-demo-build: $(TARGET)
+	bash scripts/lagrange_demo.sh build
+
+lagrange-demo-run:
+	bash scripts/lagrange_demo.sh run
+
+lagrange-demo-test: $(TARGET)
+	bash tests/integration/lagrange_window_test.sh
+
+solar-lagrange-demo: $(TARGET)
+	bash scripts/solar_lagrange_demo.sh
+
+solar-lagrange-demo-build: $(TARGET)
+	bash scripts/solar_lagrange_demo.sh build
+
+solar-lagrange-demo-run:
+	bash scripts/solar_lagrange_demo.sh run
+
+solar-lagrange-demo-test: $(TARGET)
+	bash tests/integration/solar_lagrange_window_test.sh
+
 run-demo: $(TARGET)
 	bash scripts/run_demo.sh
 
@@ -268,6 +324,27 @@ geometry-demo: $(TARGET)
 
 units-demo: $(TARGET)
 	bash scripts/units_demo.sh
+
+orbit-math-demo: $(TARGET)
+	bash scripts/orbit_math_demo.sh
+
+orbit-numeric-demo: $(TARGET)
+	bash scripts/orbit_numeric_demo.sh
+
+orbit-numeric-demo-test: $(TARGET)
+	bash tests/integration/orbit_numeric_test.sh
+
+lagrange-numeric-demo: $(TARGET)
+	bash scripts/lagrange_numeric_demo.sh
+
+lagrange-numeric-demo-test: $(TARGET)
+	bash tests/integration/lagrange_numeric_test.sh
+
+solar-lagrange-numeric-demo: $(TARGET)
+	bash scripts/solar_lagrange_numeric_demo.sh
+
+solar-lagrange-numeric-demo-test: $(TARGET)
+	bash tests/integration/solar_lagrange_numeric_test.sh
 
 editor-tooling-demo: $(TARGET)
 	bash scripts/editor_tooling_demo.sh

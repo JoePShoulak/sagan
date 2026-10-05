@@ -1,10 +1,12 @@
 #include "../src/lsp/server.hpp"
 #include "../src/source/provider.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 namespace
 {
@@ -68,11 +70,13 @@ auto main() -> int
           sagan::source::document_id{}, "tests/fixtures/catalog/index.tsv").uri.value},
           {"prefix", "orbit"}, {"limit", 1}});
   const auto &catalog_package = catalog.get("packages")->elements()->front();
+  const auto &catalog_exports = *catalog_package.get("modules")->elements()->front()
+      .get("exports")->elements();
   require(catalog.get("schema")->string() == "sagan-package-catalog-v1" &&
               catalog.get("state")->string() == "ready" &&
               catalog_package.get("modules")->elements()->size() == 1 &&
-              catalog_package.get("modules")->elements()->front().get("exports")
-                  ->elements()->front().get("name")->string() == "orbit_answer",
+              std::any_of(catalog_exports.begin(), catalog_exports.end(), [](const auto &item)
+                { return item.get("name")->string() == "orbit_answer"; }),
           "LSP package catalog omitted installed exported declarations");
   const std::string uri = "file:///lsp-demo.sagan";
   const std::string text = "fun 🚀(value: Int): Int => value + 2\nfun main(): Int {\n  let answer = 🚀(40)\n  print(answer)\n  return 0\n}\n";
@@ -83,6 +87,18 @@ auto main() -> int
               opened.front().get("method")->string() == "textDocument/publishDiagnostics" &&
               opened.front().get("params")->get("diagnostics")->elements()->empty(),
           "didOpen did not publish clean diagnostics");
+  const std::string invalid_default_uri = "file:///default-argument-invalid.sagan";
+  const auto invalid_default = notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", invalid_default_uri}, {"version", 1},
+          {"text", "fun bad(value: Int = \"wrong\"): Int => value\nprint(bad())\n"}}}});
+  require(invalid_default.size() == 2 &&
+              invalid_default.back().get("params")->get("uri")->string() == invalid_default_uri &&
+              !invalid_default.back().get("params")->get("diagnostics")->elements()->empty() &&
+              invalid_default.back().get("params")->get("diagnostics")->elements()->front()
+                  .get("message")->string()->find("Default argument") != std::string::npos,
+          "default-argument type mismatch did not produce an LSP diagnostic");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", invalid_default_uri}}}}));
   J::array operation_notifications;
   service.set_notification_sink([&](const J &message) { operation_notifications.push_back(message); });
   const auto operation = request(service, "sagan/operation",
@@ -299,6 +315,50 @@ auto main() -> int
   const auto formatted = request(service, "textDocument/formatting",
                                  J::object{{"textDocument", J::object{{"uri", uri}}}});
   require(formatted.elements(), "formatting handler failed");
+  const auto manifest_uri = sagan::source::identity_from_path(
+      sagan::source::document_id{}, "tests/fixtures/catalog/consumer-alias/sagan.toml").uri.value;
+  const auto manifest_source = sagan::source::disk_source_provider{}.read_path(
+      "tests/fixtures/catalog/consumer-alias/sagan.toml");
+  require(manifest_source.value.has_value(), "LSP manifest fixture was not readable");
+  auto manifest_text = std::string(manifest_source.value->text());
+  const auto manifest_name = manifest_text.find("name = \"consumer-alias\"");
+  require(manifest_name != std::string::npos, "LSP manifest fixture has no package name");
+  manifest_text.replace(manifest_name, std::string_view{"name = \"consumer-alias\""}.size(),
+                        "  name  =  \"consumer-alias\"  ");
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}, {"version", 31},
+                                           {"text", manifest_text}}}}));
+  const auto manifest_formatted = request(service, "textDocument/formatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}}});
+  require(manifest_formatted.elements() && manifest_formatted.elements()->size() == 1 &&
+              manifest_formatted.elements()->front().get("newText") &&
+              manifest_formatted.elements()->front().get("newText")->string() ==
+                  "name = \"consumer-alias\"",
+          "LSP did not format a valid unsaved manifest");
+  const auto manifest_range = request(service, "textDocument/rangeFormatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}},
+                {"range", J::object{{"start", J::object{{"line", 1}, {"character", 0}}},
+                                    {"end", J::object{{"line", 2}, {"character", 0}}}}}});
+  require(manifest_range.elements() && manifest_range.elements()->size() == 1 &&
+              manifest_range.elements()->front().get("newText") &&
+              manifest_range.elements()->front().get("newText")->string() ==
+                  "name = \"consumer-alias\"",
+          "LSP manifest range formatting omitted a selected safe line");
+  const auto manifest_other_range = request(service, "textDocument/rangeFormatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}},
+                {"range", J::object{{"start", J::object{{"line", 2}, {"character", 0}}},
+                                    {"end", J::object{{"line", 2}, {"character", 10}}}}}});
+  require(manifest_other_range.elements() && manifest_other_range.elements()->empty(),
+          "LSP manifest range formatting changed a line outside the selected range");
+  static_cast<void>(notify(service, "textDocument/didChange",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}, {"version", 32}}},
+                {"contentChanges", J::array{J::object{{"text", "[package]\nname = \"broken\"\nunknown = 1\n"}}}}}));
+  const auto invalid_manifest_format = request(service, "textDocument/formatting",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}}});
+  require(invalid_manifest_format.elements() && invalid_manifest_format.elements()->empty(),
+          "LSP formatted an invalid manifest instead of refusing safely");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", manifest_uri}}}}));
   const auto range_formatted = request(service, "textDocument/rangeFormatting",
       J::object{{"textDocument", J::object{{"uri", uri}}},
                 {"range", J::object{{"start", J::object{{"line", 1}, {"character", 0}}},
@@ -357,6 +417,54 @@ auto main() -> int
               conflicting_rename.front().get("error")->get("message")->string() ==
                   "Proposed name already exists in the semantic scope set",
           "F2 collision refusal did not preserve the compiler-owned explanation");
+  const std::string independent_uri = "untitled:independent-f2-scopes";
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", independent_uri}, {"version", 1},
+          {"text", "fun first(): Int { let value = 1\n return value }\n"
+                   "fun second(): Int { let other = 2\n return other }\n"}}}}));
+  const auto independent_f2 = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", independent_uri}}},
+                {"position", J::object{{"line", 2}, {"character", 24}}},
+                {"newName", "value"}});
+  require(independent_f2.get("documentChanges") &&
+              independent_f2.get("documentChanges")->elements()->size() == 1 &&
+              independent_f2.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 rejected an independent-scope name through the LSP transport");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", independent_uri}}}}));
+  const std::string local_type_uri = "untitled:local-type-f2";
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", local_type_uri}, {"version", 1},
+          {"text", "class Probe { new() {} }\nlet probe = Probe()\nprint(probe)\n"}}}}));
+  const auto prepared_local_type = request(service, "textDocument/prepareRename",
+      at(local_type_uri, 1, 13));
+  require(prepared_local_type.get("placeholder") &&
+              prepared_local_type.get("placeholder")->string() == "Probe",
+          "F2 preparation rejected an unexported constructor reference");
+  const auto renamed_type = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", local_type_uri}}},
+                {"position", J::object{{"line", 1}, {"character", 13}}},
+                {"newName", "Sensor"}});
+  require(renamed_type.get("documentChanges") &&
+              renamed_type.get("documentChanges")->elements()->size() == 1 &&
+              renamed_type.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 did not rename an unexported class from its constructor reference");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", local_type_uri}}}}));
+  const std::string local_case_uri = "untitled:local-case-f2";
+  static_cast<void>(notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", local_case_uri}, {"version", 1},
+          {"text", "enum Signal { nominal }\nlet status = Signal.nominal\nprint(status)\n"}}}}));
+  const auto renamed_case = request(service, "textDocument/rename",
+      J::object{{"textDocument", J::object{{"uri", local_case_uri}}},
+                {"position", J::object{{"line", 1}, {"character", 21}}},
+                {"newName", "ready"}});
+  require(renamed_case.get("documentChanges") &&
+              renamed_case.get("documentChanges")->elements()->size() == 1 &&
+              renamed_case.get("documentChanges")->elements()->front().get("edits")->elements()->size() == 2,
+          "F2 did not rename an unexported enum case from a qualified reference");
+  static_cast<void>(notify(service, "textDocument/didClose",
+      J::object{{"textDocument", J::object{{"uri", local_case_uri}}}}));
   const auto actions = request(service, "textDocument/codeAction",
                                J::object{{"textDocument", J::object{{"uri", uri}}},
                                          {"context", J::object{{"diagnostics", J::array{}}}},
@@ -408,6 +516,8 @@ auto main() -> int
       "  let phi = (1 + 5 ^ 0.5) / 2\n"
       "  let raised = phi ^ b\n"
       "  let rounded = Int.round(raised)\n"
+      "  let direction = <3.0, 4.0>\n"
+      "  let heading = direction.normalized()\n"
       "  a, b = b, a + b\n"
       "  return indices[0] + a + b + rounded\n"
       "}\n";
@@ -429,6 +539,14 @@ auto main() -> int
   require(round_completion.elements() && round_completion.elements()->size() == 1 &&
               round_completion.elements()->front().get("label")->string() == "round",
           "LSP did not offer Int.round completion");
+  const auto vector_completion = request(service, "textDocument/completion", at(sugar_uri, 8, 29));
+  require(vector_completion.elements() &&
+              std::any_of(vector_completion.elements()->begin(), vector_completion.elements()->end(),
+                          [](const auto &entry)
+                          {
+                            return entry.get("label") && entry.get("label")->string() == "normalized";
+                          }),
+          "LSP did not offer Vector.normalized completion");
   const auto round_hover = request(service, "textDocument/hover", at(sugar_uri, 6, 20));
   require(round_hover.get("contents") &&
               sagan::lsp::json::serialize(round_hover).find("Int64") != std::string::npos,
@@ -522,10 +640,34 @@ auto main() -> int
           "closing imported overlay did not restore importer diagnostics");
   notify(service, "textDocument/didClose",
          J::object{{"textDocument", J::object{{"uri", module_uri}}}});
+  const auto collision = disk.read_path("tests/fixtures/modules/completion_collision/main.sagan");
+  require(static_cast<bool>(collision), "completion collision fixture missing");
+  const auto collision_uri = collision.value->identity().uri.value;
+  notify(service, "textDocument/didOpen",
+         J::object{{"textDocument", J::object{{"uri", collision_uri}, {"version", 1},
+                                              {"text", std::string(collision.value->text())}}}});
+  const auto collision_completion = request(service, "textDocument/completion",
+                                            at(collision_uri, 6, 2));
+  require(collision_completion.elements(), "colliding export completion returned no candidates");
+  std::vector<std::string> collision_details;
+  for (const auto &item : *collision_completion.elements())
+    if (item.get("label") && item.get("label")->string() == "answer")
+    {
+      const auto *edits = item.get("additionalTextEdits");
+      require(edits && edits->elements() && edits->elements()->size() == 1 &&
+                  item.get("detail") && item.get("detail")->string(),
+              "colliding export completion omitted its module-specific edit or detail");
+      collision_details.push_back(std::string(*item.get("detail")->string()));
+    }
+  require(collision_details == std::vector<std::string>{"(): Int (from alpha)",
+                                                       "(): Int (from beta)"},
+          "standard LSP completion did not distinguish colliding module exports");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", collision_uri}}}});
   const std::string composition_uri = "untitled:composition-lsp";
   const std::string composition =
       "face Readable { fun read(): Int\n  fun describe(): String => \"readable\" }\n"
-      "class Probe is Readable { fun read(): Int => 1 }\n"
+      "class Probe has Readable { fun read(): Int => 1 }\n"
       "fun main(): Int {\n  let probe = Probe()\n  return probe.read()\n}\n";
   notify(service, "textDocument/didOpen",
          J::object{{"textDocument", J::object{{"uri", composition_uri}, {"version", 1},
@@ -551,6 +693,36 @@ auto main() -> int
           "hierarchy item did not retain an identity-based follow-up position");
   notify(service, "textDocument/didClose",
          J::object{{"textDocument", J::object{{"uri", composition_uri}}}});
+  const std::string face_field_uri = "untitled:face-field-lsp";
+  const std::string face_field_valid =
+      "face Massive { let .mass: Float<kilogram>\n"
+      "  fun getMass(): Float<kilogram> => self.mass }\n"
+      "class Body has Massive { new() { self.mass = 1.0 kilogram } }\n"
+      "let body = Body()\nassert(body.getMass() == 1.0 kilogram)\n";
+  const auto face_field_opened = notify(service, "textDocument/didOpen",
+      J::object{{"textDocument", J::object{{"uri", face_field_uri}, {"version", 1},
+                                           {"text", face_field_valid}}}});
+  require(face_field_opened.size() == 1 &&
+              face_field_opened.front().get("params")->get("diagnostics")->elements()->empty(),
+          "LSP rejected a valid face field promise");
+  const auto face_field_definition = request(service, "textDocument/definition",
+                                             at(face_field_uri, 2, 39));
+  require(face_field_definition.elements() && face_field_definition.elements()->size() == 1 &&
+              face_field_definition.elements()->front().get("range")->get("start")
+                  ->get("line")->integer() == 0,
+          "LSP did not navigate synthesized face storage to its promise");
+  const std::string face_field_invalid =
+      "face Massive { let .mass: Float<kilogram>\n"
+      "  fun getMass(): Float<kilogram> => self.mass }\n"
+      "class Body has Massive { new() { } }\n";
+  const auto face_field_changed = notify(service, "textDocument/didChange",
+      J::object{{"textDocument", J::object{{"uri", face_field_uri}, {"version", 2}}},
+                {"contentChanges", J::array{J::object{{"text", face_field_invalid}}}}});
+  require(face_field_changed.size() == 1 &&
+              !face_field_changed.front().get("params")->get("diagnostics")->elements()->empty(),
+          "LSP missed a missing face field promise");
+  notify(service, "textDocument/didClose",
+         J::object{{"textDocument", J::object{{"uri", face_field_uri}}}});
   const std::string incomplete_uri = "untitled:incomplete-lsp";
   notify(service, "textDocument/didOpen",
          J::object{{"textDocument", J::object{{"uri", incomplete_uri}, {"version", 1},

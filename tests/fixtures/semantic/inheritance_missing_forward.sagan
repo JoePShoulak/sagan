@@ -1,0 +1,7 @@
+class Parent {
+  let value: Int
+  new(value: Int) { self.value = value }
+}
+class Child is Parent {
+  new(value: Int) { }
+}

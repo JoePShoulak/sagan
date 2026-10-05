@@ -1,0 +1,36 @@
+face Named {
+  fun name(): String
+}
+
+face Powered {
+  fun power(): Int
+}
+
+face Spacecraft is Named, Powered {
+  fun status(): String => "${self.name()} power ${self.power()}"
+}
+
+class ExplorerShip has Spacecraft {
+  let .ship_name: String
+  let .power_level: Int
+
+  new(ship_name: String, power_level: Int) {
+    self.ship_name = ship_name
+    self.power_level = power_level
+  }
+
+  fun name(): String => self.ship_name
+  fun power(): Int => self.power_level
+}
+
+fun report_status(value: Spacecraft): Void {
+  print(value.status())
+}
+
+fun main(): Int {
+  let ship = ExplorerShip("Endurance", 88)
+  report_status(ship)
+  return 0
+}
+
+exit(main())

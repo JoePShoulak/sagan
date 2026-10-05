@@ -8,7 +8,7 @@ namespace sagan::language_service
         {"format.document", true, "Strict source only; ambiguous spacing and existing line breaks are preserved"},
         {"format.range", true, "Strict source only; complete intersecting lines are formatted"},
         {"format.onType", true, "Only closing brace and newline triggers"},
-        {"rename.local", true, "Only one proven local symbol and its indexed references"},
+        {"rename.local", true, "Proven local bindings or unexported types/cases and their indexed references"},
         {"rename.privateMember", true, "Only uniquely resolved members confined to one document"},
         {"rename.function", true, "Only non-exported, non-overloaded functions in one document"},
         {"rename.workspace", true,

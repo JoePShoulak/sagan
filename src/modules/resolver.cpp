@@ -21,6 +21,10 @@
 #include <unordered_set>
 #include <utility>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace modules
 {
   namespace
@@ -40,23 +44,36 @@ namespace modules
       return std::string(full.substr(0, full.find_first_not_of("0123456789.")));
     }
 
+    auto installed_package_index() -> std::filesystem::path
+    {
+#ifdef _WIN32
+      std::vector<wchar_t> buffer(32768);
+      const DWORD size = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+      if (size == 0 || size == buffer.size()) return {};
+      const auto executable = std::filesystem::path(std::wstring(buffer.data(), size));
+      const auto candidate = executable.parent_path().parent_path() / "libraries" / "index.tsv";
+      if (std::filesystem::is_regular_file(candidate)) return candidate;
+#endif
+      return {};
+    }
+
     auto installed_dependencies(const package_manifest &manifest,
                                 const package_resolution_options &options)
       -> std::map<std::string, package_manifest>
     {
       std::map<std::string, package_manifest> installed;
       if (manifest.dependencies.empty()) return installed;
-      auto index_path = options.index_path;
+      auto index_path = options.index_path.empty() ? default_package_index_path() : options.index_path;
       if (index_path.empty())
-        if (const auto *configured = std::getenv("SAGAN_PACKAGE_INDEX")) index_path = configured;
-      if (index_path.empty())
-        throw std::runtime_error("External package dependencies require SAGAN_PACKAGE_INDEX or an explicit local index");
+        throw std::runtime_error("Package dependencies require an installed libraries/index.tsv, "
+                                 "SAGAN_PACKAGE_INDEX, or an explicit local index");
       const auto version = options.compiler_version.empty() ? compiler_numeric_version() : options.compiler_version;
       const auto lock = options.lock_path.empty() ? manifest.package_root / "sagan.lock" : options.lock_path;
       const auto selected = resolve_indexed_dependencies(
-          manifest.manifest_path, index_path, version, lock);
+          manifest, index_path, version, lock);
       if (selected.state != dependency_state::ready)
-        throw std::runtime_error("Could not resolve package dependencies: " + selected.message);
+        throw std::runtime_error("Could not resolve package dependencies using '" +
+                                 index_path.string() + "': " + selected.message);
       for (const auto &item : selected.packages)
         installed.emplace(item.name, load_package(item.manifest_path));
       return installed;
@@ -84,9 +101,11 @@ namespace modules
           if (cancellation.is_cancelled()) throw std::runtime_error("Module traversal cancelled");
         }
         if (cancellation.is_cancelled()) throw std::runtime_error("Module traversal cancelled");
-        parser::syntax_parser syntax(std::move(tokens));
+        parser::syntax_parser syntax(std::move(tokens), cancellation);
         return syntax.parse();
       }
+      catch (const parser::parse_cancelled &)
+      { throw std::runtime_error("Module traversal cancelled"); }
       catch (const parser::parse_error &error)
       {
         throw std::runtime_error("Invalid module '" + path.string() + "' at byte " +
@@ -132,10 +151,11 @@ namespace modules
       return value.substr(1, value.size() - 2);
     }
 
-    auto manifest_from_file(const std::filesystem::path &manifest_path) -> package_manifest
+    auto manifest_from_text(const std::filesystem::path &manifest_path,
+                            const std::string_view text) -> package_manifest
     {
       const auto absolute_manifest = std::filesystem::absolute(manifest_path).lexically_normal();
-      std::istringstream input(read_file(absolute_manifest));
+      std::istringstream input{std::string(text)};
       std::unordered_map<std::string, std::string> package_values;
       std::unordered_map<std::string, std::string> application_values;
       std::unordered_map<std::string, std::string> dependency_values;
@@ -152,30 +172,37 @@ namespace modules
         if (line.front() == '[' && line.back() == ']')
         {
           section = trim(line.substr(1, line.size() - 2));
-          if (section != "package" && section != "application" && section != "dependencies")
-            throw std::runtime_error("Unknown package manifest section '[" + section + "]'");
+          if (std::find(manifest_sections.begin(), manifest_sections.end(), section) ==
+              manifest_sections.end())
+            throw manifest_error("Unknown package manifest section '[" + section + "]'", line_number);
           continue;
         }
         if (section.empty())
-          throw std::runtime_error("Package manifest values must appear under [package], [application], or [dependencies]");
+          throw manifest_error("Package manifest values must appear under [package], [application], or [dependencies]", line_number);
         const std::size_t equals = line.find('=');
         if (equals == std::string::npos)
-          throw std::runtime_error("Invalid package manifest line " + std::to_string(line_number));
+          throw manifest_error("Invalid package manifest line " + std::to_string(line_number), line_number);
         const std::string key = trim(line.substr(0, equals));
         const bool package_key = section == "package" &&
-                                 (key == "name" || key == "version" || key == "source" || key == "entry");
-        const bool application_key = section == "application" && key == "mode";
+                                 std::find(manifest_package_keys.begin(), manifest_package_keys.end(), key) !=
+                                     manifest_package_keys.end();
+        const bool application_key = section == "application" &&
+                                     std::find(manifest_application_keys.begin(), manifest_application_keys.end(), key) !=
+                                         manifest_application_keys.end();
         const bool dependency_key = section == "dependencies" &&
                                     std::regex_match(key, std::regex{"[A-Za-z][A-Za-z0-9_-]*"});
         if (!package_key && !application_key && !dependency_key)
-          throw std::runtime_error("Unknown package manifest key '" + key + "'");
+          throw manifest_error("Unknown package manifest key '" + key + "'", line_number);
         auto &values = section == "package" ? package_values :
                        section == "application" ? application_values : dependency_values;
         const auto raw = trim(line.substr(equals + 1));
-        if (!values.emplace(key, section == "dependencies" ? raw : quoted_value(raw, key)).second)
-          throw std::runtime_error("Duplicate package manifest key '" + key + "'");
+        std::string value;
+        try { value = section == "dependencies" ? raw : quoted_value(raw, key); }
+        catch (const std::runtime_error &error) { throw manifest_error(error.what(), line_number); }
+        if (!values.emplace(key, std::move(value)).second)
+          throw manifest_error("Duplicate package manifest key '" + key + "'", line_number);
       }
-      for (const std::string_view required : {"name", "version", "source", "entry"})
+      for (const std::string_view required : manifest_package_keys)
         if (!package_values.contains(std::string(required)))
           throw std::runtime_error("Package manifest is missing required key '" + std::string(required) + "'");
       if (!std::regex_match(package_values.at("name"), std::regex{"[A-Za-z][A-Za-z0-9_-]*"}))
@@ -223,8 +250,8 @@ namespace modules
       if (application_values.contains("mode"))
       {
         const std::string &configured = application_values.at("mode");
-        if (configured == "windowed") mode = application_mode::windowed;
-        else if (configured != "console")
+        if (configured == manifest_application_modes[1]) mode = application_mode::windowed;
+        else if (configured != manifest_application_modes[0])
           throw std::runtime_error("Application mode must be 'console' or 'windowed'");
       }
       const auto package_root = absolute_manifest.parent_path();
@@ -238,6 +265,9 @@ namespace modules
                               package_root, source_root, package_values.at("entry"), mode,
                               std::move(dependencies)};
     }
+
+    auto manifest_from_file(const std::filesystem::path &manifest_path) -> package_manifest
+    { return manifest_from_text(manifest_path, read_file(manifest_path)); }
 
     auto discover_manifest(std::filesystem::path path) -> std::optional<package_manifest>
     {
@@ -735,6 +765,12 @@ namespace modules
     }
   }
 
+  auto default_package_index_path() -> std::filesystem::path
+  {
+    if (const auto *configured = std::getenv("SAGAN_PACKAGE_INDEX")) return configured;
+    return installed_package_index();
+  }
+
   auto application_mode_name(const application_mode mode) -> std::string_view
   {
     return mode == application_mode::windowed ? "windowed" : "console";
@@ -803,6 +839,25 @@ namespace modules
     if (!std::filesystem::is_regular_file(manifest))
       throw std::runtime_error("Could not find package manifest '" + manifest.string() + "'");
     return manifest_from_file(manifest);
+  }
+
+  auto parse_package_manifest(const std::filesystem::path &manifest_path,
+                              const std::string_view text) -> package_manifest
+  {
+    if (manifest_path.filename() != "sagan.toml")
+      throw std::runtime_error("Package path must name sagan.toml");
+    return manifest_from_text(manifest_path, text);
+  }
+
+  auto installed_package_for_dependency(const package_manifest &project,
+                                        const std::string_view package_name,
+                                        const package_resolution_options &options)
+    -> std::optional<package_manifest>
+  {
+    const auto installed = installed_dependencies(project, options);
+    const auto found = installed.find(std::string(package_name));
+    if (found == installed.end()) return {};
+    return found->second;
   }
 
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>

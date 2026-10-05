@@ -9,17 +9,17 @@ verified_by: null
 
 # VS Code extension roadmap
 
-Version 0.3.4 is a usable language client for the capabilities currently
+Version 0.3.6 is a usable language client for the capabilities currently
 advertised by `sagan-lsp`. This roadmap lists work that remains after the
 initial client integration. The extension must continue to consume compiler
 contracts rather than reproduce parsing, semantics, project rules, or catalogs.
 
-## Paused compiler handoff checkpoint
+## Current compiler handoff checkpoint
 
-Extension work is paused against Sagan development version 1.8.0 at compiler
-commit `dc52099`. This is a stable development checkpoint, not the final
-compiler-to-extension handoff: it has not been pushed or released, and the
-extension must not enable capabilities that discovery still reports as false.
+Extension work can consume standard LSP improvements as they land while the
+compiler-side package and debugger contracts below are completed. The earlier
+1.8.0 checkpoint is historical, not the present handoff. The extension must
+not enable capabilities that discovery still reports as false.
 
 Most ordinary editor support is ready. The language server supplies compiler-
 backed diagnostics, formatting, hover, definition, references, completion,
@@ -111,6 +111,14 @@ for continued local extension development:
 
 ## Compiler- or protocol-blocked goals
 
+- The compiler-owned `sagan.toml` service is connected through the extension's
+  manifest document selector. Live-host coverage exercises diagnostics,
+  completion, hover, symbols, entry navigation, and valid whole-document
+  formatting. The compiler also owns locked-dependency navigation and
+  installed-package requirement completion. Manifest range/on-type formatting
+  and safe quick fixes remain unavailable; extend tests as those capabilities
+  become supported. The extension must not reproduce manifest parsing or
+  validation in TypeScript.
 - Finish package completion in every relevant import, export, qualified-name,
   type, expression, and receiver context. Add compiler-owned safe auto-import
   edits, alias and collision handling, navigation when installed source is
@@ -120,11 +128,14 @@ for continued local extension development:
   contract. Keep `packageCompletion`, `packageNavigation`, and
   `packageAutoImport` false until their individual end-to-end gates pass.
 - Finish the experimental Debug Adapter Protocol implementation. `sagan-dap`
-  can launch programs and exercise breakpoints, mapped stacks, and source-level
-  stepping, but it still needs reliable Sagan values, runtime-failure and
-  exception mapping, broader source-context and cleanup coverage, Linux
-  execution validation, and release packaging of GDB and its runtime verified
-  outside an MSYS2 environment. The extension must not register a supported
+  can launch programs and exercise breakpoints, mapped stacks, source-mapped
+  stop-on-entry, and source-level
+  stepping. Windows portable packaging now contains GDB, its Python runtime,
+  and the adapter, and an extracted ZIP passed the DAP suite outside MSYS2.
+  Initialized scalar locals and parameters have a guarded value probe, while
+  collections, strings, nested values, exception stops, broader source-context
+  and cleanup coverage, Linux distribution validation, and isolated installer
+  smoke validation remain. The extension must not register a supported
   Sagan debug type while all granular debugger capability flags remain false.
 
 ## Resume sequence

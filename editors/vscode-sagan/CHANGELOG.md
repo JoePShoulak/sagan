@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Connect `sagan.toml` documents to the language server so compiler-owned
+  diagnostics, completion, hover, symbols, navigation, and formatting reach
+  VS Code, with live Extension Development Host coverage.
+- Version 0.3.6 updates class-inheritance and face-composition highlighting,
+  qualified `super.Parent.method()` calls, default-parameter examples,
+  parent-constructor forwarding examples, and grammar coverage. It has not
+  been published.
+
+## 0.3.5
+
+- Validate powered leading units in measured type annotations such as
+  `Float64<meter^3 / kilogram / second^2>` against the corrected language server.
+- Recognize `sagan.toml` as a first-class Sagan Manifest with a file icon,
+  comment/bracket configuration, and schema-aware highlighting for package,
+  application, and dependency declarations.
 - Make the esbuild entry and output paths portable across Windows, Linux, and
   macOS by resolving them from the declared extension working directory.
 - Refresh extension guidance for the post-1.0 compiler: script entry points,

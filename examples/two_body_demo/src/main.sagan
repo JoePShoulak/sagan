@@ -1,0 +1,105 @@
+module main
+
+import TwoBodySolver from physics.two_body
+import open from render.window
+import poll from render.window
+import clear from render.window
+import close from render.window
+import elapsed_seconds from render.window
+import key_pressed from render.window
+import set_view from render.canvas
+import present from render.canvas
+import circle from render.canvas
+import line from render.canvas
+import text from render.canvas
+import text_screen from render.canvas
+
+const PRIMARY_MASS: Float64<kilogram> = 5.9722e24 kilogram
+const SECONDARY_MASS: Float64<kilogram> = 7.342e22 kilogram
+const SEPARATION: Float64<meter> = 384400 kilometer
+const STEP: Float64<second> = 300.0 second
+const STEP_SECONDS: Float64 = 300.0
+const PRIMARY_SPEED: Float64<meter / second> = 12.44242780569817 (meter / second)
+const SECONDARY_SPEED: Float64<meter / second> = 1012.1038864231901 (meter / second)
+const MAX_PLAYBACK_RATE: Float64 = 3456000.0
+
+let total_mass = PRIMARY_MASS + SECONDARY_MASS
+let primary_radius = (SEPARATION * SECONDARY_MASS / total_mass) as meter
+let secondary_radius = (SEPARATION * PRIMARY_MASS / total_mass) as meter
+let origin = (0.0, 0.0) meter
+let primary_position = origin + <-1.0, 0.0> * primary_radius
+let secondary_position = origin + <1.0, 0.0> * secondary_radius
+let primary_velocity = <0.0, -1.0> * PRIMARY_SPEED
+let secondary_velocity = <0.0, 1.0> * SECONDARY_SPEED
+let solver = TwoBodySolver(
+  "Primary", PRIMARY_MASS, primary_position, primary_velocity,
+  "Secondary", SECONDARY_MASS, secondary_position, secondary_velocity,
+  STEP)
+let current = solver.snapshot()
+
+if open("Sagan R2: Physics-driven Two-body Orbit", 960, 540) {
+  set_view(0.0, 0.0, 1.0)
+  let previous_frame_time = elapsed_seconds()
+  let accumulated_simulation_seconds = 0.0
+  let simulation_seconds_per_real_second = 86400.0
+  let paused = false
+
+  while poll() {
+    let frame_time = elapsed_seconds()
+    let frame_duration = frame_time - previous_frame_time
+    previous_frame_time = frame_time
+    if frame_duration > 0.25 {
+      frame_duration = 0.25
+    }
+
+    if key_pressed("space") {
+      if paused {
+        paused = false
+      } else {
+        paused = true
+      }
+    }
+    if key_pressed("up") {
+      simulation_seconds_per_real_second = simulation_seconds_per_real_second * 2.0
+      if simulation_seconds_per_real_second > MAX_PLAYBACK_RATE {
+        simulation_seconds_per_real_second = MAX_PLAYBACK_RATE
+      }
+    }
+    if key_pressed("down") {
+      simulation_seconds_per_real_second = simulation_seconds_per_real_second * 0.5
+    }
+
+    if paused == false {
+      accumulated_simulation_seconds = accumulated_simulation_seconds +
+        frame_duration * simulation_seconds_per_real_second
+    }
+    while accumulated_simulation_seconds >= STEP_SECONDS {
+      current = solver.step!()
+      accumulated_simulation_seconds = accumulated_simulation_seconds - STEP_SECONDS
+    }
+
+    let primary = display_coordinates(current.first().position(), origin, 1000 kilometer)
+    let secondary = display_coordinates(current.second().position(), origin, 1000 kilometer)
+    clear(9, 16, 30)
+    line(-250.0, 0.0, 250.0, 0.0, 1.0, 45, 62, 82)
+    line(0.0, -135.0, 0.0, 135.0, 1.0, 45, 62, 82)
+    line(primary.x, primary.y, secondary.x, secondary.y, 1.0, 52, 76, 102)
+    circle(primary.x, primary.y, 9.0, 250, 204, 21)
+    circle(secondary.x, secondary.y, 5.0, 96, 165, 250)
+    text(primary.x + 12.0, primary.y - 18.0, current.first().identity(), 13, 248, 250, 252)
+    text(secondary.x + 8.0, secondary.y - 15.0, current.second().identity(), 13, 248, 250, 252)
+    text_screen(20, 18, "Sagan Render 0.3 — immutable physics snapshots", 17, 226, 232, 240)
+    text_screen(20, 45, "Space pause | Up/Down speed (max 40 days/s) | Escape close", 12, 148, 163, 184)
+    text_screen(20, 68, "elapsed simulation time: ${current.time() as day}", 12, 148, 210, 189)
+    text_screen(20, 91, "selected simulation rate: ${simulation_seconds_per_real_second / 86400.0} simulated days / real second", 12, 148, 210, 189)
+    text_screen(20, 114, "display primary: ${primary} | secondary: ${secondary}", 11, 120, 138, 160)
+    present()
+  }
+  print("final_simulation_rate_days_per_real_second ${simulation_seconds_per_real_second / 86400.0}")
+  close()
+}
+
+print("final_time_s ${current.time()}")
+print("final_elapsed ${current.time() as day}")
+print("final_primary ${current.first().position().x} ${current.first().position().y}")
+print("final_secondary ${current.second().position().x} ${current.second().position().y}")

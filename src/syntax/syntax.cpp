@@ -190,9 +190,11 @@ namespace sagan::syntax
     {
       try
       {
-        parser::syntax_parser strict(parser_tokens);
+        parser::syntax_parser strict(parser_tokens, cancellation);
         result.strict_ast = std::make_unique<parser::program>(strict.parse());
       }
+      catch (const parser::parse_cancelled &)
+      { return {diagnostics::result_state::cancelled, {}, {}, document.version()}; }
       catch (const parser::parse_error &error)
       {
         reported.push_back(parse_diagnostic(document, diagnostics::phase::syntax, error));
@@ -215,12 +217,14 @@ namespace sagan::syntax
             chunk_tokens.push_back(value.id);
         try
         {
-          parser::syntax_parser partial(std::move(chunk));
+          parser::syntax_parser partial(std::move(chunk), cancellation);
           auto tree = partial.parse();
           for (auto &statement : tree.statements) recovered_statements.push_back(std::move(statement));
           result.nodes.push_back(syntax_node{node_id{next_id++}, node_kind::declaration, chunk_range,
                                              std::move(chunk_tokens)});
         }
+        catch (const parser::parse_cancelled &)
+        { return {diagnostics::result_state::cancelled, {}, {}, document.version()}; }
         catch (const parser::parse_error &error)
         {
           auto value = parse_diagnostic(document, diagnostics::phase::syntax, error);

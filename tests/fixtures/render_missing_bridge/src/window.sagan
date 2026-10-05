@@ -1,0 +1,3 @@
+module window
+export open
+fun open(): Bool => true

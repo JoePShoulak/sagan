@@ -14,6 +14,8 @@ WINDOWS_SERVER = os.name == "nt" or bool(os.environ.get("MSYSTEM"))
 SERVER = Path(os.environ["SAGAN_LSP_BINARY"]) if os.environ.get("SAGAN_LSP_BINARY") else (
     ROOT / "bin" / ("sagan-lsp.exe" if WINDOWS_SERVER else "sagan-lsp")
 )
+if WINDOWS_SERVER and SERVER.suffix.lower() != ".exe":
+    SERVER = SERVER.with_name(SERVER.name + ".exe")
 
 
 def server_file_uri(path):
@@ -101,7 +103,8 @@ def main():
         catalog_source = next_message(received)
         assert catalog_source["id"] == 6
         assert catalog_source["result"]["schema"] == "sagan-package-catalog-v1"
-        assert catalog_source["result"]["packages"][0]["modules"][0]["exports"][0]["name"] == "orbit_answer"
+        assert any(item["name"] == "orbit_answer" for item in
+                   catalog_source["result"]["packages"][0]["modules"][0]["exports"])
 
         send(process, {"jsonrpc": "2.0", "id": 5, "method": "workspace/symbol", "params": {
             "query": "main",
@@ -320,8 +323,95 @@ def main():
         assert len(member_changes) == 2
         assert sum(len(change["edits"]) for change in member_changes) == 3
 
+        independent_uri = "untitled:independent-f2-scopes"
+        independent_source = (
+            "fun first(): Int { let value = 1\n return value }\n"
+            "fun second(): Int { let other = 2\n return other }\n"
+        )
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": independent_uri, "languageId": "sagan", "version": 1,
+                             "text": independent_source},
+        }})
+        independent_diagnostics = next_message(received)
+        while (independent_diagnostics.get("method") != "textDocument/publishDiagnostics" or
+               independent_diagnostics["params"]["uri"] != independent_uri):
+            independent_diagnostics = next_message(received)
+        assert independent_diagnostics["method"] == "textDocument/publishDiagnostics"
+        assert independent_diagnostics["params"]["diagnostics"] == [], independent_diagnostics
+        send(process, {"jsonrpc": "2.0", "id": 8, "method": "textDocument/prepareRename", "params": {
+            "textDocument": {"uri": independent_uri},
+            "position": {"line": 2, "character": 24},
+        }})
+        prepared_independent = next_message(received)
+        while prepared_independent.get("id") != 8:
+            prepared_independent = next_message(received)
+        assert prepared_independent["id"] == 8
+        assert prepared_independent["result"]["placeholder"] == "other"
+        send(process, {"jsonrpc": "2.0", "id": 9, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": independent_uri},
+            "position": {"line": 2, "character": 24}, "newName": "value",
+        }})
+        renamed_independent = next_message(received)
+        while renamed_independent.get("id") != 9:
+            renamed_independent = next_message(received)
+        assert renamed_independent["id"] == 9
+        assert len(renamed_independent["result"]["documentChanges"]) == 1
+        assert len(renamed_independent["result"]["documentChanges"][0]["edits"]) == 2
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didClose", "params": {
+            "textDocument": {"uri": independent_uri},
+        }})
+
+        local_type_uri = "untitled:local-type-f2"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": local_type_uri, "languageId": "sagan", "version": 1,
+                             "text": "class Probe { new() {} }\nlet probe = Probe()\nprint(probe)\n"},
+        }})
+        opened_type = next_message(received)
+        while (opened_type.get("method") != "textDocument/publishDiagnostics" or
+               opened_type["params"]["uri"] != local_type_uri):
+            opened_type = next_message(received)
+        assert opened_type["params"]["diagnostics"] == []
+        send(process, {"jsonrpc": "2.0", "id": 10, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": local_type_uri},
+            "position": {"line": 1, "character": 13}, "newName": "Sensor",
+        }})
+        renamed_type = next_message(received)
+        while renamed_type.get("id") != 10:
+            renamed_type = next_message(received)
+        assert len(renamed_type["result"]["documentChanges"]) == 1
+        assert len(renamed_type["result"]["documentChanges"][0]["edits"]) == 2
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didClose", "params": {
+            "textDocument": {"uri": local_type_uri},
+        }})
+
+        local_case_uri = "untitled:local-case-f2"
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": local_case_uri, "languageId": "sagan", "version": 1,
+                             "text": "enum Signal { nominal }\nlet status = Signal.nominal\nprint(status)\n"},
+        }})
+        opened_case = next_message(received)
+        while (opened_case.get("method") != "textDocument/publishDiagnostics" or
+               opened_case["params"]["uri"] != local_case_uri):
+            opened_case = next_message(received)
+        assert opened_case["params"]["diagnostics"] == []
+        send(process, {"jsonrpc": "2.0", "id": 11, "method": "textDocument/rename", "params": {
+            "textDocument": {"uri": local_case_uri},
+            "position": {"line": 1, "character": 21}, "newName": "ready",
+        }})
+        renamed_case = next_message(received)
+        while renamed_case.get("id") != 11:
+            renamed_case = next_message(received)
+        assert len(renamed_case["result"]["documentChanges"]) == 1
+        assert len(renamed_case["result"]["documentChanges"][0]["edits"]) == 2
+        send(process, {"jsonrpc": "2.0", "method": "textDocument/didClose", "params": {
+            "textDocument": {"uri": local_case_uri},
+        }})
+
         send(process, {"jsonrpc": "2.0", "id": 4, "method": "shutdown", "params": {}})
-        assert next_message(received)["id"] == 4
+        shutdown = next_message(received)
+        while shutdown.get("id") != 4:
+            shutdown = next_message(received)
+        assert shutdown["id"] == 4
         send(process, {"jsonrpc": "2.0", "method": "exit", "params": {}})
         process.stdin.close()
         assert process.wait(timeout=10) == 0

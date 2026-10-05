@@ -22,7 +22,7 @@ grep -Fq '  workflow_dispatch:' "$release_workflow"
 grep -Fq 'environment: stable-release' "$release_workflow"
 grep -Fq 'Routine development is committed directly to `dev`.' "$development_setup"
 grep -Fq '      - dev' "$documentation_workflow"
-grep -Fq "github.ref == 'refs/heads/main'" "$documentation_workflow"
+grep -Fq "github.ref == 'refs/heads/dev'" "$documentation_workflow"
 grep -Fq 'branches: [dev, main]' "$windows_workflow"
 
 echo 'Main-driven release policy tests passed.'

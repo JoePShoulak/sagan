@@ -1,0 +1,84 @@
+module main
+
+import SolarLagrangeSeed from physics.solar_lagrange
+import SolarTertiarySnapshot from physics.solar_lagrange
+import SolarLagrangeSnapshot from physics.solar_lagrange
+import SolarLagrangeSolver from physics.solar_lagrange
+
+const SUN_MASS: Float64<kilogram> = 1.98847e30 kilogram
+const EARTH_MASS: Float64<kilogram> = 5.9722e24 kilogram
+const MOON_MASS: Float64<kilogram> = 7.342e22 kilogram
+const SOLAR_SEPARATION: Float64<meter> = 149597870.7 kilometer
+const EARTH_MOON_SEPARATION: Float64<meter> = 384400.0 kilometer
+const STEP: Float64<second> = 300.0 second
+const SOLAR_RELATIVE_SPEED: Float64<meter / second> =
+  29784.691831696804 (meter / second)
+const LUNAR_RELATIVE_SPEED: Float64<meter / second> =
+  1024.5463142288881 (meter / second)
+let earth_moon_mass = EARTH_MASS + MOON_MASS
+let system_mass = SUN_MASS + earth_moon_mass
+let sun_radius = SOLAR_SEPARATION * earth_moon_mass / system_mass
+let earth_moon_radius = SOLAR_SEPARATION * SUN_MASS / system_mass
+let sun_speed = SOLAR_RELATIVE_SPEED * earth_moon_mass / system_mass
+let earth_moon_speed = SOLAR_RELATIVE_SPEED * SUN_MASS / system_mass
+let earth_radius = EARTH_MOON_SEPARATION * MOON_MASS / earth_moon_mass
+let moon_radius = EARTH_MOON_SEPARATION * EARTH_MASS / earth_moon_mass
+let earth_speed = LUNAR_RELATIVE_SPEED * MOON_MASS / earth_moon_mass
+let moon_speed = LUNAR_RELATIVE_SPEED * EARTH_MASS / earth_moon_mass
+let origin = (0.0, 0.0) meter
+let sun_position = origin + <-1.0, 0.0> * sun_radius
+let earth_moon_barycenter = origin + <1.0, 0.0> * earth_moon_radius
+let earth_position = earth_moon_barycenter + <-1.0, 0.0> * earth_radius
+let moon_position = earth_moon_barycenter + <1.0, 0.0> * moon_radius
+let sun_velocity = <0.0, -1.0> * sun_speed
+let earth_moon_velocity = <0.0, 1.0> * earth_moon_speed
+let earth_velocity = earth_moon_velocity + <0.0, -1.0> * earth_speed
+let moon_velocity = earth_moon_velocity + <0.0, 1.0> * moon_speed
+
+fun lagrange_seed(identity: String, normalized_x: Float64,
+                  normalized_y: Float64): SolarLagrangeSeed {
+  let position = earth_moon_barycenter +
+    <normalized_x, normalized_y> * EARTH_MOON_SEPARATION
+  let velocity = earth_moon_velocity +
+    <-normalized_y, normalized_x> * LUNAR_RELATIVE_SPEED
+  return SolarLagrangeSeed(identity, position, velocity,
+                           normalized_x, normalized_y)
+}
+
+fun stability_display(body: SolarTertiarySnapshot): String {
+  if body.escaped() { return "escaped" }
+  return "${body.stability_error()}"
+}
+
+let solver = SolarLagrangeSolver(
+  SUN_MASS, sun_position, sun_velocity,
+  EARTH_MASS, earth_position, earth_velocity,
+  MOON_MASS, moon_position, moon_velocity,
+  STEP,
+  lagrange_seed("L1", 0.8369459145954874, 0.0),
+  lagrange_seed("L2", 1.155658098131319, 0.0),
+  lagrange_seed("L3", -1.0050600391594884, 0.0),
+  lagrange_seed("L4", 0.4878556707169819, 0.8660254037844386),
+  lagrange_seed("L5", 0.4878556707169819, -0.8660254037844386),
+  lagrange_seed("Control", 0.0, 1.0))
+
+let current = solver.snapshot()
+let step_index = 0
+print("day L1_error L2_error L3_error L4_error L5_error control_error")
+print("0 ${stability_display(current.tertiary(0))} ${stability_display(current.tertiary(1))} ${stability_display(current.tertiary(2))} ${stability_display(current.tertiary(3))} ${stability_display(current.tertiary(4))} ${stability_display(current.tertiary(5))}")
+while step_index < 17280 {
+  current = solver.step!()
+  step_index++
+  if step_index % 2880 == 0 {
+    print("${step_index / 288} ${stability_display(current.tertiary(0))} ${stability_display(current.tertiary(1))} ${stability_display(current.tertiary(2))} ${stability_display(current.tertiary(3))} ${stability_display(current.tertiary(4))} ${stability_display(current.tertiary(5))}")
+  }
+}
+
+let final_barycenter = current.earth_moon_barycenter()
+let solar_distance = (final_barycenter - current.sun().position()).length()
+let lunar_distance = (current.moon().position() - current.earth().position()).length()
+print("final_time_s ${current.time()}")
+print("sun_earth_moon_barycenter_distance ${solar_distance}")
+print("earth_moon_distance ${lunar_distance}")
+print("final_L4_error ${stability_display(current.tertiary(3))}")
+print("final_L5_error ${stability_display(current.tertiary(4))}")

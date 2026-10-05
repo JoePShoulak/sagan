@@ -198,7 +198,8 @@ namespace sagan::lsp
       if (const auto suffix = version.find_first_of("+-"); suffix != std::string::npos)
         version.erase(suffix);
       const auto prefix = string_field(params, "prefix");
-      const auto found = modules::query_package_index(path, version, prefix);
+      const auto found = modules::query_package_index(path, version, prefix, cancellation);
+      if (found.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       J::array packages;
       for (const auto &entry : found.packages)
         packages.push_back(J::object{{"name", entry.name}, {"version", entry.version},
@@ -420,6 +421,107 @@ namespace sagan::lsp
     const auto loaded = documents_->read(uri);
     if (!loaded) throw std::invalid_argument(loaded.error->message);
     const auto &document = *loaded.value;
+    if (document.identity().canonical_path &&
+        document.identity().canonical_path->filename() == "sagan.toml")
+    {
+      if (method == "textDocument/definition")
+      {
+        auto result = query_manifest_entry_target(document,
+            offset(document, field(params, "position")), *documents_, cancellation);
+        if (!result.value && result.state != diagnostics::result_state::cancelled)
+          result = query_manifest_dependency_target(document,
+              offset(document, field(params, "position")), *documents_, cancellation);
+        if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
+          throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        if (!result.value) return J::array{};
+        return J::array{J::object{{"uri", result.value->uri.value},
+                                  {"range", J::object{{"start", lsp_position(result.value->start)},
+                                                       {"end", lsp_position(result.value->end)}}}}};
+      }
+      if (method == "textDocument/documentSymbol")
+      {
+        const auto result = manifest_document_symbols(document, cancellation);
+        if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
+          throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        J::array sections;
+        if (result.value)
+          for (const auto &section : *result.value)
+          {
+            J::array keys;
+            for (const auto &key : section.children)
+              keys.emplace_back(J::object{{"name", key.name}, {"kind", 20},
+                                          {"range", lsp_range(document, key.range.bytes)},
+                                          {"selectionRange", lsp_range(document, key.selection.bytes)}});
+            sections.emplace_back(J::object{{"name", section.name}, {"kind", 3},
+                                            {"range", lsp_range(document, section.range.bytes)},
+                                            {"selectionRange", lsp_range(document, section.selection.bytes)},
+                                            {"children", keys}});
+          }
+        return sections;
+      }
+      if (method == "textDocument/hover")
+      {
+        const auto result = hover_manifest_document(document,
+            offset(document, field(params, "position")), cancellation);
+        if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
+          throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        if (!result.value) return nullptr;
+        return J::object{{"contents", J::object{{"kind", "markdown"},
+                                                {"value", result.value->markdown}}},
+                         {"range", lsp_range(document, result.value->selection.bytes)}};
+      }
+      if (method == "textDocument/completion")
+      {
+        const auto result = complete_manifest_document(document,
+            offset(document, field(params, "position")), cancellation);
+        if (result.state == diagnostics::result_state::cancelled || cancellation.is_cancelled())
+          throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        J::array entries;
+        if (result.value)
+          for (const auto &candidate : *result.value)
+            entries.push_back(J::object{{"label", candidate.label}, {"kind", 14},
+                                        {"textEdit", J::object{{"range", lsp_range(document,
+                                            candidate.edit.range.bytes)},
+                                                               {"newText", candidate.edit.replacement_utf8}}}});
+        return entries;
+      }
+      if (method == "textDocument/formatting")
+      {
+        if (cancellation.is_cancelled()) throw request_cancelled{};
+        const auto result = format_manifest_document(document);
+        if (cancellation.is_cancelled()) throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        return formatting_edits(document, result);
+      }
+      if (method == "textDocument/rangeFormatting")
+      {
+        if (cancellation.is_cancelled()) throw request_cancelled{};
+        const auto result = format_manifest_range(document, byte_range(document, field(params, "range")));
+        if (cancellation.is_cancelled()) throw request_cancelled{};
+        const auto current = documents_->read(uri);
+        if (!current || current.value->version() != document.version() ||
+            current.value->text() != document.text()) throw request_cancelled{};
+        return formatting_edits(document, result);
+      }
+      if (method == "textDocument/onTypeFormatting" || method == "textDocument/documentSymbol" ||
+          method == "textDocument/definition" || method == "textDocument/typeDefinition" ||
+          method == "textDocument/references") return J::array{};
+      return nullptr;
+    }
     if (method == "textDocument/formatting")
       return formatting_edits(document, format_document(document));
     if (method == "textDocument/rangeFormatting")
@@ -481,10 +583,10 @@ namespace sagan::lsp
       if (target.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       if (target.applicable)
       {
-        if (!target.error.empty()) throw std::invalid_argument(target.error);
         const auto current = documents_->read(uri);
         if (!current || current.value->version() != document.version() ||
             current.value->text() != document.text()) throw request_cancelled{};
+        if (!target.error.empty() || target.source_uri.value.empty()) return J::array{};
         return J::array{J::object{{"uri", target.source_uri.value},
                                   {"range", J::object{{"start", lsp_position(target.start)},
                                                        {"end", lsp_position(target.end)}}}}};
@@ -497,10 +599,10 @@ namespace sagan::lsp
       if (imports.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       if (imports.applicable)
       {
-        if (!imports.error.empty()) throw std::invalid_argument(imports.error);
         const auto current = documents_->read(uri);
         if (!current || current.value->version() != document.version() ||
             current.value->text() != document.text()) throw request_cancelled{};
+        if (!imports.error.empty()) return J::array{};
         J::array entries;
         for (const auto &candidate : imports.candidates)
           entries.push_back(J::object{{"label", candidate.name}, {"kind", 9},
@@ -509,17 +611,17 @@ namespace sagan::lsp
                                       {"textEdit", J::object{{"range", lsp_range(document,
                                                                                   candidate.replacement.bytes)},
                                                              {"newText", candidate.name}}}});
-        return entries;
+        return J::object{{"isIncomplete", imports.incomplete}, {"items", entries}};
       }
       const auto exports = query_import_exports(document, offset(document, field(params, "position")),
                                                 *documents_, cancellation);
       if (exports.cancelled || cancellation.is_cancelled()) throw request_cancelled{};
       if (exports.applicable)
       {
-        if (!exports.error.empty()) throw std::invalid_argument(exports.error);
         const auto current = documents_->read(uri);
         if (!current || current.value->version() != document.version() ||
             current.value->text() != document.text()) throw request_cancelled{};
+        if (!exports.error.empty()) return J::object{{"isIncomplete", false}, {"items", J::array{}}};
         J::array entries;
         for (const auto &candidate : exports.candidates)
         {
@@ -744,6 +846,7 @@ namespace sagan::lsp
           if (candidate.deprecated) item["deprecated"] = true;
           if (!candidate.additional_import_edits.empty())
           {
+            item["detail"] = candidate.detail + " (from " + candidate.source_module + ")";
             J::array edits;
             for (const auto &edit : candidate.additional_import_edits)
               edits.push_back(lsp_edit(document, edit));
@@ -806,6 +909,10 @@ namespace sagan::lsp
     }
     if (method == "textDocument/prepareRename")
     {
+      if (workspace && std::any_of(workspace->modules().begin(), workspace->modules().end(),
+          [&](const auto &module)
+          { return module.external && module.index.document().id == document.identity().id; }))
+        throw request_failed("Installed package source is not editable by workspace rename");
       const auto symbol = queries.symbol_at(selected());
       std::string placeholder;
       source::byte_range selection;
@@ -837,6 +944,10 @@ namespace sagan::lsp
     }
     if (method == "textDocument/rename")
     {
+      if (workspace && std::any_of(workspace->modules().begin(), workspace->modules().end(),
+          [&](const auto &module)
+          { return module.external && module.index.document().id == document.identity().id; }))
+        throw request_failed("Installed package source is not editable by workspace rename");
       auto result = rename_local(document, *index, selected(), string_field(params, "newName"));
       if (result.state == edit_state::unsupported && workspace)
         result = rename_workspace(document, *index, *workspace, *documents_, selected(),

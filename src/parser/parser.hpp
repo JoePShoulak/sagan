@@ -2,6 +2,7 @@
 
 #include "ast_node.hpp"
 #include "token.hpp"
+#include "../diagnostics/diagnostic.hpp"
 
 #include <cstddef>
 #include <string>
@@ -9,12 +10,15 @@
 
 namespace parser
 {
+  struct parse_cancelled {};
+
   class syntax_parser
   {
     std::vector<token> input;
     std::size_t current = 0;
     std::size_t vector_literal_depth = 0;
     std::size_t loop_depth = 0;
+    sagan::diagnostics::cancellation_token cancellation;
 
     auto at_end() const -> bool;
     auto peek() const -> const token *;
@@ -28,7 +32,7 @@ namespace parser
     auto parse_documentation_comments() -> std::vector<documentation_comment>;
     auto parse_statement() -> statement_ref;
     auto parse_let_declaration(bool allow_private = false, bool weak_member = false) -> statement_ref;
-    auto parse_const_declaration(bool allow_private = false) -> statement_ref;
+    auto parse_const_declaration(bool allow_private = false, bool face_requirement = false) -> statement_ref;
     auto parse_function_declaration(bool body_optional = false, bool allow_private = false,
                                     bool allow_mutating = false) -> statement_ref;
     auto parse_test_declaration() -> statement_ref;
@@ -78,7 +82,8 @@ namespace parser
     auto parse_lambda() -> expression_ref;
 
   public:
-    explicit syntax_parser(std::vector<token> tokens);
+    explicit syntax_parser(std::vector<token> tokens,
+                           sagan::diagnostics::cancellation_token cancellation = {});
     auto parse() -> program;
   };
 }

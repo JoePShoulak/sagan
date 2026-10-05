@@ -1,0 +1,2 @@
+fun bad(first: Int = 1, second: Int): Int => first + second
+print(bad(1, 2))

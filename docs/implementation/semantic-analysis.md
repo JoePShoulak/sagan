@@ -61,17 +61,21 @@ their nominal enum type; equality and `match` require matching enum types, and
 unknown members are rejected. Class metadata supplies typed field and method access,
 checked overload selection for `new(...)` constructors, default construction
 when every field has a default, and `self` typing. Leading-dot private
-methods are callable only while checking another method of their declaring
-class, and private methods cannot satisfy public face requirements. Leading-dot
-fields use the same declaring-class access boundary. Unknown
+members follow their declaring class's access boundary;
+`super.Parent.method(...)` resolves that parent's implementation without
+dynamic redispatch. Trailing default parameters lower the required arity for
+functions, methods, constructors, and inferred lambda bindings. Each default
+is checked against its declared type and must currently be self-contained.
+Private methods cannot satisfy public face requirements. Unknown
 class members and unmatched constructor calls are rejected. Every field without
 a declaration-site default must be assigned on every constructor path.
 Face annotations accept a class value only when that class declares transitive
 `is` or `has` conformance; calls through the face use its checked method set.
 Function types and escaping shared-reference closure captures are implemented.
-Contextual `self` capture remains deferred and is rejected explicitly. A class declaring `is` or `has` a face must satisfy
+Contextual `self` capture remains deferred and is rejected explicitly. A class declaring `has` a face must satisfy
 every required method with an exact class implementation or face default.
-Both composition words have identical meaning and do not create inheritance.
+On classes, `is` names parent classes while `has` names faces; a class may
+name multiple of each. On faces, `is` and `has` both compose other faces.
 An unambiguous face default satisfies its own requirement and becomes a class
 method. A class method with the exact signature overrides it. Multiple composed
 defaults with the same signature require an explicit class override. Within a

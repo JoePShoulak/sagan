@@ -109,6 +109,7 @@ namespace sagan::language_service
     std::optional<debug_metadata> debug;
     std::optional<std::filesystem::path> generated_source;
     std::optional<std::filesystem::path> executable;
+    std::optional<std::filesystem::path> working_directory;
     std::string standard_output;
     std::string standard_error;
     bool output_truncated{};
@@ -185,4 +186,8 @@ namespace sagan::language_service
                             const std::string &compiler_stderr,
                             const source::source_provider *provider = nullptr)
     -> std::vector<diagnostics::diagnostic>;
+  auto map_runtime_failure(const source::document_snapshot &document,
+                           const std::string &runtime_stderr,
+                           const source::source_provider *provider = nullptr)
+    -> std::optional<diagnostics::diagnostic>;
 }

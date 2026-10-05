@@ -12,13 +12,8 @@
 
 namespace parser
 {
-  struct function_parameter
-  {
-    std::string name;
-    std::optional<std::string> type_name;
-
-    function_parameter(std::string identifier, std::optional<std::string> annotation);
-  };
+  struct expression;
+  using expression_ref = std::unique_ptr<expression>;
 
   struct ast_node
   {
@@ -37,7 +32,17 @@ namespace parser
     using ast_node::ast_node;
   };
 
-  using expression_ref = std::unique_ptr<expression>;
+  // Keep the pointee complete before declaring the optional owning argument:
+  // libc++ instantiates its temporary unique_ptr destructor at this site.
+  struct function_parameter
+  {
+    std::string name;
+    std::optional<std::string> type_name;
+    expression_ref default_value;
+
+    function_parameter(std::string identifier, std::optional<std::string> annotation,
+                       expression_ref fallback = nullptr);
+  };
 
   struct identifier_expression final : expression
   {
@@ -438,6 +443,13 @@ namespace parser
 
   struct function_declaration final : statement
   {
+    struct parent_initializer
+    {
+      std::string name;
+      span range;
+      std::vector<expression_ref> arguments;
+    };
+
     std::string name;
     // Explicit source tests are functions internally, but their generated
     // callable name is not part of the user-visible namespace.
@@ -448,6 +460,7 @@ namespace parser
     std::vector<std::string> type_parameters;
     std::vector<std::optional<std::string>> type_constraints;
     std::vector<function_parameter> parameters;
+    std::vector<parent_initializer> parent_initializers;
     std::optional<std::string> return_type;
     std::unique_ptr<block_statement> body;
     expression_ref expression_body;
@@ -478,6 +491,7 @@ namespace parser
     std::vector<std::string> type_parameters;
     std::vector<std::optional<std::string>> type_constraints;
     std::optional<std::string> composition_keyword;
+    std::vector<std::string> base_classes;
     std::vector<std::string> composed_interfaces;
     std::vector<statement_ref> members;
     struct enum_member
@@ -499,6 +513,7 @@ namespace parser
                      std::vector<std::string> generic_parameters,
                      std::vector<std::optional<std::string>> generic_constraints,
                      std::optional<std::string> composition,
+                     std::vector<std::string> superclasses,
                      std::vector<std::string> interfaces,
                      std::vector<statement_ref> declared_members,
                      std::vector<enum_member> declared_enum_members);

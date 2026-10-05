@@ -3,7 +3,7 @@ face Counter {
   fun describe(): String => "count ${self.value()}"
 }
 
-class MissionCounter is Counter {
+class MissionCounter has Counter {
   let count: Int
 
   new(start: Int) {

@@ -2,6 +2,8 @@
 
 #include "../parser/ast_node.hpp"
 
+#include <filesystem>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -12,6 +14,7 @@ namespace semantic
   {
     parser::span range;
     std::string type;
+    std::optional<std::filesystem::path> source_path;
   };
 
   struct typed_declaration
@@ -41,6 +44,7 @@ namespace semantic
     int callee_end{};
     std::vector<std::string> parameter_types;
     std::string result_type;
+    std::vector<std::optional<parser::span>> default_spans = {};
   };
 
   struct type_model

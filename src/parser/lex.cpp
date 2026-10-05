@@ -51,6 +51,7 @@ namespace
       {"or", tokens::KWD_OR},
       {"not", tokens::KWD_NOT},
       {"self", tokens::KWD_SELF},
+      {"super", tokens::KWD_SUPER},
       {"is", tokens::KWD_IS},
       {"has", tokens::KWD_HAS},
       {"true", tokens::KWD_TRUE},

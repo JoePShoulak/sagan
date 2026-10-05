@@ -2,7 +2,20 @@ name: Coverage
 
 on:
   push:
+    branches: [dev, main]
   pull_request:
+    branches: [dev, main]
+    paths:
+      - ".github/workflows/coverage.yml"
+      - "examples/**"
+      - "libraries/**"
+      - "makefile"
+      - "scripts/coverage.sh"
+      - "scripts/coverage_threshold.sh"
+      - "scripts/test.sh"
+      - "src/**"
+      - "tests/**"
+      - "third_party/**"
 
 permissions:
   contents: read
@@ -11,7 +24,8 @@ permissions:
 jobs:
   codecov:
     name: GCC coverage
-    runs-on: ubuntu-latest
+    # The native GDB DAP launch suite needs GDB 16+; ubuntu-26.04 provides it.
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Check out repository
@@ -20,15 +34,36 @@ jobs:
           fetch-depth: 0
 
       - name: Install coverage tools
-        run: sudo apt-get update && sudo apt-get install --yes lcov
+        run: sudo apt-get update && sudo apt-get install --yes lcov gdb
 
       - name: Build and collect coverage
+        env:
+          SAGAN_DAP_TEST_REQUIRE_GDB: "1"
         run: bash scripts/coverage.sh --require-lcov
+
+      - name: Preserve coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc-coverage-info
+          path: build/coverage.info
+          if-no-files-found: ignore
 
       - name: Enforce release coverage floor
         run: bash scripts/coverage_threshold.sh
 
+      - name: Determine candidate version
+        id: candidate
+        run: |
+          version="$(bash scripts/version.sh numeric)"
+          echo "Candidate version: $version"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
       - name: Upload coverage to Codecov
+        id: codecov_upload
+        # Owner-approved one-time exception for v4.9.5: measured coverage,
+        # artifact preservation, and the 90% floor above remain mandatory.
+        continue-on-error: true
         uses: codecov/codecov-action@v7
         with:
           use_oidc: true
@@ -37,3 +72,13 @@ jobs:
           fail_ci_if_error: true
           flags: front-end
           name: sagan-gcc
+
+      - name: Report one-time external upload exception
+        if: always() && steps.codecov_upload.outcome == 'failure' && steps.candidate.outputs.version == '4.9.5'
+        run: echo '::warning::Codecov upload failed; only v4.9.5 may proceed with the measured report artifact and coverage floor passing.'
+
+      - name: Require Codecov upload after v4.9.5
+        if: always() && steps.codecov_upload.outcome == 'failure' && steps.candidate.outputs.version != '4.9.5'
+        run: |
+          echo 'Codecov upload must pass after the v4.9.5 exception.' >&2
+          exit 1

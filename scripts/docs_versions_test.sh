@@ -34,6 +34,7 @@ trap cleanup EXIT
 cp -R docs "$test_root/docs"
 install -d -m 0755 "$test_root/scripts"
 cp scripts/docs_status.py "$test_root/scripts/docs_status.py"
+cp scripts/docs_sagan_lexer.py "$test_root/scripts/docs_sagan_lexer.py"
 cp mkdocs.yml "$test_root/mkdocs.yml"
 
 git -C "$test_root" init -q

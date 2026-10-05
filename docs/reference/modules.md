@@ -84,7 +84,10 @@ physics = "^1.2.3"
 orbit_tools = { package = "orbit-tools", version = "^0.1.0" }
 ```
 
-Set `SAGAN_PACKAGE_INDEX` to a local package index path. A package with
+Installed Windows Sagan first looks for `libraries/index.tsv` beside its
+`bin` directory. An explicit `SAGAN_PACKAGE_INDEX` overrides that bundled
+index, and tooling may supply an index path directly. A source checkout finds
+its adjacent `libraries/index.tsv` in the same way. A package with
 dependencies must have `sagan.lock` beside its manifest, pinning the exact
 versions of direct and transitive dependencies. The compiler validates the
 lock against the index and installed manifests before linking; it does not

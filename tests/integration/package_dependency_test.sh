@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
 
-export SAGAN_PACKAGE_INDEX="$repo_root/tests/fixtures/catalog/current-index.tsv"
+export SAGAN_PACKAGE_INDEX="$repo_root/tests/fixtures/catalog/current-compiler-index.tsv"
 actual="$(bin/sagan --run-package tests/fixtures/catalog/consumer-alias)"
 actual="${actual//$'\r'/}"
 expected=$'42\n7\n42'

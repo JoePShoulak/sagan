@@ -142,4 +142,6 @@ namespace semantic
   auto build_index(const sagan::source::document_snapshot &document, const semantic_model &model,
                    const type_model *types = nullptr)
     -> semantic_index;
+
+  auto callable_signature(const semantic_index &index, const symbol_id &id) -> std::string;
 }

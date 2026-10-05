@@ -145,6 +145,9 @@ async function main() {
   assertScoped(measurements, "unit", "keyword.declaration.measurement.unit.sagan");
   assertScoped(measurements, "meter", "entity.name.type.unit.sagan");
   assertScoped(measurements, "Celsius", "entity.name.type.unit.sagan");
+  assertScoped(measurements, "^", "keyword.operator.arithmetic.sagan");
+  assert(measurements.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
+    "Powered leading unit annotation contains invalid scopes");
 
   const strings = tokenize(grammar, readFixture("strings.sagan"));
   assertScoped(strings, "\\u{1F680}", "constant.character.escape.sagan");
@@ -191,6 +194,36 @@ async function main() {
   assertScoped(executableFibonacci, "exit", "entity.name.function.call.sagan");
   assert(executableFibonacci.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
     "Executable root statements contain invalid scopes");
+
+  const inheritance = tokenize(grammar,
+    fs.readFileSync(path.join(repositoryRoot, "tests", "fixtures", "runtime", "class_inheritance.sagan"), "utf8"));
+  assertScoped(inheritance, "GunShip", "entity.name.type.sagan");
+  assertScoped(inheritance, "is", "keyword.operator.type.sagan");
+  assertScoped(inheritance, "has", "keyword.operator.type.sagan");
+  assertScoped(inheritance, "Ship", "entity.name.type.sagan");
+  assertScoped(inheritance, "Assault", "entity.name.type.sagan");
+  assertScoped(inheritance, "new", "keyword.declaration.constructor.sagan");
+  assertScoped(inheritance, "Vessel", "entity.name.type.sagan");
+  assertScoped(inheritance, "super", "variable.language.super.sagan");
+  assertScoped(inheritance, "friend", "string.quoted.double.sagan");
+  assert(inheritance.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
+    "Class inheritance example contains invalid scopes");
+
+  const facePromises = tokenize(grammar,
+    fs.readFileSync(path.join(repositoryRoot, "tests", "fixtures", "runtime", "face_member_promises.sagan"), "utf8"));
+  assertScoped(facePromises, "Named", "entity.name.type.sagan");
+  assertScoped(facePromises, "name", "variable.other.definition.sagan");
+  assertScoped(facePromises, "TAG", "constant.other.definition.sagan");
+  assertScoped(facePromises, "base", "entity.name.function.sagan");
+  assert(facePromises.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
+    "Face member promises contain invalid scopes");
+
+  const vectorMethods = tokenize(grammar,
+    fs.readFileSync(path.join(repositoryRoot, "examples", "orbit_math.sagan"), "utf8"));
+  assertScoped(vectorMethods, "squared_length", "entity.name.function.member.sagan");
+  assertScoped(vectorMethods, "length", "entity.name.function.member.sagan");
+  assertScoped(vectorMethods, "normalized", "entity.name.function.member.sagan");
+  assertScoped(vectorMethods, "normalized!", "entity.name.function.mutating.sagan");
 
   const astExample = fs.readFileSync(path.join(repositoryRoot, "examples", "ast.sagan"), "utf8");
   const parserTokens = tokenize(grammar, astExample);

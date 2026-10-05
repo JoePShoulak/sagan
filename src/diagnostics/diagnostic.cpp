@@ -1,12 +1,75 @@
 #include "diagnostic.hpp"
 
 #include <algorithm>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
 #include <sstream>
+#ifdef _WIN32
+#include <io.h>
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace sagan::diagnostics
 {
   namespace
   {
+    auto terminal_color(const std::ostream &output) -> bool
+    {
+      if (&output != &std::cerr && &output != &std::cout) return false;
+      if (std::getenv("NO_COLOR") != nullptr) return false;
+#ifdef _WIN32
+      if (_isatty(_fileno(stderr)) == 0) return false;
+      const auto handle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(stderr)));
+      DWORD mode = 0;
+      return GetConsoleMode(handle, &mode) != 0 &&
+             ((mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0 ||
+              SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0);
+#else
+      const char *term = std::getenv("TERM");
+      return term != nullptr && std::string_view(term) != "dumb" && isatty(STDERR_FILENO) != 0;
+#endif
+    }
+
+    auto display_path(const source::document_snapshot &document) -> std::string
+    {
+      if (!document.identity().canonical_path) return document.identity().uri.value;
+      const auto &path = *document.identity().canonical_path;
+      std::error_code error;
+      const auto relative = std::filesystem::relative(path, std::filesystem::current_path(), error);
+      if (!error && !relative.empty() && *relative.begin() != "..") return relative.generic_string();
+      return path.generic_string();
+    }
+
+    auto source_excerpt(std::ostream &output, const source::document_snapshot &document,
+                        const source::source_range &range, const std::string_view label) -> void
+    {
+      if (range.document != document.identity().id || range.bytes.begin > document.text().size()) return;
+      const auto position = document.to_utf16(range.bytes.begin);
+      if (!position) return;
+      const std::string_view text = document.text();
+      std::size_t begin = range.bytes.begin;
+      while (begin > 0 && text[begin - 1] != '\n' && text[begin - 1] != '\r') --begin;
+      std::size_t end = range.bytes.begin;
+      while (end < text.size() && text[end] != '\n' && text[end] != '\r') ++end;
+      const auto line = std::to_string(position->line + 1);
+      output << " " << line << " | " << text.substr(begin, end - begin) << '\n';
+      output << " " << std::string(line.size(), ' ') << " | ";
+      const auto prefix = document.to_utf16(static_cast<source::byte_offset>(begin));
+      const auto indent = prefix ? position->character - prefix->character : 0;
+      output << std::string(indent, ' ');
+      const auto highlight_end = std::min<std::size_t>(range.bytes.end, end);
+      const auto end_position = document.to_utf16(static_cast<source::byte_offset>(highlight_end));
+      const auto width = end_position && end_position->line == position->line &&
+                         end_position->character > position->character
+                             ? end_position->character - position->character : 1;
+      output << std::string(width, '^');
+      if (!label.empty()) output << ' ' << label;
+      output << '\n';
+    }
+
     auto json_string(const std::string_view input) -> std::string
     {
       static constexpr char hex[] = "0123456789abcdef";
@@ -120,10 +183,33 @@ namespace sagan::diagnostics
                        const diagnostic &value) -> void
   {
     const auto position = document.to_utf16(value.primary.bytes.begin).value_or(source::utf16_position{});
-    output << phase_name(value.owner) << ' ' << severity_name(value.level) << " at "
-           << position.line + 1 << ':' << position.character + 1 << " [" << value.code << "]: "
-           << value.message << '\n';
+    const bool color = terminal_color(output);
+    if (color) output << (value.level == severity::error ? "\x1b[31m" : "\x1b[33m");
+    output << severity_name(value.level) << '[' << value.code << ']';
+    if (color) output << "\x1b[0m";
+    output << ": " << value.message << '\n';
+    const bool located = !(value.primary.bytes == source::byte_range{} &&
+                           (value.owner == phase::build || value.owner == phase::project ||
+                            value.owner == phase::runtime));
+    if (located)
+    {
+      output << " --> " << display_path(document) << ':' << position.line + 1
+             << ':' << position.character + 1 << '\n';
+      source_excerpt(output, document, value.primary, {});
+    }
+    for (const auto &related : value.related)
+    {
+      if (related.range.document == document.identity().id)
+      {
+        const auto where = document.to_utf16(related.range.bytes.begin);
+        if (where) output << " note: " << related.message << " at " << display_path(document)
+                          << ':' << where->line + 1 << ':' << where->character + 1 << '\n';
+        source_excerpt(output, document, related.range, related.message);
+      }
+      else output << " note: " << related.message << '\n';
+    }
     for (const auto &note : value.notes) output << "note: " << note << '\n';
+    for (const auto &fix : value.fixes) output << "help: " << fix.title << '\n';
   }
 
   auto render_json(const source::document_snapshot &document, const result_state state,

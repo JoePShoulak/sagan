@@ -1,8 +1,11 @@
 #pragma once
 
 #include <filesystem>
+#include <array>
+#include <cstddef>
 #include <iosfwd>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -14,6 +17,24 @@
 
 namespace modules
 {
+  inline constexpr std::array<std::string_view, 3> manifest_sections{
+      "package", "application", "dependencies"};
+  inline constexpr std::array<std::string_view, 4> manifest_package_keys{
+      "name", "version", "source", "entry"};
+  inline constexpr std::array<std::string_view, 1> manifest_application_keys{"mode"};
+  inline constexpr std::array<std::string_view, 2> manifest_application_modes{
+      "console", "windowed"};
+
+  class manifest_error : public std::runtime_error
+  {
+    std::size_t line_{};
+
+  public:
+    manifest_error(std::string message, std::size_t line)
+        : std::runtime_error(std::move(message)), line_(line) {}
+    auto line() const -> std::size_t { return line_; }
+  };
+
   enum class application_mode
   {
     console,
@@ -45,6 +66,9 @@ namespace modules
     std::string compiler_version;
     std::filesystem::path lock_path;
   };
+
+  // Use the same installed index selection for compiler and editor queries.
+  auto default_package_index_path() -> std::filesystem::path;
 
   auto application_mode_name(application_mode mode) -> std::string_view;
 
@@ -89,6 +113,13 @@ namespace modules
   auto link(const std::filesystem::path &entry_path, const sagan::source::source_provider &source,
             sagan::diagnostics::cancellation_token cancellation = {}) -> parser::program;
   auto load_package(const std::filesystem::path &package_path) -> package_manifest;
+  // Validate an editor overlay with the same parser used for on-disk packages.
+  auto parse_package_manifest(const std::filesystem::path &manifest_path,
+                              std::string_view text) -> package_manifest;
+  auto installed_package_for_dependency(const package_manifest &project,
+                                        std::string_view package_name,
+                                        const package_resolution_options &options = {})
+    -> std::optional<package_manifest>;
   auto discover_package(const std::filesystem::path &entry_path) -> std::optional<package_manifest>;
   struct importable_module_source
   {

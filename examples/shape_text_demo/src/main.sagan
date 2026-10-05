@@ -1,0 +1,37 @@
+module main
+
+import open from render.window
+import poll from render.window
+import clear from render.window
+import close from render.window
+import set_view from render.canvas
+import present from render.canvas
+import circle from render.canvas
+import line from render.canvas
+import text from render.canvas
+import text_screen from render.canvas
+
+if open("Sagan Render R1: Shapes and Text", 960, 540) {
+  set_view(0.0, 0.0, 1.0)
+  while poll() {
+    clear(15, 23, 42)
+
+    line(-430.0, 0.0, 430.0, 0.0, 1.0, 71, 85, 105)
+    line(0.0, -220.0, 0.0, 220.0, 1.0, 71, 85, 105)
+
+    line(-300.0, -80.0, -180.0, 80.0, 2.0, 56, 189, 248)
+    line(-180.0, 80.0, 0.0, 120.0, 2.0, 56, 189, 248)
+    line(0.0, 120.0, 180.0, 80.0, 2.0, 56, 189, 248)
+    line(180.0, 80.0, 300.0, -80.0, 2.0, 56, 189, 248)
+
+    circle(-180.0, 0.0, 42.0, 250, 204, 21)
+    circle(180.0, 0.0, 28.0, 96, 165, 250)
+    text(-225.0, -65.0, "Primary", 15, 248, 250, 252)
+    text(145.0, -52.0, "Secondary", 15, 248, 250, 252)
+
+    text_screen(20, 18, "Sagan Render 0.2 — static orbital presentation", 17, 226, 232, 240)
+    text_screen(20, 45, "+X right, +Y up | resize-safe | Segoe UI", 12, 148, 163, 184)
+    present()
+  }
+  close()
+}

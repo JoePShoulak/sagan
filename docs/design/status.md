@@ -14,10 +14,14 @@ today from planned libraries and external release gates. The `work-in-progress`
 metadata at the top means the prose still awaits the owner's documentation
 audit; it does not mean every listed compiler feature is unfinished.
 
-Current development commits are preparation for a future 2.0 release. Their
-1.x commit versions are checkpoints, not a declaration that the 2.0 migration
-or release gates are complete. The major-version commit is reserved for the
-coordinated 2.0 publication decision.
+Sagan 2.0 has been published. Current `dev` development follows the
+[active roadmap](../contributing/active-roadmap.md); a development commit is
+not itself approval to promote or publish the next stable release.
+
+The current units work also preserves compound-denominator grouping and shows
+the selected unit in native `print` output and string interpolation. Named
+derived units such as `newton` and `watt` retain their catalog dimensions; the
+[units reference](../reference/units.md) includes executable examples.
 
 ## Roadmap snapshot
 
@@ -93,7 +97,11 @@ across normal completion, exception paths, and early returns. Successful source 
 expression, collection, control-flow, matching, exception, and
 unterminated-block errors are demonstrated. Classes execute with typed fields,
 checked `new(...)` constructors, default construction, `self`, private field access/mutation, and
-ordinary or `!`-suffixed methods. `is` and `has` composition require every face
+ordinary or `!`-suffixed methods. Multiple class parents, parent-constructor
+forwarding, qualified `super.Parent.method()` calls, and trailing default
+parameters on constructors, functions, methods, and lambdas execute. Faces may
+promise typed fields that provide storage to adopting classes; constructors
+initialize that storage. `is` and `has` composition require every face
 signature to have an exact class implementation or an unambiguous default. Simple
 nominal enums now execute with `Type.member` selection, equality, matching,
 interpolation, and readable printing. Face defaults execute, may call other face
@@ -143,7 +151,7 @@ with specialization and inference. Explicit function, method, and constructor
 type arguments execute, and function/class parameters can require structural
 face conformance with `is`. Method-specific face generics, package installation
 and distribution, and the concrete math, physics, and rendering APIs remain
-post-1.0 work. Implementation inheritance, parallelism, unsafe escape
+post-1.0 work. Parallelism, unsafe escape
 hatches, registries, and remote dependency retrieval are also explicitly
 deferred. Exact lockfiles and offline installed-package resolution are now
 implemented. Math's automatic availability and the explicit-import
@@ -191,6 +199,13 @@ context-menu verbs override either choice. Windowed failures retain a local log
 and show a native diagnostic dialog. Published release artifacts use GitHub
 Releases as the canonical source; HP1 provides a verified mirror.
 
+The L1 window-distribution work packages the explicit physics/render libraries,
+render native bridge, and two-body demo with Windows releases. A normal
+`sagan --run-package` call and the GUI launcher use the resolved package rather
+than a demo-specific compiler command. Headless projects still omit the render
+bridge. The [two-body roadmap](../standard-library/two-body-window-roadmap.md)
+records staged-payload verification and remaining manual Explorer validation.
+
 Installer policy is Windows x64 only, a self-contained offline package,
 in-place upgrades, refused downgrades, and SHA-256 sidecars. Initial 1.0.0
 publication explicitly permits an unsigned installer after automated
@@ -209,6 +224,6 @@ are immutable, and only the latest stable release receives best-effort support.
 The initial 1.0.0 documentation stays experimental; its page-by-page audit is
 the **first post-1.0 task** and will determine whether any language, tooling,
 or documentation changes are needed. Authenticode signing and a clean-machine
-run are subsequent Windows acceptance work. The VS Code 0.3.4 language client
+run are subsequent Windows acceptance work. The VS Code 0.3.5 language client
 is usable today; matching extension tests and compiler capabilities are part
 of every release gate.
