@@ -11,6 +11,8 @@ owner_recovery_drill = "not-run"
 git_filter_repo = "missing"
 github_cli_authentication = "invalid"
 destination_repository_access = "unverified"
+vscode_local_extraction_rehearsal = "passed-2026-10-05"
+primary_repository_transfer = "required-before-split-repository-creation"
 
 [[decisions]]
 id = "repository-names"
@@ -43,9 +45,14 @@ status = "required"
 evidence = "Teams, protections, secrets, environments, runners, and transfer permission are unrecorded."
 
 [[decisions]]
+id = "primary-repository-transfer"
+status = "required"
+evidence = "Transfer the intact sagan repository to Sagan-Shoulak and verify redirects, remotes, governance, CI, documentation, integrations, owner recovery, and rollback before creating any split repository."
+
+[[decisions]]
 id = "history-and-rollback"
 status = "provisional"
-evidence = "history-extraction.md is drafted; tooling, backup, filtered-clone, and rollback rehearsals remain."
+evidence = "The VS Code subtree rehearsal passed and is recorded in rehearsals/vscode.md; approved tooling, backup, exact shared-file import, and rollback rehearsals remain."
 
 [[decisions]]
 id = "space-game-seed"

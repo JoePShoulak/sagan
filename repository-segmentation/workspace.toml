@@ -8,7 +8,7 @@ lock_file = "workspace.lock"
 id = "sagan"
 url = "https://github.com/Sagan-Shoulak/sagan.git"
 checkout = "sagan"
-state = "existing-outside-organization"
+state = "transfer-required-before-split-repository-creation"
 
 [[repositories]]
 id = "sagan-vscode"

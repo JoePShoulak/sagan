@@ -26,6 +26,7 @@ repository-segmentation/history-extraction.md
 repository-segmentation/inventory.tsv
 repository-segmentation/ownership-rules.toml
 repository-segmentation/readiness.toml
+repository-segmentation/rehearsals/vscode.md
 repository-segmentation/schemas/chat-map.schema.json
 repository-segmentation/schemas/component-manifest.schema.json
 repository-segmentation/schemas/documentation-export.schema.json

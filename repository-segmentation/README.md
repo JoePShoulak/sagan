@@ -31,6 +31,9 @@ extraction. The canonical policy remains the
 
 ## Before moving any code
 
+- Transfer the intact primary repository to `Sagan-Shoulak/sagan` and verify
+  its redirects, remotes, governance, CI, documentation, integrations, owner
+  recovery, and rollback before creating any split repository.
 - Resolve every `required` decision in `readiness.toml` and record its evidence.
 - Resolve every `needs-split` and `needs-rewrite` inventory row into exact
   extraction ownership before deleting any monorepo copy.

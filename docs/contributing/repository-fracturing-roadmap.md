@@ -22,9 +22,10 @@ locked Sagan ecosystem.
 
 ## Target organization and repositories
 
-Create new repositories directly under `Sagan-Shoulak` where practical. Move
-the existing language repository into the organization only after the split
-and integration workflow are proven.
+Move the intact existing language repository into `Sagan-Shoulak` first, after
+the transfer gate passes and before creating any split repository. This puts
+all subsequent repository creation and integration work in its permanent
+organization context from the beginning.
 
 | Repository | Owns | Does not own |
 | --- | --- | --- |
@@ -480,7 +481,22 @@ indirection.
   survive extraction.
 - Establish baseline versions and a known-good monorepo commit.
 
-### Phase 1 — Make current components independently testable
+### Phase 1 — Transfer the intact language repository
+
+- Back up the repository and record every ref before transfer.
+- Verify organization ownership, teams, permissions, visibility, branch
+  protection, Actions, secrets, environments, runners, Pages, releases,
+  mirrors, package URLs, and transfer authority.
+- Transfer the existing repository to `Sagan-Shoulak/sagan` without recreating
+  the old path, so GitHub redirects remain intact.
+- Update local and automation remotes, badges, links, documentation locks, and
+  integrations that cannot follow the redirect safely.
+- Run focused checks, hosted CI, documentation checks, onboarding, maintainer,
+  and rollback drills in the organization context.
+- Do not create any split repository until the transferred primary repository
+  is verified and recoverable.
+
+### Phase 2 — Make current components independently testable
 
 - Give every future repository a focused build and test entry point.
 - Remove accidental repository-relative coupling.
@@ -489,7 +505,7 @@ indirection.
 - Define native rendering metadata or document the temporary bridge.
 - Test Space Game as a consumer of an installed Sagan toolchain.
 
-### Phase 2 — Establish `sagan-workspace`
+### Phase 3 — Establish `sagan-workspace`
 
 - Implement bootstrap, status, update, build, test, lock, and restore commands.
 - Generate the local package index and multi-root editor workspace.
@@ -497,7 +513,7 @@ indirection.
 - Add every current component and Space Game to an exact lock.
 - Pass its maintainer and clean-chat drills.
 
-### Phase 3 — Establish `sagan-docs`
+### Phase 4 — Establish `sagan-docs`
 
 - Move site theme, aggregation, versioning, deployment, and HP1 operations.
 - Initially consume all documentation from the current `sagan` repository.
@@ -505,7 +521,7 @@ indirection.
 - Prove aggregate PR previews and experimental/stable publication.
 - Pass its maintainer and clean-chat drills.
 
-### Phase 4 — Extract `sagan-vscode`
+### Phase 5 — Extract `sagan-vscode`
 
 - Preserve relevant history.
 - Move extension docs and tests.
@@ -514,7 +530,7 @@ indirection.
 - Establish independent versioning, CI, releases, maintainer guide, and prompt.
 - Remove the original only after parity.
 
-### Phase 5 — Extract `sagan-physics`
+### Phase 6 — Extract `sagan-physics`
 
 - Preserve package history, fixtures, numerical examples, and docs.
 - Publish and consume a real package artifact.
@@ -523,7 +539,7 @@ indirection.
 - Establish independent versioning, CI, releases, maintainer guide, and prompt.
 - Remove the original only after integrated demos pass.
 
-### Phase 6 — Formalize native packages and extract `sagan-render`
+### Phase 7 — Formalize native packages and extract `sagan-render`
 
 - Define native sources, includes, flags, libraries, assets, subsystem, and
   unsupported-platform diagnostics in package metadata.
@@ -533,7 +549,7 @@ indirection.
 - Establish independent versioning, CI, releases, maintainer guide, and prompt.
 - Remove the original only after windowed demos pass.
 
-### Phase 7 — Extract `sagan-space-game`
+### Phase 8 — Extract `sagan-space-game`
 
 - Copy the owner-reviewed design document as the sole canonical source of
   game-design context.
@@ -546,7 +562,7 @@ indirection.
 - Remove the original design/source only after canonical-location links and
   backups are verified.
 
-### Phase 8 — Move integrated demonstrations
+### Phase 9 — Move integrated demonstrations
 
 - Keep language-only examples in `sagan`.
 - Keep package-specific headless examples with their packages.
@@ -554,7 +570,7 @@ indirection.
 - Keep application gameplay and game-specific vertical slices in Space Game.
 - Verify documentation snippets against the exact workspace lock.
 
-### Phase 9 — Establish independent publication
+### Phase 10 — Establish independent publication
 
 - Publish component artifacts, checksums, provenance, compatibility metadata,
   and documentation exports.
@@ -562,15 +578,6 @@ indirection.
 - Verify partial-failure recovery for tags, releases, catalogs, docs, mirrors,
   and deployments.
 - Promote a tested ecosystem lock.
-
-### Phase 10 — Transfer the language repository
-
-- Transfer the existing language repository into `Sagan-Shoulak`.
-- Update remotes, badges, links, Pages, workflows, secrets, environments,
-  runners, mirrors, package URLs, installer metadata, and documentation locks.
-- Do not recreate the old repository path and destroy redirects.
-- Run every repository's maintainer, onboarding, CI, documentation, and
-  integration gate after transfer.
 
 ## Required decisions before extraction
 

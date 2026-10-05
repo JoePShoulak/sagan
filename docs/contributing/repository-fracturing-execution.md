@@ -15,7 +15,8 @@ authority when this checklist omits detail.
 
 ## Destination repositories
 
-Create seven coordinated repositories under `Sagan-Shoulak`:
+Operate seven coordinated repositories under `Sagan-Shoulak`, transferring the
+existing `sagan` repository and creating the other six only afterward:
 
 1. `sagan` — language, compiler, CLI, LSP, DAP, packages, math, and units.
 2. `sagan-vscode` — VS Code client, grammars, VSIX, and editor tests.
@@ -28,9 +29,10 @@ Create seven coordinated repositories under `Sagan-Shoulak`:
 7. `sagan-space-game` — the Sagan application, assets, tests, releases, and
    owner-reviewed `SPACE_GAME_DESIGN.md`.
 
-The language repository moves into the organization last. Physics never
-depends on rendering, rendering never depends on physics, and the extension
-never owns language semantics.
+The existing language repository moves into the organization first, after the
+transfer start gate passes and before any new split repository is created.
+Physics never depends on rendering, rendering never depends on physics, and
+the extension never owns language semantics.
 
 ## Mandatory root contract
 
@@ -88,6 +90,8 @@ Do not move code until all of the following are true:
   exports, `TECHNOLOGY.md`, `MAINTAINERS.md`, and `CODEX_START.md`;
 - organization teams, branch protection, CI credentials, runners, and transfer
   permissions are understood;
+- the existing `sagan` transfer has an approved backup, redirect, remote-update,
+  permission, integration, and rollback procedure;
 - canonical source, history-preservation, redirects, rollback, and
   partial-failure recovery are documented; and
 - the owner can bootstrap, test, and recover the baseline using checked-in
@@ -97,24 +101,28 @@ Do not move code until all of the following are true:
 
 1. Record contracts and inventory every source, test, document, workflow,
    release artifact, secret, runner, mirror, and deployment by destination.
-2. Make each future component independently buildable and testable in the
+2. Transfer the intact primary `sagan` repository to `Sagan-Shoulak`, preserve
+   GitHub redirects, update all remotes and organization-scoped integrations,
+   and pass its focused, CI, documentation, and owner-recovery checks there.
+   Do not create any split repository before this transfer is verified.
+3. Make each future component independently buildable and testable in the
    monorepo.
-3. Establish `sagan-workspace` with bootstrap, status, lock, restore, focused
+4. Establish `sagan-workspace` with bootstrap, status, lock, restore, focused
    test, and complete integration commands.
-4. Establish `sagan-docs` and prove version-locked aggregate previews without
+5. Establish `sagan-docs` and prove version-locked aggregate previews without
    changing the public site.
-5. Extract `sagan-vscode`; verify it against installed and pinned compiler/LSP
+6. Extract `sagan-vscode`; verify it against installed and pinned compiler/LSP
    artifacts and restore its official-docs section.
-6. Extract `sagan-physics`; publish and consume a real package artifact, run
+7. Extract `sagan-physics`; publish and consume a real package artifact, run
    headless numerical tests, and restore its docs.
-7. Extract `sagan-render`; first define native-package metadata, then verify
+8. Extract `sagan-render`; first define native-package metadata, then verify
    graphical evidence and installer consumption on supported platforms.
-8. Extract `sagan-space-game`; use only `SPACE_GAME_DESIGN.md` for canonical
+9. Extract `sagan-space-game`; use only `SPACE_GAME_DESIGN.md` for canonical
    game context and verify both released-toolchain and workspace-override builds.
-9. Move cross-component demonstrations to `sagan-workspace`, leaving
+10. Move cross-component demonstrations to `sagan-workspace`, leaving
    component-owned examples with their owners.
-10. Establish independent releases and holistic documentation publication,
-    promote a tested ecosystem lock, then transfer `sagan` into the organization.
+11. Establish independent releases and holistic documentation publication,
+    then promote a tested ecosystem lock.
 
 ## Repeatable extraction gate
 

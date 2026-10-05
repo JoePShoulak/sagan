@@ -17,6 +17,11 @@ Current audit on October 4, 2026: `git filter-repo` is not installed, and the
 configured GitHub CLI credential is invalid. These are start-gate blockers, not
 reasons to weaken the extraction procedure.
 
+The local fallback rehearsal script is
+`scripts/rehearse_vscode_extraction.sh`. It uses `git filter-branch` only to
+prove that the extension subtree has usable independent history and can build
+and test after relocation. It is not the approved production extraction tool.
+
 ## Preserve the source
 
 From the parent directory of the normal checkout:
@@ -72,3 +77,10 @@ fails, abandon the destination candidate and restore from the untouched mirror.
 Remove the monorepo copy only in a later reviewed request after the destination
 release, exact workspace lock, documentation aggregation, redirects, and
 rollback drill all pass.
+
+## Recorded local rehearsal
+
+The October 5, 2026 VS Code rehearsal passed from source commit `33d258e`.
+Details and remaining gaps are recorded in `rehearsals/vscode.md`. This proves
+the extension subtree can stand alone; it does not approve repository creation,
+shared-file relocation, pushing, or deletion from the monorepo.
