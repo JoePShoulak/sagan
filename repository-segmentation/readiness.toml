@@ -33,8 +33,8 @@ evidence = "Canonical fracture roadmap and ecosystem.toml"
 
 [[decisions]]
 id = "repository-visibility"
-status = "required"
-evidence = "Choose public or private for each destination before creation."
+status = "approved"
+evidence = "Owner confirmed on 2026-10-05 that sagan-workspace, sagan-docs, sagan-vscode, sagan-physics, sagan-render, and sagan-space-game are all public."
 
 [[decisions]]
 id = "ownership-boundaries"

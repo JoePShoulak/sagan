@@ -1,8 +1,10 @@
 # History-preserving extraction and rollback draft
 
-This procedure is a draft preparation artifact. Do not run its push or transfer
-steps until repository visibility, permissions, protections, and rollback have
-been approved. Always operate on a temporary mirror, never the working checkout.
+This procedure is a draft preparation artifact. The owner chose public
+visibility for all six split repositories on October 5, 2026. Do not run its
+push steps until destination permissions, protections, exact file ownership,
+and rollback have been approved. Always operate on a temporary mirror, never
+the working checkout.
 
 ## Prerequisites
 
@@ -14,9 +16,11 @@ been approved. Always operate on a temporary mirror, never the working checkout.
 - An approved exact include/rename list derived from `inventory.tsv`.
 
 The October 5, 2026 audit found that `git filter-repo` is not installed.
-GitHub CLI authentication now works for an active `Sagan-Shoulak` admin. The
-primary repository transfer, baseline selection, approved destination policy,
-backup, and rollback rehearsal still precede any extraction.
+GitHub CLI authentication works for an active `Sagan-Shoulak` admin. The
+intact primary repository transfer and its frozen-baseline local backup passed;
+see `audits/primary-transfer-result-2026-10-05.md`. Destination permissions,
+exact ownership, approved extraction tooling, and rollback rehearsal still
+precede any split repository.
 
 The local fallback rehearsal script is
 `scripts/rehearse_vscode_extraction.sh`. It uses `git filter-branch` only to
