@@ -23,6 +23,16 @@ imports, docs, CI, and owner runbooks have not been relocated or validated.
 Use `--no-ff` on the final physics extraction and verify the exact tree again;
 do not assume the filter exit code proves file parity.
 
+A separate local patch at `../patches/physics/` added a candidate-local
+package index, removed hardcoded `bin/sagan` paths from the six numeric
+scripts, and supplied draft maintainer/technology/chat guides. With the
+existing Sagan 4.9.5 compiler and MinGW PATH, all three focused headless
+integration tests passed against the extracted physics source. A fresh normal
+clone replayed the patch with `git am`, matched tree
+`4d53d27daf31481eac74bcd3bf3ad993d79d1f1f`, passed `git fsck --full`,
+and reran all three tests. No independent hosted CI or released package has
+been tested.
+
 ## Rendering
 
 The default exact-path filter retained **21** owned files and **19** commits

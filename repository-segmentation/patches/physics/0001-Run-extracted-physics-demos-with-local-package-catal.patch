@@ -1,0 +1,375 @@
+From f9d24d04d628574ce2c8627c0172ba6effc232da Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 03:28:48 -0500
+Subject: [PATCH] Run extracted physics demos with local package catalog
+
+---
+ .gitignore                                    |  1 +
+ AGENTS.md                                     | 11 +++
+ CODEX_START.md                                | 25 ++++++
+ MAINTAINERS.md                                | 86 +++++++++++++++++++
+ README.md                                     | 16 ++++
+ TECHNOLOGY.md                                 | 41 +++++++++
+ libraries/index.tsv                           |  2 +
+ scripts/lagrange_numeric_demo.sh              |  5 +-
+ scripts/orbit_numeric_demo.sh                 |  5 +-
+ scripts/solar_lagrange_numeric_demo.sh        |  5 +-
+ tests/integration/lagrange_numeric_test.sh    |  5 +-
+ tests/integration/orbit_numeric_test.sh       |  7 +-
+ .../solar_lagrange_numeric_test.sh            |  5 +-
+ 13 files changed, 201 insertions(+), 13 deletions(-)
+ create mode 100644 .gitignore
+ create mode 100644 AGENTS.md
+ create mode 100644 CODEX_START.md
+ create mode 100644 MAINTAINERS.md
+ create mode 100644 README.md
+ create mode 100644 TECHNOLOGY.md
+ create mode 100644 libraries/index.tsv
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..84c048a
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++/build/
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..c438502
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,11 @@
++# Physics repository agent rules
++
++Read `CODEX_START.md`, `TECHNOLOGY.md`, and `MAINTAINERS.md` before making a
++change. Keep physics algorithms in this repository and consume Sagan math
++rather than copying language or rendering internals. Treat units, frames,
++time steps, tolerances, and solver limits as explicit technical contracts.
++
++Use Bash commands for the owner, never PowerShell. Preserve unrelated work.
++Follow the branch, focused-test, `dev` integration, full-suite-on-`main`,
++documentation-review reset, and release-hold rules in `MAINTAINERS.md`.
++The owner prefers to be taught what to write; implement only when asked.
+diff --git a/CODEX_START.md b/CODEX_START.md
+new file mode 100644
+index 0000000..8bdf7d0
+--- /dev/null
++++ b/CODEX_START.md
+@@ -0,0 +1,25 @@
++# Starting a new Sagan physics chat
++
++Begin read-only. Read `AGENTS.md`, `TECHNOLOGY.md`, `MAINTAINERS.md`,
++`README.md`, `libraries/physics/sagan.toml`, the physics technical page,
++numeric examples and tests, and the versioned ecosystem/chat maps from the
++primary repository. Inspect branch, HEAD, status, staged paths, compiler
++version, package catalog, and concurrent work. State that this checkout is a
++local split candidate, not an independently released package.
++
++Prefer teaching me what to code through small steps, examples, model
++assumptions, tolerance reasoning, review, and verification. Implement only
++when I explicitly request it. For authorized changes, use a fresh
++`codex/<request>` branch from current `dev`, test the affected work until
++it passes, commit only intended paths, merge to `dev`, and rerun relevant
++tests there. Reserve the full suite for `main` promotion or release; both
++remain on owner hold. Do not execute unrelated documentation examples for a
++structural-only edit. Reset every edited documentation page to
++`review-needed`, `publication_ready: false`, and null verification metadata.
++
++Use the chat map to recommend the language, rendering, game, workspace, or
++official-docs chat for work they own. Supply a self-contained ready-to-paste
++handoff with goal, evidence, constraints, dependency pins, and verification;
++do not assume shared chat history. Use Bash, never PowerShell. Preserve
++unrelated work and do not push, publish, release, transfer, or change remote
++settings without current authorization.
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+new file mode 100644
+index 0000000..416c4c3
+--- /dev/null
++++ b/MAINTAINERS.md
+@@ -0,0 +1,86 @@
++---
++title: Maintaining Sagan physics
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Maintaining Sagan physics
++
++This is a local split candidate, not a published package repository. Its
++`libraries/physics/sagan.toml` currently declares `sagan-physics` version
++`0.3.0`; the candidate-local `libraries/index.tsv` points to that manifest
++and declares compiler compatibility `^4.0.0`. The index must stay inside the
++candidate so its manifest path does not escape the index root. Do not use the
++old monorepo index when validating this candidate.
++
++## Exact focused checks
++
++Install or build a compatible Sagan compiler and native C++ toolchain.
++From this candidate root in Git Bash on the current Windows machine:
++
++```bash
++export SAGAN_EXECUTABLE=/c/Users/joeps/coding/sagan/bin/sagan.exe
++bash tests/integration/orbit_numeric_test.sh
++bash tests/integration/lagrange_numeric_test.sh
++bash tests/integration/solar_lagrange_numeric_test.sh
++```
++
++Each script sets the local `SAGAN_PACKAGE_INDEX` by default and adds the
++current Windows MinGW toolchain paths. If Sagan is correctly installed on
++PATH, omit `SAGAN_EXECUTABLE`; the scripts default to `sagan`. For a different
++package index, set `SAGAN_PACKAGE_INDEX` explicitly to an exact, reviewed
++catalog before running. The three test scripts passed on Windows with the
++existing Sagan 4.9.5 development binary and the extracted local package.
++The orbit test also passed the three invalid mass/step/overlap fixtures.
++Linux/macOS and a released standalone package are not yet verified.
++
++The corresponding demonstration commands are:
++
++```bash
++bash scripts/orbit_numeric_demo.sh
++bash scripts/lagrange_numeric_demo.sh
++bash scripts/solar_lagrange_numeric_demo.sh
++```
++
++Those scripts run headlessly and do not require a rendering window. Build
++outputs and generated caches belong in ignored `build/`. Do not edit the
++numeric examples' expected behavior merely to make a changed solver pass;
++review units, frames, time step, tolerances, and the physical model.
++
++## Branches, review, and release
++
++Inspect branch, HEAD, status, staged paths, exact toolchain version, and
++relevant history first. For every authorized request, start from current
++`dev` on a fresh `codex/<request>` branch. Test the affected work, refine
++until it works and focused tests pass, commit only intended paths, merge to
++`dev`, and rerun those relevant tests against concurrent integration. The
++full suite is reserved for reviewed `dev` to `main` promotion or release.
++Both promotion and releases remain on owner hold until explicitly reopened
++with a publication/signing policy; passing tests alone cannot lift the hold.
++
++Structural-only documentation edits do not require unrelated executable
++examples. Run affected examples when their source or supporting behavior
++changes. Any edited documentation page resets to `status: review-needed`,
++`publication_ready: false`, and null verification fields until a human audit.
++
++## Extraction and recovery
++
++The local history extraction requires the pinned `git-filter-repo` v2.47.0
++with `--no-ff`, the exact `sagan-physics.txt` ownership manifest, a
++disposable mirror, and post-filter exact-tree plus `git fsck --full` checks.
++Default filtering omitted four solar-Lagrange files despite exiting zero.
++Do not use its filtered tree, and do not rewrite the intact repository.
++The final split must preserve relevant author/timestamp history and publish
++only reviewed `dev` and `main` heads without inherited language release tags.
++
++The current package path, technical docs links, CI, package distribution,
++version compatibility, cross-platform checks, workspace lock, and owner
++clean-machine drill still require independent validation. A failing
++dependency lookup should be diagnosed against `libraries/index.tsv` and the
++active `SAGAN_PACKAGE_INDEX`, not fixed by copying code into a consumer.
++No local Git mirror or workspace lock can recover GitHub settings, secrets,
++issues, or PR history; the current transfer backup is local-only and would
++be lost with this machine.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..e4f9a20
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,16 @@
++# Sagan physics (local split candidate)
++
++This is a local history-preserving rehearsal of `sagan-physics`, not a
++published independent repository. It contains the current headless physics
++package, numeric examples, failure fixtures, integration checks, and its
++technical page. The package remains under `libraries/physics/` in this first
++candidate; final root relocation and CI are still open.
++
++`libraries/index.tsv` is a candidate-local package catalog for testing this
++source against an installed or explicitly selected Sagan compiler. It is not
++a public release catalog. The extracted demo/test scripts accept
++`SAGAN_EXECUTABLE` and no longer assume `bin/sagan` lives in this repo.
++
++Read [MAINTAINERS.md](MAINTAINERS.md) for exact Bash commands and recovery,
++[TECHNOLOGY.md](TECHNOLOGY.md) for conceptual boundaries, and
++[CODEX_START.md](CODEX_START.md) for a new physics chat.
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+new file mode 100644
+index 0000000..de11c43
+--- /dev/null
++++ b/TECHNOLOGY.md
+@@ -0,0 +1,41 @@
++---
++title: Sagan physics technology overview
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Sagan physics technology overview
++
++This repository owns physics models and numerical algorithms, not language
++syntax, game rules, or rendering backends. The current Sagan package under
++`libraries/physics/` exports two-body and restricted-three-body operations
++used by the headless orbit and Lagrange demos. Tests exercise conserved
++quantity drift, representative orbital behavior, tracer stability/escape
++outputs, and invalid input rejection. Those tests are evidence about these
++specific implementations and tolerances, not a general proof of physical
++correctness for every scenario.
++
++The package source is Sagan. `libraries/physics/sagan.toml` declares its
++package identity and version; `libraries/index.tsv` lets the current
++compiler resolve this candidate locally without accidentally loading the
++monorepo's physics source. The numeric demos in `examples/` consume that
++package through their own manifests/locks. The tests in `tests/integration/`
++drive those demos and check important output contracts, while negative
++fixtures under `tests/fixtures/physics/` check rejected inputs.
++
++The dependency direction is physics to Sagan's language/math/toolchain.
++Rendering and the Space Game consume physics, never the reverse. The future
++workspace exact lock coordinates tested versions across repositories;
++physics can still be developed and tested independently. The present local
++catalog is a source-checkout aid, not a substitute for released package
++metadata or compatibility verification.
++
++The first extracted tree retained all 29 owned files and relevant history
++only when the pinned filter used `--no-ff`; the default filter silently
++omitted four solar-Lagrange files. Therefore exact file-manifest comparison
++after filtering is a required invariant, not optional polish. The final
++package-root relocation, standalone hosted CI, Linux/macOS validation, and
++official-docs aggregation remain to be completed. See [MAINTAINERS.md](MAINTAINERS.md).
+diff --git a/libraries/index.tsv b/libraries/index.tsv
+new file mode 100644
+index 0000000..b95f676
+--- /dev/null
++++ b/libraries/index.tsv
+@@ -0,0 +1,2 @@
++sagan-package-index-v1
++sagan-physics	0.3.0	^4.0.0	installed	physics/sagan.toml
+diff --git a/scripts/lagrange_numeric_demo.sh b/scripts/lagrange_numeric_demo.sh
+index b60701d..581d1e1 100644
+--- a/scripts/lagrange_numeric_demo.sh
++++ b/scripts/lagrange_numeric_demo.sh
+@@ -5,7 +5,8 @@ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ cd "$repo_root"
+-export SAGAN_PACKAGE_INDEX="$repo_root/libraries/index.tsv"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+ echo "Restricted three-body numeric source:"
+ echo "-------------------------------------"
+@@ -14,7 +15,7 @@ cat examples/lagrange_numeric_demo/src/main.sagan
+ echo
+ echo "Checked headless result:"
+ echo "------------------------"
+-bin/sagan --run-package examples/lagrange_numeric_demo
++"$sagan_executable" --run-package examples/lagrange_numeric_demo
+ 
+ echo
+ echo "Lagrange numeric demo passed: six massless tracers compared rotating-frame stability."
+diff --git a/scripts/orbit_numeric_demo.sh b/scripts/orbit_numeric_demo.sh
+index 11e6ade..2273110 100644
+--- a/scripts/orbit_numeric_demo.sh
++++ b/scripts/orbit_numeric_demo.sh
+@@ -6,7 +6,8 @@ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ cd "$repo_root"
+ 
+-export SAGAN_PACKAGE_INDEX="$repo_root/libraries/index.tsv"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+ echo "Two-body numeric source:"
+ echo "------------------------"
+@@ -15,7 +16,7 @@ cat examples/orbit_numeric_demo/src/main.sagan
+ echo
+ echo "Checked headless result:"
+ echo "------------------------"
+-bin/sagan --run-package examples/orbit_numeric_demo
++"$sagan_executable" --run-package examples/orbit_numeric_demo
+ 
+ echo
+ echo "Orbit numeric demo passed: the fixed-step solver preserved the documented circular-orbit invariants."
+diff --git a/scripts/solar_lagrange_numeric_demo.sh b/scripts/solar_lagrange_numeric_demo.sh
+index ff4681b..af36b93 100644
+--- a/scripts/solar_lagrange_numeric_demo.sh
++++ b/scripts/solar_lagrange_numeric_demo.sh
+@@ -4,6 +4,7 @@ set -euo pipefail
+ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ cd "$repo_root"
+-export SAGAN_PACKAGE_INDEX="$repo_root/libraries/index.tsv"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+-bin/sagan --run-package examples/solar_lagrange_numeric_demo
++"$sagan_executable" --run-package examples/solar_lagrange_numeric_demo
+diff --git a/tests/integration/lagrange_numeric_test.sh b/tests/integration/lagrange_numeric_test.sh
+index 3df561f..4f86095 100644
+--- a/tests/integration/lagrange_numeric_test.sh
++++ b/tests/integration/lagrange_numeric_test.sh
+@@ -5,9 +5,10 @@ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ 
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ cd "$repo_root"
+-export SAGAN_PACKAGE_INDEX="$repo_root/libraries/index.tsv"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+-output="$(bin/sagan --run-package examples/lagrange_numeric_demo)"
++output="$("$sagan_executable" --run-package examples/lagrange_numeric_demo)"
+ for expected in \
+   "day L1_error L2_error L3_error L4_error L5_error control_error" \
+   "primary_energy_drift" \
+diff --git a/tests/integration/orbit_numeric_test.sh b/tests/integration/orbit_numeric_test.sh
+index 2939b69..aa2849d 100644
+--- a/tests/integration/orbit_numeric_test.sh
++++ b/tests/integration/orbit_numeric_test.sh
+@@ -6,9 +6,10 @@ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ cd "$repo_root"
+ 
+-export SAGAN_PACKAGE_INDEX="$repo_root/libraries/index.tsv"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+-valid_output="$(bin/sagan --run-package examples/orbit_numeric_demo)"
++valid_output="$("$sagan_executable" --run-package examples/orbit_numeric_demo)"
+ for expected in \
+   "time_s primary_x_m primary_y_m secondary_x_m secondary_y_m energy_J angular_momentum" \
+   "energy_absolute_drift" \
+@@ -29,7 +30,7 @@ expect_failure() {
+   local expected="$2"
+   set +e
+   local output
+-  output="$(bin/sagan --run-package "$package" 2>&1)"
++  output="$("$sagan_executable" --run-package "$package" 2>&1)"
+   local status=$?
+   set -e
+   if [[ "$status" -eq 0 || "$output" != *"$expected"* ]]; then
+diff --git a/tests/integration/solar_lagrange_numeric_test.sh b/tests/integration/solar_lagrange_numeric_test.sh
+index cf060ba..8857f08 100644
+--- a/tests/integration/solar_lagrange_numeric_test.sh
++++ b/tests/integration/solar_lagrange_numeric_test.sh
+@@ -4,9 +4,10 @@ set -euo pipefail
+ export PATH="/c/msys64/ucrt64/bin:/ucrt64/bin:/usr/bin:/bin:$PATH"
+ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ cd "$repo_root"
+-export SAGAN_PACKAGE_INDEX="$repo_root/libraries/index.tsv"
++export SAGAN_PACKAGE_INDEX="${SAGAN_PACKAGE_INDEX:-$repo_root/libraries/index.tsv}"
++sagan_executable="${SAGAN_EXECUTABLE:-sagan}"
+ 
+-output="$(bin/sagan --run-package examples/solar_lagrange_numeric_demo)"
++output="$("$sagan_executable" --run-package examples/solar_lagrange_numeric_demo)"
+ for expected in \
+   "day L1_error L2_error L3_error L4_error L5_error control_error" \
+   "final_time_s 5.184e+06" \
+-- 
+2.51.0.windows.2
+
