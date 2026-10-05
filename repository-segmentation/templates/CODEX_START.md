@@ -22,7 +22,11 @@
 > executable examples run structural checks without unrelated examples; test
 > examples when their content or supporting behavior changes. Run the full
 > repository suite only for promotion from `dev` to `main` or a release, and
-> block that promotion until the full suite passes.
+> block that promotion until the full suite passes. The current project-wide
+> hold pauses release publication and `main` promotion until the owner
+> explicitly reopens them and decides the publication/signing policy; a
+> passing suite alone does not lift the hold. Confirm any later policy change
+> from the repository's maintained release guide before acting.
 >
 > If another specialized chat owns work, identify it from the versioned chat
 > map and provide a self-contained ready-to-paste handoff prompt. Any

@@ -13,6 +13,11 @@ tests pass. Commit intended paths, merge into `dev`, and run the post-merge
 relevant tests selected by the impact matrix. Reserve `main` for reviewed
 publication and require the full suite before promotion or release.
 
+The current Sagan-wide owner hold pauses all release publication and `main`
+promotion until the owner explicitly reopens them and decides the
+publication/signing policy. Carry that hold into each extracted repository;
+do not treat a passing suite as permission to publish.
+
 ## Impact-based test matrix
 
 Replace this section with exact focused and post-merge relevant Bash commands.

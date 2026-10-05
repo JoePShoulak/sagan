@@ -27,7 +27,10 @@ Paste the following into a new chat when returning to this repository:
 > but not every example; test affected examples whenever their content or
 > supporting behavior changes. Resolve integration failures before completion.
 > Run the full repository suite only when promoting `dev` to `main` or preparing
-> a release; promotion is contingent on that full suite passing.
+> a release; promotion is contingent on that full suite passing. All release
+> publication and `main` promotion are currently paused until I explicitly
+> reopen them and decide the publication/signing policy. A passing suite does
+> not lift that hold.
 
 The [maintainer entry point](MAINTAINERS.md) is the navigation index for
 compiler, editor, libraries, tests, documentation, release, and recovery.
