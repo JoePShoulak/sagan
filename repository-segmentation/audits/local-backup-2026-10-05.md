@@ -49,3 +49,8 @@ package downloads and then permitted the setup in an isolated elevated run;
 this was a sandbox network restriction, not a project test failure. The
 owner-performed comprehension and recovery drill remains **not run**, and the
 backup still predates the final frozen `dev` baseline.
+
+The separate read-only parity checker also passed against the still-current
+source repository, matching its refs, releases, visibility, and default
+branch to this backup. Its destination and redirect branches remain untested
+until the transfer occurs.

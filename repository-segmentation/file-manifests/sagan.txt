@@ -155,6 +155,7 @@ scripts/test.sh
 scripts/units_demo.sh
 scripts/update_unicode_tables.sh
 scripts/verify_primary_local_backup.sh
+scripts/verify_primary_transfer_parity.sh
 scripts/version.sh
 scripts/version_test.sh
 scripts/windows/build_installer.sh

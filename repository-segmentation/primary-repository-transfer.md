@@ -30,7 +30,10 @@ Before scheduling the transfer:
 6. Freeze all releases, documentation deployment, mirror synchronization,
    branch changes, and repository administration for the transfer window.
    Signing is abandoned for now, and release publication remains paused until
-   the owner makes a separate publication-policy decision.
+   the owner makes a separate publication-policy decision. The hold is
+   procedural: release workflows can still be triggered by a `main` push or
+   manual dispatch. Do not do either, and wait for any in-flight workflow to
+   finish before transferring.
 
 The inventory in `primary-transfer.toml` names repository settings and files;
 it deliberately contains no secret values.
@@ -111,6 +114,19 @@ Compare the remote refs and releases with the backup inventory. Then verify
 teams, protections, affected checks, Actions permissions, environments,
 reviewers, secret names, runner access, Pages, webhooks, deploy keys, releases,
 and security settings. A redirect working by itself is not success.
+
+Run the read-only parity checker with the **final frozen** backup directory:
+
+```bash
+bash scripts/verify_primary_transfer_parity.sh "$backup_root"
+```
+
+It independently restores the mirror, compares destination refs and release
+asset metadata against the frozen backup, checks public `dev` policy, and
+confirms that both old Git and API URLs resolve to the transferred repository.
+Its pass does not replace the settings and integration checks above. Before
+transfer, the source-only rehearsal form may be used with
+`JoePShoulak/sagan` as the second argument; that form cannot prove redirects.
 
 Update this checkout only after the new endpoint is verified:
 

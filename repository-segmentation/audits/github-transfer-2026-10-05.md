@@ -12,6 +12,9 @@ No secret values were read or recorded.
 - Source: `JoePShoulak/sagan`, public, unarchived, default branch `dev`.
 - `Sagan-Shoulak/sagan` returned HTTP 404 to the authenticated admin account.
   Confirm availability again immediately before transfer.
+- A later read-only organization listing returned no repositories, and the
+  source fork listing returned no forks. Recheck both at the freeze; these
+  observations are not a reservation of the destination name.
 - Remote `dev` was `1e1675037ca5273c1381588e6a8dadd395813bb6`;
   local `dev` was `c8fa3a17b8017d39d5d5e4cb1f929ab179471d6a`.
   A transfer baseline has not been selected.
@@ -64,6 +67,9 @@ No secret values were read or recorded.
 - The owner approved a local-only backup on this machine. Its verified
   rehearsal is recorded in `local-backup-2026-10-05.md`; it must be refreshed
   from frozen `dev` after merge and before transfer.
+- `bash scripts/verify_primary_transfer_parity.sh` passed its source-only
+  rehearsal against the saved local backup. The destination and redirect
+  checks can run only after the actual transfer.
 - [GitHub's transfer documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository)
   says repository secrets and collaborators remain associated, while the
   organization's default permissions apply. It also warns that creating a

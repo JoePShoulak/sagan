@@ -15,6 +15,9 @@ describe the existing automation and historical release gates; they do not
 authorize a preview, stable tag, `main` push, or unsigned replacement policy.
 The owner must explicitly reopen publication and decide the future signing or
 unsigned-release policy before these procedures are used again.
+This is a procedural hold: the existing `release-on-main.yml` still responds
+to `main` pushes and manual dispatch. Do not push `main` or dispatch release
+workflows while the hold is in effect.
 
 Development occurs on focused branches created from `dev`. Changes merge into
 `dev` through pull requests, where the combined state receives relevant

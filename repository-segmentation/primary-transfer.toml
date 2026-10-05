@@ -80,6 +80,10 @@ path = "scripts/create_primary_local_backup.sh"
 purpose = "pre-transfer mirror source; retire or update after cutover"
 
 [[legacy_references]]
+path = "scripts/verify_primary_transfer_parity.sh"
+purpose = "source URL in post-transfer redirect and pre-transfer rehearsal checks"
+
+[[legacy_references]]
 path = "scripts/primary_release_backup_test.sh"
 purpose = "pre-transfer release-backup mock; retire or update after cutover"
 
