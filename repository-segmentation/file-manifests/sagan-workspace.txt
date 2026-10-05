@@ -12,6 +12,7 @@ examples/two_body_demo/sagan.lock
 examples/two_body_demo/sagan.toml
 examples/two_body_demo/src/main.sagan
 repository-segmentation/README.md
+repository-segmentation/audits/codecov-post-transfer-2026-10-05.md
 repository-segmentation/audits/github-transfer-2026-10-05.md
 repository-segmentation/audits/local-backup-2026-10-05.md
 repository-segmentation/audits/owner-transfer-drill-2026-10-05.md

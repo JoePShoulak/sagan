@@ -20,7 +20,7 @@ promotion remain paused.
 
 | Component | Local result | Still required before independent publication |
 | --- | --- | --- |
-| Primary `sagan` | Transfer parity, redirects, backup/restore, canonical links, docs, extension, and installer checks passed. | Successful post-transfer Codecov upload and badge verification. [Codecov incident `n8kwr2rr2v6v`](https://status.codecov.com/incidents/n8kwr2rr2v6v) was still monitoring with backend marked major outage at 08:33 UTC. No upload gate bypass. |
+| Primary `sagan` | Transfer parity, redirects, backup/restore, canonical links, docs, extension, and installer checks passed. Codecov's incident resolved; coverage build, artifact, and floor passed again. | The post-transfer upload now fails `Repository not found`; the organization currently reports zero GitHub App installations. Connect the transferred repo to Codecov, rerun the upload gate, then verify the organization badge/report. No gate bypass. |
 | `sagan-workspace` | Path/history and dev/main-only local-ref rehearsals passed. Four replayable patches passed fifteen offline tests and a real primary clone. A combined catalog resolved local physics/rendering candidates; game, three physics checks, and two Windows native render checks passed. Three-platform offline CI is drafted but not hosted-tested. | Curate monorepo-only audit scripts, implement update/build/test/lock-refresh and editor workspace generation, hosted CI and other-platform checks, clean-machine owner drill. |
 | `sagan-docs` | Path/history and dev/main-only local-ref rehearsals passed. Pinned primary-source assembly, five offline tests, strict MkDocs build, and fresh replay passed. | Wire build/deploy scripts to aggregate, mount component docs, preview/review/version gates, host cutover/rollback, hosted CI, owner drill. Live HP1 site stays on intact repo. |
 | `sagan-vscode` | 61-file history extraction and five local relocation patches; Windows unit, bundle, live host, VSIX, and isolated install checks passed. | Build the pinned Sagan source in independent Linux/macOS/Windows hosted CI; complete docs aggregation, release tag policy, governance and owner drill. |
@@ -35,9 +35,12 @@ GitHub settings, secrets, issues, or PR conversations.
 
 ## Do not collapse these gates
 
-1. Wait for Codecov service recovery, rerun only the failed post-transfer
-   coverage upload path, and verify the organization badge shows a real
-   report. The measured local coverage floor passing is not an upload pass.
+1. With owner approval, connect `Sagan-Shoulak/sagan` to Codecov after the
+   transfer. The service outage is resolved, but the new owner/repository
+   record was not found on attempt 3. Follow the evidence and safe steps in
+   `audits/codecov-post-transfer-2026-10-05.md`, rerun only the failed
+   coverage job, and verify the organization badge shows a real report. The
+   measured coverage floor passing is not an upload pass.
 2. Refresh source refs and backups at the final extraction freeze. The local
    patch bases are dated rehearsals; re-filter from then-current reviewed
    `dev` and compare exact owned paths. Physics requires `--no-ff` unless a
