@@ -70,6 +70,7 @@ repository-segmentation/schemas/readiness.schema.json
 repository-segmentation/schemas/vscode-relocation.schema.json
 repository-segmentation/schemas/workspace-lock.schema.json
 repository-segmentation/schemas/workspace-manifest.schema.json
+repository-segmentation/start-gate-2026-10-05.md
 repository-segmentation/templates/CODEX_START.md
 repository-segmentation/templates/MAINTAINERS.md
 repository-segmentation/templates/TECHNOLOGY.md
