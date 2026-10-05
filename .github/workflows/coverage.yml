@@ -55,7 +55,7 @@ jobs:
   upload-codecov:
     name: Upload coverage to Codecov
     needs: codecov
-    runs-on: ubuntu-24.04
+    runs-on: windows-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
