@@ -6,7 +6,7 @@ subtree_destination = ""
 [[shared_files]]
 source = ".github/workflows/vscode-extension.yml"
 destination = ".github/workflows/vscode-extension.yml"
-rewrite = "Replace monorepo compiler build with pinned installed compiler and language server; run extension checks from repository root."
+rewrite = "Check out an exact sagan source commit and build compiler and language server on each CI platform until cross-platform released artifacts exist; run extension checks from repository root."
 
 [[shared_files]]
 source = "docs/getting-started/editor-support.md"
@@ -41,7 +41,7 @@ rewrite = "Resolve test-electron from repository-root node_modules and use a rep
 [[shared_files]]
 source = "scripts/vscode/test_release.sh"
 destination = "scripts/vscode/test_release.sh"
-rewrite = "Use pinned installed compiler and language server artifacts; update repository-relative script and build paths."
+rewrite = "Use an exact pinned sagan source commit to build compiler and language server for CI; update repository-relative script and build paths."
 
 [[shared_files]]
 source = "scripts/vscode/verify_release.js"

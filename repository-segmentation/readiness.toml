@@ -17,7 +17,7 @@ destination_repository_access = "org-admin-confirmed-transferred-2026-10-05"
 vscode_local_extraction_rehearsal = "passed-2026-10-05"
 vscode_shared_file_import = "nine-shared-paths-preserved-with-filter-repo; required-content-rewrites-not-yet-tested"
 vscode_live_host_rehearsal = "passed-in-monorepo-and-61-file-filter-repo-checkout-2026-10-05"
-primary_repository_transfer = "transferred-2026-10-05; refs-settings-redirects-verified; post-transfer-reference-update-in-progress"
+primary_repository_transfer = "transferred-2026-10-05; canonical-references-and-live-docs-verified; Codecov-outage-blocks-final-integration-check"
 primary_remote_backup_rehearsal = "passed-2026-10-05"
 primary_release_inventory = "metadata-and-33-assets-verified-in-local-rehearsal-2026-10-05"
 primary_release_backup_test = "mock-download-and-corruption-rejection-passed-2026-10-05"
@@ -62,9 +62,14 @@ status = "approved"
 evidence = "Owner confirmed on 2026-10-05: for each new public repository, use dev as the default unprotected branch; protect main with admin enforcement and linear history, and forbid force-push and deletion; initially grant only JoePShoulak admin access. Tighten later. This does not authorize copying secrets, runners, environments, or release permissions."
 
 [[decisions]]
+id = "vscode-initial-compiler-ci"
+status = "approved"
+evidence = "Owner confirmed on 2026-10-05: independent sagan-vscode CI may check out an exact pinned sagan source commit and build compiler/LSP on each platform until cross-platform released artifacts exist. Record the exact lock and verify Linux, macOS, and Windows jobs before publication."
+
+[[decisions]]
 id = "primary-repository-transfer"
 status = "provisional"
-evidence = "The intact repository moved to Sagan-Shoulak/sagan with frozen dev 689e6ec, a verified local-only mirror and 33 release assets, matching destination refs/releases/settings, working old redirects, and a clean-clone focused bootstrap. Canonical reference updates and a new-organization Codecov upload remain before this gate is approved; see audits/primary-transfer-result-2026-10-05.md."
+evidence = "The intact repository moved to Sagan-Shoulak/sagan with frozen dev 689e6ec, a verified local-only mirror and 33 release assets, matching destination refs/releases/settings, working old redirects, and a clean-clone focused bootstrap. Canonical references, docs, installer, and extension passed at dev 4132c8c. Codecov's October 5 SSL certificate outage blocked the new-organization upload and badge verification; this gate remains provisional. See audits/primary-transfer-result-2026-10-05.md."
 
 [[decisions]]
 id = "history-and-rollback"

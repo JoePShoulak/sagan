@@ -69,13 +69,23 @@ parity and the clean clone passed.
 
 ## Remaining before the first split repository
 
-- Merge and validate the dedicated post-transfer canonical-reference update
-  on `dev`, including installer, release mirror, extension metadata, docs,
-  and backup tooling. Do not run the full suite merely for this `dev` merge.
-- The new-organization Codecov badge currently renders **unknown** while the
-  old-owner badge still shows 94%. The frozen `dev` Codecov upload succeeded
-  *before* transfer. Check a fresh upload under the new owner before switching
-  the badge; if it stays unknown, resolve the Codecov integration separately.
+- The dedicated post-transfer canonical-reference update reached `dev` at
+  `4132c8c37f99dc5f89c7141f5780b583b64d192e`. Focused branch and
+  integrated-`dev` tests passed after one ownership-manifest correction.
+  Documentation, VS Code Extension, and Windows Installer CI passed at that
+  commit, and the live HP1 downloads page and experimental documentation now
+  link to the organization repository. The full compiler suite did not run on
+  this `dev` push; its workflow now targets `main` or explicit dispatch.
+- Coverage CI run `37274993834` built the compiler, preserved its measured
+  report, and passed the coverage floor, but the Codecov CLI download failed
+  during TLS negotiation. The [official Codecov status incident](https://status.codecov.com/incidents/n8kwr2rr2v6v)
+  reported an SSL certificate expiration and partial service outage beginning
+  October 5 at 06:53 UTC. A single failed-job retry (attempt 2) completed with
+  the same TLS handshake failure at 07:13 UTC; the local coverage floor passed
+  again, but the mandatory upload gate remained red. Do not treat
+  that external failure as a Sagan coverage regression, bypass the existing
+  upload gate, or switch the badge while the new-organization badge says
+  **unknown**. Verify a successful post-transfer upload after Codecov recovers.
 - Keep releases paused. Do not promote `dev` to `main` or run a release
   workflow without the owner's later publication decision and the full-suite
   promotion gate.

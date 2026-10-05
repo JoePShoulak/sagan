@@ -78,7 +78,10 @@ The full path set and its history now pass a pinned filter-repo rehearsal.
 The shared workflow, documentation, and release scripts still contain
 monorepo-relative behavior. Apply the rewrites in
 `../vscode-relocation.toml` and test the resulting independent repository
-before creation. The filtered mirror retained nine historical Sagan release
+before creation. The owner approved a temporary CI contract that checks out
+an exact pinned Sagan source commit and builds compiler/LSP on each platform;
+the exact lock and cross-platform jobs still need implementation and
+verification. The filtered mirror retained nine historical Sagan release
 tags, which must **not** be published as VS Code extension releases by
 accident; approve a branch/tag policy first. Complete the destination
 governance and owner-survivability/rollback drills before publishing.
