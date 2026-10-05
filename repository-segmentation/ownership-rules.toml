@@ -238,6 +238,10 @@ pattern = "scripts/verify_initial_split_refs.sh"
 repository = "sagan-workspace"
 
 [[rules]]
+pattern = "scripts/verify_filtered_component.py"
+repository = "sagan-workspace"
+
+[[rules]]
 pattern = "src/**"
 repository = "sagan"
 

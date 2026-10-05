@@ -1,0 +1,255 @@
+From 204cf48051c58b12a57310116e3077249991f82e Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 03:19:33 -0500
+Subject: [PATCH 1/2] Import preserved current sandbox seed
+
+---
+ src/main.sagan | 188 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 181 insertions(+), 7 deletions(-)
+
+diff --git a/src/main.sagan b/src/main.sagan
+index ca3e3a9..98f1719 100644
+--- a/src/main.sagan
++++ b/src/main.sagan
+@@ -69,7 +69,7 @@ face Gravitational has Orbital {
+ 
+ class NaturalBody has Named, Gravitational {
+   let .diameter: Float<kilometer>
+-  weak let .parent_body: Massive
++  weak let .parent_body: NaturalBody
+ 
+   new(
+   name: String = "",
+@@ -84,7 +84,6 @@ class NaturalBody has Named, Gravitational {
+     self.diameter = diameter
+     match parent_body {
+       case Some(body) self.parent_body = body
+-      case None {}
+     }
+     self.position = position
+     self.velocity = velocity
+@@ -122,7 +121,7 @@ class Planet is NaturalBody {
+   mass: Float<kilogram>,
+   diameter: Float<kilometer>,
+   parent_star: Star,
+-  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
++  position: Point3<Float, kilometer>,
+   velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+   ) is NaturalBody(name, mass, diameter, Some(parent_star), position, velocity) { }
+ }
+@@ -133,7 +132,7 @@ class DwarfPlanet is NaturalBody {
+   mass: Float<kilogram>,
+   diameter: Float<kilometer>,
+   parent_star: Star,
+-  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
++  position: Point3<Float, kilometer>,
+   velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+   ) is NaturalBody(name, mass, diameter, Some(parent_star), position, velocity) { }
+ }
+@@ -144,7 +143,7 @@ class Moon is NaturalBody {
+   mass: Float<kilogram>,
+   diameter: Float<kilometer>,
+   parent_body: NaturalBody,
+-  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
++  position: Point3<Float, kilometer>,
+   velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+   ) is NaturalBody(name, mass, diameter, Some(parent_body), position, velocity) { }
+ }
+@@ -155,11 +154,186 @@ class SmallBody is NaturalBody {
+   mass: Float<kilogram>,
+   diameter: Float<kilometer>,
+   parent_body: NaturalBody,
+-  position: Point3<Float, kilometer> = (0, 0, 0) kilometer,
++  position: Point3<Float, kilometer>,
+   velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
+   ) is NaturalBody(name, mass, diameter, Some(parent_body), position, velocity) { }
+ }
+ 
++face Durability {
++  let .durability: Float
++
++  fun degrade(): Void {}
++  fun repair(): Void {}
++}
++
++face Powered {
++  let .energyConsumption: Float<watt>
++
++  fun consumePower(): Void {}
++}
++
++face Consumption {
++  let .resourceUsage: Array<Float> // This should end up being a dict/struct of resource names and their usage amounts
++
++  fun consumeResources(): Void {}
++}
++
++class System has Durability, Named {
++  new(name: String) {
++    self.durability = 100
++    self.name = name
++  }
++}
++
++class Engine is System, has Consumption, Powered {
++  new(name: String) is System(name) {
++    self.resourceUsage = [1.0]
++    self.energyConsumption = 1 watt
++  }
++}
++
++// class ChemicalEngine is Engine {}
++// class NuclearEngine is Engine {}
++// class IonEngine is Engine {}
++
++class LifeSupport is System, has Consumption, Powered {
++  new(name: String) is System(name) {
++    self.resourceUsage = [1.0]
++    self.energyConsumption = 1 watt
++  }
++}
++
++class Storage is System, has Powered {
++  new(name: String) is System(name) {
++    self.energyConsumption = 1 watt
++  }
++}
++
++class Sensors is System, has Powered {
++  new(name: String) is System(name) {
++    self.energyConsumption = 1 watt
++  }
++}
++
++class Comms is System, has Powered {
++  new(name: String) is System(name) {
++    self.energyConsumption = 1 watt
++  }
++}
++
++class Navigation is System, has Powered {
++  new(name: String) is System(name) {
++    self.energyConsumption = 1 watt
++  }
++}
++
++face PowerGeneration {
++  let .powerGenerationRate: Float<watt / second>
++}
++
++class Generator is System, has PowerGeneration {
++  new(name: String, powerGenerationRate: Float<watt / second>) is System(name) {
++    self.powerGenerationRate = powerGenerationRate
++  }
++}
++
++// class NuclearGenerator is Generator {}
++// class SolarGenerator is Generator {}
++
++class Thermal is System, has Powered {
++  new(name: String) is System(name) {
++    self.energyConsumption = 1 watt
++  }
++}
++
++class Weapon is System, has Powered, Consumption {
++  new(name: String) is System(name) {
++    self.energyConsumption = 1 watt
++    self.resourceUsage = [1.0]
++  }
++}
++
++// class BallisticWeapon is Weapon {}
++// class LaserWeapon is Weapon {}
++
++class Shield is System, has Powered {
++  new(name: String) is System(name) {
++    self.energyConsumption = 1 watt
++  }
++}
++
++class Armor is System {
++  new(name: String) is System(name) {}
++}
++
++class Chassis has Named {}
++
++class Ship {
++  let .engine: Engine // Main propulsion (rcs, sas possibly included or fully abstracted)
++  let .storage: Storage // Fuel, food, ammo, etc, customizable and partionable storage
++  let .comms: Comms // Need it to talk to folks
++  let .sensors: Sensors // Need it to scan planets, dodge asteroids, etc
++  let .navigation: Navigation // Need it to plot routes and setup recurring routes
++  let .generator: Generator // Need it to keep the lights on
++  let .thermals: Thermal // Need it to keep people from freezing or overheating, and electronics from freezing
++  let .shield: Optional<Shield> = None // Blocks laser weapons
++  let .armor: Optional<Armor> = None // Blocks ballistic weapons
++  let .weapon: Optional<Weapon> = None // Sometimes ya gotta fire first
++  let .lifeSupport: Optional<LifeSupport> = None // Food, water recycling, etc
++
++  new(
++  engine: Engine,
++  storage: Storage,
++  comms: Comms,
++  sensors: Sensors,
++  navigation: Navigation,
++  generator: Generator,
++  thermals: Thermal,
++  shield: Optional<Shield> = None,
++  armor: Optional<Armor> = None,
++  weapons: Optional<Weapon> = None,
++  lifeSupport: Optional<LifeSupport> = None
++  ) {
++    self.engine = engine
++    self.storage = storage
++    self.comms = comms
++    self.sensors = sensors
++    self.navigation = navigation
++    self.generator = generator
++    self.thermals = thermals
++    self.shield = shield
++    self.armor = armor
++    self.weapon = weapons
++    self.lifeSupport = lifeSupport
++  }
++}
++
++/* 
++
++class Asteroid is SmallBody {
++  new(
++  name: String,
++  mass: Float<kilogram>,
++  diameter: Float<kilometer>,
++  parent_body: NaturalBody,
++  position: Point3<Float, kilometer>,
++  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
++  ) is SmallBody(name, mass, diameter, Some(parent_body), position, velocity) { }
++}
++
++class Comet is SmallBody {
++  new(
++  name: String,
++  mass: Float<kilogram>,
++  diameter: Float<kilometer>,
++  parent_body: NaturalBody,
++  position: Point3<Float, kilometer>,
++  velocity: Vector3<Float, kilometer / second> = <0, 0, 0> (kilometer / second)
++  ) is SmallBody(name, mass, diameter, Some(parent_body), position, velocity) { }
++}
++
++*/
++
+ let sol = Star("Sol", 1.9884e30 kilogram, 1.392e6 kilometer)
+ let earth = Planet("Earth", 5.97e24 kilogram, 12756 kilometer, sol, (149593200, 0, 0) kilometer)
+ let luna = Moon("Luna", 7.34e22 kilogram, 3474.8 kilometer, earth, (149977600, 0, 0) kilometer)
+@@ -181,4 +355,4 @@ print("  Earth: ${sol.getDistanceToEntity(earth)}")
+ print("  Luna: ${sol.getDistanceToEntity(luna)}")
+ print("  Pluto: ${sol.getDistanceToEntity(pluto)}")
+ print("  Ceres: ${sol.getDistanceToEntity(ceres)}")
+-print("  Halley's Comet: ${sol.getDistanceToEntity(hallesComet)}")
+\ No newline at end of file
++print("  Halley's Comet: ${sol.getDistanceToEntity(hallesComet)}")
+-- 
+2.51.0.windows.2
+

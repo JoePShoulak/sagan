@@ -1,0 +1,231 @@
+From 5c38aed8088a09fc35cc6239c13951fdb5647c43 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 03:19:55 -0500
+Subject: [PATCH 2/2] Add standalone game maintainer and chat guides
+
+---
+ .gitignore     |  1 +
+ AGENTS.md      | 12 ++++++++
+ CODEX_START.md | 30 ++++++++++++++++++++
+ MAINTAINERS.md | 75 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ README.md      | 16 +++++++++++
+ TECHNOLOGY.md  | 38 +++++++++++++++++++++++++
+ 6 files changed, 172 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 AGENTS.md
+ create mode 100644 CODEX_START.md
+ create mode 100644 MAINTAINERS.md
+ create mode 100644 README.md
+ create mode 100644 TECHNOLOGY.md
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..84c048a
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++/build/
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..17ea1bf
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,12 @@
++# Space Game agent rules
++
++Read `SPACE_GAME_DESIGN.md` for goals, then `CODEX_START.md`, `TECHNOLOGY.md`,
++and `MAINTAINERS.md` for context and operations. Ask the owner clarifying
++questions freely. Never treat old chats or prototype code as sources of
++new game goals.
++
++Use Bash commands for the owner, never PowerShell. Preserve the shared
++sandbox and both recorded local snapshots. Follow the branch, focused-test,
++`dev` integration, full-suite-on-`main`, documentation-review reset, and
++release-hold rules in `MAINTAINERS.md`. The owner prefers to be taught what
++to write; implement only on explicit request.
+diff --git a/CODEX_START.md b/CODEX_START.md
+new file mode 100644
+index 0000000..fada280
+--- /dev/null
++++ b/CODEX_START.md
+@@ -0,0 +1,30 @@
++# Starting a new Space Game chat
++
++Read `SPACE_GAME_DESIGN.md` first. Treat it, plus my direct answers to your
++questions, as the **only source of game goals**. Ask me as many clarifying
++questions as you find useful to understand the experience I want and to help
++me make open design decisions. Do not infer goals from old Codex chats or
++from provisional behavior in `src/main.sagan`.
++
++Read `AGENTS.md`, `TECHNOLOGY.md`, `MAINTAINERS.md`, `README.md`, `sagan.toml`,
++and `sagan.lock` for the current implementation and operating context, not
++for new game goals. Begin read-only: inspect branch, HEAD, status, staged
++paths, dependency pins, and concurrent work. State clearly that this is a
++local split candidate until the independent repository and tests exist.
++
++Prefer teaching me what to code through small steps, examples, review, and
++verification. Implement game code only when I explicitly request it. For an
++authorized change, branch from current `dev` as `codex/<request>`, test and
++refine the affected work, commit intended paths, merge into `dev`, and rerun
++relevant tests. Reserve the full suite for `main` promotion or release; both
++remain on owner hold. Every edited documentation page returns to
++`review-needed` and `publication_ready: false` with cleared verification
++metadata until human review.
++
++Use the versioned ecosystem/chat map to recommend the owning language,
++physics, rendering, workspace, or official-docs chat for work outside this
++repo. Give me a self-contained ready-to-paste handoff with goal, evidence,
++constraints, pins, and verification. Do not assume another chat has your
++context. Use Bash, never PowerShell. Preserve unrelated work and do not
++push, publish, release, deploy, transfer, or alter remote settings without
++current authorization.
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+new file mode 100644
+index 0000000..016534f
+--- /dev/null
++++ b/MAINTAINERS.md
+@@ -0,0 +1,75 @@
++---
++title: Maintaining Space Game
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Maintaining Space Game
++
++This is a local split candidate. `SPACE_GAME_DESIGN.md` owns the game goals;
++`src/main.sagan` is a prototype seed. The independent game repository,
++installed-toolchain test, and release pipeline do not exist yet. Do not push
++this candidate or present it as a game release.
++
++## Reproduce the current focused check
++
++Install or build Sagan and make a compatible `sagan-physics` package available.
++On the current Windows development machine, from this candidate's root in
++Git Bash, the verified rehearsal command was:
++
++```bash
++PATH=/c/msys64/ucrt64/bin:$PATH /c/Users/joeps/coding/sagan/bin/sagan.exe src/main.sagan
++```
++
++It printed Sol, Earth, Luna, Pluto, Ceres, and Halley's Comet summaries and
++distances, then exited zero. Invoking the executable without the MinGW
++compiler on PATH instead failed to start its native process (Windows error
++2); that was an environment failure, not a Sagan diagnostic. On a system with
++a properly installed Sagan CLI and physics package, the intended command is
++`sagan src/main.sagan`; it still needs independent cross-platform validation.
++The manifest currently names the package `Sandbox`, retained from the seed;
++rename it only after the owner chooses the game's package identity.
++
++`sagan.toml` declares the physics dependency, and `sagan.lock` selects its
++current version. Do not silently replace a released package with a sibling
++checkout. Use the workspace's exact lock and record any local override when
++testing across repositories. Build outputs belong in ignored `build/`.
++
++## Change workflow and ownership
++
++Inspect branch, HEAD, status, staged paths, and the relevant design section
++before changing files. For each authorized request, branch from current
++`dev` as `codex/<request>`. Test the affected change and refine until it
++works, commit only intended paths, merge into `dev`, and rerun relevant tests
++against integrated work. Run the full suite only for a reviewed `dev` to
++`main` promotion or release. Both promotion and releases are currently held
++until the owner explicitly reopens them and decides publication policy.
++
++Do not run unrelated executable documentation examples for a structural-only
++documentation change. Any edited documentation page returns to
++`status: review-needed`, `publication_ready: false`, and null verification
++metadata until a human audit. If a change belongs to the language, physics,
++rendering, workspace, or official-docs owner, hand it to the specialized chat
++with a self-contained prompt rather than duplicating implementation here.
++
++## Preservation and recovery
++
++The candidate's `src/main.sagan` came from the newly preserved October 5
++snapshot, SHA-256
++`545cf284f287698c45bb50ca4737d6dff9755e45f791d8ad4971bf9e70a51533`.
++The earlier local-only snapshot has SHA-256
++`f8886930a4e5455750bdab0c6732c3f29562769d19e162cf2e060df894622c43`.
++Both snapshots, the shared working tree, and the pre-relocation Git history
++must remain available until the owner confirms the game seed to publish.
++This candidate is not a backup: loss of this machine would lose both local
++copies, and GitHub settings or conversations cannot be restored from them.
++
++If the shared sandbox changes again, compare its hash with the recorded
++snapshot before re-extracting; preserve a new copy rather than overwriting
++either existing one. Do not reset or discard the shared `sandbox/src/main.sagan`
++edit. Before a real split, document installation, exact package resolution,
++CI/platform test commands, design review, release artifacts, rollback,
++secrets by name only, and an owner clean-machine drill.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..1a7a500
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,16 @@
++# Space Game (local split candidate)
++
++This is a local history-preserving rehearsal of the future
++`sagan-space-game` repository. It has not been published as a separate repo.
++`SPACE_GAME_DESIGN.md` is the sole source of game goals; the Sagan program in
++`src/main.sagan` is an early natural-body demonstration, not a complete game
++or a substitute for decisions in the design document.
++
++The old monorepo's `sandbox/` project was relocated to this candidate's root.
++The source file includes a separately preserved snapshot of the owner's
++uncommitted work from October 5, 2026. A previous snapshot was kept too;
++neither the shared checkout nor either snapshot was overwritten.
++
++Read [MAINTAINERS.md](MAINTAINERS.md) for exact commands and preservation,
++[TECHNOLOGY.md](TECHNOLOGY.md) for the architecture boundary, and
++[CODEX_START.md](CODEX_START.md) when starting a new game chat.
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+new file mode 100644
+index 0000000..32f7634
+--- /dev/null
++++ b/TECHNOLOGY.md
+@@ -0,0 +1,38 @@
++---
++title: Space Game technology overview
++status: review-needed
++publication_ready: false
++verified_in: null
++verified_on: null
++verified_by: null
++---
++
++# Space Game technology overview
++
++This repository owns the game design and application code. The authoritative
++goals are in `SPACE_GAME_DESIGN.md`, supplemented only by the owner's later
++answers to clarifying questions. Do not infer game requirements from old
++Codex chats or treat the current prototype's implementation details as
++settled design choices.
++
++The Sagan project manifest `sagan.toml` points to `src/main.sagan` and names
++the `sagan-physics` package as a dependency. `sagan.lock` records the currently
++selected package version. The game is a consumer: physics algorithms belong
++in `sagan-physics`, graphical backends in `sagan-render`, and language/compiler
++behavior in `sagan`. The game may use those APIs but must not copy their
++implementations into its own source. The future `sagan-workspace` exact lock
++will coordinate compatible checkouts for holistic development.
++
++The present Sagan source defines natural-body and spacecraft concepts and
++prints sample body summaries and distances. It has no persistent game state,
++resource economy, simulation loop, input system, or rendering window yet.
++The `Sandbox` package name is inherited from the prototype and is not a
++decision about the final product name. The sample's orbital quantities and
++outputs should be evaluated as prototype behavior, not as validated
++astronomical data or promised gameplay.
++
++The current Windows rehearsal ran the imported source with the existing
++Sagan executable and MinGW toolchain and exited successfully. An installed
++standalone Sagan distribution plus independently published physics package
++has not yet been validated. See [MAINTAINERS.md](MAINTAINERS.md) for the
++exact test and recovery path.
+-- 
+2.51.0.windows.2
+
