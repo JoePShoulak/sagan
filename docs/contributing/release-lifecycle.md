@@ -119,6 +119,15 @@ tooling, or documentation corrections; decide those from the evidence and use
 the normal versioning rules for any follow-up release. Published 1.0.0 assets
 and tags remain immutable.
 
+For the exact `v4.9.4` candidate, Joe approved one further disclosed exception:
+the Windows installer may be unsigned and the page-by-page documentation audit
+may remain pending. The release pipeline still requires compiler, library,
+extension, portable/installer, coverage, security-scan, signed-tag, and
+clean-machine acceptance checks. Its draft notes must disclose the
+unknown-publisher warning and experimental documentation status. No numbered
+`4.9.4` documentation archive is published. This exception does not apply to
+any later version and does not waive owner approval of the stable draft.
+
 After the documentation audit is complete, a later release promotes versioned
 documentation from its matching tag and makes it the `latest`
 documentation version. GitHub Releases is canonical. HP1 mirrors and verifies

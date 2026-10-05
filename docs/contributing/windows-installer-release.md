@@ -47,7 +47,9 @@ bash scripts/windows/test_portable.sh
 The Windows Installer workflow performs the same package build and smoke test.
 An unsigned artifact is normally a development artifact. The experimental
 `v0.88.0-rc.1` preview and initial 1.0.0 release are the two narrowly
-disclosed exceptions.
+disclosed historical exceptions. The exact `v4.9.4` candidate has a separate
+one-time, owner-approved unsigned-installer exception. Its release notes must
+warn about the unknown publisher; clean-machine acceptance remains required.
 
 ## Public-release signing gate
 

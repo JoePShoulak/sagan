@@ -13,6 +13,8 @@ if [[ "$version" == 1.0.0 ]]; then
   signature_policy="unsigned-initial-1.0-exception"
 elif [[ "${SAGAN_RELEASE_TAG:-}" == v0.88.0-rc.1 && "$version" == 0.88.0 ]]; then
   signature_policy="unsigned-experimental-0.x-preview-exception"
+elif [[ "${SAGAN_RELEASE_TAG:-}" == v4.9.4 && "$version" == 4.9.4 ]]; then
+  signature_policy="unsigned-experimental-4.9.4-exception"
 fi
 commit="$(git -C "$repo_root" rev-parse HEAD)"
 installer="$repo_root/build/installer/sagan-$version-windows-x64.exe"

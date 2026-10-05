@@ -43,3 +43,8 @@ This checklist describes the release gate, not an instruction to publish an
 internal or work-in-progress documentation page. After the audit, release
 documentation requires the normal page metadata and `release-check` gate.
 Joe's separate stable-publication approval applies to every stable release.
+For the exact `v4.9.4` release, the owner has also deferred the human page
+audit and Authenticode signing. Documentation stays experimental, no numbered
+documentation archive is dispatched, and the unsigned installer is disclosed.
+All other candidate checks and clean-machine acceptance still apply; the
+exception must not be inherited by subsequent versions.
