@@ -3420,6 +3420,8 @@
       
         
       
+        
+      
     
     
     
@@ -3539,7 +3541,43 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository-fracturing-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository fracture execution plan
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3575,7 +3613,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3755,7 +3793,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3800,7 +3838,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3826,7 +3864,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4092,7 +4130,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4423,13 +4461,23 @@
 
 
 <div class="admonition warning">
-<p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
+<p class="admonition-title">Experimental documentation — Needs review</p>
+<p>This page completed the primary audit but requires Zach's review. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="release-lifecycle">Release lifecycle</h1>
+<p>Owner hold, October 5, 2026: release publication and promotion to <code>main</code> are
+paused, and signing work is deferred because of its cost. The procedures below
+describe the existing automation and historical release gates; they do not
+authorize a preview, stable tag, <code>main</code> push, or unsigned replacement policy.
+The owner must explicitly reopen publication and decide the future signing or
+unsigned-release policy before these procedures are used again.
+This is a procedural hold: the existing <code>release-on-main.yml</code> still responds
+to <code>main</code> pushes and manual dispatch. Do not push <code>main</code> or dispatch release
+workflows while the hold is in effect.</p>
 <p>Development occurs on focused branches created from <code>dev</code>. Changes merge into
-<code>dev</code> through pull requests, where the combined state receives the full
-integration suite. The project owner promotes validated <code>dev</code> history to <code>main</code>
+<code>dev</code> through pull requests, where the combined state receives relevant
+integration checks for the affected surfaces. The project owner promotes
+validated <code>dev</code> history to <code>main</code>
 only when intentionally preparing a release; ordinary feature and fix work does
 not land directly on either protected branch. See the
 <a href="../change-lifecycle/">change and publication lifecycle</a> for the complete path.</p>

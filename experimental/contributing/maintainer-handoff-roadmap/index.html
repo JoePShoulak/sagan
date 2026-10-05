@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://sagan.shoulak.org/latest/contributing/maintainer-handoff-roadmap/">
       
       
-        <link rel="prev" href="../repository-fracturing-roadmap/">
+        <link rel="prev" href="../repository-fracturing-execution/">
       
       
         <link rel="next" href="../development-setup/">
@@ -3420,6 +3420,8 @@
       
         
       
+        
+      
     
     
     
@@ -3539,7 +3541,43 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository-fracturing-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository fracture execution plan
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3584,7 +3622,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3610,7 +3648,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4053,7 +4091,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4089,7 +4127,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4269,7 +4307,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4777,8 +4815,8 @@
 
 
 <div class="admonition warning">
-<p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
+<p class="admonition-title">Experimental documentation — Needs review</p>
+<p>This page completed the primary audit but requires Zach's review. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="maintainer-handoff-and-project-survivability">Maintainer handoff and project survivability</h1>
 <p>Sagan must remain operable by its owner if every current contributor and every
@@ -4866,15 +4904,18 @@ through PowerShell into Bash.</p>
 <h3 id="daily-git-workflow">Daily Git workflow</h3>
 <ul>
 <li>The exact remote names and their purpose.</li>
-<li>The project's normal rule that ongoing development occurs directly on
-  <code>dev</code>, without automatically creating a branch per feature.</li>
-<li>The exceptional cases that justify a temporary branch.</li>
+<li>The project's normal rule that each authorized Codex change begins on a
+  short-lived <code>codex/&lt;request&gt;</code> branch from current <code>dev</code>.</li>
+<li>The focused-test gate before merging a request branch into <code>dev</code>, followed
+  by the relevant integration tests on <code>dev</code>; reserve the full suite for
+  <code>main</code> promotion and releases.</li>
 <li>How to inspect status and concurrent changes before editing.</li>
 <li>How to stage only intended paths.</li>
 <li>Conventional Commit syntax, including examples for patch, minor, major,
   documentation-only, test-only, and maintenance changes.</li>
 <li>When a commit changes a component version and when it does not.</li>
-<li>Exact commands for committing and pushing <code>dev</code>.</li>
+<li>Exact commands for committing the request branch, merging it into <code>dev</code>,
+  rerunning relevant tests, and pushing <code>dev</code>.</li>
 <li>The rule that <code>main</code> is reserved for reviewed publication promotion.</li>
 <li>Exact pull-request and merge procedure for promoting <code>dev</code> to <code>main</code>.</li>
 <li>How branch protection, required checks, linear history, tags, and release
@@ -5032,8 +5073,9 @@ drill from a clean location or machine.</p>
 <li>explain the dependency and documentation-publication paths;</li>
 <li>build each relevant component;</li>
 <li>run focused and complete tests;</li>
-<li>make a small representative change on <code>dev</code>;</li>
-<li>stage, commit, push, and interpret the resulting CI;</li>
+<li>make a small representative change on a request branch from <code>dev</code>;</li>
+<li>run its focused tests, stage and commit only that change, merge it into
+   <code>dev</code>, rerun the relevant tests, push, and interpret the resulting CI;</li>
 <li>diagnose at least one deliberately introduced failure;</li>
 <li>restore the known-good state without destructive shortcuts;</li>
 <li>prepare a promotion to <code>main</code> without publishing it accidentally;</li>

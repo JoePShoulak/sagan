@@ -3420,6 +3420,8 @@
       
         
       
+        
+      
     
     
     
@@ -3539,7 +3541,43 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repository-fracturing-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository fracture execution plan
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3575,7 +3613,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3755,7 +3793,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3791,7 +3829,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -3980,7 +4018,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4006,7 +4044,7 @@
     
   
   
-    <span class="md-status md-status--work-in-progress" title="Work in progress">
+    <span class="md-status md-status--review-needed" title="Needs review">
     </span>
   
 
@@ -4379,8 +4417,8 @@
 
 
 <div class="admonition warning">
-<p class="admonition-title">Experimental documentation — Work in progress</p>
-<p>This page has not completed the documentation audit. Current documentation version: <strong>experimental</strong>.</p>
+<p class="admonition-title">Experimental documentation — Needs review</p>
+<p>This page completed the primary audit but requires Zach's review. Current documentation version: <strong>experimental</strong>.</p>
 </div>
 <h1 id="testing">Testing</h1>
 <p>Run the complete compiler check from Git Bash:</p>
@@ -4426,26 +4464,36 @@ implementation paths ran; it does not
 prove that every language rule is correct.</p>
 <h2 id="branch-and-integration-scope">Branch and integration scope</h2>
 <p>On a focused change branch, run the smallest set of tests that fully exercises
-the changed surfaces. After the branch merges into <code>dev</code>, CI reruns the complete
-compiler, coverage, documentation, extension, and installer gates against the
-combined repository state. Promotion to <code>main</code> then starts the stable-release
-pipeline. See <a href="../change-lifecycle/">Change and publication lifecycle</a> for the
-required sequence.</p>
+the changed surfaces and refine until they pass. After the branch merges into
+<code>dev</code>, rerun those relevant tests against the combined repository state; do not
+run the complete suite merely because work entered <code>dev</code>. Promotion from <code>dev</code>
+to <code>main</code>, and every release, is contingent on the complete compiler, coverage,
+documentation, extension, installer, and other required platform gates passing.
+See <a href="../change-lifecycle/">Change and publication lifecycle</a> for the sequence.</p>
 <h2 id="documentation">Documentation</h2>
-<p>Validate documentation metadata, links, navigation, Markdown, executable
-examples, and rendering with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
+<p>For prose, navigation, or metadata changes that cannot affect executable
+examples, validate documentation structure, links, navigation, Markdown, and
+rendering without compiling every example:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check-structure
+</span></code></pre></div>
+<p>When executable examples or their supporting compiler, package, tooling, or
+harness behavior changes, test the examples directly:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check-examples
+</span></code></pre></div>
+<p>Run the combined documentation gate when both surfaces are affected or when
+preparing integration and publication evidence:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bash<span class="w"> </span>scripts/docs.sh<span class="w"> </span>check
 </span></code></pre></div>
 <h2 id="vs-code-extension">VS Code extension</h2>
 <p>Run the extension's lexical, capability, lifecycle, operations, Test Explorer,
 bundle, and live Extension Host checks separately from the C++ suite. Build the
 matching compiler and language server first:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>make<span class="w"> </span>all<span class="w"> </span>bin/sagan-lsp
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">cd</span><span class="w"> </span>editors/vscode-sagan
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>npm<span class="w"> </span>ci
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>npm<span class="w"> </span><span class="nb">test</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>npm<span class="w"> </span>run<span class="w"> </span>test:bundle
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>npm<span class="w"> </span>run<span class="w"> </span>test:integration
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>all<span class="w"> </span>bin/sagan-lsp
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">cd</span><span class="w"> </span>editors/vscode-sagan
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>npm<span class="w"> </span>ci
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>npm<span class="w"> </span><span class="nb">test</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>npm<span class="w"> </span>run<span class="w"> </span>test:bundle
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>npm<span class="w"> </span>run<span class="w"> </span>test:integration
 </span></code></pre></div>
 <p>The unit tests are offline. The integration command downloads or reuses the
 supported VS Code test runtime, starts a real Extension Development Host, and
