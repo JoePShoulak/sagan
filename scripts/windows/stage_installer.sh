@@ -138,7 +138,7 @@ fi
 
 bash "$repo_root/scripts/windows/stage_debugger.sh" "$toolchain_root" "$staged_toolchain"
 mkdir -p "$stage_dir/licenses/debugger"
-gpl_text="$toolchain_root/share/licenses/gcc-libs/COPYING3"
+gpl_text="$repo_root/packaging/windows/GDB-GPL-3.0.txt"
 [[ -f "$gpl_text" ]] || { echo "Missing debugger GPLv3 license text: $gpl_text" >&2; exit 1; }
 cp "$gpl_text" "$stage_dir/licenses/debugger/GDB-GPL-3.0.txt"
 for debugger_license in expat "python$debugger_python_version" readline xxhash xz; do

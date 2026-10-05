@@ -126,7 +126,11 @@ extension, portable/installer, coverage, security-scan, and signed-tag checks.
 The owner also deferred separate clean-machine acceptance for this version;
 the isolated Windows CI installer smoke test still must pass. Its draft notes
 must disclose the unknown-publisher warning, experimental documentation, and
-deferred clean-machine check. No numbered
+deferred clean-machine check. Joe also approved a one-time exception for the
+external Codecov upload, which failed TLS from Ubuntu and Windows CI runners.
+The v4.9.5 coverage suite, preserved LCOV report, and 90% floor must still
+pass; the failed upload must remain visible as a warning. Later versions
+require a successful Codecov upload. No numbered
 `4.9.5` documentation archive is published. This exception does not apply to
 any later version and does not waive owner approval of the stable draft.
 

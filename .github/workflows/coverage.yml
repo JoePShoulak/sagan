@@ -52,23 +52,15 @@ jobs:
       - name: Enforce release coverage floor
         run: bash scripts/coverage_threshold.sh
 
-  upload-codecov:
-    name: Upload coverage to Codecov
-    needs: codecov
-    runs-on: windows-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Download measured coverage report
-        uses: actions/download-artifact@v4
-        with:
-          name: gcc-coverage-info
-          path: build
+      - name: Determine candidate version
+        id: candidate
+        run: echo "version=$(bash scripts/version.sh numeric)" >> "$GITHUB_OUTPUT"
 
       - name: Upload coverage to Codecov
+        id: codecov_upload
+        # Owner-approved one-time exception for v4.9.5: measured coverage,
+        # artifact preservation, and the 90% floor above remain mandatory.
+        continue-on-error: ${{ steps.candidate.outputs.version == '4.9.5' }}
         uses: codecov/codecov-action@v7
         with:
           use_oidc: true
@@ -77,3 +69,7 @@ jobs:
           fail_ci_if_error: true
           flags: front-end
           name: sagan-gcc
+
+      - name: Report one-time external upload exception
+        if: steps.codecov_upload.outcome == 'failure'
+        run: echo '::warning::Codecov upload failed; only v4.9.5 may proceed with the measured report artifact and coverage floor passing.'
