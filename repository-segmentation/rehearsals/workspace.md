@@ -89,3 +89,13 @@ repositories. It replayed cleanly; the candidate and replay trees both
 equal `e5347f489c8a8ec4e1932f045259eb817bc9054e`, and the fifteen
 offline tests passed again. The workflow has **not** run in an independent
 GitHub destination and does not establish hosted CI readiness.
+
+A fifth patch generates a VS Code multi-root file under ignored `build/`
+from the exact active manifest/lock set. It refuses missing, wrong, or dirty
+checkouts, omits planned remotes, and preserves a differing output unless
+`--force` is explicit. The real locked primary checkout produced a file
+containing the coordinator and `sagan` roots. Eighteen offline tests passed
+in both candidate and fresh replay; both trees equal
+`25f0262c137d590f4df728b32f78859949407b5c`, and `git fsck --full`
+passed. Bash syntax passed. This does not establish hosted CI or the still
+missing update/build/test/lock-refresh commands.

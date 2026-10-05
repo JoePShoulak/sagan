@@ -1,0 +1,308 @@
+From 272117fc6fabe27ecac10d4a2737595c413307c5 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 12:33:38 -0500
+Subject: [PATCH] Generate editor workspace from exact source lock
+
+---
+ .github/workflows/workspace-checks.yml |  2 +-
+ MAINTAINERS.md                         | 17 ++++++--
+ README.md                              |  4 ++
+ TECHNOLOGY.md                          | 10 ++++-
+ scripts/editor-workspace.sh            | 12 ++++++
+ scripts/workspace.py                   | 56 +++++++++++++++++++++++++-
+ tests/workspace_test.py                | 47 +++++++++++++++++++++
+ 7 files changed, 141 insertions(+), 7 deletions(-)
+ create mode 100644 scripts/editor-workspace.sh
+
+diff --git a/.github/workflows/workspace-checks.yml b/.github/workflows/workspace-checks.yml
+index deb00d3..8c37d90 100644
+--- a/.github/workflows/workspace-checks.yml
++++ b/.github/workflows/workspace-checks.yml
+@@ -23,6 +23,6 @@ jobs:
+           python-version: '3.11'
+       - name: Check Bash syntax
+         shell: bash
+-        run: bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++        run: bash -n scripts/bootstrap.sh scripts/status.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+       - name: Test offline workspace contracts
+         run: python -m unittest discover -s tests -p '*_test.py' -v
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index f9b5d00..241a3c4 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -22,9 +22,10 @@ Use Git Bash, Git, and Python 3.11 or newer. From the workspace repository root:
+ ```bash
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
++bash scripts/editor-workspace.sh
+ bash scripts/restore-lock.sh
+ python -m unittest discover -s tests -p '*_test.py' -v
+-bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+ ```
+ 
+ `bootstrap.sh` and `status.sh` accept `--root`, `--manifest`, and `--lock` for
+@@ -34,6 +35,16 @@ its locked commit. A missing, dirty, wrong-origin, or wrong-commit checkout
+ returns nonzero. No command here pushes, tags, changes a remote, or deletes a
+ checkout.
+ 
++`editor-workspace.sh` requires every active checkout to pass the same exact
++origin, clean-tree, and locked-HEAD checks as `status.sh`. It writes ignored
++`build/sagan.code-workspace` with the coordinator and active child folders,
++using paths relative to that file. Run it after bootstrap, then open the
++generated file in VS Code. It is idempotent when the file already matches.
++If the existing file differs, inspect your editor customizations first; only
++then use `bash scripts/editor-workspace.sh --force` to replace it. A missing
++or dirty child fails before changing the generated file. The generator does
++not clone, reset, delete, or retarget a child repository.
++
+ `restore-lock.sh` accepts the same options. It clones a missing checkout;
+ otherwise it requires the exact manifest origin and a clean working tree,
+ fetches a missing locked commit without tags, and detaches HEAD at that
+@@ -141,10 +152,10 @@ Focused verification for a catalog change is:
+ 
+ ```bash
+ python -m unittest discover -s tests -p '*_test.py' -v
+-bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++bash -n scripts/bootstrap.sh scripts/status.sh scripts/editor-workspace.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
+ ```
+ 
+-The eventual maintainer guide must add exact editor generation,
++The eventual maintainer guide must add exact
+ workspace build/test/update/lock-refresh syntax, clean-machine drills,
+ platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
+ without their values. Those capabilities are not implemented in this candidate.
+diff --git a/README.md b/README.md
+index 14d25d0..68b0fd7 100644
+--- a/README.md
++++ b/README.md
+@@ -14,6 +14,7 @@ From Git Bash, with Python 3.11+ and Git installed:
+ ```bash
+ bash scripts/bootstrap.sh
+ bash scripts/status.sh
++bash scripts/editor-workspace.sh
+ bash scripts/restore-lock.sh
+ python -m unittest discover -s tests -p '*_test.py' -v
+ ```
+@@ -24,6 +25,9 @@ overwrites a dirty, wrong-origin, or wrong-commit checkout. Status is
+ read-only and returns nonzero until all active checkouts match the lock.
+ Restore-lock fetches and detaches a clean, correctly owned checkout at the
+ pin; it refuses dirty work and ignored-file collisions.
++Editor-workspace generates ignored `build/sagan.code-workspace` from only
++active, clean, exact-lock checkouts. It does not include planned repositories
++or overwrite a differing editor file without explicit `--force`.
+ 
+ `scripts/package_index.py` also combines installed package catalogs from
+ separately checked-out physics and rendering repos. Its locked mode refuses
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index f1c6ab8..51657d6 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -32,6 +32,12 @@ correct-origin checkouts to the pin and refuses to overwrite ignored files.
+ A clone or checkout failure leaves any
+ partial directory for inspection. The Bash entry points are thin wrappers so
+ Windows, Linux, and macOS share the same rules.
++The editor generator reads the same validated active set and checks each
++checkout before writing a VS Code multi-root file under ignored `build/`.
++Its folder paths are relative to the generated file, so the workspace root
++and child repositories can be opened together without copying product code.
++It refuses to replace a differing file unless the maintainer explicitly
++uses `--force`; planned repositories never appear as phantom editor roots.
+ 
+ The dependency direction is outward: the workspace consumes language,
+ extension, docs, physics, rendering, and game checkouts. Those repositories
+@@ -46,8 +52,8 @@ workspace lock or a package release.
+ 
+ An offline contract workflow is drafted for GitHub-hosted Linux, Windows,
+ and macOS runners, but it cannot be confirmed as passing in an independent
+-destination until that destination exists. Editor workspace generation,
+-lock refresh, build orchestration, hosted cross-repository CI, and full
++destination until that destination exists. Lock refresh, build
++orchestration, hosted cross-repository CI, and full
+ integration tests remain later milestones in
+ [the roadmap](docs/contributing/repository-fracturing-roadmap.md).
+ 
+diff --git a/scripts/editor-workspace.sh b/scripts/editor-workspace.sh
+new file mode 100644
+index 0000000..b4a2ae5
+--- /dev/null
++++ b/scripts/editor-workspace.sh
+@@ -0,0 +1,12 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$repo_root"
++for candidate in python3 python py; do
++  if command -v "$candidate" >/dev/null 2>&1; then
++    exec "$candidate" scripts/workspace.py editor-workspace "$@"
++  fi
++done
++echo "Python 3.11 or newer is required for workspace.toml." >&2
++exit 1
+diff --git a/scripts/workspace.py b/scripts/workspace.py
+index 86ab407..55966e5 100644
+--- a/scripts/workspace.py
++++ b/scripts/workspace.py
+@@ -3,10 +3,13 @@
+ from __future__ import annotations
+ 
+ import argparse
++import json
++import os
+ from pathlib import Path
+ import re
+ import subprocess
+ import sys
++import tempfile
+ import tomllib
+ 
+ 
+@@ -154,6 +157,51 @@ def status(checkout_dir: Path, entries: list[dict]) -> int:
+     return result
+ 
+ 
++def editor_workspace(root: Path, checkout_dir: Path, entries: list[dict], force: bool) -> Path:
++    """Generate a VS Code multi-root file from only clean, locked checkouts."""
++    for entry in entries:
++        good, message = inspect(checkout_dir / entry["checkout"], entry)
++        if not good:
++            raise ValueError(f"{entry['id']}: {message}; editor workspace not generated")
++
++    output_dir = root / "build"
++    output = output_dir / "sagan.code-workspace"
++    if output_dir.is_symlink() or (output_dir.exists() and not output_dir.is_dir()):
++        raise ValueError("build output directory is unsafe")
++    if output.is_symlink() or (output.exists() and not output.is_file()):
++        raise ValueError("editor workspace output is unsafe")
++
++    def relative(target: Path) -> str:
++        return Path(os.path.relpath(target, output_dir)).as_posix()
++
++    folders = [{"name": "Sagan workspace", "path": relative(root)}]
++    folders.extend(
++        {"name": entry["id"], "path": relative(checkout_dir / entry["checkout"])}
++        for entry in entries
++    )
++    rendered = json.dumps({"folders": folders}, indent=2) + "\n"
++    if output.exists():
++        if output.read_text(encoding="utf-8") == rendered:
++            return output
++        if not force:
++            raise ValueError(f"existing editor workspace differs: {output}; inspect it before --force")
++
++    output_dir.mkdir(parents=True, exist_ok=True)
++    temporary: Path | None = None
++    try:
++        with tempfile.NamedTemporaryFile(
++            mode="w", encoding="utf-8", newline="\n", prefix=".sagan-workspace-",
++            suffix=".tmp", dir=output_dir, delete=False,
++        ) as stream:
++            stream.write(rendered)
++            temporary = Path(stream.name)
++        os.replace(temporary, output)
++    finally:
++        if temporary is not None and temporary.exists():
++            temporary.unlink()
++    return output
++
++
+ def restore_lock(checkout_dir: Path, entries: list[dict]) -> int:
+     for entry in entries:
+         target = checkout_dir / entry["checkout"]
+@@ -198,20 +246,26 @@ def restore_lock(checkout_dir: Path, entries: list[dict]) -> int:
+ 
+ def main() -> int:
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("command", choices=("bootstrap", "status", "restore-lock"))
++    parser.add_argument("command", choices=("bootstrap", "status", "restore-lock", "editor-workspace"))
+     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+     parser.add_argument("--manifest", type=Path)
+     parser.add_argument("--lock", type=Path)
++    parser.add_argument("--force", action="store_true")
+     arguments = parser.parse_args()
+     root = arguments.root.resolve()
+     manifest_path = arguments.manifest or root / "workspace.toml"
+     lock_path = arguments.lock or root / "workspace.lock"
+     try:
+         checkout_dir, entries = load_contract(root, manifest_path, lock_path)
++        if arguments.force and arguments.command != "editor-workspace":
++            raise ValueError("--force is only valid for editor-workspace")
+         if arguments.command == "bootstrap":
+             return bootstrap(checkout_dir, entries)
+         if arguments.command == "restore-lock":
+             return restore_lock(checkout_dir, entries)
++        if arguments.command == "editor-workspace":
++            print(f"Editor workspace ready: {editor_workspace(root, checkout_dir, entries, arguments.force)}")
++            return 0
+         return status(checkout_dir, entries)
+     except (OSError, RuntimeError, ValueError, tomllib.TOMLDecodeError) as error:
+         print(f"Workspace {arguments.command} failed: {error}", file=sys.stderr)
+diff --git a/tests/workspace_test.py b/tests/workspace_test.py
+index 98b7c4e..08463cf 100644
+--- a/tests/workspace_test.py
++++ b/tests/workspace_test.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++import json
+ from pathlib import Path
+ import subprocess
+ import sys
+@@ -81,6 +82,52 @@ class WorkspaceTest(unittest.TestCase):
+         self.assertEqual("", run("branch", "--show-current", cwd=target))
+         self.assertEqual(0, workspace.bootstrap(checkouts, entries))
+ 
++    def test_editor_workspace_uses_only_clean_locked_checkouts(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        output = workspace.editor_workspace(self.root, checkouts, entries, False)
++        self.assertEqual(self.root / "build" / "sagan.code-workspace", output)
++        self.assertEqual(
++            {"folders": [
++                {"name": "Sagan workspace", "path": ".."},
++                {"name": "sagan", "path": "../checkouts/sagan"},
++            ]},
++            json.loads(output.read_text(encoding="utf-8")),
++        )
++        self.assertEqual(output, workspace.editor_workspace(self.root, checkouts, entries, False))
++
++        (checkouts / "sagan" / "personal.txt").write_text("keep\n", encoding="utf-8")
++        with self.assertRaisesRegex(ValueError, "dirty"):
++            workspace.editor_workspace(self.root, checkouts, entries, True)
++        self.assertEqual(2, len(json.loads(output.read_text(encoding="utf-8"))["folders"]))
++
++    def test_editor_workspace_preserves_differing_output_without_force(self) -> None:
++        checkouts, entries = self.load()
++        self.assertEqual(0, workspace.bootstrap(checkouts, entries))
++        output = self.root / "build" / "sagan.code-workspace"
++        output.parent.mkdir()
++        output.write_text("my editor choices\n", encoding="utf-8")
++        with self.assertRaisesRegex(ValueError, "existing editor workspace differs"):
++            workspace.editor_workspace(self.root, checkouts, entries, False)
++        self.assertEqual("my editor choices\n", output.read_text(encoding="utf-8"))
++        self.assertEqual(output, workspace.editor_workspace(self.root, checkouts, entries, True))
++        self.assertIn("Sagan workspace", output.read_text(encoding="utf-8"))
++
++    def test_editor_workspace_refuses_missing_child_and_skips_planned(self) -> None:
++        checkouts, entries = self.load()
++        with self.assertRaisesRegex(ValueError, "missing"):
++            workspace.editor_workspace(self.root, checkouts, entries, False)
++        self.assertFalse((self.root / "build").exists())
++
++        self.write_contract(state="planned")
++        self.lock.write_text("schema_version = 1\nrepositories = []\n", encoding="utf-8")
++        checkouts, entries = self.load()
++        output = workspace.editor_workspace(self.root, checkouts, entries, False)
++        self.assertEqual(
++            {"folders": [{"name": "Sagan workspace", "path": ".."}]},
++            json.loads(output.read_text(encoding="utf-8")),
++        )
++
+     def test_dirty_and_wrong_commit_are_not_overwritten(self) -> None:
+         checkouts, entries = self.load()
+         self.assertEqual(0, workspace.bootstrap(checkouts, entries))
+-- 
+2.51.0.windows.2
+

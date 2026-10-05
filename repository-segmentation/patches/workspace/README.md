@@ -5,10 +5,10 @@ It is not a published split, and it must not be applied to the intact Sagan
 repository. The path-only filtered base came from source preparation commit
 `68d55b003709e28b4e96bdcbd22d8341018c2253` and has filtered HEAD
 `47a72ef3a23421248dc2f983ead8d5548a5d473d`. Verify that base before
-applying the four numbered patches with `git am` in a disposable normal clone
+applying the five numbered patches with `git am` in a disposable normal clone
 of the filtered repository. The expected draft result is commit
-`e3573b68dbbe7a2909f6e6877f4cfd544cc42bf1`, tree
-`e5347f489c8a8ec4e1932f045259eb817bc9054e`.
+`272117fc6fabe27ecac10d4a2737595c413307c5`, tree
+`25f0262c137d590f4df728b32f78859949407b5c`.
 
 The first patch moves the proposed workspace manifest to root `workspace.toml`,
 activates only the already-transferred primary repository, and adds
@@ -31,14 +31,17 @@ path-validated, and never overwrites differing content without `--force`.
 The fourth patch drafts offline contract CI for Linux, Windows, and macOS.
 It does not assert that independent hosted CI has run or that native
 rendering works outside Windows.
+The fifth patch adds an ignored VS Code multi-root generator based only on
+active, clean, locked checkouts. It refuses a missing or dirty child and
+preserves a differing generated file unless `--force` is deliberate.
 
 The first two patches' offline Python suite passed ten cases on Windows; the
 third raised the total to fifteen. A real GitHub clone
 into the ignored candidate `checkouts/sagan` passed at the locked SHA, and
 `bash scripts/status.sh` and `bash scripts/restore-lock.sh` reported the
 expected clean pin. Bash syntax and `git diff --check` passed. A fresh normal
-clone of the filtered base replayed all four patches with `git am`, matched
-the expected tree, passed `git fsck --full`, and reran all fifteen tests. No split
+clone of the filtered base replayed all five patches with `git am`, matched
+the expected tree, passed `git fsck --full`, and reran all eighteen tests. No split
 GitHub repository was created or changed, and no CI ran in a
 new destination. The candidate still contains monorepo-preparation audit
 scripts and archived manifests that require curation; this patch by itself

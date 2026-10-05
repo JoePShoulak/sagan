@@ -20,6 +20,16 @@ must have independent ownership, history, versioning, tests, CI, documentation,
 maintainer instructions, new-chat onboarding, and a verified place in the
 locked Sagan ecosystem.
 
+The creation and independence gates are deliberately separate. Before a new
+public repository is created, its locally runnable candidate, exact history
+and ownership map, focused checks, initial governance, recovery path, and
+owner-reviewed public material must be ready. The new repository is then
+created and populated with only reviewed `dev` and `main` refs. Hosted CI,
+actual organization permissions, component documentation aggregation, and
+owner drills are verified *there* before the repository is called independent.
+The monorepo copy and live documentation remain in service until a later
+reviewed cutover. Hosted CI cannot be a pre-creation condition.
+
 ## Target organization and repositories
 
 Move the intact existing language repository into `Sagan-Shoulak` first, after

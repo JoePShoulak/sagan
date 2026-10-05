@@ -85,9 +85,13 @@ with explicit branch refspecs. The VS Code history retains nine unrelated
 Sagan language release tags: do **not** use `--mirror`, `--all`, `--tags`,
 or `--follow-tags` for its first push. Keep all tags unpublished until the
 owner approves an extension-specific release-tag policy after releases resume.
-Do not delete or rewrite the monorepo copy at this stage. If verification, CI,
-documentation aggregation, package consumption, or workspace integration
-fails, abandon the destination candidate and restore from the untouched mirror.
+Do not delete or rewrite the monorepo copy at this stage. Hosted CI can run
+only after the destination exists; its success is an independence gate, not a
+pre-creation gate. If post-creation verification, CI, documentation
+aggregation, package consumption, or workspace integration fails, leave the
+monorepo copy and live site in service while the destination is repaired or
+the publication attempt is rolled back under the reviewed plan. Do not
+silently delete a public destination or discard its issue/PR history.
 Before publication, run `bash scripts/verify_initial_split_refs.sh` against
 the candidate bare repository. It requires exactly `dev` and `main`, a
 `dev` default HEAD, zero tags, and a clean Git object check.
