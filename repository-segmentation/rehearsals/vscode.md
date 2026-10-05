@@ -86,15 +86,25 @@ not yet run on GitHub or on Linux/macOS. `npm ci` continued to report six
 high-severity dependency findings; no automatic dependency rewrite was
 performed.
 
+The filtered history still contains nine **language** release tags. A
+disposable bare-repository publication rehearsal pushed only the reviewed
+extension candidate as `dev` (`db57bb3`) and the filtered language
+`main` snapshot as `main` (`4045491`), set the bare default HEAD to
+`dev`, and passed `git fsck --full`. The destination had exactly those two
+heads and **zero tags**. The real destination must likewise use explicit
+branch refspecs; never use `--mirror`, `--all`, `--tags`, or
+`--follow-tags` when publishing filtered history. Extension release tags
+remain deferred until the owner resumes publication and approves their
+names. This local push did not create or contact a GitHub repository.
+
 Imported documentation and remaining release integration still contain
 monorepo-relative behavior beyond this first patch. Apply the rewrites in
 `../vscode-relocation.toml` and test the resulting independent repository
 before creation. The owner approved a temporary CI contract that checks out
 an exact pinned Sagan source commit and builds compiler/LSP on each platform;
-the exact lock and cross-platform jobs still need implementation and
-verification. The filtered mirror retained nine historical Sagan release
-tags, which must **not** be published as VS Code extension releases by
-accident; approve a branch/tag policy first. Complete the destination
+the draft lock is recorded in the patch, but its cross-platform jobs still
+need hosted verification. The branch-only safety policy above does not decide a
+future extension-release tag format. Complete the destination
 governance and owner-survivability/rollback drills before publishing.
 
 `npm ci` reported six high-severity dependency findings. Do not apply an

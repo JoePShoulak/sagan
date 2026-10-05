@@ -80,8 +80,12 @@ relevant rename history. A successful filter alone is not extraction parity.
 ## Publish and rollback boundary
 
 Only after the filtered clone passes its extraction gate may a maintainer add
-the empty destination remote and push reviewed branches and approved tags. Do
-not delete or rewrite the monorepo copy at this stage. If verification, CI,
+the empty destination remote and push the reviewed `dev` and `main` heads
+with explicit branch refspecs. The VS Code history retains nine unrelated
+Sagan language release tags: do **not** use `--mirror`, `--all`, `--tags`,
+or `--follow-tags` for its first push. Keep all tags unpublished until the
+owner approves an extension-specific release-tag policy after releases resume.
+Do not delete or rewrite the monorepo copy at this stage. If verification, CI,
 documentation aggregation, package consumption, or workspace integration
 fails, abandon the destination candidate and restore from the untouched mirror.
 
