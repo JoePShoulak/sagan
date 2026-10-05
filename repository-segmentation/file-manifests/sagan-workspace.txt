@@ -44,6 +44,7 @@ repository-segmentation/primary-transfer.toml
 repository-segmentation/readiness.toml
 repository-segmentation/rehearsals/primary-backup.md
 repository-segmentation/rehearsals/vscode.md
+repository-segmentation/rehearsals/workspace.md
 repository-segmentation/schemas/chat-map.schema.json
 repository-segmentation/schemas/component-manifest.schema.json
 repository-segmentation/schemas/documentation-export.schema.json
