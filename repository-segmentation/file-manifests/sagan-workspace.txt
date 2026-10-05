@@ -33,6 +33,8 @@ repository-segmentation/merge-readiness.md
 repository-segmentation/owner-transfer-start-drill.md
 repository-segmentation/ownership-rules.toml
 repository-segmentation/patches/.gitattributes
+repository-segmentation/patches/docs/0001-Assemble-official-docs-from-pinned-Sagan-source.patch
+repository-segmentation/patches/docs/README.md
 repository-segmentation/patches/vscode/.gitattributes
 repository-segmentation/patches/vscode/0001-Prepare-independent-extension-CI-with-pinned-Sagan-s.patch
 repository-segmentation/patches/vscode/0002-Normalize-cross-platform-compiler-source-pin.patch

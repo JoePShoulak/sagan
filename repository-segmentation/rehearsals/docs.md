@@ -29,3 +29,22 @@ aggregation/build workflow, human-review gate, and host rollback are
 implemented and tested. The public HP1 site remains on the intact
 repository's documentation workflow until a separately reviewed
 cutover. Re-extract from final reviewed `dev` before publication.
+
+## Primary-source aggregation candidate
+
+A separate patch at `../patches/docs/` adds an exact source lock, explicitly
+overlays the six docs-site-owned files, and assembles a fresh generated
+MkDocs tree from the transferred primary repository at commit
+`4132c8c37f99dc5f89c7141f5780b583b64d192e`. Its five offline tests
+passed. The real pinned source assembled, and a strict MkDocs build passed
+on Windows using the existing documentation environment. It reported the
+pre-existing unlisted contributor checkpoint page but did not fail. The
+source checkout, shared checkout, and live site were not modified.
+
+The patch also supplies draft root maintainer, technology, and chat guides.
+It does not wire the old monorepo `docs.sh`/deployment scripts to the
+aggregate or add other component exports, independent hosted CI, human
+publication review, or hosting rollback. No split remote was created or
+pushed. A fresh normal clone replayed the patch with `git am`, matched tree
+`d2992da632fe7e6cec654bde9a8f35fd76a1f31a`, passed `git fsck --full`,
+and reran all five offline tests.
