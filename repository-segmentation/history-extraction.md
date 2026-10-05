@@ -1,0 +1,74 @@
+# History-preserving extraction and rollback draft
+
+This procedure is a draft preparation artifact. Do not run its push or transfer
+steps until repository visibility, permissions, protections, and rollback have
+been approved. Always operate on a temporary mirror, never the working checkout.
+
+## Prerequisites
+
+- A clean, reviewed `dev` commit recorded in `readiness.toml`.
+- A verified offline mirror backup and a recorded ref inventory.
+- An empty destination repository with no generated starter commit.
+- Working GitHub authentication with organization repository permissions.
+- `git filter-repo` installed and its version recorded.
+- An approved exact include/rename list derived from `inventory.tsv`.
+
+Current audit on October 4, 2026: `git filter-repo` is not installed, and the
+configured GitHub CLI credential is invalid. These are start-gate blockers, not
+reasons to weaken the extraction procedure.
+
+## Preserve the source
+
+From the parent directory of the normal checkout:
+
+```bash
+git clone --mirror sagan sagan-segmentation-backup.git
+git -C sagan-segmentation-backup.git show-ref > sagan-segmentation-backup.refs
+git -C sagan-segmentation-backup.git fsck --full
+```
+
+Copy the mirror and ref inventory to approved backup storage before filtering.
+Record their hashes and restore location outside the source repository.
+
+## Rehearse one extraction
+
+Create another temporary mirror from the preserved source mirror. For example,
+the VS Code extraction will eventually retain the extension subtree and move it
+to the new repository root:
+
+```bash
+git clone --mirror sagan-segmentation-backup.git sagan-vscode-filter.git
+git -C sagan-vscode-filter.git filter-repo \
+  --path editors/vscode-sagan/ \
+  --path-rename editors/vscode-sagan/:
+git -C sagan-vscode-filter.git fsck --full
+```
+
+The final filter command must also retain deliberately shared root history such
+as security, licensing, maintainer, technology, and onboarding files when the
+approved extraction manifest requires them. Generate those files before the
+destination's first reviewed commit rather than silently losing the contract.
+
+## Verification before any push
+
+```bash
+git -C sagan-vscode-filter.git log --all --oneline --decorate
+git -C sagan-vscode-filter.git ls-tree -r --name-only HEAD
+git -C sagan-vscode-filter.git fsck --full
+```
+
+Compare the filtered tree to the approved ownership manifest, build and test a
+normal clone of the filtered mirror, and verify author, timestamp, tag, and
+relevant rename history. A successful filter alone is not extraction parity.
+
+## Publish and rollback boundary
+
+Only after the filtered clone passes its extraction gate may a maintainer add
+the empty destination remote and push reviewed branches and approved tags. Do
+not delete or rewrite the monorepo copy at this stage. If verification, CI,
+documentation aggregation, package consumption, or workspace integration
+fails, abandon the destination candidate and restore from the untouched mirror.
+
+Remove the monorepo copy only in a later reviewed request after the destination
+release, exact workspace lock, documentation aggregation, redirects, and
+rollback drill all pass.

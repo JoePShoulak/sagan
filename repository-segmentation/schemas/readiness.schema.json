@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sagan.shoulak.org/schemas/readiness-v1.json",
+  "title": "Sagan repository segmentation readiness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "baseline", "tooling", "decisions"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "baseline": { "type": "object" },
+    "tooling": { "type": "object" },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "status": { "enum": ["approved", "provisional", "required"] },
+          "evidence": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

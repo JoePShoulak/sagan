@@ -1,0 +1,50 @@
+schema_version = 1
+
+[[components]]
+id = "sagan"
+phase = 10
+source_roots = ["src/", "third_party/", "packaging/"]
+documentation_mount = "/language/"
+artifact_kinds = ["source", "executable", "installer"]
+
+[[components]]
+id = "sagan-vscode"
+phase = 4
+source_roots = ["editors/vscode-sagan/"]
+documentation_mount = "/tooling/vscode/"
+artifact_kinds = ["source", "extension"]
+
+[[components]]
+id = "sagan-physics"
+phase = 5
+source_roots = ["libraries/physics/"]
+documentation_mount = "/libraries/physics/"
+artifact_kinds = ["source", "package", "documentation"]
+
+[[components]]
+id = "sagan-render"
+phase = 6
+source_roots = ["libraries/render/"]
+documentation_mount = "/libraries/rendering/"
+artifact_kinds = ["source", "package", "documentation"]
+
+[[components]]
+id = "sagan-workspace"
+phase = 2
+source_roots = ["repository-segmentation/"]
+documentation_mount = "/examples/"
+artifact_kinds = ["source", "documentation"]
+
+[[components]]
+id = "sagan-docs"
+phase = 3
+source_roots = ["docs/", "deploy/docs/", "deploy/hosting/", "deploy/frontdoor/"]
+documentation_mount = "/"
+artifact_kinds = ["source", "documentation"]
+
+[[components]]
+id = "sagan-space-game"
+phase = 7
+source_roots = ["sandbox/", "SPACE_GAME_DESIGN.md"]
+documentation_mount = "/projects/space-game/"
+artifact_kinds = ["source", "executable", "documentation"]

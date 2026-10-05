@@ -1,0 +1,47 @@
+schema_version = 1
+organization = "Sagan-Shoulak"
+checkout_root = "checkouts"
+default_branch = "dev"
+lock_file = "workspace.lock"
+
+[[repositories]]
+id = "sagan"
+url = "https://github.com/Sagan-Shoulak/sagan.git"
+checkout = "sagan"
+state = "existing-outside-organization"
+
+[[repositories]]
+id = "sagan-vscode"
+url = "https://github.com/Sagan-Shoulak/sagan-vscode.git"
+checkout = "sagan-vscode"
+state = "planned"
+
+[[repositories]]
+id = "sagan-physics"
+url = "https://github.com/Sagan-Shoulak/sagan-physics.git"
+checkout = "sagan-physics"
+state = "planned"
+
+[[repositories]]
+id = "sagan-render"
+url = "https://github.com/Sagan-Shoulak/sagan-render.git"
+checkout = "sagan-render"
+state = "planned"
+
+[[repositories]]
+id = "sagan-workspace"
+url = "https://github.com/Sagan-Shoulak/sagan-workspace.git"
+checkout = "sagan-workspace"
+state = "planned"
+
+[[repositories]]
+id = "sagan-docs"
+url = "https://github.com/Sagan-Shoulak/sagan-docs.git"
+checkout = "sagan-docs"
+state = "planned"
+
+[[repositories]]
+id = "sagan-space-game"
+url = "https://github.com/Sagan-Shoulak/sagan-space-game.git"
+checkout = "sagan-space-game"
+state = "planned"

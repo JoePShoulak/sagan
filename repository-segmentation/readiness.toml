@@ -1,0 +1,53 @@
+schema_version = 1
+
+[baseline]
+branch = "dev"
+commit = "c8fa3a1"
+backup_reference = "unrecorded"
+full_suite = "required-before-first-extraction"
+owner_recovery_drill = "not-run"
+
+[tooling]
+git_filter_repo = "missing"
+github_cli_authentication = "invalid"
+destination_repository_access = "unverified"
+
+[[decisions]]
+id = "repository-names"
+status = "approved"
+evidence = "Canonical fracture roadmap and ecosystem.toml"
+
+[[decisions]]
+id = "repository-visibility"
+status = "required"
+evidence = "Choose public or private for each destination before creation."
+
+[[decisions]]
+id = "ownership-boundaries"
+status = "provisional"
+evidence = "inventory.tsv contains needs-split and needs-rewrite rows."
+
+[[decisions]]
+id = "dependency-direction"
+status = "approved"
+evidence = "ecosystem.toml and its forbidden dependency rules"
+
+[[decisions]]
+id = "artifact-formats"
+status = "required"
+evidence = "Native rendering and released package formats remain undecided."
+
+[[decisions]]
+id = "github-governance"
+status = "required"
+evidence = "Teams, protections, secrets, environments, runners, and transfer permission are unrecorded."
+
+[[decisions]]
+id = "history-and-rollback"
+status = "provisional"
+evidence = "history-extraction.md is drafted; tooling, backup, filtered-clone, and rollback rehearsals remain."
+
+[[decisions]]
+id = "space-game-seed"
+status = "approved"
+evidence = "sandbox/ and SPACE_GAME_DESIGN.md are assigned to sagan-space-game."

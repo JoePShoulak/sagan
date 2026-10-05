@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sagan.shoulak.org/schemas/workspace-manifest-v1.json",
+  "title": "Sagan workspace manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "organization", "checkout_root", "default_branch", "lock_file", "repositories"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "organization": { "const": "Sagan-Shoulak" },
+    "checkout_root": { "type": "string", "minLength": 1 },
+    "default_branch": { "const": "dev" },
+    "lock_file": { "type": "string", "minLength": 1 },
+    "repositories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "url", "checkout", "state"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^sagan(?:-[a-z0-9]+)*$" },
+          "url": { "type": "string", "format": "uri" },
+          "checkout": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "state": { "enum": ["planned", "existing-outside-organization", "active", "archived"] }
+        }
+      }
+    }
+  }
+}

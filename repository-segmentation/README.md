@@ -12,6 +12,12 @@ extraction. The canonical policy remains the
 - `ecosystem.toml` records repository roles, dependency direction, and forbidden
   dependencies; `chat-map.toml` records specialized-chat ownership and the
   required handoff fields.
+- `components.toml` records extraction order, source roots, documentation mount
+  points, and artifact classes. `readiness.toml` records approved, provisional,
+  and still-required start-gate decisions without storing credentials.
+- `workspace.toml` is the proposed clone layout and repository URL map; it does
+  not imply that its planned remotes exist. `history-extraction.md` is the
+  preservation-first filter, verification, publication, and rollback draft.
 - `schemas/` defines the initial component, workspace-lock, documentation-
   export, and chat-map contracts. `templates/` provides the shared root files
   that each repository must specialize and test.
@@ -25,7 +31,9 @@ extraction. The canonical policy remains the
 
 ## Before moving any code
 
-- Review every `decision-required` inventory row and approve its destination.
+- Resolve every `required` decision in `readiness.toml` and record its evidence.
+- Resolve every `needs-split` and `needs-rewrite` inventory row into exact
+  extraction ownership before deleting any monorepo copy.
 - Record a clean, green baseline commit and a recoverable backup reference.
 - Finalize schemas for component metadata, workspace locks, documentation
   exports, repository prompts, maintainer guides, and technology overviews.

@@ -1,9 +1,13 @@
 path	destination	status	notes
+.gitignore	sagan	needs-rewrite	Each repository receives ownership-specific ignore rules.
+.vscode/	sagan	needs-split	Language launch configuration remains; multi-root workspace configuration moves to workspace.
+.github/allowed_signers	sagan	needs-split	Language release signing remains; other repositories require deliberate signer policies.
 src/	sagan	proposed	Compiler, CLI, LSP, DAP, package system, runtime, and language services.
 tests/	sagan	needs-split	Compiler tests remain; package and cross-component fixtures move with their owners.
 third_party/	sagan	proposed	Audit each vendored dependency before extraction; native-render-only dependencies move with rendering.
 libraries/physics/	sagan-physics	proposed	Physics package, numerical models, fixtures, and API documentation.
 libraries/render/	sagan-render	proposed	Rendering package, native bridge, assets, graphical tests, and API documentation.
+libraries/index.tsv	sagan	needs-split	Current monorepo catalog becomes released component metadata plus workspace-generated local indexes.
 editors/vscode-sagan/	sagan-vscode	proposed	Extension client, grammars, bundle, VSIX lifecycle, and editor tests.
 examples/lagrange_demo/	sagan-workspace	proposed	Cross-component physics and rendering demonstration.
 examples/solar_lagrange_demo/	sagan-workspace	proposed	Cross-component physics and rendering demonstration.
@@ -13,6 +17,7 @@ examples/two_body_demo/	sagan-workspace	proposed	Cross-component physics and ren
 examples/lagrange_numeric_demo/	sagan-physics	proposed	Headless numerical physics example.
 examples/solar_lagrange_numeric_demo/	sagan-physics	proposed	Headless numerical physics example.
 examples/orbit_numeric_demo/	sagan-physics	proposed	Headless numerical physics example.
+examples/package/	sagan	proposed	Language package-resolution example.
 examples/*.sagan	sagan	needs-split	Language-only examples remain; package-dependent examples move with their owner.
 SPACE_GAME_DESIGN.md	sagan-space-game	proposed	Sole canonical game-design source after owner review and extraction.
 sandbox/	sagan-space-game	approved	Current Space Game seed project; preserve source, manifest, and lock during extraction.
@@ -34,6 +39,9 @@ packaging/	sagan	proposed	Language and toolchain packaging; component-native pac
 scripts/	sagan	needs-split	Move component-specific scripts with owners and integration coordination to workspace.
 makefile	sagan	needs-split	Language targets remain; package, editor, docs, and integration targets become repository-local commands.
 README.md	sagan	needs-rewrite	Replace monorepo ownership claims after successful extractions.
+SECURITY.md	sagan	needs-split	Retain language reporting policy and specialize a copy for every public repository.
 MAINTAINERS.md	sagan	needs-rewrite	Prototype contract; remove extracted operations only after parity.
 TECHNOLOGY.md	sagan	needs-rewrite	Prototype overview; narrow it as components leave.
 CODEX_START.md	sagan	needs-rewrite	Prototype prompt; add organization chat map and locked ecosystem sources.
+version.conf	sagan	proposed	Language version lineage remains with the language repository.
+repository-segmentation/	sagan-workspace	proposed	Migration contracts seed the future workspace; retain a historical pointer in sagan after completion.
