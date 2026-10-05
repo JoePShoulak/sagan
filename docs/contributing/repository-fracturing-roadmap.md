@@ -139,26 +139,59 @@ In particular, each root must contain `MAINTAINERS.md`, exact Bash commands,
 and a passed owner-survivability drill. Repository extraction, publication,
 and organization transfer are blocked until this is true.
 
+## Mandatory technology overview
+
+Every repository root must also contain `TECHNOLOGY.md`. This document is the
+conceptual companion to `MAINTAINERS.md`: it explains what the repository is
+made of, why those technologies and boundaries exist, and how its moving parts
+work together. `MAINTAINERS.md` remains the operational authority for exact
+commands, prerequisites, branching, testing, release, deployment, diagnosis,
+and recovery procedures.
+
+Each `TECHNOLOGY.md` must explain, at a minimum:
+
+- the repository's architectural responsibilities and explicit non-goals;
+- its major subsystems, their responsibilities, and their dependency direction;
+- important data, control, compilation, protocol, and artifact flows;
+- language runtimes, native toolchains, frameworks, formats, and generated
+  artifacts, including why each is present;
+- public boundaries and contracts with every upstream and downstream Sagan
+  repository;
+- how local development differs from released and workspace-locked operation;
+- platform-specific layers and where portability boundaries live;
+- extension points, invariants, and common conceptual failure modes; and
+- links to canonical detailed designs, decisions, schemas, manifests, and the
+  corresponding operational sections of `MAINTAINERS.md`.
+
+The technology overview must be understandable without relying on chat history
+and must favor diagrams and concrete end-to-end examples where relationships
+would otherwise be difficult to follow. It must not become a second command
+reference or duplicate volatile version and file inventories that belong in
+machine-readable manifests, locks, or maintainer procedures. Architecture or
+integration changes are incomplete until the relevant `TECHNOLOGY.md` is
+updated and returned to human documentation review.
+
 ## Mandatory new-chat onboarding prompt
 
 Every repository must contain `CODEX_START.md` at its root. This is a
 ready-to-paste prompt for starting a new Codex chat in that repository. It is
-an onboarding aid, not a replacement for `AGENTS.md`, `MAINTAINERS.md`, or
-canonical design documentation.
+an onboarding aid, not a replacement for `AGENTS.md`, `TECHNOLOGY.md`,
+`MAINTAINERS.md`, or canonical design documentation.
 
 The prompt must instruct a new chat to begin read-only and read, in order:
 
 1. repository `AGENTS.md` and applicable nested instructions;
-2. root `MAINTAINERS.md`;
-3. root `README.md`;
-4. the repository's architecture, status, roadmap, compatibility, and release
+2. root `TECHNOLOGY.md` for the conceptual system model;
+3. root `MAINTAINERS.md` for exact operational procedures;
+4. root `README.md`;
+5. the repository's architecture, status, roadmap, compatibility, and release
    documents;
-5. `sagan.toml`, package locks, workspace locks, catalog entries, and other
+6. `sagan.toml`, package locks, workspace locks, catalog entries, and other
    machine-readable contracts applicable to the repository;
-6. the organization-level ecosystem map and the workspace lock;
-7. recent Git status and relevant history without disturbing concurrent work;
-8. repository-specific canonical context listed below; and
-9. current CI status when the task depends on it.
+7. the organization-level ecosystem map and the workspace lock;
+8. recent Git status and relevant history without disturbing concurrent work;
+9. repository-specific canonical context listed below; and
+10. current CI status when the task depends on it.
 
 After reading, the chat must report:
 
@@ -287,6 +320,7 @@ Its root must contain:
 
 - `SPACE_GAME_DESIGN.md` as the canonical living design document;
 - `CODEX_START.md` as its new-chat prompt;
+- `TECHNOLOGY.md` as its conceptual architecture and integration overview;
 - `MAINTAINERS.md` as its operational handoff;
 - a Sagan application `sagan.toml` with an explicit compiler requirement;
 - an exact package lock for physics, rendering, and future dependencies;
@@ -401,7 +435,8 @@ indirection.
   runners, mirrors, and deployments by destination.
 - Record dependency direction and forbidden dependencies.
 - Define package artifacts, compatibility metadata, workspace locks,
-  documentation manifests, `MAINTAINERS.md`, and `CODEX_START.md` schemas.
+  documentation manifests, `TECHNOLOGY.md`, `MAINTAINERS.md`, and
+  `CODEX_START.md` schemas.
 - Define the versioned organization-level chat map, cross-chat handoff format,
   and documentation-review invalidation check shared by every repository.
 - Confirm that `SPACE_GAME_DESIGN.md` contains the game context intended to
@@ -508,7 +543,7 @@ indirection.
 - Workspace and documentation lock schemas.
 - Documentation export and navigation manifest schemas.
 - Compatibility-range meaning and release gates.
-- `MAINTAINERS.md` and `CODEX_START.md` required schemas.
+- `TECHNOLOGY.md`, `MAINTAINERS.md`, and `CODEX_START.md` required schemas.
 - Space Game's provisional/final naming and initial public/private boundary.
 - Minimum supported Sagan, physics, and rendering versions for the game.
 - Cross-repository CI authorization and credentials.
@@ -531,7 +566,11 @@ The fracture is complete only when:
 
 - all seven repositories exist under the intended organization;
 - each has independent history, `dev`/`main`, protection, CI, versioning,
-  issues, releases where applicable, `MAINTAINERS.md`, and `CODEX_START.md`;
+  issues, releases where applicable, `TECHNOLOGY.md`, `MAINTAINERS.md`, and
+  `CODEX_START.md`;
+- each technology overview accurately explains the repository's moving parts
+  and its conceptual place in the locked ecosystem without depending on chat
+  history;
 - all maintainer and clean-chat onboarding drills pass;
 - every repository prompt can identify the other specialized chats, route
   cross-repository work, and produce a context-complete handoff prompt;
