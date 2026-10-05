@@ -46,5 +46,6 @@ Joe's separate stable-publication approval applies to every stable release.
 For the exact `v4.9.4` release, the owner has also deferred the human page
 audit and Authenticode signing. Documentation stays experimental, no numbered
 documentation archive is dispatched, and the unsigned installer is disclosed.
-All other candidate checks and clean-machine acceptance still apply; the
-exception must not be inherited by subsequent versions.
+The owner also deferred a separate clean-machine check for this version, while
+the isolated Windows CI installer test remains required. All other candidate
+checks apply; none of these exceptions may be inherited by later versions.

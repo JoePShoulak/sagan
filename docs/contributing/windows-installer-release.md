@@ -49,7 +49,9 @@ An unsigned artifact is normally a development artifact. The experimental
 `v0.88.0-rc.1` preview and initial 1.0.0 release are the two narrowly
 disclosed historical exceptions. The exact `v4.9.4` candidate has a separate
 one-time, owner-approved unsigned-installer exception. Its release notes must
-warn about the unknown publisher; clean-machine acceptance remains required.
+warn about the unknown publisher. The owner separately deferred clean-machine
+acceptance for this exact version; the isolated CI installer smoke test remains
+required.
 
 ## Public-release signing gate
 
