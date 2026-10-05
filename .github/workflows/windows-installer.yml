@@ -32,6 +32,7 @@ jobs:
             mingw-w64-ucrt-x86_64-crt
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-gcc-libs
+            mingw-w64-ucrt-x86_64-gdb
             mingw-w64-ucrt-x86_64-headers
             mingw-w64-ucrt-x86_64-libgcc
             mingw-w64-ucrt-x86_64-libstdc++

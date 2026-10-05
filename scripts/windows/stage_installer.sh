@@ -12,6 +12,7 @@ if [[ ! -x "$default_toolchain/bin/g++.exe" && -x /c/msys64/ucrt64/bin/g++.exe ]
 fi
 toolchain_root="${SAGAN_TOOLCHAIN_ROOT:-$default_toolchain}"
 version="$(bash "$repo_root/scripts/version.sh" numeric)"
+debugger_python_version="$(bash "$repo_root/scripts/windows/debugger_python_version.sh" "$toolchain_root/bin/gdb.exe")"
 
 if [[ ! -x "$toolchain_root/bin/g++.exe" ]]; then
   echo "The Windows installer requires a UCRT64 toolchain at $toolchain_root." >&2
@@ -106,7 +107,7 @@ cp -a "$toolchain_root/include/." "$staged_toolchain/include/"
 # The MinGW platform headers share this prefix with optional third-party SDKs.
 # Remove packages that cannot be reached by Sagan's generated standard C++.
 for unrelated_headers in \
-  gdb isl libiberty lzma ncurses ncursesw openssl pkgconf python3.12 \
+  gdb isl libiberty lzma ncurses ncursesw openssl pkgconf "python$debugger_python_version" \
   readline tcl8.6 tk8.6 tre X11; do
   rm -rf "$staged_toolchain/include/$unrelated_headers"
 done
@@ -137,10 +138,10 @@ fi
 
 bash "$repo_root/scripts/windows/stage_debugger.sh" "$toolchain_root" "$staged_toolchain"
 mkdir -p "$stage_dir/licenses/debugger"
-gpl_text="$toolchain_root/share/licenses/gcc-libs/COPYING3"
+gpl_text="$repo_root/packaging/windows/GDB-GPL-3.0.txt"
 [[ -f "$gpl_text" ]] || { echo "Missing debugger GPLv3 license text: $gpl_text" >&2; exit 1; }
 cp "$gpl_text" "$stage_dir/licenses/debugger/GDB-GPL-3.0.txt"
-for debugger_license in expat python3.12 readline xxhash xz; do
+for debugger_license in expat "python$debugger_python_version" readline xxhash xz; do
   copy_toolchain_license "$debugger_license"
 done
 

@@ -33,7 +33,10 @@ compiler's native build operation before passing a
 native executable to the bundled GDB DAP backend. `SAGAN_GDB` is a local test
 override; production Windows lookup first expects
 `<installation>/toolchain/ucrt64/bin/gdb.exe` beside the sibling
-`<installation>/bin/sagan-dap.exe`. The initial Windows integration probe covers a Unicode
+`<installation>/bin/sagan-dap.exe`. The Windows payload includes GDB's
+matching Python DLL and standard library; packaging detects that version from
+GDB's imported DLL rather than assuming a fixed MSYS2 Python release. The
+initial Windows integration probe covers a Unicode
 source path and a manifest-backed package launch, pending-to-verified
 breakpoints in entry and imported modules, a Sagan-mapped stack frame and
 source-level `next`, `stepIn`, and `stepOut` on a function-call fixture, a

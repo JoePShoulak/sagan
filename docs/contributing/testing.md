@@ -58,8 +58,12 @@ coverage linkage.
 
 `.github/workflows/coverage.yml` repeats this on Ubuntu for pull requests that
 affect the implementation and for every integrated push to `dev` or `main`. It
-uploads the report to Codecov through GitHub OIDC and enforces the repository's
-line-coverage floor. Coverage shows which implementation paths ran; it does not
+enforces the repository's line-coverage floor and uploads the report to Codecov
+through GitHub OIDC. The owner approved a one-time v4.9.5 exception when the
+external Codecov endpoint cannot be reached: the upload is still attempted and
+warns on failure, while the measured report artifact and 90% floor remain
+mandatory. Later versions require the upload to pass. Coverage shows which
+implementation paths ran; it does not
 prove that every language rule is correct.
 
 ## Branch and integration scope

@@ -30,8 +30,9 @@ fi
 [[ -x "$install_dir/bin/sagan-dap.exe" ]]
 [[ -x "$install_dir/toolchain/ucrt64/bin/g++.exe" ]]
 [[ -x "$install_dir/toolchain/ucrt64/bin/gdb.exe" ]]
-[[ -f "$install_dir/toolchain/ucrt64/bin/libpython3.12.dll" ]]
-[[ -f "$install_dir/toolchain/ucrt64/lib/python3.12/asyncio/__init__.py" ]]
+python_version="$(bash "$repo_root/scripts/windows/debugger_python_version.sh" "$install_dir/toolchain/ucrt64/bin/gdb.exe")"
+[[ -f "$install_dir/toolchain/ucrt64/bin/libpython$python_version.dll" ]]
+[[ -f "$install_dir/toolchain/ucrt64/lib/python$python_version/asyncio/__init__.py" ]]
 [[ -f "$install_dir/toolchain/ucrt64/share/gdb/python/gdb/dap/__init__.py" ]]
 [[ -f "$install_dir/toolchain/ucrt64/etc/gdbinit" ]]
 compiler_version="$("$install_dir/toolchain/ucrt64/bin/g++.exe" -dumpfullversion)"
