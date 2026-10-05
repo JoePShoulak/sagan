@@ -4,17 +4,23 @@ set -euo pipefail
 toolchain_root="${1:?expected UCRT64 toolchain root}"
 stage_root="${2:?expected staged UCRT64 root}"
 
-for required in bin/gdb.exe bin/libpython3.12.dll lib/python3.12 share/gdb/python; do
+compiler_version="$("$toolchain_root/bin/g++.exe" -dumpfullversion)"
+gcc_python="share/gcc-$compiler_version/python"
+for required in bin/gdb.exe bin/libpython3.12.dll lib/python3.12 share/gdb/python \
+  etc/gdbinit "$gcc_python/libstdcxx/v6/printers.py"; do
   if [[ ! -e "$toolchain_root/$required" ]]; then
     echo "The debugger toolchain is missing $toolchain_root/$required." >&2
     exit 1
   fi
 done
 
-mkdir -p "$stage_root/bin" "$stage_root/lib" "$stage_root/share/gdb"
+mkdir -p "$stage_root/bin" "$stage_root/lib" "$stage_root/share/gdb" \
+  "$stage_root/share/gcc-$compiler_version" "$stage_root/etc"
 cp -L "$toolchain_root/bin/gdb.exe" "$stage_root/bin/gdb.exe"
 cp -a "$toolchain_root/lib/python3.12" "$stage_root/lib/"
 cp -a "$toolchain_root/share/gdb/python" "$stage_root/share/gdb/"
+cp -a "$toolchain_root/$gcc_python" "$stage_root/share/gcc-$compiler_version/"
+cp "$toolchain_root/etc/gdbinit" "$stage_root/etc/gdbinit"
 
 # The Python regression suite is not a debugger runtime dependency. Confirm
 # this exact generated target is inside the repository before pruning it.

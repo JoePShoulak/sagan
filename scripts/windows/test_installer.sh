@@ -40,6 +40,7 @@ for packaged in assets/sagan-resource.o licenses/debugger/GDB-GPL-3.0.txt \
                 toolchain/ucrt64/bin/gdb.exe toolchain/ucrt64/bin/libpython3.12.dll \
                 toolchain/ucrt64/lib/python3.12/asyncio/__init__.py \
                 toolchain/ucrt64/share/gdb/python/gdb/dap/__init__.py \
+                toolchain/ucrt64/etc/gdbinit \
                 libraries/index.tsv libraries/render/sagan.toml \
                 libraries/render/src/window.sagan libraries/render/src/canvas.sagan \
                 libraries/render/native/window_bridge.hpp libraries/render/native/window_bridge.cpp \
@@ -48,6 +49,11 @@ for packaged in assets/sagan-resource.o licenses/debugger/GDB-GPL-3.0.txt \
                 examples/two_body_demo/src/main.sagan; do
   [[ -f "$install_dir/$packaged" ]] || { echo "Installer omitted $packaged" >&2; exit 1; }
 done
+compiler_version="$("$install_dir/toolchain/ucrt64/bin/g++.exe" -dumpfullversion)"
+[[ -f "$install_dir/toolchain/ucrt64/share/gcc-$compiler_version/python/libstdcxx/v6/printers.py" ]] || {
+  echo "Installer omitted libstdc++ GDB pretty-printers." >&2
+  exit 1
+}
 
 # Run installed executables without any MinGW/MSYS2 compiler-runtime directory.
 # This catches accidental dependencies on libgcc_s_seh-1.dll,

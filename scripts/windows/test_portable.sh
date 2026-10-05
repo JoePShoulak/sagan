@@ -33,6 +33,9 @@ fi
 [[ -f "$install_dir/toolchain/ucrt64/bin/libpython3.12.dll" ]]
 [[ -f "$install_dir/toolchain/ucrt64/lib/python3.12/asyncio/__init__.py" ]]
 [[ -f "$install_dir/toolchain/ucrt64/share/gdb/python/gdb/dap/__init__.py" ]]
+[[ -f "$install_dir/toolchain/ucrt64/etc/gdbinit" ]]
+compiler_version="$("$install_dir/toolchain/ucrt64/bin/g++.exe" -dumpfullversion)"
+[[ -f "$install_dir/toolchain/ucrt64/share/gcc-$compiler_version/python/libstdcxx/v6/printers.py" ]]
 [[ -f "$install_dir/licenses/debugger/GDB-GPL-3.0.txt" ]]
 grep -q 'GNU GENERAL PUBLIC LICENSE' "$install_dir/licenses/debugger/GDB-GPL-3.0.txt"
 [[ -f "$install_dir/assets/sagan-resource.o" ]]
@@ -46,6 +49,8 @@ grep -q 'GNU GENERAL PUBLIC LICENSE' "$install_dir/licenses/debugger/GDB-GPL-3.0
 runtime_isolated_path="/usr/bin:/bin:/c/Windows/System32:/c/Windows"
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" --version
 PATH="$runtime_isolated_path" "$install_dir/toolchain/ucrt64/bin/gdb.exe" --version
+PATH="$runtime_isolated_path" "$install_dir/toolchain/ucrt64/bin/gdb.exe" --batch \
+  -ex 'info pretty-printer' | grep -Fq 'libstdc++-v6'
 PATH="$runtime_isolated_path" "$install_dir/bin/sagan.exe" "$repo_root/tests/fixtures/runtime/smoke.sagan"
 unset SAGAN_PACKAGE_INDEX
 orbit_output="$(PATH="$runtime_isolated_path" \

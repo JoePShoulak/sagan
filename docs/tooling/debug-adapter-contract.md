@@ -11,8 +11,9 @@ verified_by: null
 
 The repository now builds an **experimental** `bin/sagan-dap.exe` on Windows
 (`bin/sagan-dap` on Linux) with `make bin/sagan-dap`. Windows installer and
-portable staging now include the adapter, GDB 16.3, and its relocated Python
-runtime; the extracted portable payload passed the DAP protocol suite with
+portable staging now include the adapter, GDB 16.3, its relocated Python
+runtime, the prefix-local `etc/gdbinit`, and version-matched libstdc++ Python
+pretty-printers. The extracted portable payload passed the DAP protocol suite with
 only Windows system directories on `PATH`. This is not yet advertised by
 compiler capability discovery. Editor clients must not
 offer a supported Sagan debug configuration on its presence alone.
@@ -75,10 +76,12 @@ pointer field without a debuggee call and returns the Sagan type. A
 pre-initialization function-entry probe and arbitrary expressions are refused.
 Collections, nested values, optimized builds, and general expression
 evaluation remain unsupported. String display is verified for local and
-parameter values with system GDB, not yet for every string storage or lifetime
-context. The extracted 4.9.2 Windows portable ZIP currently fails the same
-String-value probe with bundled GDB returning empty strings; the bundled
-runtime must pass before `debugVariables` or `debugEvaluate` can be advertised.
+parameter values with system and bundled GDB, not yet for every string storage
+or lifetime context. A prior portable build returned empty strings because it
+omitted libstdc++'s printer startup and Python package; the isolated-PATH
+portable gate now checks their presence and runs the String-value probe.
+Broader value support is still required before `debugVariables` or
+`debugEvaluate` can be advertised.
 `debugEvaluate` and `debugVariables` remain false.
 
 The Windows prototype uses GDB 16.3's native DAP interpreter behind a
