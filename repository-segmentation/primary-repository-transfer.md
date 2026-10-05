@@ -13,13 +13,15 @@ Before scheduling the transfer:
    create or receive repositories in `Sagan-Shoulak`.
 2. Confirm that `Sagan-Shoulak/sagan` does not already exist and that no
    repository or fork will prevent GitHub from preserving the old URL redirect.
-3. Record the destination visibility, organization owner/team access, `dev`
+3. Preserve the source repository's public visibility. Record organization
+   owner/team access, `dev`
    and `main` protection, Actions policy, environment reviewers, runner access,
    Pages/custom-domain behavior, and secret owners.
 4. Reach a clean reviewed `dev` commit and run the relevant hosting, workflow,
    documentation, release-policy, and integration checks. Do not run the full
    repository suite solely for a transfer; it remains reserved for promotion
    from `dev` to `main` or a release.
+   The local `dev` commit must match the remote `dev` commit at the freeze.
 5. Create and verify an offline mirror backup and ref inventory. Store its
    location and hashes outside this checkout in the approved recovery system.
 6. Freeze releases, documentation deployment, mirror synchronization, branch
@@ -44,6 +46,8 @@ gh api repos/JoePShoulak/sagan/branches/main/protection
 Query secret and environment *names and policy only*. Never print secret
 values. Verify the four environments and two secret names listed in
 `primary-transfer.toml`, plus access for the `sagan-docs-hp1` runner.
+The read-only October 5 snapshot is in `audits/github-transfer-2026-10-05.md`;
+recheck it immediately before transfer because GitHub settings and `dev` move.
 
 ## Backup immediately before transfer
 

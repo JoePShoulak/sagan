@@ -20,7 +20,8 @@ extraction. The canonical policy remains the
   preservation-first filter, verification, publication, and rollback draft.
 - `primary-transfer.toml` inventories the intact repository's transfer surface;
   `primary-repository-transfer.md` is the transfer, verification, and recovery
-  runbook. The primary transfer must pass before any split repository exists.
+  runbook. `audits/` records dated read-only GitHub settings snapshots. The
+  primary transfer must pass before any split repository exists.
 - `vscode-relocation.toml` assigns destination paths and rewrites for every
   extension-owned file outside `editors/vscode-sagan/`; the validator checks it
   against the exact ownership manifest.

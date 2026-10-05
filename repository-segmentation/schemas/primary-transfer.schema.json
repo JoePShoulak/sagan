@@ -9,6 +9,7 @@
     "source",
     "destination",
     "required_default_branch",
+    "required_visibility",
     "split_repository_creation_blocked_until_verified",
     "local_remote",
     "github",
@@ -20,6 +21,7 @@
     "source": { "const": "JoePShoulak/sagan" },
     "destination": { "const": "Sagan-Shoulak/sagan" },
     "required_default_branch": { "const": "dev" },
+    "required_visibility": { "const": "public" },
     "split_repository_creation_blocked_until_verified": { "const": true },
     "local_remote": {
       "type": "object",

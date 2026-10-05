@@ -52,8 +52,39 @@ else
   block "origin does not match the recorded pre-transfer repository"
 fi
 
+local_dev="$(git rev-parse refs/heads/dev 2>/dev/null || true)"
+remote_dev="$(git ls-remote origin refs/heads/dev 2>/dev/null | cut -f1 || true)"
+printf 'INFO: local_dev=%s\n' "$local_dev"
+printf 'INFO: remote_dev=%s\n' "$remote_dev"
+if [[ -n "$local_dev" && "$local_dev" == "$remote_dev" ]]; then
+  pass "local dev matches origin dev"
+else
+  block "local dev does not match origin dev or the remote is unavailable"
+fi
+
 if gh auth status >/dev/null 2>&1; then
   pass "GitHub CLI authentication is valid"
+  source_policy="$(gh api repos/JoePShoulak/sagan --jq '[.visibility, .default_branch] | join(" ")' 2>/dev/null || true)"
+  if [[ "$source_policy" == "public dev" ]]; then
+    pass "source repository is public with dev as its default branch"
+  else
+    block "source visibility or default branch differs from the transfer inventory"
+  fi
+
+  organization_role="$(gh api user/memberships/orgs/Sagan-Shoulak --jq '[.state, .role] | join(" ")' 2>/dev/null || true)"
+  if [[ "$organization_role" == "active admin" ]]; then
+    pass "authenticated account is an active organization admin"
+  else
+    block "authenticated account lacks confirmed organization admin membership"
+  fi
+
+  if destination_response="$(gh api repos/Sagan-Shoulak/sagan --jq .full_name 2>&1)"; then
+    block "destination repository already exists"
+  elif [[ "$destination_response" == *"HTTP 404"* ]]; then
+    pass "destination repository returned HTTP 404 to the organization admin"
+  else
+    block "destination repository availability could not be verified"
+  fi
 else
   block "GitHub CLI authentication is invalid"
 fi

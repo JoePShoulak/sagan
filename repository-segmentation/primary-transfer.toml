@@ -2,6 +2,7 @@ schema_version = 1
 source = "JoePShoulak/sagan"
 destination = "Sagan-Shoulak/sagan"
 required_default_branch = "dev"
+required_visibility = "public"
 split_repository_creation_blocked_until_verified = true
 
 [local_remote]

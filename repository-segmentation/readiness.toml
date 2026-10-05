@@ -2,15 +2,17 @@ schema_version = 1
 
 [baseline]
 branch = "dev"
-commit = "c8fa3a1"
+commit = "pending-current-dev-selection"
+initial_preparation_commit = "c8fa3a1"
+remote_dev_observed_2026_10_05 = "1e1675037ca5273c1381588e6a8dadd395813bb6"
 backup_reference = "unrecorded"
 full_suite = "required-only-for-main-promotion-or-release"
 owner_recovery_drill = "not-run"
 
 [tooling]
 git_filter_repo = "missing"
-github_cli_authentication = "invalid"
-destination_repository_access = "unverified"
+github_cli_authentication = "valid-2026-10-05"
+destination_repository_access = "org-admin-confirmed-target-not-found-2026-10-05"
 vscode_local_extraction_rehearsal = "passed-2026-10-05"
 vscode_shared_file_import = "not-rehearsed"
 vscode_live_host_rehearsal = "unverified-after-host-exit"
@@ -44,7 +46,7 @@ evidence = "Native rendering and released package formats remain undecided."
 [[decisions]]
 id = "github-governance"
 status = "required"
-evidence = "Teams, protections, secrets, environments, runners, and transfer permission are unrecorded."
+evidence = "A read-only source-settings snapshot is in audits/github-transfer-2026-10-05.md. Target team policy, dev protection choice, missing release-signing secret, and post-transfer parity remain unresolved."
 
 [[decisions]]
 id = "primary-repository-transfer"

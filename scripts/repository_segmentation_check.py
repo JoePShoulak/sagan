@@ -172,6 +172,8 @@ def check_primary_transfer() -> None:
         fail("primary-transfer.toml has an unexpected destination repository")
     if data.get("required_default_branch") != "dev":
         fail("primary-transfer.toml must preserve dev as the default branch")
+    if data.get("required_visibility") != "public":
+        fail("primary-transfer.toml must preserve the source repository's public visibility")
     if data.get("split_repository_creation_blocked_until_verified") is not True:
         fail("primary transfer must block split repository creation until verified")
 
