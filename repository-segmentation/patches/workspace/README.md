@@ -5,10 +5,10 @@ It is not a published split, and it must not be applied to the intact Sagan
 repository. The path-only filtered base came from source preparation commit
 `68d55b003709e28b4e96bdcbd22d8341018c2253` and has filtered HEAD
 `47a72ef3a23421248dc2f983ead8d5548a5d473d`. Verify that base before
-applying the three numbered patches with `git am` in a disposable normal clone
+applying the four numbered patches with `git am` in a disposable normal clone
 of the filtered repository. The expected draft result is commit
-`711d235d491046e9add6b259217c7706c152c806`, tree
-`e7257c6364f38a66d03e2992fbaf9e494c6ba766`.
+`e3573b68dbbe7a2909f6e6877f4cfd544cc42bf1`, tree
+`e5347f489c8a8ec4e1932f045259eb817bc9054e`.
 
 The first patch moves the proposed workspace manifest to root `workspace.toml`,
 activates only the already-transferred primary repository, and adds
@@ -28,13 +28,16 @@ exact-revision active repos; explicit local-candidate mode does not activate
 the planned GitHub remotes. A shared catalog resolved the game and passed
 three physics and two Windows rendering checks. Output is root-relative,
 path-validated, and never overwrites differing content without `--force`.
+The fourth patch drafts offline contract CI for Linux, Windows, and macOS.
+It does not assert that independent hosted CI has run or that native
+rendering works outside Windows.
 
 The first two patches' offline Python suite passed ten cases on Windows; the
 third raised the total to fifteen. A real GitHub clone
 into the ignored candidate `checkouts/sagan` passed at the locked SHA, and
 `bash scripts/status.sh` and `bash scripts/restore-lock.sh` reported the
 expected clean pin. Bash syntax and `git diff --check` passed. A fresh normal
-clone of the filtered base replayed all three patches with `git am`, matched
+clone of the filtered base replayed all four patches with `git am`, matched
 the expected tree, passed `git fsck --full`, and reran all fifteen tests. No split
 GitHub repository was created or changed, and no CI ran in a
 new destination. The candidate still contains monorepo-preparation audit

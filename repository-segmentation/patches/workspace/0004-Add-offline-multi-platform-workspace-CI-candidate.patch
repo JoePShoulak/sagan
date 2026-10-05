@@ -1,0 +1,78 @@
+From e3573b68dbbe7a2909f6e6877f4cfd544cc42bf1 Mon Sep 17 00:00:00 2001
+From: Joe P Shoulak <joepshoulak2@gmail.com>
+Date: Mon, 5 Oct 2026 11:11:01 -0500
+Subject: [PATCH] Add offline multi-platform workspace CI candidate
+
+---
+ .github/workflows/workspace-checks.yml | 28 ++++++++++++++++++++++++++
+ MAINTAINERS.md                         |  3 +++
+ TECHNOLOGY.md                          |  7 +++++--
+ 3 files changed, 36 insertions(+), 2 deletions(-)
+ create mode 100644 .github/workflows/workspace-checks.yml
+
+diff --git a/.github/workflows/workspace-checks.yml b/.github/workflows/workspace-checks.yml
+new file mode 100644
+index 0000000..deb00d3
+--- /dev/null
++++ b/.github/workflows/workspace-checks.yml
+@@ -0,0 +1,28 @@
++name: Workspace checks
++
++on:
++  push:
++    branches: [dev, main]
++  pull_request:
++
++permissions:
++  contents: read
++
++jobs:
++  offline-contracts:
++    name: Offline contracts (${{ matrix.os }})
++    runs-on: ${{ matrix.os }}
++    strategy:
++      fail-fast: false
++      matrix:
++        os: [ubuntu-latest, windows-latest, macos-latest]
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-python@v5
++        with:
++          python-version: '3.11'
++      - name: Check Bash syntax
++        shell: bash
++        run: bash -n scripts/bootstrap.sh scripts/status.sh scripts/restore-lock.sh scripts/integrated-package-smoke.sh
++      - name: Test offline workspace contracts
++        run: python -m unittest discover -s tests -p '*_test.py' -v
+diff --git a/MAINTAINERS.md b/MAINTAINERS.md
+index 1b6d78f..f9b5d00 100644
+--- a/MAINTAINERS.md
++++ b/MAINTAINERS.md
+@@ -148,3 +148,6 @@ The eventual maintainer guide must add exact editor generation,
+ workspace build/test/update/lock-refresh syntax, clean-machine drills,
+ platform-specific compiler prerequisites, cross-repo rollback, and CI secrets
+ without their values. Those capabilities are not implemented in this candidate.
++The draft `.github/workflows/workspace-checks.yml` runs the offline contract
++tests on Linux, Windows, and macOS without fetching planned split remotes;
++it remains locally reviewed only, not a successful hosted CI run.
+diff --git a/TECHNOLOGY.md b/TECHNOLOGY.md
+index 6c15965..f1c6ab8 100644
+--- a/TECHNOLOGY.md
++++ b/TECHNOLOGY.md
+@@ -44,8 +44,11 @@ mode requires clean, exact-revision active checkouts; explicit component mode
+ is for local extraction rehearsals only. The generated index is not a
+ workspace lock or a package release.
+ 
+-Editor workspace generation, lock refresh, build orchestration, hosted CI,
+-and full integration tests remain later milestones in
++An offline contract workflow is drafted for GitHub-hosted Linux, Windows,
++and macOS runners, but it cannot be confirmed as passing in an independent
++destination until that destination exists. Editor workspace generation,
++lock refresh, build orchestration, hosted cross-repository CI, and full
++integration tests remain later milestones in
+ [the roadmap](docs/contributing/repository-fracturing-roadmap.md).
+ 
+ The lock is about source compatibility. Release manifests and Sagan package
+-- 
+2.51.0.windows.2
+

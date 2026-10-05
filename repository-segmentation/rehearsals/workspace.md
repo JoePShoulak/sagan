@@ -82,3 +82,10 @@ functional candidate, `git fsck --full` passed, and all fifteen offline
 tests passed again. `--from-lock` intentionally refuses the current lock
 because physics/rendering remain planned. The combined index was generated
 under ignored `build/` and is not a public package catalog.
+
+A fourth patch drafts a three-platform GitHub Actions workflow for the
+offline workspace contract tests, without trying to fetch planned split
+repositories. It replayed cleanly; the candidate and replay trees both
+equal `e5347f489c8a8ec4e1932f045259eb817bc9054e`, and the fifteen
+offline tests passed again. The workflow has **not** run in an independent
+GitHub destination and does not establish hosted CI readiness.
