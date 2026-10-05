@@ -192,10 +192,12 @@ updated and returned to human documentation review.
 
 ## Mandatory new-chat onboarding prompt
 
-Every repository must contain `CODEX_START.md` at its root. This is a
-ready-to-paste prompt for starting a new Codex chat in that repository. It is
-an onboarding aid, not a replacement for `AGENTS.md`, `TECHNOLOGY.md`,
-`MAINTAINERS.md`, or canonical design documentation.
+Each repository begins with a root `CODEX_START.md`, a one-time ready-to-paste
+bootstrap prompt. After its first chat reads it and completes read-only
+orientation, that chat deletes the tracked file on a short-lived branch and
+opens a reviewed PR into `dev`. It must not be recreated. Future chats use
+the durable `AGENTS.md`, `TECHNOLOGY.md`, `MAINTAINERS.md`, repository maps,
+and canonical design documents; deletion must not remove essential knowledge.
 
 The prompt must instruct a new chat to begin read-only and read, in order:
 
@@ -226,8 +228,8 @@ After reading, the chat must report:
 
 The prompt must tell the chat not to edit, commit, push, publish, transfer,
 release, deploy, or resolve an unsettled design question during familiarization
-unless the user explicitly asks. It must require Bash-facing commands and
-preservation of unrelated changes.
+except for the expressly authorized tracked-prompt removal after orientation.
+It must require Bash-facing commands and preservation of unrelated changes.
 
 After familiarization, every newly authorized Codex request that changes a
 repository must use its own short-lived branch created from current `dev`. The
@@ -247,7 +249,15 @@ workflow as a mandatory shared clause and point to the exact commands and
 impact matrix in `MAINTAINERS.md`. Repository-specific prompts may add stricter
 requirements but may not omit or weaken this clause. The complete repository
 suite is reserved for promotion from `dev` to `main` and release preparation;
-promotion is contingent on that complete suite passing.
+promotion is contingent on that complete suite passing. The workflow must
+remain in `AGENTS.md` and `MAINTAINERS.md` after the prompt is deleted.
+
+Substantive work should use a GitHub issue (reusing an existing one when it
+fits) and a linked PR into `dev`. The organization Project tracks cross-repo
+milestones; a missing Project permission is recorded in the issue rather than
+blocking safe local validation. PRs include focused test evidence, dependency
+pins, and cross-repository integration impact. These rules must survive in
+durable guidance after one-time prompt deletion.
 
 Every prompt must also state the owner's teaching-first preference. By default,
 the chat should teach the owner what to write and why through explanations,
@@ -634,17 +644,18 @@ The fracture is complete only when:
 
 - all seven repositories exist under the intended organization;
 - each has independent history, `dev`/`main`, protection, CI, versioning,
-  issues, releases where applicable, `TECHNOLOGY.md`, `MAINTAINERS.md`, and
-  `CODEX_START.md`;
+  issues, releases where applicable, `AGENTS.md`, `TECHNOLOGY.md`, and
+  `MAINTAINERS.md`; the one-time `CODEX_START.md` has been tested and removed
+  through a reviewed onboarding PR;
 - each technology overview accurately explains the repository's moving parts
   and its conceptual place in the locked ecosystem without depending on chat
   history;
 - all maintainer and clean-chat onboarding drills pass;
-- every repository prompt and maintainer guide enforce and demonstrate the
+- every repository's durable guidance enforces and demonstrates the
   request-branch, focused-test, merge-to-`dev`, repeat-relevant-tests cycle and
   the full-suite-before-`main` rule, including when executable documentation
   examples are and are not required;
-- every repository prompt can identify the other specialized chats, route
+- every repository's durable guidance can identify the other specialized chats, route
   cross-repository work, and produce a context-complete handoff prompt;
 - `sagan-workspace` recreates a known-good ecosystem from exact commits;
 - every component's canonical docs appear in one official Sagan site;

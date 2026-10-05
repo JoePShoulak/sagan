@@ -1,6 +1,6 @@
 ---
 title: Active development roadmap
-status: work-in-progress
+status: review-needed
 publication_ready: false
 verified_in: null
 verified_on: null
@@ -73,14 +73,17 @@ integrated workspace, and the application currently named Space Game. The
 workspace and documentation aggregators must preserve one-command development
 and one official documentation site across those boundaries.
 
-Every extracted repository must satisfy the maintainer-handoff gate and include
-a root `CODEX_START.md`: a ready-to-paste prompt for a new Codex chat that
+Every extracted repository must satisfy the maintainer-handoff gate and begin
+with a root `CODEX_START.md`: a one-time prompt for a new Codex chat that
 teaches the agent both that repository and the Sagan ecosystem before work
 begins. Prompts must name the canonical files to read, dependency boundaries,
 workflow and validation commands, current compatibility metadata, and rules
 for preserving unrelated changes. A clean-chat onboarding drill must verify
 that each prompt produces an accurate repo map and safe first-step plan without
 depending on hidden conversation history.
+After that first chat reads the prompt, it deletes the tracked file through a
+reviewed PR into `dev`. `AGENTS.md`, `TECHNOLOGY.md`, `MAINTAINERS.md`, and the
+versioned maps retain the lasting onboarding and workflow knowledge.
 
 Every prompt must preserve the owner's teaching-first preference: explain what
 to code, why, and how before offering to implement it. Planning, diagnosis, and
@@ -104,6 +107,12 @@ versioning, issues, maintainer guidance, and new-chat onboarding; a clean
 workspace can build the locked ecosystem and Space Game; all component docs
 publish into the official Sagan site; and the owner can operate the result
 without undocumented cross-repository knowledge.
+
+**Post-publication status (2026-10-05):** all seven public repositories exist.
+The [cross-repository tracking issue](https://github.com/Sagan-Shoulak/sagan/issues/6)
+records remaining independent CI, workspace-lock activation, documentation
+aggregation, installed-artifact tests, clean-chat/owner drills, and reviewed
+cutover. Publication of a repository is not completion of these gates.
 
 ## 4. Finish compiler-owned extension contracts
 

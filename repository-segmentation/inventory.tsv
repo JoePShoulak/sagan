@@ -43,6 +43,7 @@ README.md	sagan	needs-rewrite	Replace monorepo ownership claims after successful
 SECURITY.md	sagan	needs-split	Retain language reporting policy and specialize a copy for every public repository.
 MAINTAINERS.md	sagan	needs-rewrite	Prototype contract; remove extracted operations only after parity.
 TECHNOLOGY.md	sagan	needs-rewrite	Prototype overview; narrow it as components leave.
-CODEX_START.md	sagan	needs-rewrite	Prototype prompt; add organization chat map and locked ecosystem sources.
+CODEX_START.md	sagan	needs-rewrite	One-time onboarding prompt; delete after first chat orientation.
+AGENTS.md	sagan	approved	Durable agent guidance after the one-time prompt is deleted.
 version.conf	sagan	proposed	Language version lineage remains with the language repository.
 repository-segmentation/	sagan-workspace	proposed	Migration contracts seed the future workspace; retain a historical pointer in sagan after completion.

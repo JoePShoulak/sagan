@@ -95,6 +95,8 @@ def check_inventory() -> None:
             fail(f"inventory path {item} has unknown destination {row['destination']}")
         if row["status"] not in ALLOWED_INVENTORY_STATUS:
             fail(f"inventory path {item} has unsupported status {row['status']}")
+        if item == "CODEX_START.md" and not (ROOT / item).exists():
+            continue  # One-time onboarding prompt is removed after first use.
         if not any(character in item for character in "*?[") and not (ROOT / item).exists():
             fail(f"inventory path does not exist: {item}")
 
@@ -295,7 +297,7 @@ def check_schemas_and_templates() -> None:
 
 
 def check_root_contract() -> None:
-    for name in ("README.md", "TECHNOLOGY.md", "MAINTAINERS.md", "CODEX_START.md"):
+    for name in ("README.md", "AGENTS.md", "TECHNOLOGY.md", "MAINTAINERS.md"):
         if not (ROOT / name).is_file():
             fail(f"current repository is missing root contract file {name}")
 

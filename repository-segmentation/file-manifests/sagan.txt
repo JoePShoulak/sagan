@@ -6,6 +6,7 @@
 .github/workflows/windows-installer.yml
 .gitignore
 .vscode/launch.json
+AGENTS.md
 CODEX_START.md
 MAINTAINERS.md
 README.md

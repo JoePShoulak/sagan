@@ -1,6 +1,6 @@
 ---
 title: Contributing
-status: work-in-progress
+status: review-needed
 publication_ready: false
 verified_in: null
 verified_on: null
@@ -29,7 +29,8 @@ Before changing code or documentation:
   including a root `MAINTAINERS.md` and clean owner drill for every repository;
 - follow the [multi-repository fracture roadmap](repository-fracturing-roadmap.md),
   including holistic documentation, Space Game extraction, and a tested root
-  `CODEX_START.md` onboarding prompt in every repository;
+  one-time `CODEX_START.md` onboarding followed by durable agent and
+  maintainer guidance in every repository;
 - use the concise [repository fracture execution plan](repository-fracturing-execution.md)
   when carrying out the split, while treating the full roadmap as authoritative;
 - preserve the [Windows installer release gate](windows-installer-release.md);

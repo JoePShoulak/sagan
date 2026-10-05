@@ -43,8 +43,9 @@ Before a repository is considered extracted, its root must contain:
 - `MAINTAINERS.md` for exact Bash commands, branching, testing, releasing,
   deployment, diagnosis, recovery, manifests, locks, CI, and an impact-based
   test-selection matrix;
-- `CODEX_START.md` for read-only onboarding, teaching-first behavior, ecosystem
-  chat routing, and repository-specific canonical sources;
+- a one-time `CODEX_START.md` for initial read-only onboarding, then durable
+  `AGENTS.md`, `TECHNOLOGY.md`, and `MAINTAINERS.md` for teaching-first behavior,
+  ecosystem chat routing, and repository-specific canonical sources;
 - machine-readable manifests, compatibility declarations, and exact locks; and
 - independently runnable focused tests, complete tests, documentation checks,
   CI, and release procedures.
@@ -74,9 +75,9 @@ a human audits it again.
 8. Leave `main` untouched until reviewed publication promotion from `dev`.
    Promotion and release require the complete repository suite to pass.
 
-Every repository's `CODEX_START.md` must repeat this impact-based test rule and
-route the chat to the authoritative matrix and exact Bash commands in
-`MAINTAINERS.md`. Repository-specific prompts may strengthen this shared
+Every repository's one-time `CODEX_START.md` must repeat this impact-based test
+rule, then its durable `AGENTS.md` and `MAINTAINERS.md` retain it after prompt
+deletion. Repository-specific prompts may strengthen this shared
 branch-test-refine-merge-verify clause, but none may omit or weaken it.
 
 ## Start gate

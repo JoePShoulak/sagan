@@ -1,8 +1,9 @@
 # Sagan technology overview
 
-This repository is currently the Sagan monorepo. It contains the language
-toolchain, editor integration, first-party physics and rendering packages,
-documentation, distribution machinery, and cross-component examples. The
+This repository is the Sagan language/toolchain source. It still contains
+monorepo-era editor, physics, rendering, documentation, and demo copies
+pending reviewed parity and cutover; their six public sibling repositories
+already exist but are not yet fully integrated. The
 [repository fracture roadmap](docs/contributing/repository-fracturing-roadmap.md)
 defines how those responsibilities will move into separately versioned
 repositories. Until an extraction passes its migration gate, this repository
