@@ -1,0 +1,14 @@
+face Named {
+  let .name: String
+  fun getName(): String => self.name
+}
+
+face Tagged {
+  const .TAG: String
+  fun tag(): String => self.TAG
+}
+
+face Calculated {
+  fun .base(): Int
+  fun doubled(): Int => self.base() * 2
+}

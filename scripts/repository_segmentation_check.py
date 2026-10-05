@@ -4,6 +4,7 @@ import csv
 import fnmatch
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tomllib
 
@@ -104,7 +105,6 @@ def check_inventory() -> None:
             return fnmatch.fnmatchcase(tracked_path, rule)
         return tracked_path == rule
 
-    import subprocess
     result = subprocess.run(
         ["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True
     )
@@ -194,6 +194,14 @@ def check_root_contract() -> None:
             fail(f"current repository is missing root contract file {name}")
 
 
+def check_file_manifests() -> None:
+    subprocess.run(
+        [sys.executable, "scripts/repository_segmentation_manifest.py", "--check"],
+        cwd=ROOT,
+        check=True,
+    )
+
+
 def main() -> int:
     try:
         check_ecosystem()
@@ -202,7 +210,9 @@ def main() -> int:
         check_components_and_readiness()
         check_schemas_and_templates()
         check_root_contract()
-    except (OSError, ValueError, json.JSONDecodeError, tomllib.TOMLDecodeError) as error:
+        check_file_manifests()
+    except (OSError, ValueError, json.JSONDecodeError, subprocess.CalledProcessError,
+            tomllib.TOMLDecodeError) as error:
         print(f"Repository segmentation check failed: {error}", file=sys.stderr)
         return 1
 

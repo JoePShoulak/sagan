@@ -1,0 +1,18 @@
+enum GuidanceStatus {
+  waiting
+  ready
+}
+
+fun telemetry_samples(samples) {
+  for sample in samples {
+    yield sample
+  }
+}
+
+hope {
+  telemetry.publish()
+} unless NetworkError {
+  telemetry.queue()
+} finally {
+  telemetry.flush!()
+}

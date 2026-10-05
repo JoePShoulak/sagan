@@ -1,0 +1,6 @@
+fun inspect(displacement: Vector2<Float, meter>): Void {
+  let squared = displacement.squared_length()
+  let magnitude = displacement.length()
+  let direction = displacement.normalized()
+  let changed = displacement.normalized!()
+}

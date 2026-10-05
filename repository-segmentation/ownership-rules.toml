@@ -1,0 +1,278 @@
+schema_version = 1
+precedence = "last-match-wins"
+
+[[rules]]
+pattern = ".github/**"
+repository = "sagan"
+
+[[rules]]
+pattern = ".github/workflows/documentation.yml"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = ".github/workflows/integration.yml"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = ".github/workflows/vscode-extension.yml"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = ".gitignore"
+repository = "sagan"
+
+[[rules]]
+pattern = ".vscode/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "CODEX_START.md"
+repository = "sagan"
+
+[[rules]]
+pattern = "MAINTAINERS.md"
+repository = "sagan"
+
+[[rules]]
+pattern = "README.md"
+repository = "sagan"
+
+[[rules]]
+pattern = "SECURITY.md"
+repository = "sagan"
+
+[[rules]]
+pattern = "SPACE_GAME_DESIGN.md"
+repository = "sagan-space-game"
+
+[[rules]]
+pattern = "TECHNOLOGY.md"
+repository = "sagan"
+
+[[rules]]
+pattern = "makefile"
+repository = "sagan"
+
+[[rules]]
+pattern = "mkdocs.yml"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "requirements-docs.txt"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "version.conf"
+repository = "sagan"
+
+[[rules]]
+pattern = "deploy/**"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "deploy/releases/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "docs/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "docs/assets/images/render-*"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "docs/contributing/documentation*"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "docs/contributing/hosting.md"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "docs/contributing/repository-fracturing-*"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "docs/getting-started/editor-support.md"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = "docs/standard-library/physics.md"
+repository = "sagan-physics"
+
+[[rules]]
+pattern = "docs/standard-library/rendering.md"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "docs/standard-library/two-body-window-roadmap.md"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "docs/tooling/editor-support.md"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = "docs/tooling/extension-readiness.md"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = "docs/tooling/vscode-extension-roadmap.md"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = "docs/overrides/**"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "docs/stylesheets/**"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "editors/vscode-sagan/**"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = "examples/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "examples/*_numeric_demo/**"
+repository = "sagan-physics"
+
+[[rules]]
+pattern = "examples/shape_text_demo/**"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "examples/window_demo/**"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "examples/lagrange_demo/**"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "examples/solar_lagrange_demo/**"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "examples/two_body_demo/**"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "libraries/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "libraries/physics/**"
+repository = "sagan-physics"
+
+[[rules]]
+pattern = "libraries/render/**"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "packaging/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "repository-segmentation/**"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "sandbox/**"
+repository = "sagan-space-game"
+
+[[rules]]
+pattern = "scripts/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "scripts/docs*"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "scripts/maintainer_docs_test.py"
+repository = "sagan-docs"
+
+[[rules]]
+pattern = "scripts/*_numeric_demo.sh"
+repository = "sagan-physics"
+
+[[rules]]
+pattern = "scripts/shape_text_demo.sh"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "scripts/window_demo.sh"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "scripts/lagrange_demo.sh"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "scripts/solar_lagrange_demo.sh"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "scripts/two_body_demo.sh"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "scripts/editor_tooling_demo.sh"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = "scripts/vscode/**"
+repository = "sagan-vscode"
+
+[[rules]]
+pattern = "scripts/repository_segmentation_check.*"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "src/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "tests/**"
+repository = "sagan"
+
+[[rules]]
+pattern = "tests/fixtures/physics/**"
+repository = "sagan-physics"
+
+[[rules]]
+pattern = "tests/fixtures/render_missing_bridge/**"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "tests/integration/*_numeric_test.sh"
+repository = "sagan-physics"
+
+[[rules]]
+pattern = "tests/integration/shape_text_test.sh"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "tests/integration/window_bridge_test.sh"
+repository = "sagan-render"
+
+[[rules]]
+pattern = "tests/integration/lagrange_window_test.sh"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "tests/integration/solar_lagrange_window_test.sh"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "tests/integration/two_body_window_test.sh"
+repository = "sagan-workspace"
+
+[[rules]]
+pattern = "third_party/**"
+repository = "sagan"

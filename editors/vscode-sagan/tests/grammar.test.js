@@ -5,7 +5,6 @@ const textmate = require("vscode-textmate");
 const oniguruma = require("vscode-oniguruma");
 
 const extensionRoot = path.resolve(__dirname, "..");
-const repositoryRoot = path.resolve(extensionRoot, "..", "..");
 const grammarPath = path.join(extensionRoot, "syntaxes", "sagan.tmLanguage.json");
 
 async function loadGrammar() {
@@ -189,14 +188,12 @@ async function main() {
   assert(fibonacci.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
     "Fibonacci example contains invalid scopes");
 
-  const executableFibonacci = tokenize(grammar,
-    fs.readFileSync(path.join(repositoryRoot, "examples", "fibonacci.sagan"), "utf8"));
+  const executableFibonacci = tokenize(grammar, readFixture("root_statements.sagan"));
   assertScoped(executableFibonacci, "exit", "entity.name.function.call.sagan");
   assert(executableFibonacci.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
     "Executable root statements contain invalid scopes");
 
-  const inheritance = tokenize(grammar,
-    fs.readFileSync(path.join(repositoryRoot, "tests", "fixtures", "runtime", "class_inheritance.sagan"), "utf8"));
+  const inheritance = tokenize(grammar, readFixture("inheritance.sagan"));
   assertScoped(inheritance, "GunShip", "entity.name.type.sagan");
   assertScoped(inheritance, "is", "keyword.operator.type.sagan");
   assertScoped(inheritance, "has", "keyword.operator.type.sagan");
@@ -209,8 +206,7 @@ async function main() {
   assert(inheritance.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
     "Class inheritance example contains invalid scopes");
 
-  const facePromises = tokenize(grammar,
-    fs.readFileSync(path.join(repositoryRoot, "tests", "fixtures", "runtime", "face_member_promises.sagan"), "utf8"));
+  const facePromises = tokenize(grammar, readFixture("face_member_promises.sagan"));
   assertScoped(facePromises, "Named", "entity.name.type.sagan");
   assertScoped(facePromises, "name", "variable.other.definition.sagan");
   assertScoped(facePromises, "TAG", "constant.other.definition.sagan");
@@ -218,14 +214,13 @@ async function main() {
   assert(facePromises.every((token) => token.scopes.every((scope) => !scope.startsWith("invalid.illegal"))),
     "Face member promises contain invalid scopes");
 
-  const vectorMethods = tokenize(grammar,
-    fs.readFileSync(path.join(repositoryRoot, "examples", "orbit_math.sagan"), "utf8"));
+  const vectorMethods = tokenize(grammar, readFixture("vector_methods.sagan"));
   assertScoped(vectorMethods, "squared_length", "entity.name.function.member.sagan");
   assertScoped(vectorMethods, "length", "entity.name.function.member.sagan");
   assertScoped(vectorMethods, "normalized", "entity.name.function.member.sagan");
   assertScoped(vectorMethods, "normalized!", "entity.name.function.mutating.sagan");
 
-  const astExample = fs.readFileSync(path.join(repositoryRoot, "examples", "ast.sagan"), "utf8");
+  const astExample = readFixture("parser_features.sagan");
   const parserTokens = tokenize(grammar, astExample);
   assertScoped(parserTokens, "yield", "keyword.control.flow.sagan");
   assertScoped(parserTokens, "ready", "variable.other.enummember.sagan");

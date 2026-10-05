@@ -1,0 +1,25 @@
+face Weapons {
+  fun fire(): String
+}
+
+face Assault has Weapons {
+}
+
+class Ship {
+  fun kind(): String => "ship"
+}
+
+class Aircraft {
+}
+
+class GunShip is Ship, Aircraft, has Assault {
+  fun kind(): String => super.Ship.kind()
+}
+
+class Vessel {
+  let name: String
+
+  new(name: String = "friend") {
+    self.name = name
+  }
+}

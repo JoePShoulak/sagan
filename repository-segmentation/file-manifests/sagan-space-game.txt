@@ -1,0 +1,4 @@
+SPACE_GAME_DESIGN.md
+sandbox/sagan.lock
+sandbox/sagan.toml
+sandbox/src/main.sagan
