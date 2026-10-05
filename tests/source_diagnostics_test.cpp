@@ -123,6 +123,18 @@ auto main() -> int
                       equivalent_units.value.has_value() && equivalent_units.diagnostics.empty(),
                   "derived equivalent units normalize default Float aliases");
 
+  source::document_snapshot dimensionless_ratio_document(
+      source::document_identity{source::document_id{12}, source::document_uri{"file:///dimensionless-ratio.sagan"}, {}},
+      1,
+      "fun sphere(mass: Float<kilogram>, parent: Float<kilogram>): Float<kilometer> {\n"
+      "  let ratio: Float = mass / parent\n"
+      "  return 1 kilometer * (ratio ^ (2.0 / 5.0))\n"
+      "}\n");
+  const auto dimensionless_ratio = language_service::check_document(dimensionless_ratio_document);
+  passed &= check(dimensionless_ratio.state == diagnostics::result_state::complete &&
+                      dimensionless_ratio.value.has_value() && dimensionless_ratio.diagnostics.empty(),
+                  "equal measured units cancel to a dimensionless scalar");
+
   diagnostics::cancellation_source pre_cancelled;
   pre_cancelled.cancel();
   const auto stopped = language_service::check_document(valid_document, {}, pre_cancelled.token());

@@ -543,6 +543,9 @@ namespace semantic::units
 
   auto format_type(const std::string_view numeric, const descriptor &unit) -> std::string
   {
+    if (unit.dimension.empty() && !unit.quantity && unit.kind == category::linear &&
+        unit.scale == rational{1, 1})
+      return std::string(numeric);
     return std::string(numeric) + '<' + unit.name + '>';
   }
 

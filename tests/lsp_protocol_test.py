@@ -14,6 +14,8 @@ WINDOWS_SERVER = os.name == "nt" or bool(os.environ.get("MSYSTEM"))
 SERVER = Path(os.environ["SAGAN_LSP_BINARY"]) if os.environ.get("SAGAN_LSP_BINARY") else (
     ROOT / "bin" / ("sagan-lsp.exe" if WINDOWS_SERVER else "sagan-lsp")
 )
+if WINDOWS_SERVER and SERVER.suffix.lower() != ".exe":
+    SERVER = SERVER.with_name(SERVER.name + ".exe")
 
 
 def server_file_uri(path):

@@ -2561,7 +2561,9 @@ namespace semantic
                       "Private field '" + member->member_name + "' of class '" + target_type +
                           "' is not accessible here",
                       value.range);
-              return substitute_type(field->second, object->second.type_parameters, instantiated_target.arguments);
+              return record(value,
+                            substitute_type(field->second, object->second.type_parameters,
+                                            instantiated_target.arguments));
             }
           }
           return expression(value);

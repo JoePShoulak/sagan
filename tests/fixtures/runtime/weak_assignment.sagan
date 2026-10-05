@@ -1,0 +1,13 @@
+class Parent {}
+
+class Child {
+  weak let parent: Parent
+
+  fun attach!(value: Parent): Void {
+    self.parent = value
+  }
+}
+
+let parent = Parent()
+let child = Child()
+child.attach!(parent)
