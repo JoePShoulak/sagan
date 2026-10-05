@@ -2,8 +2,11 @@
 
 This directory contains preparation and primary-transfer evidence for separating
 the Sagan monorepo. The intact primary repository moved to
-`Sagan-Shoulak/sagan` on October 5, 2026; no split repository has been created
-or canonical component files extracted. The canonical policy remains the
+`Sagan-Shoulak/sagan` on October 5, 2026. The first public split repository,
+`Sagan-Shoulak/sagan-workspace`, now exists with the historical transfer/audit
+archive retained by the owner's choice. Other component files remain in the
+intact primary repository pending their own extraction gates. The canonical
+policy remains the
 [repository fracture roadmap](../docs/contributing/repository-fracturing-roadmap.md).
 
 ## Current preparation artifacts
@@ -24,7 +27,8 @@ or canonical component files extracted. The canonical policy remains the
   runbook. `audits/` records dated read-only GitHub settings snapshots. The
   primary transfer result is recorded in
   `audits/primary-transfer-result-2026-10-05.md`; remaining integration gates
-  must pass before any split repository exists.
+  must pass before a destination is called independently operational or a
+  monorepo copy is retired.
 - `merge-readiness.md` separates this preparation branch's merge checks from
   the later transfer and per-repository extraction gates. The preparation
   branch merged into `dev` before the primary transfer.
