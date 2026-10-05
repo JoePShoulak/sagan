@@ -30,6 +30,14 @@ owner drills are verified *there* before the repository is called independent.
 The monorepo copy and live documentation remain in service until a later
 reviewed cutover. Hosted CI cannot be a pre-creation condition.
 
+As of October 5, 2026, the intact `sagan` repository and all six split
+repositories are public in `Sagan-Shoulak`. Initial publication is complete,
+but the split repositories are not yet independently operational. CI,
+documentation aggregation, package consumption, and source retirement remain
+separate gates. The
+[publication audit](https://github.com/Sagan-Shoulak/sagan/blob/dev/repository-segmentation/audits/initial-split-publication-2026-10-05.md)
+records the exact refs and deferred checks.
+
 ## Target organization and repositories
 
 Move the intact existing language repository into `Sagan-Shoulak` first, after

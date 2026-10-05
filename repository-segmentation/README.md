@@ -1,12 +1,13 @@
 # Repository segmentation preparation
 
-This directory contains preparation and primary-transfer evidence for separating
-the Sagan monorepo. The intact primary repository moved to
-`Sagan-Shoulak/sagan` on October 5, 2026. The first public split repository,
-`Sagan-Shoulak/sagan-workspace`, now exists with the historical transfer/audit
-archive retained by the owner's choice. Other component files remain in the
-intact primary repository pending their own extraction gates. The canonical
-policy remains the
+This directory contains the plan and audit record for separating the Sagan
+monorepo. The intact primary repository moved to `Sagan-Shoulak/sagan` on
+October 5, 2026. All six split repositories have since been created with
+reviewed `dev` and `main` histories; see
+[`audits/initial-split-publication-2026-10-05.md`](audits/initial-split-publication-2026-10-05.md).
+The monorepo copies and live documentation site remain in service while
+independent CI, aggregation, consumption, and cutover are finished. The
+canonical policy remains the
 [repository fracture roadmap](../docs/contributing/repository-fracturing-roadmap.md).
 
 ## Current preparation artifacts
@@ -19,9 +20,9 @@ policy remains the
 - `components.toml` records extraction order, source roots, documentation mount
   points, and artifact classes. `readiness.toml` records approved, provisional,
   and still-required start-gate decisions without storing credentials.
-- `workspace.toml` is the proposed clone layout and repository URL map; it does
-  not imply that its planned remotes exist. `history-extraction.md` is the
-  preservation-first filter, verification, publication, and rollback draft.
+- `workspace.toml` is the clone layout and repository URL map.
+  `history-extraction.md` retains the preservation-first filter,
+  verification, publication, and rollback procedure.
 - `primary-transfer.toml` inventories the intact repository's transfer surface;
   `primary-repository-transfer.md` is the transfer, verification, and recovery
   runbook. `audits/` records dated read-only GitHub settings snapshots. The
@@ -48,16 +49,15 @@ policy remains the
 - `scripts/docs.sh` exposes separate structural and executable-example checks
   so documentation-only work can use the impact-based test policy.
 
-## Before moving any code
+## Before retiring monorepo copies
 
-- Confirm the passed post-transfer canonical references and new-organization
-  Codecov integration check; integrate the prepared badge URL with a reviewed
-  `dev` change, and confirm the recorded redirects, governance, CI,
-  documentation, owner recovery, and rollback before creating a split repository.
-- Resolve every `required` decision in `readiness.toml` and record its evidence.
+- Complete the post-publication CI, documentation aggregation, component
+  consumption, owner recovery, and rollback checks recorded in the split audit.
+- Resolve remaining `required` decisions in `readiness.toml` and record
+  their evidence before the affected cutover.
 - Resolve every `needs-split` and `needs-rewrite` inventory row into exact
   extraction ownership before deleting any monorepo copy.
-- Record a clean, green baseline commit and a recoverable backup reference.
+- Preserve the clean baseline and local backup references in the dated audits.
 - Select and pass the relevant checks for transfer or extraction impact. The
   full repository suite remains reserved for `dev` to `main` promotion or a
   release.

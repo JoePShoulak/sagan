@@ -14,34 +14,34 @@ state = "active"
 id = "sagan-vscode"
 url = "https://github.com/Sagan-Shoulak/sagan-vscode.git"
 checkout = "sagan-vscode"
-state = "planned"
+state = "active"
 
 [[repositories]]
 id = "sagan-physics"
 url = "https://github.com/Sagan-Shoulak/sagan-physics.git"
 checkout = "sagan-physics"
-state = "planned"
+state = "active"
 
 [[repositories]]
 id = "sagan-render"
 url = "https://github.com/Sagan-Shoulak/sagan-render.git"
 checkout = "sagan-render"
-state = "planned"
+state = "active"
 
 [[repositories]]
 id = "sagan-workspace"
 url = "https://github.com/Sagan-Shoulak/sagan-workspace.git"
 checkout = "sagan-workspace"
-state = "planned"
+state = "active"
 
 [[repositories]]
 id = "sagan-docs"
 url = "https://github.com/Sagan-Shoulak/sagan-docs.git"
 checkout = "sagan-docs"
-state = "planned"
+state = "active"
 
 [[repositories]]
 id = "sagan-space-game"
 url = "https://github.com/Sagan-Shoulak/sagan-space-game.git"
 checkout = "sagan-space-game"
-state = "planned"
+state = "active"
