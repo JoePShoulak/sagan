@@ -20,7 +20,7 @@ esac
   exit 2
 }
 
-source_repo="https://github.com/JoePShoulak/sagan.git"
+source_repo="https://github.com/Sagan-Shoulak/sagan.git"
 mkdir "$backup_root"
 printf 'Backup in progress at: %s\n' "$backup_root"
 git ls-remote --refs "$source_repo" | awk '{print $1 " " $2}' | sort > "$backup_root/source-before.refs"

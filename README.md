@@ -5,7 +5,7 @@
 # Sagan
 
 [![Development version 4.9.5](https://img.shields.io/badge/development-4.9.5-2563eb)](docs/contributing/versioning.md)
-[![Documentation](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/JoePShoulak/sagan/actions/workflows/documentation.yml)
+[![Documentation](https://github.com/Sagan-Shoulak/sagan/actions/workflows/documentation.yml/badge.svg)](https://github.com/Sagan-Shoulak/sagan/actions/workflows/documentation.yml)
 [![Codecov](https://codecov.io/gh/JoePShoulak/sagan/graph/badge.svg)](https://codecov.io/gh/JoePShoulak/sagan)
 
 Sagan is a strongly typed programming language for simulations: orbits,
@@ -110,7 +110,7 @@ Small conveniences stay readable: `5.times` makes `[0, 1, 2, 3, 4]`;
 ## Install Sagan
 
 Windows x64 is the first supported platform. Check
-**[GitHub Releases](https://github.com/JoePShoulak/sagan/releases)** for
+**[GitHub Releases](https://github.com/Sagan-Shoulak/sagan/releases)** for
 published builds. Stable installers and portable archives also appear on the
 **[Sagan download mirror](https://sagan.shoulak.org/downloads/)**. GitHub
 Releases remains the canonical source.

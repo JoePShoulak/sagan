@@ -58,7 +58,7 @@ printf '%s\n' \
   '  ]' \
   '}' > "$manifest"
 
-namespace="https://github.com/JoePShoulak/sagan/releases/$release_tag/sbom/$commit"
+namespace="https://github.com/Sagan-Shoulak/sagan/releases/$release_tag/sbom/$commit"
 printf '%s\n' \
   '{' \
   '  "spdxVersion": "SPDX-2.3",' \

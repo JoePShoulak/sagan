@@ -13,7 +13,7 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 
-API = "https://api.github.com/repos/JoePShoulak/sagan"
+API = "https://api.github.com/repos/Sagan-Shoulak/sagan"
 
 
 def api_json(path: str) -> object:

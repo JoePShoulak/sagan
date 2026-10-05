@@ -166,7 +166,7 @@ repository.
 During registration, add the custom label:
 
 ```bash
-./config.sh --url https://github.com/JoePShoulak/sagan \
+./config.sh --url https://github.com/Sagan-Shoulak/sagan \
   --token YOUR_TEMPORARY_REGISTRATION_TOKEN \
   --name hp1-sagan-docs \
   --labels sagan-docs-hp1 \

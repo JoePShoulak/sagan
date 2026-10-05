@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source_repo="JoePShoulak/sagan"
+source_repo="Sagan-Shoulak/sagan"
 releases_api="repos/$source_repo/releases?per_page=100"
 mode="${1:-inventory}"
 

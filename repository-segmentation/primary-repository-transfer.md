@@ -1,5 +1,10 @@
 # Primary repository organization transfer
 
+The intact transfer completed on October 5, 2026. This is the historical
+transfer runbook, **not** a procedure to run again. The frozen baseline,
+verified backup, parity results, and remaining post-transfer gates are in
+`audits/primary-transfer-result-2026-10-05.md`.
+
 This runbook prepares the transfer of the intact `JoePShoulak/sagan`
 repository to `Sagan-Shoulak/sagan`. It must be completed and verified before
 any split repository is created. Do not execute the transfer from this

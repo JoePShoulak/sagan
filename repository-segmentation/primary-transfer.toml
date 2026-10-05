@@ -37,59 +37,11 @@ workflows = [
 
 [[legacy_references]]
 path = "README.md"
-purpose = "documentation and Codecov badges plus release links"
-
-[[legacy_references]]
-path = "MAINTAINERS.md"
-purpose = "canonical clone command"
-
-[[legacy_references]]
-path = "docs/getting-started/downloads.md"
-purpose = "release download link"
-
-[[legacy_references]]
-path = "docs/getting-started/editor-support.md"
-purpose = "extension release link"
-
-[[legacy_references]]
-path = "docs/contributing/hosting.md"
-purpose = "self-hosted runner configuration"
-
-[[legacy_references]]
-path = "packaging/windows/sagan.iss"
-purpose = "publisher, support, and update URLs"
-
-[[legacy_references]]
-path = "deploy/releases/github.py"
-purpose = "GitHub API repository endpoint"
-
-[[legacy_references]]
-path = "deploy/releases/index.py"
-purpose = "rendered release navigation"
-
-[[legacy_references]]
-path = "scripts/release_metadata.sh"
-purpose = "SBOM namespace"
-
-[[legacy_references]]
-path = "scripts/primary_release_backup.sh"
-purpose = "pre-transfer release source; retire or update after cutover"
-
-[[legacy_references]]
-path = "scripts/create_primary_local_backup.sh"
-purpose = "pre-transfer mirror source; retire or update after cutover"
+purpose = "Old Codecov badge remains until a new-organization upload establishes coverage data"
 
 [[legacy_references]]
 path = "scripts/verify_primary_transfer_parity.sh"
-purpose = "source URL in post-transfer redirect and pre-transfer rehearsal checks"
-
-[[legacy_references]]
-path = "scripts/primary_release_backup_test.sh"
-purpose = "pre-transfer release-backup mock; retire or update after cutover"
-
-[[legacy_references]]
-path = "scripts/rehearse_primary_backup.sh"
-purpose = "pre-transfer mirror source; retire or update after cutover"
+purpose = "Historical source URL must remain for post-transfer redirect verification"
 
 [[external_integrations]]
 id = "github-actions"

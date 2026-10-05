@@ -29,7 +29,7 @@ On Windows x64, use Git Bash and the MSYS2 UCRT64 toolchain. `git`, `make`,
 bootstrap is equally validated. From a clean checkout:
 
 ```bash
-git clone https://github.com/JoePShoulak/sagan.git
+git clone https://github.com/Sagan-Shoulak/sagan.git
 cd sagan
 git switch dev
 bash scripts/test.sh

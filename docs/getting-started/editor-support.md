@@ -21,7 +21,7 @@ release asset or build it from source.
 ## Install from a Sagan release
 
 1. Open the [HP1 download mirror](https://sagan.shoulak.org/downloads/) or the
-   canonical [GitHub Releases](https://github.com/JoePShoulak/sagan/releases)
+   canonical [GitHub Releases](https://github.com/Sagan-Shoulak/sagan/releases)
    page.
 2. Select the same Sagan release as the compiler you installed.
 3. Download `sagan-language-EXTENSION_VERSION.vsix` and its `.sha256` file.

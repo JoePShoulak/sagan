@@ -19,7 +19,7 @@ locations:
 - **[HP1 download mirror](https://sagan.shoulak.org/downloads/)** — installers,
   portable ZIP archives, VS Code extension packages, checksums, release
   manifests, and software bills of materials hosted beside this documentation.
-- **[GitHub Releases](https://github.com/JoePShoulak/sagan/releases)** — the
+- **[GitHub Releases](https://github.com/Sagan-Shoulak/sagan/releases)** — the
   canonical source and release record.
 
 The HP1 copy is a convenience mirror. Stable releases and public release

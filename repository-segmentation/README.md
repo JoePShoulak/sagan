@@ -1,8 +1,9 @@
 # Repository segmentation preparation
 
-This directory contains Phase 0 evidence for separating the Sagan monorepo. It
-does not create remote repositories, move canonical files, or authorize an
-extraction. The canonical policy remains the
+This directory contains preparation and primary-transfer evidence for separating
+the Sagan monorepo. The intact primary repository moved to
+`Sagan-Shoulak/sagan` on October 5, 2026; no split repository has been created
+or canonical component files extracted. The canonical policy remains the
 [repository fracture roadmap](../docs/contributing/repository-fracturing-roadmap.md).
 
 ## Current preparation artifacts
@@ -21,10 +22,12 @@ extraction. The canonical policy remains the
 - `primary-transfer.toml` inventories the intact repository's transfer surface;
   `primary-repository-transfer.md` is the transfer, verification, and recovery
   runbook. `audits/` records dated read-only GitHub settings snapshots. The
-  primary transfer must pass before any split repository exists.
+  primary transfer result is recorded in
+  `audits/primary-transfer-result-2026-10-05.md`; remaining integration gates
+  must pass before any split repository exists.
 - `merge-readiness.md` separates this preparation branch's merge checks from
-  the later transfer and per-repository extraction gates. It remains blocked
-  until the primary transfer can begin safely immediately after that merge.
+  the later transfer and per-repository extraction gates. The preparation
+  branch merged into `dev` before the primary transfer.
 - `owner-transfer-start-drill.md` is the owner's clean-checkout, local-backup
   recovery rehearsal required before this branch may merge.
 - `vscode-relocation.toml` assigns destination paths and rewrites for every
@@ -43,9 +46,9 @@ extraction. The canonical policy remains the
 
 ## Before moving any code
 
-- Transfer the intact primary repository to `Sagan-Shoulak/sagan` and verify
-  its redirects, remotes, governance, CI, documentation, integrations, owner
-  recovery, and rollback before creating any split repository.
+- Finish post-transfer canonical references and the new-organization Codecov
+  integration check; confirm the recorded redirects, governance, CI,
+  documentation, owner recovery, and rollback before creating a split repository.
 - Resolve every `required` decision in `readiness.toml` and record its evidence.
 - Resolve every `needs-split` and `needs-rewrite` inventory row into exact
   extraction ownership before deleting any monorepo copy.
@@ -70,11 +73,10 @@ git rev-parse HEAD
 git ls-files
 bash scripts/docs.sh check-structure
 bash scripts/repository_segmentation_check.sh
-bash scripts/primary_repository_transfer_audit.sh
 bash scripts/rehearse_primary_backup.sh
 bash scripts/primary_release_backup.sh inventory
 bash scripts/primary_release_backup_test.sh
-bash scripts/verify_primary_transfer_parity.sh /c/Users/joeps/coding/sagan-pretransfer-script-rehearsal-2026-10-05 JoePShoulak/sagan
+bash scripts/verify_primary_transfer_parity.sh /c/Users/joeps/coding/sagan-transfer-freeze-2026-10-05
 ```
 
 Run executable documentation examples only when examples or their supporting

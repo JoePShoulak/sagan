@@ -123,7 +123,7 @@ def render(releases: list[dict[str, object]]) -> str:
   </style>
 </head>
 <body>
-  <nav><a href="/">Documentation</a><a href="https://github.com/JoePShoulak/sagan/releases">GitHub releases</a></nav>
+  <nav><a href="/">Documentation</a><a href="https://github.com/Sagan-Shoulak/sagan/releases">GitHub releases</a></nav>
   <header><h1>Sagan downloads</h1><p>Windows installers, portable archives, VS Code extensions, checksums, and release metadata mirrored on HP1.</p></header>
   {empty}{''.join(sections)}
 </body>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source_repo="${1:-https://github.com/JoePShoulak/sagan.git}"
+source_repo="${1:-https://github.com/Sagan-Shoulak/sagan.git}"
 rehearsal_root="${2:-$(mktemp -d "${TMPDIR:-/tmp}/sagan-primary-backup.XXXXXX")}"
 if [[ "$rehearsal_root" != /* || ! -d "$rehearsal_root" ||
       -n "$(find "$rehearsal_root" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then

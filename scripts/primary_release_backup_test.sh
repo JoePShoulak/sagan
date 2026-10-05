@@ -12,7 +12,7 @@ export SAGAN_BACKUP_TEST_DIGEST="$(sha256sum "$fixture" | cut -d' ' -f1)"
 gh() {
   local query="" directory="" arg
   case "${1:-} ${2:-}" in
-    'api repos/JoePShoulak/sagan/releases?per_page=100')
+    'api repos/Sagan-Shoulak/sagan/releases?per_page=100')
       shift 2
       while (( $# )); do
         if [[ "$1" == --jq ]]; then
@@ -42,7 +42,7 @@ gh() {
           ;;
       esac
       ;;
-    'api repos/JoePShoulak/sagan/releases/tags/v-test')
+    'api repos/Sagan-Shoulak/sagan/releases/tags/v-test')
       printf 'asset.bin\tsha256:%s\t%s\n' "$SAGAN_BACKUP_TEST_DIGEST" "$SAGAN_BACKUP_TEST_SIZE"
       ;;
     'release download')
@@ -55,7 +55,7 @@ gh() {
           directory="$1"
           shift
         elif [[ "$arg" == --repo ]]; then
-          [[ "$1" == JoePShoulak/sagan ]] || return 1
+          [[ "$1" == Sagan-Shoulak/sagan ]] || return 1
           shift
         else
           printf 'Unexpected download argument: %s\n' "$arg" >&2
