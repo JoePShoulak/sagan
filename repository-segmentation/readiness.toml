@@ -57,6 +57,11 @@ status = "provisional"
 evidence = "Observed access, protections, environments, secret name, runner, and Actions settings remained after transfer. JoePShoulak is still the only collaborator and the stable-release reviewer. Tightening remains a later decision; releases remain paused and signing deferred. See audits/github-transfer-2026-10-05.md and audits/primary-transfer-result-2026-10-05.md."
 
 [[decisions]]
+id = "split-repository-initial-governance"
+status = "approved"
+evidence = "Owner confirmed on 2026-10-05: for each new public repository, use dev as the default unprotected branch; protect main with admin enforcement and linear history, and forbid force-push and deletion; initially grant only JoePShoulak admin access. Tighten later. This does not authorize copying secrets, runners, environments, or release permissions."
+
+[[decisions]]
 id = "primary-repository-transfer"
 status = "provisional"
 evidence = "The intact repository moved to Sagan-Shoulak/sagan with frozen dev 689e6ec, a verified local-only mirror and 33 release assets, matching destination refs/releases/settings, working old redirects, and a clean-clone focused bootstrap. Canonical reference updates and a new-organization Codecov upload remain before this gate is approved; see audits/primary-transfer-result-2026-10-05.md."
