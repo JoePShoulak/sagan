@@ -64,14 +64,13 @@ a human audits it again.
    the changed component works and every focused test passes.
 6. Commit only the intended paths and merge the completed request branch into
    `dev`.
-7. Run the post-merge checks required by the repository's impact matrix on the
-   resulting `dev`. Code and integration changes normally run the complete
-   suite. Documentation-only edits that do not affect executable examples run
-   documentation structure, metadata, link, and publication checks without
-   testing every example; changed examples or supporting behavior run the
-   relevant example tests. Resolve failures before declaring the request
-   complete.
+7. Rerun the relevant tests selected by the repository's impact matrix on the
+   resulting `dev`. Documentation-only edits that do not affect executable
+   examples run structural checks without testing every example; changed
+   examples or supporting behavior run the relevant example tests. Resolve
+   failures before declaring the request complete.
 8. Leave `main` untouched until reviewed publication promotion from `dev`.
+   Promotion and release require the complete repository suite to pass.
 
 Every repository's `CODEX_START.md` must repeat this impact-based test rule and
 route the chat to the authoritative matrix and exact Bash commands in

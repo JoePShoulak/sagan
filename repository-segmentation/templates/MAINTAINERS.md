@@ -10,14 +10,17 @@ clean-machine recovery.
 Every authorized Codex change request starts from current `dev` on a dedicated
 `codex/<request>` branch. Test only the affected work and refine until focused
 tests pass. Commit intended paths, merge into `dev`, and run the post-merge
-suite selected by the impact matrix. Reserve `main` for reviewed publication.
+relevant tests selected by the impact matrix. Reserve `main` for reviewed
+publication and require the full suite before promotion or release.
 
 ## Impact-based test matrix
 
-Replace this section with exact focused and post-merge Bash commands. Do not run
+Replace this section with exact focused and post-merge relevant Bash commands.
+Do not run the full suite for ordinary `dev` merges. Do not run
 unrelated executable documentation examples for a documentation-only change
 that cannot affect them. Run affected examples whenever their content or
-supporting behavior changes.
+supporting behavior changes. Record the complete suite separately as a required
+`dev`-to-`main` promotion and release gate.
 
 ## Release and recovery
 

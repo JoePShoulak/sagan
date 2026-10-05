@@ -16,11 +16,13 @@
 > Every authorized request that changes this repository gets a fresh
 > `codex/<request>` branch from current `dev`. Test only the affected work first
 > and refine it until it works and focused tests pass. Commit only intended
-> paths, merge the completed branch into `dev`, and run the post-merge suite
-> selected by the `MAINTAINERS.md` impact matrix. Code and integration changes
-> normally run the full suite. Documentation-only changes that cannot affect
+> paths, merge the completed branch into `dev`, and rerun the relevant tests
+> selected by the `MAINTAINERS.md` impact matrix against integrated `dev`.
+> Documentation-only changes that cannot affect
 > executable examples run structural checks without unrelated examples; test
-> examples when their content or supporting behavior changes.
+> examples when their content or supporting behavior changes. Run the full
+> repository suite only for promotion from `dev` to `main` or a release, and
+> block that promotion until the full suite passes.
 >
 > If another specialized chat owns work, identify it from the versioned chat
 > map and provide a self-contained ready-to-paste handoff prompt. Any

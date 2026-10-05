@@ -1,6 +1,6 @@
 ---
 title: Multi-repository fracture roadmap
-status: work-in-progress
+status: review-needed
 publication_ready: false
 verified_in: null
 verified_on: null
@@ -216,10 +216,9 @@ chat must test only what it changed first, diagnose and refine its work until
 the focused tests pass, and keep unrelated or concurrent changes out of its
 commits. It may merge the completed branch back into `dev` only after that
 focused gate.
-Immediately after the merge, it must run the post-merge checks required by the
+Immediately after the merge, it must rerun the relevant tests required by the
 repository's impact-based test matrix on `dev` and resolve any integration
-failure before reporting the request complete. Code and integration changes
-normally require the complete repository suite. A documentation-only change
+failure before reporting the request complete. A documentation-only change
 that does not alter executable examples or the behavior supporting them runs
 documentation structure, metadata, link, and publication checks without
 re-running every documentation example. Changed examples and language,
@@ -227,7 +226,9 @@ package, tooling, or harness changes that can affect examples require the
 relevant executable example tests. Every `CODEX_START.md` must state this
 workflow as a mandatory shared clause and point to the exact commands and
 impact matrix in `MAINTAINERS.md`. Repository-specific prompts may add stricter
-requirements but may not omit or weaken this clause.
+requirements but may not omit or weaken this clause. The complete repository
+suite is reserved for promotion from `dev` to `main` and release preparation;
+promotion is contingent on that complete suite passing.
 
 Every prompt must also state the owner's teaching-first preference. By default,
 the chat should teach the owner what to write and why through explanations,
@@ -295,7 +296,9 @@ The drill fails if the chat:
 - cannot find the correct build and test commands;
 - recommends the wrong branch or publication workflow;
 - fails to create a request branch, iterate through focused tests, merge the
-  passing work into `dev`, or run the impact-required post-merge checks;
+  passing work into `dev`, or rerun the relevant tests after integration;
+- runs the complete suite for an ordinary `dev` merge or recommends promotion
+  to `main` without a passing complete suite;
 - runs every executable documentation example for an unrelated documentation-
   only edit, or skips affected example tests when examples or their supporting
   behavior change;
@@ -425,14 +428,15 @@ Every product repository uses the same default policy:
   current `dev` on its own short-lived `codex/<request>` branch;
 - the request branch is refined until its focused tests pass, then merged back
   into `dev`;
-- the impact-required post-merge checks run on the resulting `dev`, and
+- the impact-required relevant tests are repeated on the resulting `dev`, and
   integration failures must be resolved before the request is complete;
-- code and integration changes normally run the complete repository suite,
-  while unrelated documentation-only changes do not re-run all executable
-  documentation examples; affected examples must still be tested;
+- ordinary `dev` merges do not run the complete repository suite, and unrelated
+  documentation-only changes do not re-run all executable documentation
+  examples; affected examples must still be tested;
 - commits follow the repository's Conventional Commit/version rules;
 - `main` is reserved for reviewed publication promotion;
-- promotion occurs by pull request from `dev` to `main` with required checks;
+- promotion occurs by pull request from `dev` to `main` only after the complete
+  repository suite and required release gates pass;
 - tags and public releases originate only from approved `main`; and
 - unrelated or concurrent changes are preserved and never swept into a move.
 
@@ -606,9 +610,9 @@ The fracture is complete only when:
   history;
 - all maintainer and clean-chat onboarding drills pass;
 - every repository prompt and maintainer guide enforce and demonstrate the
-  request-branch, focused-test, merge-to-`dev`, and impact-based post-merge
-  verification cycle, including when executable documentation examples are and
-  are not required;
+  request-branch, focused-test, merge-to-`dev`, repeat-relevant-tests cycle and
+  the full-suite-before-`main` rule, including when executable documentation
+  examples are and are not required;
 - every repository prompt can identify the other specialized chats, route
   cross-repository work, and produce a context-complete handoff prompt;
 - `sagan-workspace` recreates a known-good ecosystem from exact commits;

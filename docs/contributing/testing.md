@@ -1,6 +1,6 @@
 ---
 title: Testing
-status: work-in-progress
+status: review-needed
 publication_ready: false
 verified_in: null
 verified_on: null
@@ -69,11 +69,12 @@ prove that every language rule is correct.
 ## Branch and integration scope
 
 On a focused change branch, run the smallest set of tests that fully exercises
-the changed surfaces. After the branch merges into `dev`, CI reruns the complete
-compiler, coverage, documentation, extension, and installer gates against the
-combined repository state. Promotion to `main` then starts the stable-release
-pipeline. See [Change and publication lifecycle](change-lifecycle.md) for the
-required sequence.
+the changed surfaces and refine until they pass. After the branch merges into
+`dev`, rerun those relevant tests against the combined repository state; do not
+run the complete suite merely because work entered `dev`. Promotion from `dev`
+to `main`, and every release, is contingent on the complete compiler, coverage,
+documentation, extension, installer, and other required platform gates passing.
+See [Change and publication lifecycle](change-lifecycle.md) for the sequence.
 
 ## Documentation
 

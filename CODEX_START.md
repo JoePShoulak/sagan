@@ -19,12 +19,13 @@ Paste the following into a new chat when returning to this repository:
 > For every authorized request that changes the repository, start from current
 > `dev` on a new short-lived `codex/<request>` branch. Test only the affected
 > work first and refine it until it works and all focused tests pass. Commit
-> only intended paths, merge the completed branch into `dev`, then run the
-> post-merge suite required by the impact matrix in `MAINTAINERS.md`. Code and
-> integration changes normally require the full suite. Documentation-only
+> only intended paths, merge the completed branch into `dev`, then rerun those
+> relevant tests against the integrated state. Documentation-only
 > changes that cannot affect executable examples require structural docs checks
 > but not every example; test affected examples whenever their content or
 > supporting behavior changes. Resolve integration failures before completion.
+> Run the full repository suite only when promoting `dev` to `main` or preparing
+> a release; promotion is contingent on that full suite passing.
 
 The [maintainer entry point](MAINTAINERS.md) is the navigation index for
 compiler, editor, libraries, tests, documentation, release, and recovery.
