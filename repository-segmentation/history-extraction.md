@@ -13,9 +13,10 @@ been approved. Always operate on a temporary mirror, never the working checkout.
 - `git filter-repo` installed and its version recorded.
 - An approved exact include/rename list derived from `inventory.tsv`.
 
-Current audit on October 4, 2026: `git filter-repo` is not installed, and the
-configured GitHub CLI credential is invalid. These are start-gate blockers, not
-reasons to weaken the extraction procedure.
+The October 5, 2026 audit found that `git filter-repo` is not installed.
+GitHub CLI authentication now works for an active `Sagan-Shoulak` admin. The
+primary repository transfer, baseline selection, approved destination policy,
+backup, and rollback rehearsal still precede any extraction.
 
 The local fallback rehearsal script is
 `scripts/rehearse_vscode_extraction.sh`. It uses `git filter-branch` only to
