@@ -22,6 +22,10 @@ pattern = ".gitignore"
 repository = "sagan"
 
 [[rules]]
+pattern = "LICENSE.txt"
+repository = "sagan"
+
+[[rules]]
 pattern = ".vscode/**"
 repository = "sagan"
 

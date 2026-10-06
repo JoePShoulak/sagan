@@ -195,6 +195,9 @@ visibly work-in-progress until its human audit is complete.
 
 ## Origins and license
 
+Sagan is licensed under the GNU General Public License version 3 only
+(`GPL-3.0-only`). The complete license text is in [`LICENSE.txt`](LICENSE.txt).
+
 Sagan began with compiler infrastructure from Zachary Westerman's
 [Schematic](https://github.com/ZacharyWesterman/schematic). Sagan preserves the
 applicable attribution and GNU GPLv3 obligations of that work.
