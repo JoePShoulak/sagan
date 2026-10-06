@@ -3268,6 +3268,24 @@ namespace semantic
                     binding{"Function", callable_signature{{"Float64", "Float64", "String", "Int64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
         add_binding("__render_text_screen",
                     binding{"Function", callable_signature{{"Int64", "Int64", "String", "Int64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
+        add_binding("__render_ui_open",
+                    binding{"Function", callable_signature{{"String", "Int64", "Int64"}, "Bool", {}, {}}});
+        add_binding("__render_ui_poll", binding{"Function", callable_signature{{}, "Bool", {}, {}}});
+        add_binding("__render_ui_close", binding{"Function", callable_signature{{}, "Void", {}, {}}});
+        add_binding("__render_ui_width", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
+        add_binding("__render_ui_height", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
+        add_binding("__render_ui_begin", binding{"Function", callable_signature{{}, "Void", {}, {}}});
+        add_binding("__render_ui_fill",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "Float64", "Float64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
+        add_binding("__render_ui_text",
+                    binding{"Function", callable_signature{{"Float64", "Float64", "String", "Float64", "Int64", "Int64", "Int64"}, "Void", {}, {}}});
+        add_binding("__render_ui_present", binding{"Function", callable_signature{{}, "Void", {}, {}}});
+        add_binding("__render_ui_key_pressed",
+                    binding{"Function", callable_signature{{"String"}, "Bool", {}, {}}});
+        add_binding("__render_ui_pointer_pressed", binding{"Function", callable_signature{{}, "Bool", {}, {}}});
+        add_binding("__render_ui_pointer_released", binding{"Function", callable_signature{{}, "Bool", {}, {}}});
+        add_binding("__render_ui_pointer_x", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
+        add_binding("__render_ui_pointer_y", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
         add_binding("None", binding{"None", {}});
         add_binding("RuntimeError", binding{"Type", {}});
         enums["RuntimeError"] = {"integer_overflow", "division_by_zero", "modulo_by_zero",

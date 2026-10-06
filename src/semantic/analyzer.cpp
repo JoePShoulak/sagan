@@ -824,7 +824,14 @@ namespace semantic
                                               "__render_set_view", "__render_is_visible",
                                               "__render_present",
                                               "__render_circle", "__render_line", "__render_text",
-                                              "__render_text_screen"})
+                                              "__render_text_screen",
+                                              "__render_ui_open", "__render_ui_poll",
+                                              "__render_ui_close", "__render_ui_width",
+                                              "__render_ui_height", "__render_ui_begin",
+                                              "__render_ui_fill", "__render_ui_text",
+                                              "__render_ui_present", "__render_ui_key_pressed",
+                                              "__render_ui_pointer_pressed", "__render_ui_pointer_released",
+                                              "__render_ui_pointer_x", "__render_ui_pointer_y"})
           declare(std::string(bridge), symbol_kind::function, parser::span{0, 0},
                   symbol_visibility::private_access, symbol_origin::builtin,
                   {"Private sagan-render native bridge."});
