@@ -9,6 +9,11 @@ verified_by: null
 
 # License and attribution
 
+Sagan is distributed under `GPL-3.0-only`; the complete controlling text is
+the root `LICENSE.txt`. This choice applies to Sagan-owned
+code and preserves the GPLv3 obligations inherited from Schematic-derived
+foundations.
+
 Sagan vendors the header-only UniAlgo Unicode library for NFC normalization.
 Its public-domain and MIT license text is preserved in
 `third_party/uni-algo/LICENSE.md`. Generated identifier-property tables are
@@ -19,9 +24,9 @@ published under the GNU General Public License version 3, and the repository
 contains Schematic-derived infrastructure.
 
 !!! warning "Distribution requirement"
-    Applicable GPLv3 license and attribution obligations must be preserved before
-    Sagan or derived binaries are redistributed. This page is a project record,
-    not legal advice.
+    The complete `GPL-3.0-only` text, applicable attribution, and every bundled
+    third-party notice must accompany redistributed Sagan source or binaries.
+    This page is a project record, not legal advice.
 
 The inherited foundations include tokenizer state, source spans, diagnostics,
 generator utilities, parser-support utilities, AST foundations, and build

@@ -1,5 +1,6 @@
 path	destination	status	notes
 .gitignore	sagan	needs-rewrite	Each repository receives ownership-specific ignore rules.
+LICENSE.txt	sagan	approved	Canonical GPL-3.0-only license text for Sagan-owned code and distributions.
 .vscode/	sagan	needs-split	Language launch configuration remains; multi-root workspace configuration moves to workspace.
 .github/allowed_signers	sagan	needs-split	Preserve the historical language tag-signing policy while releases are paused; future signer policies are deferred until publication resumes.
 src/	sagan	proposed	Compiler, CLI, LSP, DAP, package system, runtime, and language services.
