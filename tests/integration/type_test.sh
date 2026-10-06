@@ -8,6 +8,27 @@ cd "$repo_root"
 
 bin/sagan --types tests/fixtures/semantic/types.sagan >/dev/null
 
+bin/sagan --types tests/fixtures/semantic/render_ui_bridge.sagan >/dev/null
+bin/sagan --emit-cpp tests/fixtures/semantic/render_ui_bridge.sagan build/render_ui_bridge.cpp >/dev/null
+if ! grep -q "sagan_5f5f72656e6465725f75695f6f70656e" build/render_ui_bridge.cpp; then
+  echo "Responsive UI bridge did not retain the deterministic encoded-symbol convention." >&2
+  exit 1
+fi
+
+if bin/sagan --types tests/fixtures/semantic/render_ui_bridge_argument_error.sagan; then
+  echo "Expected the responsive UI bridge argument mismatch to fail." >&2
+  exit 1
+fi
+
+echo "Responsive UI bridge argument mismatch failed as expected."
+
+if bin/sagan --types tests/fixtures/semantic/render_ui_bridge_return_error.sagan; then
+  echo "Expected the responsive UI bridge return mismatch to fail." >&2
+  exit 1
+fi
+
+echo "Responsive UI bridge return mismatch failed as expected."
+
 if bin/sagan --types tests/fixtures/semantic/type_error.sagan; then
   echo "Expected the type-error demo to fail." >&2
   exit 1
