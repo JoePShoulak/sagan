@@ -50,8 +50,10 @@ own public routing, certificates, and the public VIP.
   release to the generated `docs-site` branch using Mike.
 - `deploy/docs/manage.sh` packages the complete generated branch so HP1 receives
   the selector, default redirect, experimental version, and release archives.
-- `.github/workflows/documentation.yml` validates documentation on GitHub-hosted
-  infrastructure and deploys trusted `main` updates on HP1.
+- `.github/workflows/documentation.yml` validates primary component
+  documentation on GitHub-hosted infrastructure. It does not publish or deploy.
+  The split `sagan-docs` repository owns official-site publication and HP1
+  deployment.
 
 ## Publication gate
 
@@ -82,7 +84,9 @@ bash install-user.sh
 
 No command in this HP1 installation path requires `sudo`.
 
-For routine hosting updates from the Sagan repository, use:
+The following retained commands describe the former primary-repository path and
+are rollback evidence only. Routine official-site updates now originate in
+`Sagan-Shoulak/sagan-docs`:
 
 ```bash
 # Refresh only the HP1 origin.
@@ -113,10 +117,11 @@ in a temporary directory, and deploys that package. Local uncommitted Frontdoor
 work is neither changed nor deployed. The update uses that project's existing
 passwordless, narrowly scoped remote helpers; it does not prompt for `sudo`.
 
-## Versioned publication sequence
+## Historical versioned publication sequence
 
-Every validated documentation-relevant push to `main` updates only
-`experimental`. When a Sagan release and its documentation are approved:
+The primary repository no longer runs this sequence. Before the cutover, a
+validated documentation-relevant push updated `experimental`; an approved
+release used this sequence:
 
 1. review every page and record its verifier, date, and release documentation
    version;
@@ -138,21 +143,13 @@ matching follow-up release after the audit and release-check pass. Never
 retroactively publish or overwrite a 1.0.0 archive as though it had been
 audited before the 1.0.0 tag.
 
-## Automatic deployment from GitHub Actions
+## Primary workflow after cutover
 
-The `Documentation` workflow has three deliberately separate jobs:
-
-1. `validate` runs for matching pushes and pull requests on a disposable
-   GitHub-hosted runner.
-2. `publish-version` updates `experimental` on ordinary `main` pushes or creates
-   an explicitly requested released version on manual dispatch.
-3. `deploy` runs only after validation and publication succeed and only on a runner carrying the custom
-   `sagan-docs-hp1` label.
-
-Deployments share concurrency groups and do not cancel an installation already
-in progress. Only the version-publishing job can update `docs-site`. The deployment job has read-only repository permissions, targets
-the `documentation` GitHub environment, and refreshes only the HP1 origin. It
-does not change Frontdoor, DNS, or certificates.
+The primary `Documentation` workflow retains only `validate`, which runs for
+matching pushes, pull requests, and manual requests on a disposable
+GitHub-hosted runner. It has no content-write permission, HP1 runner job,
+release input, version publication, or deployment job. Publication and
+deployment concurrency now belong exclusively to `sagan-docs`.
 
 ### Register the HP1 runner
 
