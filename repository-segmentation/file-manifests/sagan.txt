@@ -7,7 +7,6 @@
 .gitignore
 .vscode/launch.json
 AGENTS.md
-CODEX_START.md
 MAINTAINERS.md
 README.md
 SECURITY.md
