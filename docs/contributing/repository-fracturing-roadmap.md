@@ -20,15 +20,31 @@ must have independent ownership, history, versioning, tests, CI, documentation,
 maintainer instructions, new-chat onboarding, and a verified place in the
 locked Sagan ecosystem.
 
-**2026-10-05 checkpoint:** all seven repositories exist. The five active
-source components build and pass focused tests from the exact workspace lock;
-the separate game also runs with the combined package index. Independent
-component CI and hosted workspace offline contracts pass. The official docs
-strictly assemble from locked sources but are not deployed. This is a
-source-integration checkpoint, not closure: installed-artifact tests,
-specialized-chat prompt deletion and drills, owner handoff/recovery exercises,
-and reviewed site/release cutover remain. The release and `main` promotion
-hold still applies.
+**2026-10-05 handoff checkpoint:** the intact primary repository has moved to
+`Sagan-Shoulak`, and all seven repositories exist. The five active workspace
+components build and pass focused tests from exact source pins; the separate
+game runs with the combined package index. The workspace's hosted offline
+contracts and each component's focused CI have passed. The split docs
+aggregator strictly builds from locked sources, but the existing primary
+repository still owns experimental-site deployment to HP1. Its deployment
+[passed](https://github.com/Sagan-Shoulak/sagan/actions/runs/37395943199).
+The split docs repository also retains a copied
+[workflow that fails](https://github.com/Sagan-Shoulak/sagan-docs/actions/runs/37390797941)
+because it expects primary-repository executable examples; resolve that
+workflow ownership before site cutover. This is verified source integration,
+not ecosystem closure or release authorization.
+
+| Remaining gate | Owning chat and tracking issue |
+| --- | --- |
+| Retire each one-time prompt through a reviewed PR, then perform owner onboarding and recovery drills | Each specialist; [Sagan onboarding issue](https://github.com/Sagan-Shoulak/sagan/issues/10) |
+| Verify consumption of installed, versioned artifacts without sibling source paths | Workspace coordinator with component owners; [workspace issue](https://github.com/Sagan-Shoulak/sagan-workspace/issues/5) |
+| Resolve duplicate docs workflow, prove preview/rollback parity, and obtain owner approval before changing the deployment owner | Docs specialist; [docs cutover issue](https://github.com/Sagan-Shoulak/sagan-docs/issues/7) |
+| Review removal of duplicate monorepo sources only after replacement paths and rollback are verified | Owning component chats and language chat; [split issue](https://github.com/Sagan-Shoulak/sagan/issues/6) |
+
+The [Sagan Development Project](https://github.com/orgs/Sagan-Shoulak/projects/4)
+now tracks cross-repository work. `main` promotion and releases remain on
+owner hold; do not use this handoff checkpoint to lift either hold or to
+remove source copies.
 
 The creation and independence gates are deliberately separate. Before a new
 public repository is created, its locally runnable candidate, exact history
@@ -41,9 +57,9 @@ The monorepo copy and live documentation remain in service until a later
 reviewed cutover. Hosted CI cannot be a pre-creation condition.
 
 As of October 5, 2026, the intact `sagan` repository and all six split
-repositories are public in `Sagan-Shoulak`. Initial publication is complete,
-but the split repositories are not yet independently operational. CI,
-documentation aggregation, package consumption, and source retirement remain
+repositories are public in `Sagan-Shoulak`. Initial publication and
+source-level integration are complete, but installed-artifact consumption,
+docs deployment ownership, owner drills, and source retirement remain
 separate gates. The
 [publication audit](https://github.com/Sagan-Shoulak/sagan/blob/dev/repository-segmentation/audits/initial-split-publication-2026-10-05.md)
 records the exact refs and deferred checks.
