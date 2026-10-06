@@ -117,15 +117,17 @@ The initial 1.0.0 release does not promote unaudited pages into a numbered
 documentation archive. The page-by-page owner audit begins immediately after
 that release and determines what needs correction before the first audited
 documentation version is published.
-Documentation changes on pull requests are validated on a GitHub-hosted runner.
-After a matching change reaches `main`, the same validation must pass before the
-experimental version is updated and the dedicated HP1 runner installs the
-versioned site.
+Documentation changes in this repository are validated on a GitHub-hosted
+runner. The primary repository workflow no longer publishes a version or
+deploys to HP1. `Sagan-Shoulak/sagan-docs` owns exact-lock aggregation,
+publication, and official-site deployment. The historical versioning and
+hosting scripts remain here temporarily as reviewed rollback evidence; do not
+invoke them as a second publication path.
 
-The workflow watches the documentation tree, MkDocs configuration and
-requirements, documentation scripts, and HP1 deployment files. It can also be
-started manually from GitHub Actions. See [Self-hosting](hosting.md) for runner
-setup and deployment safeguards.
+The validation workflow watches the documentation tree, MkDocs configuration,
+requirements, documentation scripts, deployment contracts, compiler sources,
+and its own workflow. See [Self-hosting](hosting.md) for the retained historical
+path and the current ownership boundary.
 
 ## Documentation version
 

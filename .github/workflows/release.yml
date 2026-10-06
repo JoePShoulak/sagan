@@ -306,10 +306,6 @@ jobs:
             }
           fi
           gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
-          if [[ "$TAG" != v1.0.0 && "$TAG" != v4.9.5 ]]; then
-            gh workflow run documentation.yml --repo "$GITHUB_REPOSITORY" \
-              --ref "$TAG" -f "release_version=$VERSION"
-          fi
 
   mirror-hp1:
     name: Mirror published stable release to HP1

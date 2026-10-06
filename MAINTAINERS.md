@@ -2,10 +2,9 @@
 
 This repository owns the Sagan compiler, language service, LSP and DAP
 executables, core runtime, first-party math, tests, and Windows distribution
-machinery. Its original physics, rendering, extension, game, and documentation
-copies still exist pending a reviewed cutover. The six public sibling
-repositories now exist under Sagan-Shoulak, but their mere publication does
-not mean their locks, CI, and documentation aggregation are operational.
+machinery. The split repositories own physics, rendering, editor, workspace,
+official-site assembly, and Space Game development. Historical monorepo copies
+remain only until their reviewed retirement gates pass.
 The [repository split roadmap](docs/contributing/repository-fracturing-roadmap.md)
 and [tracking issue](https://github.com/Sagan-Shoulak/sagan/issues/6) record
 the remaining gates. Preserve the old copies until parity and rollback are
@@ -14,7 +13,7 @@ verified.
 This repository does not own the user's installed toolchain, GitHub secrets,
 the HP1 host, or a signing certificate. Those are external dependencies.
 Downstream consumers include installed Sagan programs, the extension, the
-first-party libraries, and the documentation deployment. The compiler and
+first-party libraries, and the documentation aggregator. The compiler and
 language-service contracts are authoritative; editor code must not duplicate
 Sagan parsing or semantics.
 
@@ -22,9 +21,8 @@ The current known-good source revision is a Git commit, not a handwritten
 version in this file. Inspect `git rev-parse HEAD`, `git status --short`,
 `version.conf`, and `bash scripts/version.sh current` together. Package
 projects use `sagan.toml` and a lockfile as described in the
-[package catalog contract](docs/tooling/package-catalog-contract.md). The
-workspace lock exists, but its component entries are not all active yet;
-verify its contents rather than assuming published remotes are integrated.
+[package catalog contract](docs/tooling/package-catalog-contract.md). Verify
+the exact current ecosystem pins in `sagan-workspace/workspace.lock`.
 
 ## First safe checkout and verification
 
@@ -100,10 +98,10 @@ a publication approval.
 
 ## Current release and recovery boundaries
 
-All release publication and `main` promotion are currently paused by the
-owner; signing is not being pursued because of its cost. Do not create a tag,
-publish a release, or assume the missing signing secret will be configured
-during repository segmentation. The local release-policy scripts are
+Stable language release publication and broad `main` promotion remain paused;
+the owner's narrow split-completion authorization does not reopen unrelated
+release work. Do not create a language tag or assume the missing signing secret
+will be configured during repository segmentation. The local release-policy scripts are
 `bash scripts/release_policy_test.sh` and
 `bash scripts/main_release_policy_test.sh`. `bash scripts/docs.sh check` checks
 documentation build/examples; `bash scripts/docs.sh release-check` is a
