@@ -114,11 +114,18 @@ physics, rendering, and VS Code extension at exact commits; its local Windows
 build and focused test pass, and its offline contracts pass in hosted CI on
 Linux, macOS, and Windows. The game stays outside the default workspace but
 runs against its combined package catalog. The official docs aggregate strictly
-builds from locked component sources; it has not been deployed.
+builds from locked component sources. The existing primary documentation
+workflow still owns the experimental HP1 deployment and passed after this
+roadmap update; the split docs repository has not taken over deployment. Its
+copied primary-style workflow currently fails because the split repo does not
+contain primary executable examples, although the aggregate-docs check passes.
 
 The [cross-repository tracking issue](https://github.com/Sagan-Shoulak/sagan/issues/6)
 still tracks installed-artifact validation, clean-chat and owner handoff drills,
-Projects coordination, and reviewed publication/site cutover. The release and
+reviewed publication/site cutover, and recoverable retirement of duplicate
+sources. Cross-repository work is now tracked in the
+[Sagan Development Project](https://github.com/orgs/Sagan-Shoulak/projects/4).
+The release and
 `main` promotion hold remains in force. Source-level integration is not the
 entire definition of done.
 
