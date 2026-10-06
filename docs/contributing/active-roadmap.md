@@ -108,11 +108,19 @@ workspace can build the locked ecosystem and Space Game; all component docs
 publish into the official Sagan site; and the owner can operate the result
 without undocumented cross-repository knowledge.
 
-**Post-publication status (2026-10-05):** all seven public repositories exist.
+**Split validation status (2026-10-05):** all seven public repositories exist
+with independent focused CI. The workspace locks the language, official docs,
+physics, rendering, and VS Code extension at exact commits; its local Windows
+build and focused test pass, and its offline contracts pass in hosted CI on
+Linux, macOS, and Windows. The game stays outside the default workspace but
+runs against its combined package catalog. The official docs aggregate strictly
+builds from locked component sources; it has not been deployed.
+
 The [cross-repository tracking issue](https://github.com/Sagan-Shoulak/sagan/issues/6)
-records remaining independent CI, workspace-lock activation, documentation
-aggregation, installed-artifact tests, clean-chat/owner drills, and reviewed
-cutover. Publication of a repository is not completion of these gates.
+still tracks installed-artifact validation, clean-chat and owner handoff drills,
+Projects coordination, and reviewed publication/site cutover. The release and
+`main` promotion hold remains in force. Source-level integration is not the
+entire definition of done.
 
 ## 4. Finish compiler-owned extension contracts
 
