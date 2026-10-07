@@ -872,9 +872,10 @@ namespace parser
     print_documentation(stream, indent + 2);
   }
 
-  program::program(std::vector<statement_ref> body)
+  program::program(std::vector<statement_ref> body,
+                   std::vector<native_function_declaration> native_declarations)
       : ast_node(body.empty() ? span{0, 0} : span{body.front()->range.begin, body.back()->range.end}),
-        statements(std::move(body))
+        statements(std::move(body)), native_functions(std::move(native_declarations))
   {
   }
 

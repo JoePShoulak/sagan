@@ -845,6 +845,11 @@ namespace semantic
       auto run(const parser::program &tree) -> semantic_model
       {
         model.scopes.front().range = tree.range;
+        for (const auto &function : tree.native_functions)
+          if (!find(function.name))
+            declare(function.name, symbol_kind::function, parser::span{0, 0},
+                    symbol_visibility::private_access, symbol_origin::generated,
+                    {"Private native bridge declared by package '" + function.package + "'."});
         for (const auto &entry : tree.statements)
           if (const auto *type = dynamic_cast<const parser::type_declaration *>(entry.get()))
             type_declarations.emplace(type->name, type);

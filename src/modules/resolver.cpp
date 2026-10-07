@@ -151,6 +151,55 @@ namespace modules
       return value.substr(1, value.size() - 2);
     }
 
+    auto native_signature(const std::string &package, const std::string &name,
+                          std::string value, const std::size_t line)
+      -> parser::native_function_declaration
+    {
+      value = trim(std::move(value));
+      if (value.empty() || value.front() != '(')
+        throw manifest_error("Native function '" + name + "' must use '(Type, ...) -> ReturnType'", line);
+      int parentheses = 0;
+      int angles = 0;
+      std::size_t close = std::string::npos;
+      for (std::size_t index = 0; index < value.size(); ++index)
+      {
+        if (value[index] == '(') ++parentheses;
+        else if (value[index] == ')' && --parentheses == 0) { close = index; break; }
+        else if (value[index] == '<') ++angles;
+        else if (value[index] == '>') --angles;
+        if (parentheses < 0 || angles < 0)
+          throw manifest_error("Native function '" + name + "' has an unbalanced signature", line);
+      }
+      if (close == std::string::npos || parentheses != 0 || angles != 0)
+        throw manifest_error("Native function '" + name + "' has an unbalanced signature", line);
+      const std::string suffix = trim(value.substr(close + 1));
+      if (!suffix.starts_with("->"))
+        throw manifest_error("Native function '" + name + "' must use '(Type, ...) -> ReturnType'", line);
+      const std::string result = trim(suffix.substr(2));
+      if (result.empty()) throw manifest_error("Native function '" + name + "' requires a return type", line);
+      std::vector<std::string> parameters;
+      const std::string contents = value.substr(1, close - 1);
+      std::size_t begin = 0;
+      parentheses = 0;
+      angles = 0;
+      for (std::size_t index = 0; index <= contents.size(); ++index)
+      {
+        if (index < contents.size() && contents[index] == '(') ++parentheses;
+        else if (index < contents.size() && contents[index] == ')') --parentheses;
+        else if (index < contents.size() && contents[index] == '<') ++angles;
+        else if (index < contents.size() && contents[index] == '>') --angles;
+        if (index == contents.size() || (contents[index] == ',' && parentheses == 0 && angles == 0))
+        {
+          std::string parameter = trim(contents.substr(begin, index - begin));
+          if (parameter.empty() && !contents.empty())
+            throw manifest_error("Native function '" + name + "' has an empty parameter type", line);
+          if (!parameter.empty()) parameters.push_back(std::move(parameter));
+          begin = index + 1;
+        }
+      }
+      return {package, name, std::move(parameters), result};
+    }
+
     auto manifest_from_text(const std::filesystem::path &manifest_path,
                             const std::string_view text) -> package_manifest
     {
@@ -159,6 +208,7 @@ namespace modules
       std::unordered_map<std::string, std::string> package_values;
       std::unordered_map<std::string, std::string> application_values;
       std::unordered_map<std::string, std::string> dependency_values;
+      std::vector<std::pair<std::string, std::pair<std::string, std::size_t>>> native_values;
       std::string section;
       std::string line;
       std::size_t line_number = 0;
@@ -178,7 +228,7 @@ namespace modules
           continue;
         }
         if (section.empty())
-          throw manifest_error("Package manifest values must appear under [package], [application], or [dependencies]", line_number);
+          throw manifest_error("Package manifest values must appear under [package], [application], [dependencies], or [native]", line_number);
         const std::size_t equals = line.find('=');
         if (equals == std::string::npos)
           throw manifest_error("Invalid package manifest line " + std::to_string(line_number), line_number);
@@ -191,11 +241,24 @@ namespace modules
                                          manifest_application_keys.end();
         const bool dependency_key = section == "dependencies" &&
                                     std::regex_match(key, std::regex{"[A-Za-z][A-Za-z0-9_-]*"});
-        if (!package_key && !application_key && !dependency_key)
+        const bool native_key = section == "native" &&
+                                std::regex_match(key, std::regex{"[A-Za-z_][A-Za-z0-9_]*"});
+        if (!package_key && !application_key && !dependency_key && !native_key)
           throw manifest_error("Unknown package manifest key '" + key + "'", line_number);
+        const auto raw = trim(line.substr(equals + 1));
+        if (native_key)
+        {
+          std::string value;
+          try { value = quoted_value(raw, key); }
+          catch (const std::runtime_error &error) { throw manifest_error(error.what(), line_number); }
+          if (std::any_of(native_values.begin(), native_values.end(), [&](const auto &entry)
+              { return entry.first == key; }))
+            throw manifest_error("Duplicate package manifest key '" + key + "'", line_number);
+          native_values.push_back({key, {std::move(value), line_number}});
+          continue;
+        }
         auto &values = section == "package" ? package_values :
                        section == "application" ? application_values : dependency_values;
-        const auto raw = trim(line.substr(equals + 1));
         std::string value;
         try { value = section == "dependencies" ? raw : quoted_value(raw, key); }
         catch (const std::runtime_error &error) { throw manifest_error(error.what(), line_number); }
@@ -246,6 +309,12 @@ namespace modules
       }
       std::sort(dependencies.begin(), dependencies.end(), [](const auto &left, const auto &right)
       { return left.alias < right.alias; });
+      std::vector<parser::native_function_declaration> native_functions;
+      for (auto &[name, value] : native_values)
+        native_functions.push_back(native_signature(package_values.at("name"), name,
+                                                     std::move(value.first), value.second));
+      std::sort(native_functions.begin(), native_functions.end(), [](const auto &left, const auto &right)
+      { return left.name < right.name; });
       application_mode mode = application_mode::console;
       if (application_values.contains("mode"))
       {
@@ -263,7 +332,7 @@ namespace modules
         throw std::runtime_error("Package source directory does not exist: " + source_root.string());
       return package_manifest{package_values.at("name"), package_values.at("version"), absolute_manifest,
                               package_root, source_root, package_values.at("entry"), mode,
-                              std::move(dependencies)};
+                              std::move(dependencies), std::move(native_functions)};
     }
 
     auto manifest_from_file(const std::filesystem::path &manifest_path) -> package_manifest
@@ -761,7 +830,30 @@ namespace modules
           combined.push_back(std::move(entry));
         }
       }
-      return parser::program(std::move(combined));
+      std::map<std::string, parser::native_function_declaration> native_functions;
+      const auto collect_native = [&](const package_manifest &manifest)
+      {
+        for (const auto &declaration : manifest.native_functions)
+        {
+          const auto found = native_functions.find(declaration.name);
+          if (found != native_functions.end() && found->second != declaration)
+            throw std::runtime_error("Conflicting native function declaration '" + declaration.name +
+                                     "' in packages '" + found->second.package + "' and '" +
+                                     declaration.package + "'");
+          native_functions.insert_or_assign(declaration.name, declaration);
+        }
+      };
+      if (graph.package) collect_native(*graph.package);
+      for (const auto &module : graph.modules)
+        if (const auto owner = discover_manifest(module.path)) collect_native(*owner);
+      std::vector<parser::native_function_declaration> declarations;
+      declarations.reserve(native_functions.size());
+      for (auto &[name, declaration] : native_functions)
+      {
+        static_cast<void>(name);
+        declarations.push_back(std::move(declaration));
+      }
+      return parser::program(std::move(combined), std::move(declarations));
     }
   }
 

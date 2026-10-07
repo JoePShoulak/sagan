@@ -13,6 +13,7 @@ tests=(
   entry_test.sh
   module_test.sh
   package_dependency_test.sh
+  native_declaration_test.sh
   codegen_test.sh
   runtime_test.sh
   optional_test.sh

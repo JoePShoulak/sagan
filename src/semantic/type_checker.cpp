@@ -3286,6 +3286,24 @@ namespace semantic
         add_binding("__render_ui_pointer_released", binding{"Function", callable_signature{{}, "Bool", {}, {}}});
         add_binding("__render_ui_pointer_x", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
         add_binding("__render_ui_pointer_y", binding{"Function", callable_signature{{}, "Float64", {}, {}}});
+        for (const auto &function : tree.native_functions)
+        {
+          callable_signature declared;
+          for (const auto &parameter : function.parameters)
+            declared.parameters.push_back(fixed_annotation(std::optional<std::string>{parameter}));
+          declared.result = fixed_annotation(std::optional<std::string>{function.result});
+          if (const auto *existing = find(function.name))
+          {
+            const bool compatible_existing = std::any_of(existing->begin(), existing->end(), [&](const auto &entry)
+            {
+              return entry.callable && entry.callable->parameters == declared.parameters &&
+                     entry.callable->result == declared.result;
+            });
+            require(compatible_existing, "Native function '" + function.name + "' from package '" +
+                    function.package + "' conflicts with an existing declaration", parser::span{0, 0});
+          }
+          else add_binding(function.name, binding{callable_type(declared), std::move(declared)});
+        }
         add_binding("None", binding{"None", {}});
         add_binding("RuntimeError", binding{"Type", {}});
         enums["RuntimeError"] = {"integer_overflow", "division_by_zero", "modulo_by_zero",

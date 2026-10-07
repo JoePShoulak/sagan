@@ -567,11 +567,23 @@ namespace parser
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 
+  struct native_function_declaration
+  {
+    std::string package;
+    std::string name;
+    std::vector<std::string> parameters;
+    std::string result;
+
+    auto operator==(const native_function_declaration &) const -> bool = default;
+  };
+
   struct program final : ast_node
   {
     std::vector<statement_ref> statements;
+    std::vector<native_function_declaration> native_functions;
 
-    explicit program(std::vector<statement_ref> body);
+    explicit program(std::vector<statement_ref> body,
+                     std::vector<native_function_declaration> native_declarations = {});
     auto print(std::ostream &stream, int indent = 0) const -> void override;
   };
 }

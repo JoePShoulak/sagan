@@ -52,6 +52,18 @@ entry = "main"
 mode = "console"
 ```
 
+Packages can also declare typed functions supplied by their native host:
+
+```toml
+[native]
+__telemetry_distance = "(Float64<meter>, Bool) -> Float64<meter>"
+```
+
+Native declarations are visible only when their package is linked. The
+compiler checks calls with the same type, unit, arity, and return rules as
+Sagan functions, but emits no implementation. Generated C++ continues to call
+the existing encoded external symbol, so hosts do not need an ABI change.
+
 All four `[package]` quoted-string fields are required. `[application]` is
 optional. Its `mode` may be `"console"` or `"windowed"`; omission defaults to
 `"console"`. Console applications show and preserve terminal output when
