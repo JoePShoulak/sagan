@@ -1093,6 +1093,15 @@ namespace codegen
         return {};
       }
 
+      auto condition_expression(const parser::expression &value) -> std::string
+      {
+        const auto *binary = dynamic_cast<const parser::binary_expression *>(&value);
+        if (!binary || (binary->operator_text != "==" && binary->operator_text != "!="))
+          return expression(value);
+        return expression(*binary->left) + " " + operation(binary->operator_text, value.range) + " " +
+               converted_expression(*binary->right, expression_type(*binary->left));
+      }
+
       auto block(const parser::block_statement &value) -> void
       {
         output << "{\n";
@@ -1202,7 +1211,7 @@ namespace codegen
         }
         else if (const auto *conditional = dynamic_cast<const parser::if_statement *>(&value))
         {
-          output << "if (" << expression(*conditional->condition) << ") ";
+          output << "if (" << condition_expression(*conditional->condition) << ") ";
           block(*conditional->then_branch);
           if (conditional->else_branch)
           {
@@ -1224,7 +1233,10 @@ namespace codegen
         {
           output << "while (";
           if (loop->loop_kind == parser::condition_loop_statement::kind::until_loop) output << '!';
-          output << expression(*loop->condition) << ") ";
+          output << (loop->loop_kind == parser::condition_loop_statement::kind::until_loop
+                         ? expression(*loop->condition)
+                         : condition_expression(*loop->condition))
+                 << ") ";
           block(*loop->body);
           output << "\n";
         }

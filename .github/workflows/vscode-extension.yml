@@ -11,6 +11,7 @@ on:
       - "makefile"
       - "scripts/version.sh"
       - "src/**"
+      - "tests/fixtures/runtime/warning_clean_equality.sagan"
       - "third_party/uni-algo/**"
   workflow_dispatch:
 
@@ -55,6 +56,11 @@ jobs:
           fetch-depth: 0
       - name: Build compiler and language server
         run: make CXX=clang++ all bin/sagan-lsp
+      - name: Verify warning-clean generated equality
+        run: |
+          bin/sagan --emit-cpp tests/fixtures/runtime/warning_clean_equality.sagan build/warning_clean_equality.cpp
+          clang++ -std=c++23 -Wall -Wextra -Wpedantic -Werror -Wparentheses-equality build/warning_clean_equality.cpp -o build/warning_clean_equality
+          build/warning_clean_equality
       - name: Install extension dependencies
         working-directory: editors/vscode-sagan
         run: npm ci

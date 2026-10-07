@@ -1,0 +1,10 @@
+fun main(): Int {
+  let value = 0
+  if value == 1 return 1
+  while value != 2 {
+    value += 1
+  }
+  return value - 2
+}
+
+exit(main())

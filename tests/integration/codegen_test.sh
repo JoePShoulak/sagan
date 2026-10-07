@@ -21,6 +21,17 @@ echo
 
 bin/sagan --emit-cpp examples/showcase.sagan build/execution_demo.cpp
 
+bin/sagan --emit-cpp tests/fixtures/runtime/warning_clean_equality.sagan build/warning_clean_equality.cpp
+if ! grep -Fq "if (sagan_box_value(sagan_76616c7565) ==" build/warning_clean_equality.cpp ||
+   ! grep -Fq "while (sagan_box_value(sagan_76616c7565) !=" build/warning_clean_equality.cpp; then
+  echo "Generated control-flow equality expressions retained redundant parentheses." >&2
+  exit 1
+fi
+if command -v clang++ >/dev/null 2>&1; then
+  clang++ -std=c++23 -Wall -Wextra -Wpedantic -Werror -Wparentheses-equality \
+    build/warning_clean_equality.cpp -o build/warning_clean_equality
+fi
+
 echo
 echo "Generated C++:"
 echo "--------------"
@@ -89,6 +100,7 @@ expect_runtime_success() {
 
 expect_runtime_success tests/fixtures/runtime/weak_assignment.sagan
 expect_runtime_success tests/fixtures/runtime/face_default_diamond.sagan
+expect_runtime_success tests/fixtures/runtime/warning_clean_equality.sagan
 
 expect_runtime_error tests/fixtures/runtime/execution_exponent_zero_error.sagan \
   "Sagan exponentiation does not define 0 ^ 0"
