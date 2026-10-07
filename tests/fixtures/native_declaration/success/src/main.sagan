@@ -1,0 +1,4 @@
+module main
+
+let result: Float64<meter> = __test_native_distance(2.0 meter, true)
+assert(result == 2.0 meter)

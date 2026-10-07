@@ -1,0 +1,3 @@
+module main
+
+let result = __test_native_distance(2.0 meter)

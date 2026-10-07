@@ -1,0 +1,8 @@
+[package]
+name = "native-wrong-type"
+version = "0.1.0"
+source = "src"
+entry = "main"
+
+[native]
+__test_native_distance = "(Float64<meter>, Bool) -> Float64<meter>"

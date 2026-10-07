@@ -17,8 +17,8 @@
 
 namespace modules
 {
-  inline constexpr std::array<std::string_view, 3> manifest_sections{
-      "package", "application", "dependencies"};
+  inline constexpr std::array<std::string_view, 4> manifest_sections{
+      "package", "application", "dependencies", "native"};
   inline constexpr std::array<std::string_view, 4> manifest_package_keys{
       "name", "version", "source", "entry"};
   inline constexpr std::array<std::string_view, 1> manifest_application_keys{"mode"};
@@ -58,6 +58,7 @@ namespace modules
     std::string entry_module;
     application_mode mode{application_mode::console};
     std::vector<package_dependency> dependencies;
+    std::vector<parser::native_function_declaration> native_functions;
   };
 
   struct package_resolution_options
