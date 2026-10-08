@@ -24,6 +24,10 @@ present. An unknown target names the accepted targets; a missing asset asks the
 user to rebuild or reinstall Sagan with application assets. This makes an
 incomplete toolchain a packaging error instead of silently producing an
 unbranded application.
+The Windows query requires a Windows-built Sagan toolchain because it returns a
+COFF linker object, not merely the source ICO. A non-Windows build diagnoses
+that platform mismatch and directs the consumer to a Windows build or
+distribution.
 
 `SAGAN_TOOLCHAIN_ROOT` is a test and isolated-staging override for the normal
 executable-relative toolchain root. If set, it must name a layout containing

@@ -286,6 +286,11 @@ namespace driver
                                "'; expected windows, linux, or macos");
     for (const auto &candidate : candidates)
       if (std::filesystem::is_regular_file(candidate)) return candidate;
+#ifndef _WIN32
+    if (platform == "windows")
+      throw std::runtime_error("Sagan's Windows application-icon link resource requires a Windows-built "
+                               "Sagan toolchain; build on Windows or install the Windows distribution");
+#endif
     throw std::runtime_error("Sagan application icon for " + platform +
                              " is missing; rebuild or reinstall the Sagan toolchain with application assets");
   }

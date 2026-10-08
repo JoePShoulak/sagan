@@ -66,8 +66,16 @@ expect_output "default tokenizer input" "tokenizer: tests/fixtures/syntax/tokeni
 expect_output "version output" "Sagan " "$binary" --version
 expect_output "language-service capability discovery" '"schema":"sagan.language-service/1"' \
   "$binary" --capabilities-json
-expect_output "Windows application-icon contract" "sagan-resource.o" \
-  "$binary" --application-icon windows
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    expect_output "Windows application-icon contract" "sagan-resource.o" \
+      "$binary" --application-icon windows
+    ;;
+  *)
+    expect_failure "unsupported Windows application-icon build" 1 \
+      "requires a Windows-built Sagan toolchain" "$binary" --application-icon windows
+    ;;
+esac
 expect_output "Linux application-icon contract" "sagan.png" \
   "$binary" --application-icon linux
 expect_output "macOS application-icon contract" "sagan.icns" \
