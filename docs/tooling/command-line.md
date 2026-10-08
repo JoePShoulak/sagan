@@ -32,6 +32,9 @@ bin/sagan --emit-cpp-modules path/to/main.sagan build/program.cpp
 bin/sagan --emit-cpp-package path/to/package build/program.cpp
 bin/sagan --run-package path/to/package
 bin/sagan --application-mode path/to/source-or-package
+bin/sagan --application-icon windows
+bin/sagan --application-icon linux
+bin/sagan --application-icon macos
 ```
 
 With no valid source path, the program reports command usage or a file error.
@@ -66,6 +69,12 @@ configured entry, and returns its exit code.
 `--application-mode` prints `console` or `windowed`. It reads the named package
 manifest or discovers the nearest manifest for a source file; a loose file
 prints `console`.
+`--application-icon` prints the absolute compiler-owned resource path for a
+native packaging target. It returns the COFF object to link on Windows, the
+512-pixel PNG used by Linux desktop packaging, or the ICNS file copied into a
+macOS application bundle. Unknown platforms and incomplete installations fail
+with an actionable diagnostic. See [application icons](application-icons.md)
+for the complete downstream contract.
 `--capabilities-json` prints the versioned compiler-service schema and granular
 implemented/unavailable feature flags. `--diagnostics-json` performs recovering
 lexical and syntax analysis followed, for complete syntax, by strict semantic

@@ -12,6 +12,9 @@ MAINTAINERS.md
 README.md
 SECURITY.md
 TECHNOLOGY.md
+assets/application/linux/sagan.png
+assets/application/macos/sagan.icns
+assets/application/windows/sagan.ico
 deploy/releases/github.py
 deploy/releases/index.py
 deploy/releases/mirror.sh
@@ -92,6 +95,7 @@ docs/rfcs/template.md
 docs/standard-library/index.md
 docs/standard-library/math.md
 docs/standard-library/status.md
+docs/tooling/application-icons.md
 docs/tooling/command-line.md
 docs/tooling/compiler.md
 docs/tooling/cpp-backend.md
@@ -125,9 +129,9 @@ examples/units.sagan
 libraries/index.tsv
 makefile
 packaging/windows/GDB-GPL-3.0.txt
-packaging/windows/sagan.ico
 packaging/windows/sagan.iss
 packaging/windows/sagan.rc
+scripts/application_icon_test.py
 scripts/ast_demo.sh
 scripts/cli_test.sh
 scripts/coverage.sh
@@ -135,6 +139,7 @@ scripts/coverage_threshold.sh
 scripts/create_primary_local_backup.sh
 scripts/dap_protocol_test.sh
 scripts/editor_tooling_demo.sh
+scripts/generate_application_icons.py
 scripts/generate_unicode_tables.py
 scripts/geometry_demo.sh
 scripts/lsp_protocol_test.sh
@@ -334,6 +339,20 @@ tests/fixtures/modules/tests_project/sagan.toml
 tests/fixtures/modules/tests_project/tools.sagan
 tests/fixtures/modules/workspace_member_rename/main.sagan
 tests/fixtures/modules/workspace_member_rename/vehicle.sagan
+tests/fixtures/native_declaration/host/native_bridge.cpp
+tests/fixtures/native_declaration/host/native_bridge.hpp
+tests/fixtures/native_declaration/success/sagan.toml
+tests/fixtures/native_declaration/success/src/main.sagan
+tests/fixtures/native_declaration/undeclared/sagan.toml
+tests/fixtures/native_declaration/undeclared/src/main.sagan
+tests/fixtures/native_declaration/wrong_arity/sagan.toml
+tests/fixtures/native_declaration/wrong_arity/src/main.sagan
+tests/fixtures/native_declaration/wrong_return/sagan.toml
+tests/fixtures/native_declaration/wrong_return/src/main.sagan
+tests/fixtures/native_declaration/wrong_type/sagan.toml
+tests/fixtures/native_declaration/wrong_type/src/main.sagan
+tests/fixtures/native_declaration/wrong_unit/sagan.toml
+tests/fixtures/native_declaration/wrong_unit/src/main.sagan
 tests/fixtures/package_index/index.tsv
 tests/fixtures/package_index/invalid.tsv
 tests/fixtures/package_index/orbit-tools/sagan.toml
@@ -380,6 +399,7 @@ tests/fixtures/runtime/runtime_errors.sagan
 tests/fixtures/runtime/smoke.sagan
 tests/fixtures/runtime/source_scream_error.sagan
 tests/fixtures/runtime/source_trace_error.sagan
+tests/fixtures/runtime/warning_clean_equality.sagan
 tests/fixtures/runtime/weak_assignment.sagan
 tests/fixtures/semantic/default_argument_capture.sagan
 tests/fixtures/semantic/default_argument_missing.sagan
@@ -418,6 +438,9 @@ tests/fixtures/semantic/parallel_duplicate_error.sagan
 tests/fixtures/semantic/parallel_let_duplicate_error.sagan
 tests/fixtures/semantic/parallel_let_unbound_error.sagan
 tests/fixtures/semantic/parallel_target_error.sagan
+tests/fixtures/semantic/render_ui_bridge.sagan
+tests/fixtures/semantic/render_ui_bridge_argument_error.sagan
+tests/fixtures/semantic/render_ui_bridge_return_error.sagan
 tests/fixtures/semantic/round_integer_argument_error.sagan
 tests/fixtures/semantic/round_missing_argument_error.sagan
 tests/fixtures/semantic/scopes.sagan
@@ -496,6 +519,7 @@ tests/integration/generic_class_test.sh
 tests/integration/generic_sum_test.sh
 tests/integration/mixed_exponent_test.sh
 tests/integration/module_test.sh
+tests/integration/native_declaration_test.sh
 tests/integration/optional_test.sh
 tests/integration/orbit_math_test.sh
 tests/integration/package_dependency_test.sh

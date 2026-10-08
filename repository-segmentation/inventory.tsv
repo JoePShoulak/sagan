@@ -31,6 +31,7 @@ deploy/hp1/	sagan-docs	needs-split	Documentation services move; runner provision
 deploy/releases/	sagan	proposed	Language release mirror until organization-wide release operations are deliberately separated.
 deploy/frontdoor/	sagan-docs	proposed	Official documentation route configuration and Frontdoor overlay.
 packaging/	sagan	proposed	Language and toolchain packaging; component-native packaging must be separated later.
+assets/application/	sagan	approved	Canonical cross-platform application icons and compiler-owned native packaging inputs.
 .github/workflows/documentation.yml	sagan-docs	proposed	Replace with component export checks plus aggregate docs CI.
 .github/workflows/vscode-extension.yml	sagan-vscode	proposed	Extension CI and VSIX validation.
 .github/workflows/windows-installer.yml	sagan	proposed	Language toolchain installer; consume released extension and packages explicitly.

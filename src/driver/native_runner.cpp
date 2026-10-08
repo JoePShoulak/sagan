@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cctype>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -16,6 +17,9 @@
 
 #ifndef _WIN32
 #include <sys/wait.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 #else
 #include <windows.h>
 #endif
@@ -125,6 +129,34 @@ namespace driver
       return value == nullptr ? std::string{} : std::string{value};
     }
 
+    auto toolchain_root() -> std::filesystem::path
+    {
+      if (const char *override_root = std::getenv("SAGAN_TOOLCHAIN_ROOT");
+          override_root != nullptr && *override_root != '\0')
+        return std::filesystem::absolute(override_root).lexically_normal();
+#ifdef _WIN32
+      std::vector<wchar_t> buffer(32768);
+      const DWORD length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+      if (length == 0 || length == buffer.size())
+        throw std::runtime_error("Could not locate the Sagan toolchain directory");
+      return std::filesystem::path(std::wstring(buffer.data(), length)).parent_path().parent_path();
+#else
+#ifdef __APPLE__
+      std::uint32_t size = 0;
+      static_cast<void>(_NSGetExecutablePath(nullptr, &size));
+      std::vector<char> buffer(size);
+      if (_NSGetExecutablePath(buffer.data(), &size) != 0)
+        throw std::runtime_error("Could not locate the Sagan toolchain directory");
+      return std::filesystem::weakly_canonical(buffer.data()).parent_path().parent_path();
+#else
+      std::error_code error;
+      const auto executable = std::filesystem::read_symlink("/proc/self/exe", error);
+      if (error) throw std::runtime_error("Could not locate the Sagan toolchain directory");
+      return executable.parent_path().parent_path();
+#endif
+#endif
+    }
+
     class environment_override
     {
       std::string name;
@@ -226,15 +258,41 @@ namespace driver
   auto native_icon_resource() -> std::optional<std::filesystem::path>
   {
 #ifdef _WIN32
-    std::vector<wchar_t> buffer(32768);
-    const DWORD length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
-    if (length == 0 || length == buffer.size()) return {};
-    const auto root = std::filesystem::path(std::wstring(buffer.data(), length)).parent_path().parent_path();
-    for (const auto &candidate : {root / "assets" / "sagan-resource.o",
+    const auto root = toolchain_root();
+    for (const auto &candidate : {root / "assets" / "application" / "windows" / "sagan-resource.o",
+                                  root / "assets" / "sagan-resource.o",
                                   root / "obj" / "launcher" / "sagan-resource.o"})
       if (std::filesystem::is_regular_file(candidate)) return candidate;
 #endif
     return {};
+  }
+
+  auto application_icon_resource(const std::string &platform) -> std::filesystem::path
+  {
+    const auto root = toolchain_root();
+    std::vector<std::filesystem::path> candidates;
+    if (platform == "windows")
+    {
+      candidates = {root / "assets" / "application" / "windows" / "sagan-resource.o",
+                    root / "assets" / "sagan-resource.o",
+                    root / "obj" / "launcher" / "sagan-resource.o"};
+    }
+    else if (platform == "linux")
+      candidates = {root / "assets" / "application" / "linux" / "sagan.png"};
+    else if (platform == "macos")
+      candidates = {root / "assets" / "application" / "macos" / "sagan.icns"};
+    else
+      throw std::runtime_error("Unsupported application-icon platform '" + platform +
+                               "'; expected windows, linux, or macos");
+    for (const auto &candidate : candidates)
+      if (std::filesystem::is_regular_file(candidate)) return candidate;
+#ifndef _WIN32
+    if (platform == "windows")
+      throw std::runtime_error("Sagan's Windows application-icon link resource requires a Windows-built "
+                               "Sagan toolchain; build on Windows or install the Windows distribution");
+#endif
+    throw std::runtime_error("Sagan application icon for " + platform +
+                             " is missing; rebuild or reinstall the Sagan toolchain with application assets");
   }
 
   auto compile_and_run(const std::string &generated_cpp, const native_compilation_inputs &inputs) -> int

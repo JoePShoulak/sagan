@@ -37,7 +37,8 @@ for executable in "$install_dir/bin/sagan.exe" "$install_dir/bin/sagan-lsp.exe" 
   fi
 done
 python_version="$(bash "$repo_root/scripts/windows/debugger_python_version.sh" "$install_dir/toolchain/ucrt64/bin/gdb.exe")"
-for packaged in assets/sagan-resource.o licenses/debugger/GDB-GPL-3.0.txt \
+for packaged in assets/application/windows/sagan-resource.o assets/application/windows/sagan.ico \
+  assets/application/linux/sagan.png assets/application/macos/sagan.icns licenses/debugger/GDB-GPL-3.0.txt \
                 toolchain/ucrt64/bin/gdb.exe "toolchain/ucrt64/bin/libpython$python_version.dll" \
                 "toolchain/ucrt64/lib/python$python_version/asyncio/__init__.py" \
                 toolchain/ucrt64/share/gdb/python/gdb/dap/__init__.py \

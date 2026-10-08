@@ -117,9 +117,9 @@ libraries: $(COMPILER_LIBRARY)
 ifneq ($(WINDOWS_HOST),)
 windows-launcher: $(WINDOWS_LAUNCHER)
 
-$(WINDOWS_LAUNCHER_RESOURCE): packaging/windows/sagan.rc packaging/windows/sagan.ico
+$(WINDOWS_LAUNCHER_RESOURCE): packaging/windows/sagan.rc assets/application/windows/sagan.ico
 	@mkdir -p $(dir $@)
-	windres -I packaging/windows $< -O coff -o $@
+	windres -I assets/application/windows $< -O coff -o $@
 
 $(WINDOWS_LAUNCHER): src/launcher/windows_launcher.cpp $(WINDOWS_LAUNCHER_RESOURCE)
 	@mkdir -p $(dir $@) $(BUILD_TMP)

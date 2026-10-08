@@ -62,6 +62,13 @@ known-good; editor support is under `editors/vscode-sagan`.
 | Primary repository organization transfer | [Transfer runbook](repository-segmentation/primary-repository-transfer.md), [owner start drill](repository-segmentation/owner-transfer-start-drill.md), [transfer inventory](repository-segmentation/primary-transfer.toml) |
 | Remaining work and handoff standard | [Active roadmap](docs/contributing/active-roadmap.md), [handoff roadmap](docs/contributing/maintainer-handoff-roadmap.md) |
 
+Canonical application-icon sources live under `assets/application/`. The CLI
+contract is `sagan --application-icon windows|linux|macos`; Windows packaging
+stages the generated COFF object with the ICO, while Linux and macOS consumers
+install the returned PNG or ICNS according to
+[the application-icon guide](docs/tooling/application-icons.md). Run
+`python scripts/application_icon_test.py` after changing any icon asset.
+
 Major subtrees: `src/` implements the compiler and protocols; `libraries/`
 contains first-party library sources; `editors/` contains editor integration;
 `tests/` and `scripts/` contain validation and maintenance tools; `docs/`
