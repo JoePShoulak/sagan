@@ -66,6 +66,17 @@ expect_output "default tokenizer input" "tokenizer: tests/fixtures/syntax/tokeni
 expect_output "version output" "Sagan " "$binary" --version
 expect_output "language-service capability discovery" '"schema":"sagan.language-service/1"' \
   "$binary" --capabilities-json
+expect_output "Windows application-icon contract" "sagan-resource.o" \
+  "$binary" --application-icon windows
+expect_output "Linux application-icon contract" "sagan.png" \
+  "$binary" --application-icon linux
+expect_output "macOS application-icon contract" "sagan.icns" \
+  "$binary" --application-icon macos
+expect_failure "unsupported application-icon platform" 1 \
+  "expected windows, linux, or macos" "$binary" --application-icon plan9
+expect_failure "missing application-icon diagnostic" 1 \
+  "rebuild or reinstall the Sagan toolchain with application assets" \
+  env SAGAN_TOOLCHAIN_ROOT="$work_dir/no-icons" "$binary" --application-icon linux
 expect_output "explicit tokenizer input" "KWD_LET" "$binary" --tokens tests/fixtures/syntax/tokenizer.sagan
 printf '%s\n' 'let escaped = "\r\t\0"' > "$work_dir/escaped.sagan"
 expect_output "escaped token text" '\r\t\0' "$binary" --tokens "$work_dir/escaped.sagan"

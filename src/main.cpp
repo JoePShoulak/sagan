@@ -2287,6 +2287,7 @@ auto main(const int argc, char **argv) -> int
     emit_cpp_package,
     run_package,
     application_mode,
+    application_icon,
     diagnostics_json,
   };
 
@@ -2374,6 +2375,11 @@ auto main(const int argc, char **argv) -> int
     mode = output_mode::application_mode;
     path = argv[2];
   }
+  else if (argc == 3 && std::string(argv[1]) == "--application-icon")
+  {
+    mode = output_mode::application_icon;
+    path = argv[2];
+  }
   else if (argc == 3 && std::string(argv[1]) == "--diagnostics-json")
   {
     mode = output_mode::diagnostics_json;
@@ -2401,7 +2407,8 @@ auto main(const int argc, char **argv) -> int
                  "--ast-svg FILE OUTPUT | --ast-html FILE OUTPUT | --semantic FILE | --types FILE | "
                  "--entry FILE | --modules FILE | --package PATH | --emit-cpp FILE [OUTPUT] | "
                  "--emit-cpp-modules FILE [OUTPUT] | --emit-cpp-package PATH [OUTPUT] | "
-                 "--run-package PATH | --application-mode PATH | --diagnostics-json FILE | FILE]\n";
+                 "--run-package PATH | --application-mode PATH | --application-icon PLATFORM | "
+                 "--diagnostics-json FILE | FILE]\n";
     return 2;
   }
 #ifdef _WIN32
@@ -2414,6 +2421,11 @@ auto main(const int argc, char **argv) -> int
   std::optional<sagan::source::document_snapshot> document;
   try
   {
+    if (mode == output_mode::application_icon)
+    {
+      std::cout << driver::application_icon_resource(path).string() << '\n';
+      return 0;
+    }
     if (mode == output_mode::application_mode)
     {
       std::optional<modules::package_manifest> package;

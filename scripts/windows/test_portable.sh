@@ -39,7 +39,10 @@ compiler_version="$("$install_dir/toolchain/ucrt64/bin/g++.exe" -dumpfullversion
 [[ -f "$install_dir/toolchain/ucrt64/share/gcc-$compiler_version/python/libstdcxx/v6/printers.py" ]]
 [[ -f "$install_dir/licenses/debugger/GDB-GPL-3.0.txt" ]]
 grep -q 'GNU GENERAL PUBLIC LICENSE' "$install_dir/licenses/debugger/GDB-GPL-3.0.txt"
-[[ -f "$install_dir/assets/sagan-resource.o" ]]
+[[ -f "$install_dir/assets/application/windows/sagan-resource.o" ]]
+[[ -f "$install_dir/assets/application/windows/sagan.ico" ]]
+[[ -f "$install_dir/assets/application/linux/sagan.png" ]]
+[[ -f "$install_dir/assets/application/macos/sagan.icns" ]]
 [[ -f "$install_dir/libraries/index.tsv" ]]
 [[ -f "$install_dir/libraries/render/native/window_bridge.cpp" ]]
 [[ -f "$install_dir/libraries/render/native/window_bridge.hpp" ]]

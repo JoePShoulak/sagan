@@ -182,6 +182,10 @@ pattern = "libraries/render/**"
 repository = "sagan-render"
 
 [[rules]]
+pattern = "assets/application/**"
+repository = "sagan"
+
+[[rules]]
 pattern = "packaging/**"
 repository = "sagan"
 
